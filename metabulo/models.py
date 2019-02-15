@@ -8,7 +8,7 @@ from marshmallow import fields, post_dump, post_load, pre_load, Schema
 from marshmallow.exceptions import ValidationError
 import pandas
 from sqlalchemy import MetaData
-from sqlalchemy.dialects import postgresql as pg
+from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
 
 
@@ -36,11 +36,11 @@ class BaseSchema(Schema):
 
 
 class CSVFile(db.Model):
-    id = db.Column(pg.UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     name = db.Column(db.String, nullable=False)
     uri = db.Column(db.String, nullable=False)
-    meta = db.Column(pg.JSONB, nullable=False, default=lambda: {})
+    meta = db.Column(db.String, nullable=True)
 
     @property
     def table(self):
@@ -99,5 +99,6 @@ class CreateCSVFileSchema(Schema):
     def generate_uri(self, data):
         id = str(uuid4())
         uri = os.path.join(current_app.config['UPLOAD_FOLDER'], id)
+        data['id'] = id
         data['uri'] = uri
         return data

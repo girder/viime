@@ -30,7 +30,6 @@ setup(
         'flask',
         'flask-sqlalchemy',
         'marshmallow>=3.0.0rc4',
-        'psycopg2-binary',
         'python-dotenv',
         'sklearn',
         'sqlalchemy-utils'
