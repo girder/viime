@@ -22,6 +22,7 @@ data_files.extend(list_files_recursive('static'))
 
 setup(
     name='metabulo',
+    version='0.1.0',
     author='Kitware, Inc.',
     author_email='kitware@kitware.com',
     packages=find_packages(include=['metabulo']),
@@ -30,6 +31,7 @@ setup(
         'flask',
         'flask-sqlalchemy',
         'marshmallow>=3.0.0rc4',
+        'pandas',
         'python-dotenv',
         'sklearn',
         'sqlalchemy-utils'
