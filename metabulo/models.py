@@ -44,7 +44,7 @@ class CSVFile(db.Model):
 
     @property
     def table(self):
-        return pandas.read_csv(self.uri)
+        return pandas.read_csv(self.uri, index_col=0)
 
     def save_table(self):
         table = self.table.to_csv()
