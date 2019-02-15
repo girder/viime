@@ -64,7 +64,7 @@ class CSVFileSchema(BaseSchema):
     __model__ = CSVFile
 
     name = fields.Str(required=True)
-    uri = fields.Str(required=True, validate=_validate_uri)
+    uri = fields.Str(required=True, validate=_validate_uri, load_only=True)
     table = fields.Raw(dump_only=True)
     meta = fields.Dict()
 
