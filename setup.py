@@ -33,6 +33,7 @@ setup(
         'marshmallow>=3.0.0rc4',
         'pandas',
         'python-dotenv',
+        'requests',
         'sklearn',
         'sqlalchemy-utils'
     ],
