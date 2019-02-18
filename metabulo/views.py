@@ -1,14 +1,12 @@
 from io import BytesIO
-import os
 
 from flask import Blueprint, current_app, jsonify, request, send_file
 from sklearn import preprocessing
 
-from metabulo.models import CreateCSVFileSchema, CSVFile, CSVFileSchema, db
+from metabulo.models import CSVFile, CSVFileSchema, db
 
 
 csv_file_schema = CSVFileSchema()
-create_csv_file_schema = CreateCSVFileSchema()
 
 csv_bp = Blueprint('csv', __name__)
 
@@ -22,37 +20,34 @@ def upload_csv_file():
     if file.filename == '':
         return jsonify('No file selected'), 400
 
-    csv_file_args = create_csv_file_schema.load({
-        'name': file.filename
-    })
-    file.save(csv_file_args['uri'])
-
     try:
-        csv_file = csv_file_schema.load(csv_file_args)
+        csv_file = csv_file_schema.load({
+            'name': file.filename,
+            'table': file.read().decode()
+        })
+
         db.session.add(csv_file)
         db.session.commit()
 
         return jsonify(csv_file_schema.dump(csv_file)), 201
     except Exception:
-        os.unlink(csv_file_args['uri'])
+        if csv_file.uri.is_file():
+            csv_file.uri.unlink()
         db.session.rollback()
         raise
 
 
 @csv_bp.route('/csv', methods=['POST'])
 def create_csv_file():
-    csv_file_args = create_csv_file_schema.load(request.json)
-    with open(csv_file_args['uri'], 'w') as f:
-        f.write(csv_file_args['table'])
-
     try:
-        csv_file = csv_file_schema.load(csv_file_args)
+        csv_file = csv_file_schema.load(request.json)
         db.session.add(csv_file)
         db.session.commit()
 
         return jsonify(csv_file_schema.dump(csv_file)), 201
     except Exception:
-        os.unlink(csv_file_args['uri'])
+        if csv_file.uri.is_file():
+            csv_file.uri.unlink()
         db.session.rollback()
         raise
 
@@ -77,7 +72,7 @@ def delete_csv_file(csv_id):
     db.session.commit()
 
     try:
-        os.unlink(csv_file.uri)
+        csv_file.uri.unlink()
     except Exception as e:
         current_app.logger.exception(e)
 
