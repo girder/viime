@@ -8,7 +8,8 @@ from flask_sqlalchemy import SQLAlchemy
 from marshmallow import fields, post_dump, post_load, pre_load, Schema
 from marshmallow.exceptions import ValidationError
 import pandas
-from sqlalchemy import MetaData
+from sqlalchemy import DDL, event, MetaData
+from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
 
@@ -41,6 +42,10 @@ class CSVFile(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     name = db.Column(db.String, nullable=False)
     meta = db.Column(db.String, nullable=True)
+
+    @property
+    def columns(self):
+        return list(CSVColumn.query.filter_by(file_id=self.id))
 
     @property
     def table(self):
@@ -88,6 +93,23 @@ class CSVFileSchema(BaseSchema):
     table = fields.Raw(required=True, validate=_validate_table_data)
     meta = fields.Str()
 
+    columns = fields.List(
+        fields.Nested('CSVColumnSchema', exclude=['file_id'])
+    )
+
+    @post_load
+    def generate_columns(self, data):
+        table = pandas.read_csv(BytesIO(data['table'].encode()))
+        columns = []
+        for name, type in table.dtypes.items():
+            columns.append(CSVColumn(
+                file_id=data['id'],
+                type_id=str(type),
+                name=name
+            ))
+        db.session.add_all(columns)
+        return data
+
     @pre_load
     def fix_file_name(self, data):
         data['name'] = secure_filename(data['name'])
@@ -97,3 +119,38 @@ class CSVFileSchema(BaseSchema):
     def read_csv_file(self, data):
         data['table'] = data['table'].to_csv()
         return data
+
+
+class CSVColumnType(db.Model):
+    type_ = db.Column(db.String, primary_key=True)
+    numeric = db.Column(db.Boolean(name='ck_numeric_flag'), nullable=False)
+
+
+event.listen(
+    CSVColumnType.__table__, 'after_create',
+    DDL("""
+INSERT INTO csv_column_type (type_, numeric) VALUES
+('object', 0), ('float64', 1)
+    """)
+)
+
+
+class CSVColumn(db.Model):
+    __table_args__ = (UniqueConstraint('file_id', 'name'),)
+
+    id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
+    file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), nullable=False)
+    type_id = db.Column(db.String, db.ForeignKey('csv_column_type.type_'), nullable=False)
+    name = db.Column(db.String, nullable=False)
+
+    csv_file = db.relationship(CSVFile, backref=db.backref('columns', lazy=True))
+    type_ = db.relationship(CSVColumnType)
+
+
+class CSVColumnSchema(BaseSchema):
+    __model__ = CSVColumn
+
+    id = fields.Str(missing=uuid4)
+    file_id = fields.Str(required=True)
+    type_id = fields.Str(required=True)
+    name = fields.Str(required=True)
