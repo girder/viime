@@ -1,5 +1,6 @@
 from datetime import datetime
-import os
+from io import BytesIO
+from pathlib import Path, PurePath
 from uuid import uuid4
 
 from flask import current_app
@@ -39,66 +40,60 @@ class CSVFile(db.Model):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     name = db.Column(db.String, nullable=False)
-    uri = db.Column(db.String, nullable=False)
     meta = db.Column(db.String, nullable=True)
 
     @property
     def table(self):
         return pandas.read_csv(self.uri, index_col=0)
 
+    @property
+    def uri(self):
+        id = str(self.id)
+        return Path(current_app.config['UPLOAD_FOLDER']) / id[:3] / id
+
     def save_table(self):
-        table = self.table.to_csv()
-        with open(self.uri, 'w') as f:
-            f.write(table)
-        return table
+        return self._save_csv_file_data(self.uri, self.table.to_csv())
+
+    @classmethod
+    def create_csv_file(cls, id, name, table, meta=None):
+        csv_file = cls(id=id, name=name, meta=meta)
+        cls._save_csv_file_data(csv_file.uri, table)
+        return csv_file
+
+    @classmethod
+    def _save_csv_file_data(cls, uri, table_data):
+        uri.parent.mkdir(parents=True, exist_ok=True)
+        with open(uri, 'w') as f:
+            f.write(table_data)
+        return table_data
 
 
-def _validate_uri(uri):
+def _validate_table_data(table):
     try:
-        pandas.read_csv(uri)
+        pandas.read_csv(BytesIO(table.encode()))
     except Exception as e:
-        raise ValidationError(str(e).strip(), data=uri, field_name='uri') from None
-
-
-class CSVFileSchema(BaseSchema):
-    __model__ = CSVFile
-
-    name = fields.Str(required=True)
-    uri = fields.Str(required=True, validate=_validate_uri, load_only=True)
-    table = fields.Raw(dump_only=True)
-    meta = fields.Dict()
-
-    @pre_load
-    def remove_table_argument(self, data):
-        if 'table' in data:
-            del data['table']
-        return data
-
-    @post_dump
-    def read_csv_file(self, data):
-        data['table'] = data['table'].to_csv()
-        return data
+        raise ValidationError(str(e).strip(), data=table, field_name='table') from None
 
 
 def _validate_name(name):
-    if os.path.splitext(name)[-1] != '.csv':
+    if PurePath(name).suffix != '.csv':
         raise ValidationError('Only CSV files are allowed', data=name, field_name='name')
 
 
-class CreateCSVFileSchema(Schema):
+class CSVFileSchema(BaseSchema):
+    __model__ = CSVFile.create_csv_file
+
+    id = fields.Str(missing=uuid4)
     name = fields.Str(required=True, validate=_validate_name)
-    table = fields.Raw(missing='')
-    meta = fields.Dict()
+    table = fields.Raw(required=True, validate=_validate_table_data)
+    meta = fields.Str()
 
     @pre_load
     def fix_file_name(self, data):
         data['name'] = secure_filename(data['name'])
         return data
 
-    @post_load
-    def generate_uri(self, data):
-        id = str(uuid4())
-        uri = os.path.join(current_app.config['UPLOAD_FOLDER'], id)
-        data['id'] = id
-        data['uri'] = uri
+    @post_dump
+    def read_csv_file(self, data):
+        data['table'] = data['table'].to_csv()
         return data
