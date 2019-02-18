@@ -20,6 +20,7 @@ def upload_csv_file():
     if file.filename == '':
         return jsonify('No file selected'), 400
 
+    csv_file = None
     try:
         csv_file = csv_file_schema.load({
             'name': file.filename,
@@ -31,7 +32,7 @@ def upload_csv_file():
 
         return jsonify(csv_file_schema.dump(csv_file)), 201
     except Exception:
-        if csv_file.uri.is_file():
+        if csv_file and csv_file.uri.is_file():
             csv_file.uri.unlink()
         db.session.rollback()
         raise
