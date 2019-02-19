@@ -29,6 +29,7 @@ def create_app(config=None):
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER')
     app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_FILE_UPLOAD_SIZE', 5 * 1024 * 1024))
+    app.config['OPENCPU_API_ROOT'] = os.getenv('OPENCPU_API_ROOT')
 
     app.config.update(config)
     db.init_app(app)

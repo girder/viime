@@ -7,9 +7,11 @@ import requests
 # TODO: accept extra params
 def process_table(uri, table):
     files = {
-        'file': ('table.csv', table.to_csv().encode())
+        'table': ('table.csv', table.to_csv().encode())
     }
     req = requests.post(uri + '/csv?row.names=true', files=files)
+    if not req.ok:
+        print(req.content)
     assert req.ok
     return pandas.read_csv(BytesIO(req.content), index_col=0)
 

@@ -29,5 +29,9 @@ RUN R -e 'install.packages("XML");' && \
     R -e 'BiocManager::install("sva", version = "3.8")'
 
 RUN R -e 'install.packages("devtools"); library(devtools); devtools::install_github("xia-lab/MetaboAnalystR")'
+RUN R -e 'library(devtools); devtools::install_github("klutometis/roxygen")'
+
+ADD metabulo /metabulo
+RUN R -e 'library(devtools); library(roxygen2); setwd("/metabulo"); document(); setwd("/"); install("metabulo")'
 
 CMD service cron start && /usr/lib/rstudio-server/bin/rserver && apachectl -DFOREGROUND
