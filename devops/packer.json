@@ -1,0 +1,51 @@
+{
+    "variables": {
+        "ansible_host": "default",
+        "ansible_connection": "docker"
+    },
+    "builders": [
+        {
+            "name": "metabolomics",
+            "type": "docker",
+            "image": "r-base",
+            "commit": true,
+            "run_command": [
+                "-dit",
+                "--name", "{{build_name}}",
+                "{{.Image}}",
+                "/bin/bash"
+            ]
+        }
+    ],
+    "provisioners": [
+	{
+	    "type": "shell",
+	    "inline": ["apt-get update && apt-get install -y python3"]
+	},
+        {
+            "type": "ansible",
+            "user": "root",
+            "playbook_file": "ansible/metabolomics.yml",
+            "extra_arguments": [
+                "-vv",
+                "-e", "ansible_host={{build_name}}",
+                "-e", "ansible_connection={{user `ansible_connection`}}",
+                "-e", "ansible_python_interpreter=python3"
+            ],
+            "only": ["metabolomics"]
+        }
+    ],
+    "post-processors": [
+        [
+            {
+                "type": "docker-tag",
+                "repository": "localhost:5000/metabolomics",
+                "tag": "latest",
+                "only": ["metabolomics"]
+            },
+            {
+                "type": "docker-push"
+            }
+        ]
+    ]
+}
