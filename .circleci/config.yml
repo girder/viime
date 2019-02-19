@@ -6,3 +6,29 @@ jobs:
     steps:
       - checkout
       - run: tox
+
+  publish:
+    docker:
+      - image: themattrix/tox
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build and push Docker image
+          command: |
+            docker build -f ./devops/Dockerfile -t dozturk2/metabulo:latest .
+            echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USERNAME --password-stdin
+            docker push dozturk2/metabulo:latest
+
+workflows:
+  version: 2
+  test_and_publish:
+    jobs:
+      - build
+      - publish:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
