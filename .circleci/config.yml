@@ -9,15 +9,16 @@ jobs:
 
   publish:
     docker:
-      - image: themattrix/tox
+      - image: circleci/buildpack-deps:stretch
     steps:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
+          working_directory: ./devops
           name: Build and push Docker image
           command: |
-            docker build -f ./devops/Dockerfile -t dozturk2/metabulo:latest .
+            docker build -t dozturk2/metabulo:latest .
             echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USERNAME --password-stdin
             docker push dozturk2/metabulo:latest
 
