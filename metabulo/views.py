@@ -3,7 +3,7 @@ from io import BytesIO
 from flask import Blueprint, current_app, jsonify, request, send_file
 from sklearn import preprocessing
 
-from metabulo.models import CSVFile, CSVFileSchema, db
+from metabulo.models import CSVColumn, CSVFile, CSVFileSchema, db
 from metabulo.opencpu import process_table
 
 
@@ -71,7 +71,8 @@ def download_csv_file(csv_id):
 @csv_bp.route('/csv/<uuid:csv_id>', methods=['DELETE'])
 def delete_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
-    csv_file.delete()
+    CSVColumn.query.filter_by(file_id=csv_id).delete()
+    db.session.delete(csv_file)
     db.session.commit()
 
     try:

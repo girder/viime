@@ -2,6 +2,8 @@ from io import BytesIO
 
 from flask import url_for
 
+from metabulo.models import CSVFile
+
 csv_data = """
 id,col1,col2
 row1,0.5,2.0
@@ -54,3 +56,23 @@ def test_get_csv_file(client, csv_file):
     assert resp.status_code == 200
     assert 'application/json' in resp.headers['Content-Type']
     assert resp.json['table'] == csv_file.table.to_csv()
+
+
+def test_delete_csv_file(client, csv_file):
+    resp = client.delete(
+        url_for('csv.delete_csv_file', csv_id=csv_file.id)
+    )
+
+    assert resp.status_code == 204
+    assert CSVFile.query.first() is None
+
+
+def test_post_csv_file_error(client):
+    data = {
+        'file': (b'', 'test_file1.csv')
+    }
+    resp = client.post(
+        url_for('csv.upload_csv_file'), data=data, content_type='multipart/form-data')
+
+    assert resp.status_code == 400
+    assert resp.json == {'table': ['No columns to parse from file']}
