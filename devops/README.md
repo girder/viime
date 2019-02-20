@@ -61,11 +61,12 @@ It takes around 50 minutes to build the image.
 It might be more convenient to pull it from Dockerhub.
 
 ```sh
-docker pull dozturk2/metabolomics:latest
+docker pull dozturk2/metabulo:latest
 ```
 
-There are github actions set for pushing the docker image
-so it will be periodically updated on Dockerhub.
+Then you can visit http://localhost:8004/ocpu or http://localhost:8004/rstudio
+
+The username and password will be "opencpu".
 
 ### Running R Scripts Against the Container
 
