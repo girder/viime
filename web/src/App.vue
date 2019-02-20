@@ -1,17 +1,29 @@
-<template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+<template lang="pug">
+v-app
+  v-toolbar(dark)
+    v-toolbar-title
+      img(src="./assets/logo.png", width="48px", height="48px")
+    v-spacer
+    v-toolbar-title
+      b Biomarker Analysis
+    v-spacer
+    v-btn(icon)
+      v-icon more_vert
+  v-toolbar(dense, dark, color="primary")
+    v-spacer
+    b 1.0 {{ $router.currentRoute.name }}
+    v-spacer
+  v-layout(column)
+    router-view.grow
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Upload from './components/Upload.vue';
 
 export default {
   name: 'app',
   components: {
-    HelloWorld
+    Upload,
   }
 }
 </script>
@@ -21,8 +33,5 @@ export default {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
 }
 </style>
