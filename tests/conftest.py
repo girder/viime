@@ -23,7 +23,8 @@ def app():
         app = create_app({
             'ENV': 'testing',
             'SQLALCHEMY_DATABASE_URI': f'sqlite://',
-            'UPLOAD_FOLDER': upload_folder
+            'UPLOAD_FOLDER': upload_folder,
+            'OPENCPU_API_ROOT': 'http://localhost:8004/ocpu/library'
         })
 
         with app.app_context():
