@@ -8,12 +8,12 @@ v-app
       b Biomarker Analysis
     v-spacer
     v-btn(icon)
-      v-icon more_vert
+      v-icon {{ $vuetify.icons.more }}
   v-toolbar(dense, dark, color="primary")
     v-spacer
     b 1.0 {{ $router.currentRoute.name }}
     v-spacer
-  v-layout(column)
+  v-container(column)
     router-view.grow
 </template>
 

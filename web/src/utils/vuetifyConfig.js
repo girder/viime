@@ -14,4 +14,7 @@ export default {
     error: colors.red,
     info: colors.lightBlue.lighten1,
   },
+  icons: {
+    more: 'mdi-dots-horizontal',
+  },
 };

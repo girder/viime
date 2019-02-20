@@ -1,19 +1,23 @@
-import 'vuetify/dist/vuetify.min.css';
-import 'material-design-icons-iconfont/dist/material-design-icons.css'
-
+import _ from 'lodash';
+import Girder from '@girder/components/src';
+import girderVuetifyConfig from '@girder/components/src/utils/vuetifyConfig';
 import Vue from 'vue'
 import Vuetify from 'vuetify';
-import router from './router';
-import App from './App.vue'
-import vuetifyConfig from './utils/vuetifyConfig';
-import ApiService from './common/api.service';
 
+import ApiService from './common/api.service';
+import App from './App.vue'
+import router from './router';
+import store from './store';
+import vuetifyConfig from './utils/vuetifyConfig';
+
+Vue.use(Girder);
+Vue.use(Vuetify, _.merge(girderVuetifyConfig, vuetifyConfig));
 Vue.config.productionTip = false;
-Vue.use(Vuetify, vuetifyConfig); 
 
 ApiService.init();
 
 new Vue({
   router,
+  store,
   render: h => h(App),
-}).$mount('#app')
+}).$mount('#app');
