@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from flask import Blueprint, current_app, jsonify, request, Response, send_file
+from flask import Blueprint, current_app, jsonify, request, send_file
 from sklearn import preprocessing
 
 from metabulo.models import CSVFile, CSVFileSchema, db
@@ -41,6 +41,7 @@ def upload_csv_file():
 
 @csv_bp.route('/csv', methods=['POST'])
 def create_csv_file():
+    csv_file = None
     try:
         csv_file = csv_file_schema.load(request.json)
         db.session.add(csv_file)
@@ -48,7 +49,7 @@ def create_csv_file():
 
         return jsonify(csv_file_schema.dump(csv_file)), 201
     except Exception:
-        if csv_file.uri.is_file():
+        if csv_file and csv_file.uri.is_file():
             csv_file.uri.unlink()
         db.session.rollback()
         raise
@@ -108,15 +109,11 @@ def fill_missing_values(csv_id, column):
 def echo_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
     table = csv_file.table
-    api_root = current_app.config['OPENCPU_API_ROOT']
-    echo = process_table(api_root + '/metabulo/R/echo', table)
-    return Response(echo.to_csv(), mimetype='text/csv')
+    return process_table('/metabulo/R/echo', table)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/demo', methods=['GET'])
 def processing_demo(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
     table = csv_file.table
-    api_root = current_app.config['OPENCPU_API_ROOT']
-    echo = process_table(api_root + '/metabulo/R/demo', table)
-    return Response(echo.to_csv(), mimetype='text/csv')
+    return process_table('/metabulo/R/demo', table)
