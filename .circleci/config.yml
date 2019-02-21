@@ -1,11 +1,34 @@
 version: 2
 jobs:
-  build:
+  test_python:
     docker:
       - image: themattrix/tox
     steps:
       - checkout
-      - run: tox
+      - run: pip install -U 'tox>=3.7'
+      - run: tox -p auto -o
+
+  release:
+    docker:
+      - image: node:10
+    steps:
+      - checkout
+      - run:
+          working_directory: ./web
+          name: Install node dependencies
+          command: yarn
+      - run:
+          working_directory: ./web
+          name: Build web client
+          command: |
+            yarn build
+            cp -R dist ../static/
+      - run:
+          name: Build python package
+          command: |
+            curl https://bootstrap.pypa.io/get-pip.py | python
+            pip install tox
+            tox -e release
 
   publish:
     docker:
@@ -26,10 +49,16 @@ workflows:
   version: 2
   test_and_publish:
     jobs:
-      - build
+      - test_python
+      - release:
+          requires:
+            - test_python
+          filters:
+            branches:
+              only: master
       - publish:
           requires:
-            - build
+            - test_python
           filters:
             branches:
               only: master
