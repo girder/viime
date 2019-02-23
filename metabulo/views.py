@@ -1,13 +1,12 @@
 from io import BytesIO
 
 from flask import Blueprint, current_app, jsonify, request, send_file
-from sklearn import preprocessing
 
-from metabulo.models import CSVColumn, CSVFile, CSVFileSchema, db
-from metabulo.opencpu import process_table
+from metabulo.models import CSVFile, CSVFileSchema, db, TableTransform, TableTransformSchema
 
 
 csv_file_schema = CSVFileSchema()
+table_transform_schema = TableTransformSchema()
 
 csv_bp = Blueprint('csv', __name__)
 
@@ -71,7 +70,6 @@ def download_csv_file(csv_id):
 @csv_bp.route('/csv/<uuid:csv_id>', methods=['DELETE'])
 def delete_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
-    CSVColumn.query.filter_by(file_id=csv_id).delete()
     db.session.delete(csv_file)
     db.session.commit()
 
@@ -83,43 +81,18 @@ def delete_csv_file(csv_id):
     return '', 204
 
 
-@csv_bp.route('/csv/<uuid:csv_id>/normalize/<column>', methods=['PUT'])
-def normalize_row(csv_id, column):
+@csv_bp.route('/csv/<uuid:csv_id>/transform', methods=['POST'])
+def create_transform(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
-    table = csv_file.table
-    column_data = table[[column]].values.astype(float)
-    min_max_scalar = preprocessing.MinMaxScaler()
-    table[[column]] = min_max_scalar.fit_transform(column_data)
-
-    return csv_file.save_table()
-
-# @csv_bp.route('/csv/<uuid:csv_id>/normalize', methods=["PUT"])
-# def normalize_rows(csv_id):
-#     csv_file = CSVFile.query.get_or_404(csv_id)
-#     table = csv_file.table
+    transform_ = csv_file.generate_transform(request.json or {})
+    db.session.add(transform_)
+    db.session.commit()
+    return jsonify(table_transform_schema.dump(transform_)), 201
 
 
-@csv_bp.route('/csv/<uuid:csv_id>/fill/<column>', methods=['PUT'])
-def fill_missing_values(csv_id, column):
-    value = request.json.get('value')
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    table = csv_file.table
-    if value is None:
-        value = table[column].mean()
-    table[column] = table[column].fillna(value)
-
-    return csv_file.save_table()
-
-
-@csv_bp.route('/csv/<uuid:csv_id>/echo', methods=['GET'])
-def echo_csv_file(csv_id):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    table = csv_file.table
-    return process_table('/metabulo/R/echo', table)
-
-
-@csv_bp.route('/csv/<uuid:csv_id>/demo', methods=['GET'])
-def processing_demo(csv_id):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    table = csv_file.table
-    return process_table('/metabulo/R/demo', table)
+@csv_bp.route('/csv/<uuid:csv_id>/transform/<uuid:transform_id>', methods=['DELETE'])
+def delete_transform(csv_id, transform_id):
+    transform_ = TableTransform.query.get_or_404(transform_id)
+    db.session.delete(transform_)
+    db.session.commit()
+    return '', 204

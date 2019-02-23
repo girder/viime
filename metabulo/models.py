@@ -5,13 +5,16 @@ from uuid import uuid4
 
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
-from marshmallow import fields, post_dump, post_load, pre_load, Schema
+from marshmallow import fields, post_dump, post_load, Schema
 from marshmallow.exceptions import ValidationError
 import pandas
 from sqlalchemy import DDL, event, MetaData
 from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy_utils.types.json import JSONType
 from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
+
+from metabulo import transform
 
 
 # This is to avoid having to manually name all constraints
@@ -29,7 +32,7 @@ db = SQLAlchemy(metadata=metadata)
 class BaseSchema(Schema):
     __model__ = None
 
-    id = fields.UUID()
+    id = fields.UUID(missing=uuid4)
     created = fields.DateTime(dump_only=True)
 
     @post_load
@@ -41,20 +44,46 @@ class CSVFile(db.Model):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     name = db.Column(db.String, nullable=False)
-    meta = db.Column(db.String, nullable=True)
+    meta = db.Column(JSONType, nullable=False)
 
     @property
-    def columns(self):
-        return list(CSVColumn.query.filter_by(file_id=self.id))
+    def raw_table(self):
+        return pandas.read_csv(self.uri, index_col=0)
 
     @property
     def table(self):
-        return pandas.read_csv(self.uri, index_col=0)
+        return self.apply_transforms(self.raw_table)
+
+    @property
+    def transforms(self):
+        query = TableTransform.query.filter_by(csv_file_id=self.id)
+        return query.order_by(TableTransform.priority)
 
     @property
     def uri(self):
         id = str(self.id)
         return Path(current_app.config['UPLOAD_FOLDER']) / id[:3] / id
+
+    def apply_transforms(self, last=None):
+        table = self.raw_table
+        for t in self.transforms:
+            table = t.apply(table)
+            if str(t.id) == str(last):
+                break
+        return table
+
+    def generate_transform(self, data):
+        args = data.copy()
+        transform_type = args.pop('transform_type', None)
+        priority = args.pop('priority', None)
+        data = {
+            'csv_file_id': str(self.id),
+            'transform_type': transform_type,
+            'args': args,
+            'priority': priority
+        }
+        schema = TableTransformSchema()
+        return schema.load(data)
 
     def save_table(self):
         return self._save_csv_file_data(self.uri, self.table.to_csv())
@@ -88,29 +117,25 @@ def _validate_name(name):
 class CSVFileSchema(BaseSchema):
     __model__ = CSVFile.create_csv_file
 
-    id = fields.Str(missing=uuid4)
     name = fields.Str(required=True, validate=_validate_name)
     table = fields.Raw(required=True, validate=_validate_table_data)
-    meta = fields.Str()
+    meta = fields.Dict(missing=dict)
 
-    columns = fields.List(
-        fields.Nested('CSVColumnSchema', exclude=['file_id'])
-    )
+    transforms = fields.List(
+        fields.Nested('TableTransformSchema', exclude=['csv_file']), dump_only=True)
 
-    @post_load
+    @post_dump
     def generate_columns(self, data):
-        table = pandas.read_csv(BytesIO(data['table'].encode()))
         columns = []
-        for name, type in table.dtypes.items():
-            columns.append(CSVColumn(
-                file_id=data['id'],
-                type_id=str(type),
-                name=name
-            ))
-        db.session.add_all(columns)
+        for name, type in data['table'].dtypes.items():
+            columns.append({
+                'name': name,
+                'type': str(type)
+            })
+        data['columns'] = columns
         return data
 
-    @pre_load
+    @post_load
     def fix_file_name(self, data):
         data['name'] = secure_filename(data['name'])
         return data
@@ -121,36 +146,50 @@ class CSVFileSchema(BaseSchema):
         return data
 
 
-class CSVColumnType(db.Model):
-    type_ = db.Column(db.String, primary_key=True)
-    numeric = db.Column(db.Boolean(name='ck_numeric_flag'), nullable=False)
+class TransformType(db.Model):
+    name = db.Column(db.String, primary_key=True)
 
 
 event.listen(
-    CSVColumnType.__table__, 'after_create',
-    DDL("""
-INSERT INTO csv_column_type (type_, numeric) VALUES
-('object', 0), ('float64', 1)
-    """)
-)
+    TransformType.__table__, 'after_create',
+    DDL(f"""
+INSERT INTO transform_type (name) VALUES
+{','.join(["('" + t + "')" for t in transform.registry.keys()])}
+"""))
 
 
-class CSVColumn(db.Model):
-    __table_args__ = (UniqueConstraint('file_id', 'name'),)
+class TableTransform(db.Model):
+    __table_args__ = (UniqueConstraint('id', 'priority'),)
 
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
-    file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), nullable=False)
-    type_id = db.Column(db.String, db.ForeignKey('csv_column_type.type_'), nullable=False)
-    name = db.Column(db.String, nullable=False)
+    csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), nullable=False)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    transform_type = db.Column(
+        db.String, db.ForeignKey('transform_type.name'), nullable=False)
+    args = db.Column(JSONType, nullable=False)
+    priority = db.Column(db.Float, nullable=False)
 
-    csv_file = db.relationship(CSVFile, backref=db.backref('columns', lazy=True))
-    type_ = db.relationship(CSVColumnType)
+    csv_file = db.relationship(CSVFile)
+
+    def apply(self, table):
+        kwargs = dict(
+            table=table,
+            transform_type=self.transform_type,
+            **self.args
+        )
+        return transform.dispatch(**kwargs)
 
 
-class CSVColumnSchema(BaseSchema):
-    __model__ = CSVColumn
+class TableTransformSchema(Schema):
+    __model__ = TableTransform
 
-    id = fields.Str(missing=uuid4)
-    file_id = fields.Str(required=True)
-    type_id = fields.Str(required=True)
-    name = fields.Str(required=True)
+    csv_file_id = fields.UUID(required=True, load_only=True)
+    transform_type = fields.Str(required=True)
+    args = fields.Dict(missing=dict)
+    priority = fields.Float(required=True)
+
+    csv_file = fields.Nested(CSVFileSchema, exclude=['transforms'], dump_only=True)
+
+    @post_load
+    def check_apply_transform(self, data):
+        return TableTransform(**data)
