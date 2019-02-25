@@ -1,1 +1,3 @@
 *.simg
+.vagrant
+*.retry
