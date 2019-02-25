@@ -93,6 +93,11 @@ def normalize_row(csv_id, column):
 
     return csv_file.save_table()
 
+# @csv_bp.route('/csv/<uuid:csv_id>/normalize', methods=["PUT"])
+# def normalize_rows(csv_id):
+#     csv_file = CSVFile.query.get_or_404(csv_id)
+#     table = csv_file.table
+
 
 @csv_bp.route('/csv/<uuid:csv_id>/fill/<column>', methods=['PUT'])
 def fill_missing_values(csv_id, column):

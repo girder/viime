@@ -8,6 +8,10 @@ const ApiService = {
     Vue.axios.defaults.baseURL = '/api/v1';
   },
 
+  buildUrl(path) {
+    return [Vue.axios.defaults.baseURL, path].join('/');
+  },
+
   get(resource, slug = "") {
     return Vue.axios.get(`${resource}/${slug}`);
   },
@@ -34,8 +38,13 @@ const ApiService = {
 export default ApiService;
 
 export const CSVService = {
+  
   get(slug) {
     return ApiService.get('csv', slug);
+  },
+
+  getChartUrl(slug, type) {
+    return ApiService.buildUrl(`csv/${slug}/chart/${type}`);
   },
 
   post(data) {
@@ -50,7 +59,7 @@ export const CSVService = {
     return ApiService.download('csv', slug);
   },
 
-  normalize(slug, column) {
-    return ApiService.put('csv', `${slug}/normalize/${column}`);
+  normalize(slug, method) {
+    return ApiService.put('csv', `${slug}/normalize/${method}`);
   },
 };
