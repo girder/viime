@@ -70,3 +70,19 @@
   command:
     R -e 'install.packages("devtools"); library(devtools); devtools::install_github("xia-lab/MetaboAnalystR")'
   become: true
+
+- name: Install roxygen package
+  command:
+    R -e 'library(devtools); devtools::install_github("klutometis/roxygen")'
+  become: true
+
+- name: Copy metabulo R package to remote machine
+  copy:
+    src: ../../metabulo
+    dest: "{{ ansible_env.HOME }}"
+
+- name: Install metabulo R package
+  command:
+    R -e 'library(devtools); library(roxygen2); setwd("{{ ansible_env.HOME }}/metabulo"); document(); setwd("{{ ansible_env.HOME }}"); install("metabulo")'
+  become: true
+
