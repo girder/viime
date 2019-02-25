@@ -1,20 +1,18 @@
 <template lang="pug">
 .uploader-wrapper
-  div
-    v-layout(row, wrap, justify-space-between)
-      .grow
-        v-card-title(primary-title)
-          div
-            h3.headline Upload your data (csv or txt)
-            p Choose a file from your computer
-      .grow.ma-3.filezone
-        dropzone(:files="files", :multiple="true", :message="message", @change="onFileChange")
-        v-card(v-if="files.length > 0")
-          file-list(:files="files", @remove="files.splice($event, 1)")
-  div
-    v-card-actions
-      v-spacer
-      v-btn(depressed, color="primary", @click="upload") Next Step
+  v-layout(row, wrap, justify-space-between)
+    .grow
+      v-card-title(primary-title)
+        div
+          h3.headline Upload your data (csv or txt)
+          p Choose a file from your computer
+    .grow.ma-3.filezone
+      dropzone(:files="files", :multiple="true", :message="message", @change="onFileChange")
+      v-card(v-if="files.length > 0")
+        file-list(:files="files", @remove="files.splice($event, 1)")
+  v-card-actions
+    v-spacer
+    v-btn(depressed, color="primary", @click="upload") Next Step
 </template>
 
 <script>
@@ -42,16 +40,18 @@ export default {
       }));
     },
     async upload() {
-      this.files.forEach(async file => {
+      const promises = this.files.map(async file => {
         file.status = 'uploading';
         try {
           await this.$store.dispatch(UPLOAD_CSV, { file: file.file });
           file.status = 'done';
         } catch (err) {
-          console.log(err);
           file.status = 'error';
+          throw err;
         }
       });
+      await Promise.all(promises);
+      this.$router.push({ path: 'transform'});
     },
   },
 };
