@@ -9,3 +9,12 @@
 
     - name: Include opencpu tasks
       include_tasks: tasks/opencpu.yml
+
+  post_tasks:
+    - name: Enable opencpu
+      systemd:
+        name: "rstudio-server.service"
+        daemon_reload: true
+        enabled: true
+        state: "started"
+      become: true
