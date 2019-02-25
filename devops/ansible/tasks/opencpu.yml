@@ -1,0 +1,13 @@
+---
+- name: Add opencpu ppa
+  apt_repository:
+    repo: ppa:opencpu/opencpu-2.1
+  become: true
+
+- name: Install opencpu and rstudio
+  apt:
+    name:
+      - opencpu-server
+      - rstudio-server
+    update_cache: true
+  become: true
