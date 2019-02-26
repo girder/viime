@@ -1,9 +1,9 @@
 import io
 
-import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+import numpy as np
+
 
 def make_box_plot(frame):
     t = frame.to_records()

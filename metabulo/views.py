@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from flask import Blueprint, current_app, jsonify, request, send_file, Response
+from flask import Blueprint, current_app, jsonify, request, Response, send_file
 
 from metabulo.models import CSVFile, CSVFileSchema, db, TableTransform, TableTransformSchema
 from metabulo.plot import make_box_plot
@@ -103,4 +103,4 @@ def get_box_plot(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
     table = csv_file.table
     fig = make_box_plot(table)
-    return Response(fig, mimetype="image/png")
+    return Response(fig, mimetype='image/png')
