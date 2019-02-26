@@ -7,9 +7,9 @@
           h3.headline Upload your data (csv or txt)
           p Choose a file from your computer
     .grow.ma-3.filezone
-      dropzone(:files="files", :multiple="true", :message="message", @change="onFileChange")
+      dropzone(v-if="files.length === 0", :multiple="true", :message="message", @change="onFileChange")
       v-card(v-if="files.length > 0")
-        file-list(:files="files", @remove="files.splice($event, 1)")
+        file-list(v-model="files")
   v-card-actions
     v-spacer
     v-btn(depressed, color="primary", @click="upload") Next Step
@@ -32,8 +32,8 @@ export default {
     Dropzone,
   },
   methods: {
-    onFileChange({ target }) {
-      this.files = [...target.files].map(file => ({
+    onFileChange(targetFiles) {
+      this.files = [...targetFiles].map(file => ({
         file,
         status: 'pending',
         progress: {},

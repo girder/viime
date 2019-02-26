@@ -31,6 +31,7 @@ setup(
         'flask',
         'flask-sqlalchemy',
         'marshmallow>=3.0.0rc4',
+        'matplotlib',
         'pandas',
         'python-dotenv',
         'requests',
