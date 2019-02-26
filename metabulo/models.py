@@ -180,7 +180,7 @@ class TableTransform(db.Model):
         return transform.dispatch(**kwargs)
 
 
-class TableTransformSchema(Schema):
+class TableTransformSchema(BaseSchema):
     __model__ = TableTransform
 
     csv_file_id = fields.UUID(required=True, load_only=True)
@@ -189,7 +189,3 @@ class TableTransformSchema(Schema):
     priority = fields.Float(required=True)
 
     csv_file = fields.Nested(CSVFileSchema, exclude=['transforms'], dump_only=True)
-
-    @post_load
-    def check_apply_transform(self, data):
-        return TableTransform(**data)
