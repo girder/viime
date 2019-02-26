@@ -2,6 +2,7 @@ from io import BytesIO
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 
+from metabulo import opencpu
 from metabulo.models import CSVFile, CSVFileSchema, db, TableTransform, TableTransformSchema
 from metabulo.plot import make_box_plot
 
@@ -104,3 +105,9 @@ def get_box_plot(csv_id):
     table = csv_file.table
     fig = make_box_plot(table)
     return Response(fig, mimetype='image/png')
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/pca-overview', methods=['GET'])
+def get_pca_overview(csv_id):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    return opencpu.generate_image('/metabulo/R/pca_overview_plot', csv_file.table)
