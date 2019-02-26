@@ -17,11 +17,15 @@ const ApiService = {
   },
 
   post(resource, data) {
-    return Vue.axios.post(`${resource}`, data);
+    return Vue.axios.post(resource, data);
   },
   
   put(resource, data) {
-    return Vue.axios.put(`${resource}`, data);
+    return Vue.axios.put(resource, data);
+  },
+
+  delete(resource) {
+    return Vue.axios.delete(resource);
   },
 
   upload(resource, data) {
@@ -44,7 +48,7 @@ export const CSVService = {
   },
 
   getChartUrl(slug, type) {
-    return ApiService.buildUrl(`csv/${slug}/chart/${type}`);
+    return ApiService.buildUrl(`csv/${slug}/plot/${type}`);
   },
 
   post(data) {
@@ -59,7 +63,11 @@ export const CSVService = {
     return ApiService.download('csv', slug);
   },
 
-  normalize(slug, method) {
-    return ApiService.put('csv', `${slug}/normalize/${method}`);
+  addTransform(slug, { transform_type, args }) {
+    return ApiService.post(`csv/${slug}/transform`, { transform_type, ...args });
   },
+
+  dropTransform(csvSlug, transformSlug) {
+    return ApiService.delete(`csv/${csvSlug}/transform/${transformSlug}`);
+  }
 };
