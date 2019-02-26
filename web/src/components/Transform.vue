@@ -23,17 +23,6 @@ import { mapState } from 'vuex';
 import { CSVService } from '../common/api.service';
 import { NORMALIZE_TABLE } from '../store/actions.type';
 
-
-// registry = {
-//     'set_value': (set_value, SetValueSchema()),
-//     'drop_row': (drop_row, DropRowSchema()),
-//     'drop_column': (drop_column, DropColumnSchema()),
-//     'normalize': (normalize, NormalizeSchema()),
-//     'fill_missing_values_by_constant': (
-//         fill_missing_values_by_constant, FillMissingValuesByConstantSchema()),
-//     'fill_missing_values_by_mean': (fill_missing_values_by_mean, BaseSchema()),
-// }
-
 const normalize_methods = [
   { label: 'None', value: null },
   { label: 'Min Max', value: 'normalize', priority: 10 },
@@ -48,7 +37,6 @@ export default {
   },
   watch: {
     normalize_current(newval) {
-      console.log(newval);
       const method = this.methodFromValue(newval);      
       this.$store.dispatch(NORMALIZE_TABLE, { 
         transform_type: newval,

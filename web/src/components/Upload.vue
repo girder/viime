@@ -38,7 +38,6 @@ export default {
         status: 'pending',
         progress: {},
       }));
-      console.log(this.files);
     },
     async upload() {
       const promises = this.files.map(async file => {
