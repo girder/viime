@@ -33,8 +33,8 @@ const mutations = {
   [SET_TRANSFORM_DATA](state, { data }) {
     state.transformdata = data;
   },
-  [SET_NORMALIZATION](state, { transform_type, args }) {
-    state.normalizations.push({ transform_type, args });
+  [SET_NORMALIZATION](state, { data }) {
+    state.normalizations.push(data);
   },
   [CLEAR_NORMALIZATION](state){
     state.normalizations = [];
@@ -52,10 +52,13 @@ const actions = {
   async [NORMALIZE_TABLE]({state, commit}, { transform_type, args }) {
     const slug = state.sourcedata.id;
     if (transform_type !== null) {
-      await CSVService.addTransform(slug, { transform_type, args });
-      commit(SET_NORMALIZATION, { transform_type, args });
+      const { data } = await CSVService.addTransform(slug, { transform_type, args });
+      commit(SET_NORMALIZATION, { data });
     } else {
-      await CSVService.dropTransform(slug, )
+      const promises = state.normalizations.map((n) => {
+        return CSVService.dropTransform(slug, n.id);
+      })
+      await Promise.all(promises);
       commit(CLEAR_NORMALIZATION);
     }
     
