@@ -1,0 +1,17 @@
+- name: Check if path for sdist is specified
+  fail:
+    msg: "Should pass metabulo_sdist_path variable as an extra arg"
+  when: metabulo_sdist_path is not defined
+
+- name: Copy metabulo sdist to the remote machine
+  copy:
+    src: "{{ metabulo_sdist_path }}"
+    dest: "/tmp/metabulo-sdist.tar.gz"
+
+- name: Install metabulo python package
+  pip:
+    name: "/tmp/metabulo-sdist.tar.gz"
+    state: "latest"
+    extra_args: "--no-cache-dir"
+    virtualenv: "{{ venv }}"
+    virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
