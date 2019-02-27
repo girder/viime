@@ -24,8 +24,7 @@ def test_post_transform(client, csv_file):
 
 def test_delete_transform(client, csv_file):
     t1 = csv_file.generate_transform({
-        'transform_type': 'drop_row',
-        'row': 'row1',
+        'transform_type': 'normalize',
         'priority': 1
     })
     db.session.add(t1)
