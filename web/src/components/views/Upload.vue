@@ -1,24 +1,7 @@
-<template lang="pug">
-.uploader-wrapper
-  v-layout(row, wrap, justify-space-between)
-    .grow
-      v-card-title(primary-title)
-        div
-          h3.headline Upload your data (csv or txt)
-          p Choose a file from your computer
-    .grow.ma-3.filezone
-      dropzone(v-if="files.length === 0", :multiple="true", :message="message", @change="onFileChange")
-      v-card(v-if="files.length > 0")
-        file-list(v-model="files")
-  v-card-actions
-    v-spacer
-    v-btn(depressed, color="primary", @click="upload") Next Step
-</template>
-
 <script>
 import Dropzone from '@girder/components/src/components/Presentation/Dropzone.vue';
 import FileList from '@girder/components/src/components/Presentation/FileUploadList.vue';
-import { UPLOAD_CSV } from '../store/actions.type';
+import { UPLOAD_CSV } from '../../store/actions.type';
 
 export default {
   data() {
@@ -51,11 +34,29 @@ export default {
         }
       });
       await Promise.all(promises);
-      this.$router.push({ path: 'transform'});
+      const id = Object.keys(this.$store.state.datasets)[0];
+      this.$router.push({ path: `cleanup/${id}` });
     },
   },
 };
 </script>
+
+<template lang="pug">
+.uploader-wrapper
+  v-layout(row, wrap, justify-space-between)
+    .grow
+      v-card-title(primary-title)
+        div
+          h3.headline Upload your data (csv or txt)
+          p Choose a file from your computer
+    .grow.ma-3.filezone
+      dropzone(v-if="files.length === 0", :multiple="true", :message="message", @change="onFileChange")
+      v-card(v-if="files.length > 0")
+        file-list(v-model="files")
+  v-card-actions
+    v-spacer
+    v-btn(depressed, color="primary", @click="upload") Next Step
+</template>
 
 <style scoped>
 .filezone {
