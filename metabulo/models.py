@@ -5,10 +5,10 @@ from uuid import uuid4
 
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
-from marshmallow import fields, post_dump, post_load, Schema
+from marshmallow import fields, post_dump, post_load, Schema, validate
 from marshmallow.exceptions import ValidationError
 import pandas
-from sqlalchemy import DDL, event, MetaData
+from sqlalchemy import MetaData
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy_utils.types.json import JSONType
 from sqlalchemy_utils.types.uuid import UUIDType
@@ -146,26 +146,13 @@ class CSVFileSchema(BaseSchema):
         return data
 
 
-class TransformType(db.Model):
-    name = db.Column(db.String, primary_key=True)
-
-
-event.listen(
-    TransformType.__table__, 'after_create',
-    DDL(f"""
-INSERT INTO transform_type (name) VALUES
-{','.join(["('" + t + "')" for t in transform.registry.keys()])}
-"""))
-
-
 class TableTransform(db.Model):
     __table_args__ = (UniqueConstraint('id', 'priority'),)
 
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), nullable=False)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    transform_type = db.Column(
-        db.String, db.ForeignKey('transform_type.name'), nullable=False)
+    transform_type = db.Column(db.String, nullable=False)
     args = db.Column(JSONType, nullable=False)
     priority = db.Column(db.Float, nullable=False)
 
@@ -184,7 +171,7 @@ class TableTransformSchema(BaseSchema):
     __model__ = TableTransform
 
     csv_file_id = fields.UUID(required=True, load_only=True)
-    transform_type = fields.Str(required=True)
+    transform_type = fields.Str(required=True, validate=validate.OneOf(transform.registry.keys()))
     args = fields.Dict(missing=dict)
     priority = fields.Float(required=True)
 
