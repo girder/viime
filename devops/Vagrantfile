@@ -5,7 +5,8 @@ Vagrant.configure("2") do |config|
 
   config.vm.box = "ubuntu/bionic64"
 
-  config.vm.network "forwarded_port", guest: 8004, host: 8081
+  config.vm.network "forwarded_port", guest: 8000, host: 8081
+  config.vm.network "forwarded_port", guest: 80, host:8082
 
   config.vm.provider :virtualbox do |vb|
     vb.customize ["modifyvm", :id, "--memory", 4096]
@@ -15,7 +16,10 @@ Vagrant.configure("2") do |config|
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "ansible/site.yml"
     ansible.extra_vars = {
-      metabulo_sdist_path: '../../dist/metabulo-0.1.0.tar.gz'
+      metabulo_sdist_path: '../../dist/metabulo-0.1.0.tar.gz',
+      flask_secret: 'thisisasecretbetweenyouandme',
+      aws_access_key_id: 'aws_access_key_id',
+      aws_secret_access_key: 'aws_secret_access_key'
     }
   end
 
