@@ -1,0 +1,22 @@
+# {{ ansible_managed }}
+[Unit]
+Description=gunicorn daemon
+After=network.target
+
+[Service]
+Environment=DOTENV_PATH=/home/gunicorn/.env
+PIDFile=/run/gunicorn/pid
+User=gunicorn
+Group=gunicorn
+RuntimeDirectory=gunicorn
+ExecStart={{ venv }}/bin/gunicorn --name metabulo \
+                                  --pid /run/gunicorn/pid \
+                                  --workers 4 \
+                                  --statsd-host 127.0.0.1:8125 \
+                                  --bind 127.0.0.1:8000 metabulo.wsgi:app
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
