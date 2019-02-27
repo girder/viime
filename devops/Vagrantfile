@@ -14,6 +14,7 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provision "ansible" do |ansible|
+    ansible.galaxy_role_file = "ansible/requirements.yml"
     ansible.playbook = "ansible/site.yml"
     ansible.extra_vars = {
       metabulo_sdist_path: '../../dist/metabulo-0.1.0.tar.gz',

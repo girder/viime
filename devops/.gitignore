@@ -1,3 +1,4 @@
 *.simg
 .vagrant
 *.retry
+ansible/roles
