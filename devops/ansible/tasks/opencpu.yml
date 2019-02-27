@@ -11,3 +11,11 @@
       - rstudio-server
     update_cache: true
   become: true
+
+- name: Enable opencpu service
+  systemd:
+    name: "rstudio-server.service"
+    daemon_reload: true
+    enabled: true
+    state: "started"
+  become: true

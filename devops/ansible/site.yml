@@ -2,7 +2,10 @@
 - hosts: all
   vars:
     ansible_python_interpreter: /usr/bin/python3
-    venv: "{{ ansible_env.HOME }}/metabulo_venv"
+    venv: /home/gunicorn/venvs/metabulo
+    sqlalchemy_database_uri: "sqlite:///${ansible_env.HOME}/db.sqlite3"
+    upload_folder: "{{ ansible_env.HOME }}/files"
+    opencpu_api_root: "http://localhost:8004/ocpu/library"
   pre_tasks:
     - name: Install core system dependencies
       apt:
@@ -21,11 +24,10 @@
     - name: Include metabulo tasks
       include_tasks: tasks/metabulo.yml
 
-  post_tasks:
-    - name: Enable opencpu
+  handlers:
+    - name: Restart gunicorn
       systemd:
-        name: "rstudio-server.service"
+        name: "gunicorn.service"
         daemon_reload: true
-        enabled: true
-        state: "started"
+        state: "reloaded"
       become: true
