@@ -24,16 +24,6 @@ def test_set_value(table):
     assert t.at['row1', 'col2'] == 100
 
 
-def test_drop_row(table):
-    t = transform.drop_row(table, 'row1')
-    assert t.shape == (1, 2)
-
-
-def test_drop_column(table):
-    t = transform.drop_column(table, 'col1')
-    assert t.shape == (2, 1)
-
-
 def test_normalize(table):
     correct = table.copy()
     correct[:] = [[0.0, 1.0], [1.0, 0.0]]
@@ -80,18 +70,23 @@ def test_dispatch_invalid_argument_error(table):
 
 
 def test_generate_transform(csv_file):
+    table = csv_file.table
+    table.at['row1', 'col2'] = nan
+    csv_file.save_table(table)
+
     t1 = csv_file.generate_transform({
-        'transform_type': 'drop_row',
-        'row': 'row1',
+        'transform_type': 'fill_missing_values_by_constant',
+        'value': -3,
         'priority': 1
     })
     db.session.add(t1)
+
     t2 = csv_file.generate_transform({
-        'transform_type': 'drop_column',
-        'column': 'col2',
+        'transform_type': 'normalize',
         'priority': 2
     })
     db.session.add(t2)
 
-    assert csv_file.table.shape == (1, 1)
-    assert csv_file.table.iat[0, 0] == 1.5
+    correct = table.copy()
+    correct[:] = [[0.0, 0.0], [1.0, 1.0]]
+    assert_frame_equal(csv_file.table, correct)

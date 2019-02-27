@@ -65,24 +65,6 @@ class SetValueSchema(BaseSchema, RowMixin, ColumnMixin):
     value = fields.Float(required=True)
 
 
-def drop_row(table, row):
-    table.drop(row, inplace=True)
-    return table
-
-
-class DropRowSchema(BaseSchema, RowMixin):
-    pass
-
-
-def drop_column(table, column):
-    table.drop(column, axis=1, inplace=True)
-    return table
-
-
-class DropColumnSchema(BaseSchema, ColumnMixin):
-    pass
-
-
 def normalize(table):
     for column in table:
         if str(table[column].dtype) != 'object':
@@ -113,8 +95,6 @@ def fill_missing_values_by_mean(table):
 
 registry = {
     'set_value': (set_value, SetValueSchema()),
-    'drop_row': (drop_row, DropRowSchema()),
-    'drop_column': (drop_column, DropColumnSchema()),
     'normalize': (normalize, NormalizeSchema()),
     'fill_missing_values_by_constant': (
         fill_missing_values_by_constant, FillMissingValuesByConstantSchema()),

@@ -85,8 +85,8 @@ class CSVFile(db.Model):
         schema = TableTransformSchema()
         return schema.load(data)
 
-    def save_table(self):
-        return self._save_csv_file_data(self.uri, self.table.to_csv())
+    def save_table(self, table):
+        return self._save_csv_file_data(self.uri, table.to_csv())
 
     @classmethod
     def create_csv_file(cls, id, name, table, meta=None):
