@@ -2,3 +2,4 @@
 .vagrant
 *.retry
 ansible/roles
+*.crt
