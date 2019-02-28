@@ -70,7 +70,7 @@ export default {
 </script>
 
 <template lang="pug">
-v-container.pa-0(row, wrap)
+v-container(fill-height)
   v-layout(row, wrap)
     .cardcontainer
       v-card.pa-3.ma-2
@@ -78,20 +78,23 @@ v-container.pa-0(row, wrap)
           h3.headline Normalize
         v-card-actions
           v-radio-group(:value="norm", @change="transformTable($event, 'normalization')")
-            v-radio(v-for="m in normalize_methods", :label="m.label", :value="m.value")
+            v-radio(v-for="m in normalize_methods", :label="m.label",
+                :value="m.value", :key="`norm${m.value}`")
         
         v-card-title
           h3.headline Transform
         v-card-actions
           v-radio-group(:value="trans", @change="transformTable($event, 'transformation')")
-            v-radio(v-for="m in transform_methods", :label="m.label", :value="m.value")
+            v-radio(v-for="m in transform_methods", :label="m.label",
+                :value="m.value", :key="`trans${m.value}`")
         
         v-card-title
           h3.headline Scale
         v-card-actions
           v-radio-group(:value="scaling", @change="transformTable($event, 'scaling')")
-            v-radio(v-for="m in scaling_methods", :label="m.label", :value="m.value")
-    .cardcontainer.grow
+            v-radio(v-for="m in scaling_methods", :label="m.label",
+                :value="m.value", :key="`scale${m.value}`")
+    v-layout(row).grow
       v-card.ma-2
-        img(:src="`${boxUrl}?cachebust=${norm}${trans}${scaling}`", style="width: 100%;")
+        img(:src="`${boxUrl}?cachebust=${norm}${trans}${scaling}`" style="width: 100%;")
 </template>

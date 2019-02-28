@@ -1,9 +1,9 @@
 <script>
 const menuOptions = [
-  'Primary',
-  'Secondary',
-  'Disable',
-  'Enable',
+  'primary-key',
+  'secondary-key',
+  'disable',
+  'enable',
 ];
 
 export default {
@@ -16,7 +16,7 @@ export default {
       /**
        * width,
        * height,
-       * rowmeta, // samples
+       * rows, // samples
        * colmeta, // measurements
        */
       type: Object,
@@ -25,24 +25,17 @@ export default {
   },
   data() {
     return {
-      popover: false,
-      popover_x: 0,
-      popover_y: 0,
       menuOptions,
     };
   },
   methods: {
-    showPopover(event, rowcol, idx) {
-      console.log(event);
-      setTimeout(() => {
-        this.popover_x = event.pageX + 10;
-        this.popover_y = event.pageY + 10;
-        this.popover = true;
-      }, this.popover ? 50 : 0);
-      if (this.popover) this.popover = false;
-    },
-    selectOption(event, option) {
-      this.popover = false;
+    selectOption(value, idx, axis) {
+      const newaxis = [...this.metadata[axis]];
+      newaxis[idx] = [ value ];
+      this.$emit('update:metadata', {
+        ...this.metadata,
+        [axis]: newaxis,
+      });
     }
   },
 };
@@ -51,28 +44,33 @@ export default {
 <template lang="pug">
 .cleanup-wrapper
   table.cleanup-table
+    
     thead
       tr
-        th <!--empty-->
+        th <!-- empty -->
         th.control(v-for="idx in metadata.width") 
-          select
+          select.pa-1(@input="selectOption($event.target.value, idx - 1, 'cols')")
             option {{ idx }}
-            option(v-for="option in menuOptions" :value="option") {{ option }} 
-          //- span {{ idx }}
-          //- v-icon(@click="showPopover($event, 'col', idx)") {{ $vuetify.icons.menuDown }}
+            option(
+                v-for="option in menuOptions",
+                :value="option",
+                :key="`col${idx}${option}`") {{ option }} 
+
     tbody
-      tr(v-for="(row, idx) in rows")
+      tr(v-for="(row, idx) in rows",
+          :key="`${idx}${row[0]}`",
+          :class="metadata.rows[idx]",)
         td.control
-          select
-            option {{ idx }}
-            option(v-for="option in menuOptions" :value="option") {{ option }} 
-          //- span.px-2 {{ idx + 1 }}
-          //- v-icon(@click="showPopover($event, 'row', idx)") {{ $vuetify.icons.menuDown }}
-        td.px-1(v-for="col in row") {{ col }}
-  v-menu(:value="popover", :position-x="popover_x", :position-y="popover_y")
-    v-list
-      v-list-tile(v-for="option in menuOptions" @click="selectOption($event, option)")
-        v-list-tile-title {{ option }}
+          select.pa-1(@input="selectOption($event.target.value, idx, 'rows')")
+            option {{ idx + 1 }}
+            option(
+                v-for="option in menuOptions",
+                :value="option",
+                :key="`row${idx}${option}`") {{ option }} 
+        td.px-1.row(
+            :class="metadata.cols[idx2]"
+            v-for="(col, idx2) in row",
+            :key="`${idx}.${idx2}`") {{ col }}
 </template>
 
 <style lang="scss" scoped>
@@ -82,10 +80,13 @@ export default {
 .cleanup-table {
   overflow: auto;
   display: block;
+  margin: auto;
   height: 100%;
-  border-spacing: 4px;
+  border-collapse: collapse;
+
   th, td {
     white-space: nowrap;
+    border: 2px solid gray;
     
     &.control {
       background-color: lightgray;
@@ -93,22 +94,40 @@ export default {
       min-width: 100px;
       font-weight: 700;
       cursor: pointer;
-      span {
-        vertical-align: sub;
-        vertical-align: -webkit-baseline-middle;
-      }
-      i {
-        float: right;
-        border-left: 2px solid gray;
-        border-radius: 5px;
-      }
+
       select {
-        // border: 0;
         width: 100%;
         appearance: menulist !important;
       }
     }
   }
 }
+
+tr {
+  &.primary-key {
+    background-color: #03b803;
+  }
+  &.secondary-key {
+    background-color: lightgreen;
+  }
+
+  &.primary-key, &.secondary-key {
+    td.primary-key, td.secondary-key {
+      background-color: lightgray;
+    }
+  }
+  td {
+    &.primary-key {
+      background-color: cyan;
+    }
+    &.secondary-key {
+      background-color: lightblue;
+    }
+  }
+  &.disable td {
+    background-color: lightgray !important;
+  }
+}
+
 
 </style>

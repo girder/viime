@@ -9,17 +9,20 @@ export default {
   data() {
     return {
       dataset_id: this.$router.currentRoute.params.id,
+      metadata: {},
     };
   },
-  computed: {
-    ...mapState(['datasets']),
-    meta() {
-      return {
-        width: this.datasets[this.dataset_id].sourcerows.data[0].length,
-        height: this.datasets[this.dataset_id].sourcerows.data.length,
-      }
-    },
-  }
+  created() {
+    const width = this.datasets[this.dataset_id].sourcerows.data[0].length;
+    const height = this.datasets[this.dataset_id].sourcerows.data.length;
+    this.metadata = {
+      width,
+      height,
+      rows: Array(height).fill().map(a => []),
+      cols: Array(width).fill().map(a => []),
+    };
+  },
+  computed: mapState(['datasets']),
 };
 </script>
 
@@ -27,11 +30,11 @@ export default {
 v-layout(column, fill-height)
   cleanup-table.cleanup-table-flex.py-2(
       :rows="datasets[dataset_id].sourcerows.data",
-      :metadata="meta")
+      :metadata.sync="metadata")
   v-toolbar(dense, dark)
     v-toolbar-title Table cleanup controls
     v-spacer
-    v-toolbar-title2
+    v-toolbar-title
       v-btn(flat, :to="`/transform/${dataset_id}`")
         | Continue
         v-icon.pl-1 {{ $vuetify.icons.arrowRight }}
