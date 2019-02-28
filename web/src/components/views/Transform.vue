@@ -70,27 +70,28 @@ export default {
 </script>
 
 <template lang="pug">
-v-layout(row, wrap, justify-space-between)
-  v-card.pa-3.ma-2
-    
-    v-card-title
-      h3.headline Normalize
-    v-card-actions
-      v-radio-group(:value="norm", @change="transformTable($event, 'normalization')")
-        v-radio(v-for="m in normalize_methods", :label="m.label", :value="m.value")
-    
-    v-card-title
-      h3.headline Transform
-    v-card-actions
-      v-radio-group(:value="trans", @change="transformTable($event, 'transformation')")
-        v-radio(v-for="m in transform_methods", :label="m.label", :value="m.value")
-    
-    v-card-title
-      h3.headline Scale
-    v-card-actions
-      v-radio-group(:value="scaling", @change="transformTable($event, 'scaling')")
-        v-radio(v-for="m in scaling_methods", :label="m.label", :value="m.value")
-
-  v-card.grow.ma-2
-    img(:src="`${boxUrl}?cachebust=${norm}${trans}${scaling}`", style="width: 100%")
+v-container.pa-0(row, wrap)
+  v-layout(row, wrap)
+    .cardcontainer
+      v-card.pa-3.ma-2
+        v-card-title
+          h3.headline Normalize
+        v-card-actions
+          v-radio-group(:value="norm", @change="transformTable($event, 'normalization')")
+            v-radio(v-for="m in normalize_methods", :label="m.label", :value="m.value")
+        
+        v-card-title
+          h3.headline Transform
+        v-card-actions
+          v-radio-group(:value="trans", @change="transformTable($event, 'transformation')")
+            v-radio(v-for="m in transform_methods", :label="m.label", :value="m.value")
+        
+        v-card-title
+          h3.headline Scale
+        v-card-actions
+          v-radio-group(:value="scaling", @change="transformTable($event, 'scaling')")
+            v-radio(v-for="m in scaling_methods", :label="m.label", :value="m.value")
+    .cardcontainer.grow
+      v-card.ma-2
+        img(:src="`${boxUrl}?cachebust=${norm}${trans}${scaling}`", style="width: 100%;")
 </template>

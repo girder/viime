@@ -29,10 +29,12 @@ v-layout(column, fill-height)
       :rows="datasets[dataset_id].sourcerows.data",
       :metadata="meta")
   v-toolbar(dense, dark)
-    v-toolbar-title Table control footer
+    v-toolbar-title Table cleanup controls
     v-spacer
-    v-toolbar-footer
-      v-icon {{ $vuetify.icons.more }}
+    v-toolbar-title2
+      v-btn(flat, :to="`/transform/${dataset_id}`")
+        | Continue
+        v-icon.pl-1 {{ $vuetify.icons.arrowRight }}
 </template>
 
 <style>
