@@ -36,11 +36,11 @@ export default {
   },
   methods: {
     onFileChange(targetFiles) {
-      this.files = [...targetFiles].map(file => ({
+      this.files = this.files.concat([...targetFiles].map(file => ({
         file,
         status: 'pending',
         progress: {},
-      }));
+      })));
     },
     async upload() {
       const promises = this.files.map(async file => {
@@ -68,7 +68,8 @@ v-container(fill-height)
       div
         h3.headline Upload your data (csv or txt)
         p Choose a file from your computer
-    dropzone.filezone(v-if="files.length === 0", :multiple="true",
+    v-card
+      dropzone.filezone(v-if="files.length === 0", :multiple="true",
         :message="message", @change="onFileChange")
     v-layout(row, wrap, shrink)
         v-card.ma-2.filecard(v-for="(file, idx) in files")
@@ -83,6 +84,8 @@ v-container(fill-height)
                 :items="sampleTypes", item-text="name", item-value="value")
             v-select.pa-2(label="Type of data",
                 :items="dataTypes", item-text="name", item-value="value")
+        v-card.ma-2.filecard(v-if="files.length > 0")
+          dropzone(:multiple="true", message="Add more files", @change="onFileChange")
     v-layout.my-4(row)
       v-spacer
       v-btn.ma-0(:disabled="!files.length", large, depressed, color="primary", @click="upload")
