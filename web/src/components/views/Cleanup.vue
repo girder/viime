@@ -9,28 +9,14 @@ export default {
   data() {
     return {
       dataset_id: this.$router.currentRoute.params.id,
-      metadata: {},
     };
   },
-  created() {
-    const width = this.datasets[this.dataset_id].sourcerows.data[0].length;
-    const height = this.datasets[this.dataset_id].sourcerows.data.length;
-    this.metadata = {
-      width,
-      height,
-      rows: Array(height).fill().map(a => []),
-      cols: Array(width).fill().map(a => []),
-    };
-  },
-  computed: mapState(['datasets']),
 };
 </script>
 
 <template lang="pug">
 v-layout(column, fill-height)
-  cleanup-table.cleanup-table-flex.py-2(
-      :rows="datasets[dataset_id].sourcerows.data",
-      :metadata.sync="metadata")
+  cleanup-table.cleanup-table-flex(:dataset-id="dataset_id")
   v-toolbar(dense, dark)
     v-toolbar-title Table cleanup controls
     v-spacer

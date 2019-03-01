@@ -9,7 +9,7 @@ v-app
     v-spacer
     v-btn(icon)
       v-icon {{ $vuetify.icons.more }}
-  v-toolbar(dense, dark, color="primary")
+  v-toolbar(flat, dense, dark, color="primary")
     v-spacer
     b 1.0 {{ $router.currentRoute.name }}
     v-spacer
@@ -24,11 +24,11 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss">
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  max-height: 100vh
+  max-height: 100vh;
 }
 </style>

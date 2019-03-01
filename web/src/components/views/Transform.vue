@@ -71,9 +71,9 @@ export default {
 
 <template lang="pug">
 v-container(fill-height)
-  v-layout(row, wrap)
-    .cardcontainer
-      v-card.pa-3.ma-2
+  v-layout(row, wrap, align-content-start)
+    .cardcontainer.grow.pa-2
+      v-card.pa-3
         v-card-title
           h3.headline Normalize
         v-card-actions
@@ -94,7 +94,7 @@ v-container(fill-height)
           v-radio-group(:value="scaling", @change="transformTable($event, 'scaling')")
             v-radio(v-for="m in scaling_methods", :label="m.label",
                 :value="m.value", :key="`scale${m.value}`")
-    v-layout(row).grow
-      v-card.ma-2
+    v-layout(column).pa-2
+      v-card
         img(:src="`${boxUrl}?cachebust=${norm}${trans}${scaling}`" style="width: 100%;")
 </template>
