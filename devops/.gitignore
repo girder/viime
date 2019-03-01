@@ -3,3 +3,4 @@
 *.retry
 ansible/roles
 *.crt
+*.key
