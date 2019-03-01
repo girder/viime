@@ -1,8 +1,9 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 
-import Upload from '../components/Upload.vue';
-import Transform from '../components/Transform.vue';
+import Cleanup from '../components/views/Cleanup.vue';
+import Upload from '../components/views/Upload.vue';
+import Transform from '../components/views/Transform.vue';
 
 Vue.use(Router);
 
@@ -13,7 +14,12 @@ export const routes = [
     component: Upload,
   },
   {
-    path: '/transform',
+    path: '/cleanup/:id',
+    name: 'Cleanup Data',
+    component: Cleanup,
+  },
+  {
+    path: '/transform/:id',
     name: 'Transform Data',
     component: Transform,
   },

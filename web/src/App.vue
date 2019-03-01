@@ -9,29 +9,26 @@ v-app
     v-spacer
     v-btn(icon)
       v-icon {{ $vuetify.icons.more }}
-  v-toolbar(dense, dark, color="primary")
+  v-toolbar(flat, dense, dark, color="primary")
     v-spacer
     b 1.0 {{ $router.currentRoute.name }}
     v-spacer
-  v-container(column)
+  v-container.pa-0.d-flex(fluid, column)
     router-view.grow
 </template>
 
 <script>
-import Upload from './components/Upload.vue';
 
 export default {
   name: 'app',
-  components: {
-    Upload,
-  }
 }
 </script>
 
-<style>
+<style lang="scss">
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  max-height: 100vh;
 }
 </style>

@@ -16,5 +16,7 @@ export default {
   },
   icons: {
     more: 'mdi-dots-horizontal',
+    menuDown: 'mdi-menu-down',
+    arrowRight: 'mdi-arrow-right-box',
   },
 };
