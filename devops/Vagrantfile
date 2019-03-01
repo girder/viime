@@ -5,8 +5,9 @@ Vagrant.configure("2") do |config|
 
   config.vm.box = "ubuntu/bionic64"
 
-  config.vm.network "forwarded_port", guest: 80, host:8082
-
+  config.vm.network "forwarded_port", guest: 80, host:8000
+  config.vm.network "forwarded_port", guest: 443, host:8001
+  
   config.vm.provider :virtualbox do |vb|
     vb.customize ["modifyvm", :id, "--memory", 4096]
     vb.customize ["modifyvm", :id, "--cpus", 2]

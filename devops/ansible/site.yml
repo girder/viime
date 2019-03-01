@@ -6,6 +6,8 @@
     sqlalchemy_database_uri: "sqlite:///${ansible_env.HOME}/db.sqlite3"
     upload_folder: "{{ ansible_env.HOME }}/files"
     opencpu_api_root: "http://localhost:8004/ocpu/library"
+    deploy_domain: "metabolomics.kitware.com"
+
   pre_tasks:
     - name: Install core system dependencies
       apt:
@@ -13,9 +15,15 @@
           - python3-dev
           - python3-venv
           - python3-pip
+          - nginx
       become: true
 
   tasks:
+    - name: Check if path for sdist is specified
+      fail:
+        msg: "Should pass metabulo_sdist_path variable as an extra arg"
+      when: metabulo_sdist_path is not defined
+
     - name: Include docker role
       include_role:
         name: geerlingguy.docker
@@ -41,6 +49,12 @@
         shell: "/usr/sbin/nologin"
       become: true
 
+    - name: Create nginx user
+      user:
+        name: "nginx"
+        shell: "/usr/sbin/nologin"
+      become: true
+
     - name: Install gunicorn
       pip:
         name: "gunicorn"
@@ -50,11 +64,6 @@
       notify: Restart gunicorn
       become: true
       become_user: gunicorn
-
-    - name: Check if path for sdist is specified
-      fail:
-        msg: "Should pass metabulo_sdist_path variable as an extra arg"
-      when: metabulo_sdist_path is not defined
 
     - name: Copy metabulo sdist to the remote machine
       copy:
@@ -96,10 +105,39 @@
         state: "started"
       become: true
 
+    - name: Enable nginx service
+      systemd:
+        name: "nginx.service"
+        daemon_reload: true
+        enabled: true
+        state: "started"
+      become: true
+
+    - name: Copy nginx configs
+      copy:
+        src: "data/nginx/"
+        dest: "/etc/nginx/"
+      notify: Restart nginx
+      become: true
+
+    - name: Remove the default nginx config
+      file:
+        state: absent
+        path: /etc/nginx/sites-enabled/default
+      notify: Restart nginx
+      become: true
+
   handlers:
     - name: Restart gunicorn
       systemd:
         name: "gunicorn.service"
+        daemon_reload: true
+        state: "reloaded"
+      become: true
+
+    - name: Restart nginx
+      systemd:
+        name: "nginx.service"
         daemon_reload: true
         state: "reloaded"
       become: true
