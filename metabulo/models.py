@@ -36,8 +36,6 @@ TABLE_ROW_TYPES = ['header', 'sample', 'other']
 class BaseSchema(Schema):
     __model__ = None
 
-    id = fields.UUID(missing=uuid4)
-
     @post_load
     def make_object(self, data):
         if self.__model__ is not None:
@@ -141,7 +139,7 @@ class CSVFile(db.Model):
         rows = [
             table_row_schema.load({
                 'csv_file_id': self.id,
-                'row_id': '',  # or null?
+                'row_name': '',  # or null?
                 'row_index': 0,
                 'row_type': 'header',
                 'row_mask': None
@@ -151,11 +149,11 @@ class CSVFile(db.Model):
         # Assume all other rows are samples.  There may be other heuristics
         # to apply here in the future.  Or maybe mask rows with too many
         # NaN's.
-        for index, row_id in enumerate(table.index):
+        for index, row_name in enumerate(table.index):
             rows.append(
                 table_row_schema.load({
                     'csv_file_id': self.id,
-                    'row_id': row_id,
+                    'row_name': row_name,
                     'row_index': index + 1,
                     'row_type': 'sample',
                     'row_mask': False
@@ -192,6 +190,7 @@ def _validate_name(name):
 
 
 class CSVFileSchema(BaseSchema):
+    id = fields.UUID(missing=uuid4)
     created = fields.DateTime(dump_only=True)
     name = fields.Str(required=True, validate=_validate_name)
     table = fields.Raw(required=True, validate=_validate_table_data)
@@ -223,13 +222,11 @@ class CSVFileSchema(BaseSchema):
 class TableColumn(db.Model):
     __table_args__ = (
         UniqueConstraint('column_header', 'csv_file_id'),
-        UniqueConstraint('column_index', 'csv_file_id')
     )
 
-    id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
-    csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), nullable=False)
+    csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
+    column_index = db.Column(db.Integer, primary_key=True)
     column_header = db.Column(db.String, nullable=False)
-    column_index = db.Column(db.Integer, nullable=False)
     column_type = db.Column(db.String, nullable=False)
     column_mask = db.Column(db.Boolean, nullable=True)
 
@@ -251,15 +248,13 @@ class TableColumnSchema(BaseSchema):
 
 class TableRow(db.Model):
     __table_args__ = (
-        UniqueConstraint('row_id', 'csv_file_id'),
-        UniqueConstraint('row_index', 'csv_file_id')
+        UniqueConstraint('row_name', 'csv_file_id'),
     )
 
-    id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     csv_file_id = db.Column(
-        UUIDType(binary=False), db.ForeignKey('csv_file.id'), nullable=False)
-    row_id = db.Column(db.String, nullable=False)
-    row_index = db.Column(db.Integer, nullable=False)
+        UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
+    row_index = db.Column(db.Integer, primary_key=True)
+    row_name = db.Column(db.String, nullable=False)
     row_type = db.Column(db.String, nullable=False)
     row_mask = db.Column(db.Boolean, nullable=True)
 
@@ -270,7 +265,7 @@ class TableRowSchema(BaseSchema):
     __model__ = TableRow
 
     csv_file_id = fields.UUID(required=True, load_only=True)
-    row_id = fields.Str(required=True, nullable=False)
+    row_name = fields.Str(required=True, nullable=False)
     row_index = fields.Int(required=True, validate=validate.Range(min=0))
     row_type = fields.Str(required=True, validate=validate.OneOf(TABLE_ROW_TYPES))
     row_mask = fields.Bool(required=True, allow_none=True)
@@ -303,6 +298,7 @@ class TableTransform(db.Model):
 class TableTransformSchema(BaseSchema):
     __model__ = TableTransform
 
+    id = fields.UUID(missing=uuid4)
     csv_file_id = fields.UUID(required=True, load_only=True)
     created = fields.DateTime(dump_only=True)
     transform_type = fields.Str(required=True, validate=validate.OneOf(transform.registry.keys()))
