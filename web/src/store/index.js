@@ -5,6 +5,14 @@ import { convertCsvToRows } from '../utils/trash';
 import { CSVService } from '../common/api.service';
 
 import {
+  defaultRowOption,
+  defaultColOption,
+  rowPrimaryKey,
+  colPrimaryKey,
+} from '../utils/constants';
+
+import {
+  CHANGE_AXIS_LABEL,
   UPLOAD_CSV,
   MUTEX_TRANSFORM_TABLE,
 } from './actions.type';
@@ -13,8 +21,10 @@ import {
   ADD_SOURCE_DATA,
   REMOVE_TRANSFORMATION,
   SET_AXIS_LABEL,
+  SET_AXIS_MASK,
   SET_TRANSFORMATION,
   SET_TRANSFORM_DATA,
+  SET_LAST_ERROR,
 } from './mutations.type';
 
 Vue.use(Vuex);
@@ -28,12 +38,10 @@ Vue.use(Vuex);
  * @property {String} normalization there can only be 1.
  */
 
-const default_axis_label = 'data'; // TODO: this should go elsewhere
-const primary_key_label = 'primary-key'; // TODO: should definitely not be here
-
 const state = {
   // map of all datasets in the session by csv UUID
   datasets: {},
+  lasterror: null,
 };
 
 const getters = {
@@ -44,6 +52,16 @@ const mutations = {
 
   [ADD_SOURCE_DATA](state, { data }) {
     const key = data.id;
+    
+    const rows = Array(data.rows.length).fill();
+    data.rows.forEach((r) => {
+      rows[r.row_index] = r;
+    });
+    const cols = Array(data.columns.length).fill();
+    data.columns.forEach((c) => {
+      cols[c.column_index] = c;
+    });
+    
     const { data: sourcerows } = convertCsvToRows(data.table);
     Vue.set(state.datasets, key, {
       // API response from 
@@ -51,19 +69,15 @@ const mutations = {
       width: sourcerows[0].length, // TODO: get from server
       height: sourcerows.length, // TODO: get from server
       // user- and server-generated lables for rows and columns
-      axislabels: { // TODO: entire obj should be set by server
-        row: {
-          labels: Array(sourcerows.length)
-            .fill()
-            .map((_, idx) => idx === 0 ? primary_key_label : default_axis_label),
-          primary_key: 0,
-        },
-        col: {
-          labels: Array(sourcerows[0].length)
-            .fill()
-            .map((_, idx) => idx === 0 ? primary_key_label : default_axis_label),
-          primary_key: 0,
-        },
+      row: {
+        labels: rows.map(r => r.row_type),
+        mask: rows.map(r => r.row_mask),
+        primary_key: 0,
+      },
+      column: {
+        labels: cols.map(c => c.column_type),
+        mask: cols.map(c => c.column_mask),
+        primary_key: 0,
       },
       // JSON serialized copy of data.table
       sourcerows,
@@ -88,17 +102,25 @@ const mutations = {
   },
 
   [SET_AXIS_LABEL](state, { key, axis, index, value, isPrimary }) {
-    Vue.set(state.datasets[key].axislabels[axis].labels, index, value);
-    const oldprimary = state.datasets[key].axislabels[axis].primary_key;
+    Vue.set(state.datasets[key][axis].labels, index, value);
+    const oldprimary = state.datasets[key][axis].primary_key;
+    const default_axis_label = axis === 'col' ? defaultColOption : defaultRowOption;
     if (isPrimary) {
       if (oldprimary !== null) {
-        Vue.set(state.datasets[key].axislabels[axis].labels, oldprimary, default_axis_label);
+        Vue.set(state.datasets[key][axis].labels, oldprimary, default_axis_label);
       }
-      Vue.set(state.datasets[key].axislabels[axis], 'primary_key', index);
+      Vue.set(state.datasets[key][axis], 'primary_key', index);
     } else if (index === oldprimary) {
-      Vue.set(state.datasets[key].axislabels[axis], 'primary_key', null);
+      Vue.set(state.datasets[key][axis], 'primary_key', null);
     }
-    
+  },
+
+  [SET_AXIS_MASK](state, { key, axis, index, value}) {
+    Vue.set(state.datasets[key][axis].mask, index, value);
+  },
+
+  [SET_LAST_ERROR](state, { err }) {
+    state.lasterror = err;
   },
 
   [SET_TRANSFORM_DATA](state, { data }) {
@@ -120,8 +142,13 @@ const actions = {
   async [UPLOAD_CSV]({ commit }, { file }) {
     const formData = new FormData();
     formData.append('file', file);
-    const { data } = await CSVService.upload(formData);
-    commit(ADD_SOURCE_DATA, { data });
+    try {
+      const { data } = await CSVService.upload(formData);
+      commit(ADD_SOURCE_DATA, { data });
+    } catch (err){
+      commit(SET_LAST_ERROR, err);
+      throw err;
+    }
   },
 
   // set mutually exclusive transformation within category.
@@ -130,16 +157,62 @@ const actions = {
     const last = state.datasets[key][category];
     if (transform_type === null || last) {
       // remove the existing transform
-      await CSVService.dropTransform(key, last.id);
-      if (last) commit(REMOVE_TRANSFORMATION, { key, tx_key: last.id, category });
+      try {
+        await CSVService.dropTransform(key, last.id);
+        if (last) commit(REMOVE_TRANSFORMATION, { key, tx_key: last.id, category });
+      } catch (err){
+        commit(SET_LAST_ERROR, err);
+        throw err;
+      }
     }
     if (transform_type !== null) {
       // create new transform
-      const { data } = await CSVService.addTransform(key, { transform_type, args });
-      commit(SET_TRANSFORMATION, { key, data, category });
+      try {
+        const { data } = await CSVService.addTransform(key, { transform_type, args });
+        commit(SET_TRANSFORMATION, { key, data, category });
+      } catch (err){
+        commit(SET_LAST_ERROR, err);
+        throw err;
+      }
     }
-    const { data } = await CSVService.get(key);
-    commit(SET_TRANSFORM_DATA, { data });
+
+    try {
+      const { data } = await CSVService.get(key);
+      commit(SET_TRANSFORM_DATA, { data });
+    } catch (err){
+      commit(SET_LAST_ERROR, err);
+      throw err;
+    }
+  },
+  
+  async [CHANGE_AXIS_LABEL]({commit}, { dataset_id, axis, label, index }) {
+    const params = {};
+    if (label === 'disable') {
+      params[`${axis}_mask`] = true;
+    }
+    else {
+      params[`${axis}_mask`] = false;
+      params[`${axis}_type`] = label;
+    }
+    try {
+      await CSVService.updateAxis(dataset_id, axis, index, params);
+      commit(SET_AXIS_LABEL, {
+        key: dataset_id,
+        axis,
+        index,
+        value: label,
+        isPrimary: [rowPrimaryKey, colPrimaryKey].indexOf(label) >= 0,
+      });
+      commit(SET_AXIS_MASK, {
+        key: dataset_id,
+        axis,
+        index,
+        value: params[`${axis}_mask`],
+      });
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      throw err;
+    }
   },
 };
 
