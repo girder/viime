@@ -94,7 +94,7 @@
 
     - name: Add gunicorn environment variables
       template:
-          src: "home/gunicorn/.env"
+          src: "home/gunicorn/.gunicorn_env"
           dest: "/home/gunicorn/.env"
           mode: 0600
       become: true
@@ -148,7 +148,6 @@
       command: "{{ venv }}/bin/metabulo-create-tables"
       become: true
       become_user: gunicorn
-
 
   handlers:
     - name: Restart gunicorn

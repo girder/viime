@@ -1,0 +1,17 @@
+export SECRET_KEY={{ flask_secret }}
+export FLASK_APP=metabulo/wsgi
+export FLASK_ENV=production
+
+export AWS_ACCESS_KEY_ID={{ aws_access_key_id }}
+export AWS_SECRET_ACCESS_KEY={{ aws_secret_access_key }}
+export AWS_DEFAULT_REGION=us-east-2
+
+export SQLALCHEMY_DATABASE_URI={{ sqlalchemy_database_uri }}
+export UPLOAD_FOLDER={{ upload_folder }}
+export MAX_FILE_UPLOAD_SIZE=5242880
+
+export OPENCPU_API_ROOT={{ opencpu_api_root }}
+
+
+
+

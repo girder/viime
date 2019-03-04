@@ -95,7 +95,7 @@
 
     - name: Add gunicorn environment variables
       template:
-          src: "home/gunicorn/.env"
+          src: "home/gunicorn/.gunicorn_env"
           dest: "/home/gunicorn/.env"
           mode: 0600
       become: true

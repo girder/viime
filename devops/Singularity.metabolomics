@@ -1,4 +1,0 @@
-Bootstrap: docker
-From: metabolomics:latest
-Namespace:
-Registry: localhost:5000
