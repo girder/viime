@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
-from marshmallow import fields, post_dump, post_load, Schema, validate
+from marshmallow import fields, post_dump, post_load, pre_load, Schema, validate
 from marshmallow.exceptions import ValidationError
 import numpy as np
 import pandas
@@ -230,7 +230,8 @@ class TableColumn(db.Model):
     column_type = db.Column(db.String, nullable=False)
     column_mask = db.Column(db.Boolean, nullable=True)
 
-    csv_file = db.relationship(CSVFile, backref=db.backref('columns', lazy=True))
+    csv_file = db.relationship(
+        CSVFile, backref=db.backref('columns', lazy=True, order_by='TableColumn.column_index'))
 
 
 class TableColumnSchema(BaseSchema):
@@ -246,6 +247,24 @@ class TableColumnSchema(BaseSchema):
         CSVFileSchema, exclude=['rows', 'columns', 'transforms'], dump_only=True)
 
 
+class ModifyColumnSchema(Schema):
+    column_type = fields.Str(required=False, validate=validate.OneOf(TABLE_COLUMN_TYPES))
+    column_mask = fields.Bool(required=False, allow_none=True)
+
+    @pre_load
+    def validate_not_empty(self, data):
+        if data is None or data == {}:
+            raise ValidationError('JSON params required', data=data)
+        return data
+
+    @post_load
+    def validate_type(self, data):
+        if data.get('column_type') == 'primary-id':
+            raise ValidationError(
+                'Setting primary-id not yet supported', data='primary-id', field_name='column_type')
+        return data
+
+
 class TableRow(db.Model):
     __table_args__ = (
         UniqueConstraint('row_name', 'csv_file_id'),
@@ -258,7 +277,8 @@ class TableRow(db.Model):
     row_type = db.Column(db.String, nullable=False)
     row_mask = db.Column(db.Boolean, nullable=True)
 
-    csv_file = db.relationship(CSVFile, backref=db.backref('rows', lazy=True))
+    csv_file = db.relationship(
+        CSVFile, backref=db.backref('rows', lazy=True, order_by='TableRow.row_index'))
 
 
 class TableRowSchema(BaseSchema):
@@ -272,6 +292,24 @@ class TableRowSchema(BaseSchema):
 
     csv_file = fields.Nested(
         CSVFileSchema, exclude=['rows', 'columns', 'transforms'], dump_only=True)
+
+
+class ModifyRowSchema(Schema):
+    row_type = fields.Str(required=False, validate=validate.OneOf(TABLE_ROW_TYPES))
+    row_mask = fields.Bool(required=False, allow_none=True)
+
+    @pre_load
+    def validate_not_empty(self, data):
+        if data is None or data == {}:
+            raise ValidationError('JSON params required', data=data)
+        return data
+
+    @post_load
+    def validate_type(self, data):
+        if data.get('row_type') == 'header':
+            raise ValidationError(
+                'Setting header row not yet supported', data='header', field_name='row_type')
+        return data
 
 
 class TableTransform(db.Model):
