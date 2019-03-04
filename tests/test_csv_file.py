@@ -21,7 +21,7 @@ def test_upload_csv_file(client):
     assert resp.status_code == 201
     assert resp.json['name'] == 'test_file1.csv'
     assert csv_data.strip().startswith('id,col1,col2')
-    assert len(resp.json['columns']) == 2
+    assert len(resp.json['columns']) == 3
 
 
 def test_post_csv_data(client):
@@ -35,7 +35,7 @@ def test_post_csv_data(client):
     assert resp.status_code == 201
     assert resp.json['name'] == 'test_file1.csv'
     assert csv_data.strip().startswith('id,col1,col2')
-    assert len(resp.json['columns']) == 2
+    assert len(resp.json['columns']) == 3
 
 
 def test_download_csv_file(client, csv_file):

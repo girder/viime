@@ -3,7 +3,8 @@ from io import BytesIO
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 
 from metabulo import opencpu
-from metabulo.models import CSVFile, CSVFileSchema, db, TableTransform, TableTransformSchema
+from metabulo.models import CSVFile, CSVFileSchema, db, \
+    TableColumn, TableRow, TableTransform, TableTransformSchema
 from metabulo.plot import make_box_plot
 
 csv_file_schema = CSVFileSchema()
@@ -71,8 +72,15 @@ def download_csv_file(csv_id):
 @csv_bp.route('/csv/<uuid:csv_id>', methods=['DELETE'])
 def delete_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
-    db.session.delete(csv_file)
-    db.session.commit()
+
+    try:
+        TableRow.query.filter_by(csv_file_id=csv_id).delete()
+        TableColumn.query.filter_by(csv_file_id=csv_id).delete()
+        db.session.delete(csv_file)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 
     try:
         csv_file.uri.unlink()
