@@ -1,13 +1,14 @@
 <script>
 import { mapState } from 'vuex';
-import { SET_AXIS_LABEL } from '../store/mutations.type';
-
-const menuOptions = [
-  'data',
-  'primary-key',
-  'secondary-key',
-  'disabled',
-];
+import { CHANGE_AXIS_LABEL } from '../store/actions.type';
+import {
+  rowMenuOptions,
+  defaultRowOption,
+  colMenuOptions,
+  defaultColOption,
+  rowPrimaryKey,
+  colPrimaryKey,
+} from '../utils/constants';
 
 export default {
   props: {
@@ -18,25 +19,27 @@ export default {
   },
   data() {
     return {
-      menuOptions,
+      rowMenuOptions,
+      colMenuOptions,
+      rowPrimaryKey,
+      colPrimaryKey,
     };
   },
   computed: {
     dataset() { return this.$store.getters.dataset(this.datasetId); },
   },
   methods: {
-    selectOption(value, index, axis) {
-      this.$store.commit(SET_AXIS_LABEL, {
-        key: this.datasetId,
-        axis,
-        index,
-        value,
-        isPrimary: value === 'primary-key',
-      });
+    selectOption(label, index, axis) {
+      this.$store.dispatch(CHANGE_AXIS_LABEL, {
+        dataset_id: this.datasetId,
+        axis, label, index });
     },
     getDisplayValue(axis, idx) {
-      const val = this.dataset.axislabels[axis].labels[idx - 1];
-      return val === 'data' ? `${idx}` : val;
+      const val = this.dataset[axis].labels[idx];
+      if (axis === 'row')
+        return val === defaultRowOption ? `${idx + 1}` : val;
+      else if (axis === 'column')
+        return val === defaultColOption ? `${idx + 1}` : val;
     }
   },
 };
@@ -49,31 +52,33 @@ export default {
     thead
       tr
         th <!-- empty -->
-        th.control(v-for="idx in dataset.width") 
+        th.control(v-for="(col, idx) in dataset.column.labels") 
           select.pa-1(
-              :value="getDisplayValue('col', idx)",
-              @input="selectOption($event.target.value, idx - 1, 'col')")
-            option(style="display: none;") {{ idx }}
+              :value="getDisplayValue('column', idx)",
+              @input="selectOption($event.target.value, idx, 'column')")
+            option(style="display: none;") {{ idx + 1 }}
             option(
-                v-for="option in menuOptions",
+                v-for="option in colMenuOptions",
                 :value="option",
-                :key="`col${idx}${option}`") {{ option }} 
+                :key="`column${idx}${option}`") {{ option }}
+            option(v-show="dataset['column'].labels[idx] !== colPrimaryKey") disable
 
     tbody
       tr(v-for="(row, idx) in dataset.sourcerows",
           :key="`${idx}${row[0]}`",
-          :class="dataset.axislabels.row.labels[idx]",)
+          :class="dataset.row.labels[idx]",)
         td.control
           select.pa-1(
-              :value="getDisplayValue('row', idx + 1)",
+              :value="getDisplayValue('row', idx)",
               @input="selectOption($event.target.value, idx, 'row')")
             option(style="display: none;") {{ idx + 1 }}
             option(
-                v-for="option in menuOptions",
+                v-for="option in rowMenuOptions",
                 :value="option",
-                :key="`row${idx}${option}`") {{ option }} 
+                :key="`row${idx}${option}`") {{ option }}
+            option(v-show="dataset['row'].labels[idx] !== rowPrimaryKey") disable
         td.px-1.row(
-            :class="dataset.axislabels.col.labels[idx2]"
+            :class="dataset.column.labels[idx2]"
             v-for="(col, idx2) in row",
             :key="`${idx}.${idx2}`") {{ col }}
 </template>
@@ -109,27 +114,27 @@ export default {
 }
 
 tr {
-  &.primary-key {
+  &.header {
     background-color: #03b803;
   }
   &.secondary-key {
     background-color: lightgreen;
   }
 
-  &.primary-key, &.secondary-key {
-    td.primary-key, td.secondary-key {
+  &.header, &.secondary-key {
+    td.qualitative, td.secondary-key {
       background-color: lightgray;
     }
   }
   td {
-    &.primary-key {
+    &.qualitative {
       background-color: cyan;
     }
     &.secondary-key {
       background-color: lightblue;
     }
   }
-  &.disabled td, td.disabled {
+  &.disable td, td.disable {
     background-color: lightgray !important;
   }
 }

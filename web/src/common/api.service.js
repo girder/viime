@@ -69,5 +69,9 @@ export const CSVService = {
 
   dropTransform(csvSlug, transformSlug) {
     return ApiService.delete(`csv/${csvSlug}/transform/${transformSlug}`);
-  }
+  },
+
+  updateAxis(csvSlug, axis, index, args) {
+    return ApiService.put(`csv/${csvSlug}/${axis}/${index}`, args);
+  },
 };
