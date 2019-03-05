@@ -7,7 +7,7 @@ from metabulo.models import CSVFile, CSVFileSchema, db, \
     ModifyColumnSchema, ModifyRowSchema, \
     TableColumn, TableColumnSchema, TableRow, TableRowSchema, \
     TableTransform, TableTransformSchema
-from metabulo.plot import make_box_plot
+from metabulo.plot import make_box_plot, pca
 
 csv_file_schema = CSVFileSchema()
 modify_column_schema = ModifyColumnSchema()
@@ -175,6 +175,14 @@ def get_box_plot(csv_id):
     table = csv_file.table
     fig = make_box_plot(table)
     return Response(fig, mimetype='image/png')
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/plot/pca', methods=['GET'])
+def get_pca_plot(csv_id):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    column_index = request.args.get('column_index', None)
+    data = pca(csv_file.table, csv_file.rows, csv_file.columns, column_index)
+    return jsonify(data), 200
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/pca-overview', methods=['GET'])

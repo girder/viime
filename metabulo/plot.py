@@ -3,6 +3,11 @@ import io
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from sklearn.decomposition import PCA
+
+from metabulo.models import COLUMN_DATA_INDEX, ROW_DATA_INDEX, \
+    TABLE_COLUMN_TYPES, TABLE_ROW_TYPES
 
 
 def make_box_plot(frame):
@@ -17,3 +22,21 @@ def make_box_plot(frame):
     output = io.BytesIO()
     FigureCanvas(fig1).print_png(output)
     return output.getvalue()
+
+
+def pca(frame, rows, columns, key):
+    col_data_type = TABLE_COLUMN_TYPES[COLUMN_DATA_INDEX]
+    column_data = filter(lambda col: col.column_type == col_data_type, columns)
+    column_data_indexes = list(map(lambda col: col.column_index - 1, column_data))
+
+    row_data_type = TABLE_ROW_TYPES[ROW_DATA_INDEX]
+    row_data = filter(lambda row: row.row_type == row_data_type, rows)
+    row_data_indexes = list(map(lambda row: row.row_index - 1, row_data))
+
+    filtered = frame.iloc[row_data_indexes, column_data_indexes]
+    label_column = frame.iloc[:, [int(key)]]
+    label_column_dummies = pd.get_dummies(label_column).astype(int)
+
+    n_components = min(len(row_data_indexes), label_column_dummies.shape[1])
+    x = PCA(n_components=n_components).fit_transform(filtered)
+    return [{'x': d[0], 'y': d[1], 'label': label_column.iloc[i][0]} for i, d in enumerate(x)]

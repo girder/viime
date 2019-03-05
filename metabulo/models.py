@@ -29,8 +29,14 @@ metadata = MetaData(naming_convention={
 })
 db = SQLAlchemy(metadata=metadata)
 
-TABLE_COLUMN_TYPES = ['key', 'metadata', 'metabolite', 'masked']
+TABLE_COLUMN_TYPES = ['key', 'metadata', 'data', 'masked']
+COLUMN_KEY_INDEX = 0
+COLUMN_METADATA_INDEX = 1
+COLUMN_DATA_INDEX = 2
 TABLE_ROW_TYPES = ['header', 'metadata', 'sample', 'masked']
+ROW_KEY_INDEX = 0
+ROW_METADATA_INDEX = 1
+ROW_DATA_INDEX = 2
 
 
 class BaseSchema(Schema):
@@ -128,16 +134,16 @@ class CSVFile(db.Model):
                 'csv_file_id': self.id,
                 'column_header': table.index.name,
                 'column_index': index,
-                'column_type': 'key',
+                'column_type': TABLE_COLUMN_TYPES[COLUMN_KEY_INDEX],
             })
         )
         index += 1
         for column_header, dtype in table.dtypes.items():
             # There are probably better heuristics for this.
             if dtype == np.object:
-                column_type = 'metadata'
+                column_type = TABLE_COLUMN_TYPES[COLUMN_METADATA_INDEX]
             else:
-                column_type = 'metabolite'
+                column_type = TABLE_COLUMN_TYPES[COLUMN_DATA_INDEX]
 
             columns.append(
                 table_column_schema.load({
@@ -161,7 +167,7 @@ class CSVFile(db.Model):
                 'csv_file_id': self.id,
                 'row_name': '',  # or null?
                 'row_index': 0,
-                'row_type': 'header',
+                'row_type': TABLE_ROW_TYPES[ROW_KEY_INDEX],
             })
         ]
 
@@ -174,7 +180,7 @@ class CSVFile(db.Model):
                     'csv_file_id': self.id,
                     'row_name': row_name,
                     'row_index': index + 1,
-                    'row_type': 'sample',
+                    'row_type': TABLE_ROW_TYPES[ROW_DATA_INDEX],
                 })
             )
         return rows
@@ -325,9 +331,10 @@ class ModifyRowSchema(Schema):
 
     @post_load
     def validate_type(self, data):
-        if data.get('row_type') == 'header':
+        if data.get('row_type') == TABLE_ROW_TYPES[ROW_KEY_INDEX]:
             raise ValidationError(
-                'Setting header row not yet supported', data='header', field_name='row_type')
+                'Setting row primary key not yet supported',
+                data=data.get('row_type'), field_name='row_type')
         return data
 
 

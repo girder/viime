@@ -39,11 +39,11 @@ def test_list_columns(client, table):
     }, {
         'column_header': 'col1',
         'column_index': 2,
-        'column_type': 'metabolite'
+        'column_type': 'data'
     }, {
         'column_header': 'col2',
         'column_index': 3,
-        'column_type': 'metabolite'
+        'column_type': 'data'
     }]
 
 
