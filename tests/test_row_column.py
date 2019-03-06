@@ -31,23 +31,19 @@ def test_list_columns(client, table):
     assert resp.json == [{
         'column_header': 'id',
         'column_index': 0,
-        'column_mask': None,
-        'column_type': 'primary-id'
+        'column_type': 'key'
     }, {
         'column_header': 'meta',
         'column_index': 1,
-        'column_mask': False,
-        'column_type': 'qualitative'
+        'column_type': 'metadata'
     }, {
         'column_header': 'col1',
         'column_index': 2,
-        'column_mask': False,
-        'column_type': 'numeric'
+        'column_type': 'metabolite'
     }, {
         'column_header': 'col2',
         'column_index': 3,
-        'column_mask': False,
-        'column_type': 'numeric'
+        'column_type': 'metabolite'
     }]
 
 
@@ -58,22 +54,18 @@ def test_list_rows(client, table):
     assert resp.json == [{
         'row_name': '',
         'row_index': 0,
-        'row_mask': None,
         'row_type': 'header'
     }, {
         'row_name': 'row1',
         'row_index': 1,
-        'row_mask': False,
         'row_type': 'sample'
     }, {
         'row_name': 'row2',
         'row_index': 2,
-        'row_mask': False,
         'row_type': 'sample'
     }, {
         'row_name': 'row3',
         'row_index': 3,
-        'row_mask': False,
         'row_type': 'sample'
     }]
 
@@ -85,8 +77,7 @@ def test_get_column(client, table):
     assert resp.json == {
         'column_header': 'meta',
         'column_index': 1,
-        'column_mask': False,
-        'column_type': 'qualitative'
+        'column_type': 'metadata'
     }
 
 
@@ -97,7 +88,6 @@ def test_get_row(client, table):
     assert resp.json == {
         'row_name': 'row1',
         'row_index': 1,
-        'row_mask': False,
         'row_type': 'sample'
     }
 
@@ -106,16 +96,14 @@ def test_modify_column(client, table):
     resp = client.put(
         url_for('csv.modify_column', csv_id=table.id, column_index=1),
         json={
-            'column_type': 'secondary-id',
-            'column_mask': None
+            'column_type': 'metadata'
         }
     )
     assert resp.status_code == 200
     assert resp.json == {
         'column_header': 'meta',
         'column_index': 1,
-        'column_mask': None,
-        'column_type': 'secondary-id'
+        'column_type': 'metadata'
     }
 
 
@@ -123,14 +111,12 @@ def test_modify_row(client, table):
     resp = client.put(
         url_for('csv.modify_row', csv_id=table.id, row_index=1),
         json={
-            'row_mask': True,
-            'row_type': 'other'
+            'row_type': 'masked'
         }
     )
     assert resp.status_code == 200
     assert resp.json == {
         'row_name': 'row1',
         'row_index': 1,
-        'row_mask': True,
-        'row_type': 'other'
+        'row_type': 'masked'
     }

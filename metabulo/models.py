@@ -29,8 +29,8 @@ metadata = MetaData(naming_convention={
 })
 db = SQLAlchemy(metadata=metadata)
 
-TABLE_COLUMN_TYPES = ['primary-id', 'secondary-id', 'numeric', 'qualitative']
-TABLE_ROW_TYPES = ['header', 'sample', 'other']
+TABLE_COLUMN_TYPES = ['key', 'metadata', 'metabolite', 'masked']
+TABLE_ROW_TYPES = ['header', 'metadata', 'sample', 'masked']
 
 
 class BaseSchema(Schema):
@@ -99,24 +99,26 @@ class CSVFile(db.Model):
         table_column_schema = TableColumnSchema()
         table = self.raw_table
 
-        index = 0
         columns = []
-        if table.index.name is not None:
-            columns.append(
-                table_column_schema.load({
-                    'csv_file_id': self.id,
-                    'column_header': table.index.name,
-                    'column_index': 0,
-                    'column_type': 'primary-id',
-                    'column_mask': None
-                })
-            )
-            index += 1
+        if table.index.name is None:
+            raise ValidationError('No primary key column detected')
+
+        index = 0
+        columns.append(
+            table_column_schema.load({
+                'csv_file_id': self.id,
+                'column_header': table.index.name,
+                'column_index': index,
+                'column_type': 'key',
+            })
+        )
+        index += 1
         for column_header, dtype in table.dtypes.items():
+            # There are probably better heuristics for this.
             if dtype == np.object:
-                column_type = 'qualitative'
+                column_type = 'metadata'
             else:
-                column_type = 'numeric'
+                column_type = 'metabolite'
 
             columns.append(
                 table_column_schema.load({
@@ -124,7 +126,6 @@ class CSVFile(db.Model):
                     'column_header': column_header,
                     'column_index': index,
                     'column_type': column_type,
-                    'column_mask': False
                 })
             )
             index += 1
@@ -142,7 +143,6 @@ class CSVFile(db.Model):
                 'row_name': '',  # or null?
                 'row_index': 0,
                 'row_type': 'header',
-                'row_mask': None
             })
         ]
 
@@ -156,7 +156,6 @@ class CSVFile(db.Model):
                     'row_name': row_name,
                     'row_index': index + 1,
                     'row_type': 'sample',
-                    'row_mask': False
                 })
             )
         return rows
@@ -228,7 +227,6 @@ class TableColumn(db.Model):
     column_index = db.Column(db.Integer, primary_key=True)
     column_header = db.Column(db.String, nullable=False)
     column_type = db.Column(db.String, nullable=False)
-    column_mask = db.Column(db.Boolean, nullable=True)
 
     csv_file = db.relationship(
         CSVFile, backref=db.backref('columns', lazy=True, order_by='TableColumn.column_index'))
@@ -241,7 +239,6 @@ class TableColumnSchema(BaseSchema):
     column_header = fields.Str(required=True, nullable=False)
     column_index = fields.Int(required=True, validate=validate.Range(min=0))
     column_type = fields.Str(required=True, validate=validate.OneOf(TABLE_COLUMN_TYPES))
-    column_mask = fields.Bool(required=True, allow_none=True)
 
     csv_file = fields.Nested(
         CSVFileSchema, exclude=['rows', 'columns', 'transforms'], dump_only=True)
@@ -249,7 +246,6 @@ class TableColumnSchema(BaseSchema):
 
 class ModifyColumnSchema(Schema):
     column_type = fields.Str(required=False, validate=validate.OneOf(TABLE_COLUMN_TYPES))
-    column_mask = fields.Bool(required=False, allow_none=True)
 
     @pre_load
     def validate_not_empty(self, data):
@@ -259,9 +255,9 @@ class ModifyColumnSchema(Schema):
 
     @post_load
     def validate_type(self, data):
-        if data.get('column_type') == 'primary-id':
+        if data.get('column_type') == 'key':
             raise ValidationError(
-                'Setting primary-id not yet supported', data='primary-id', field_name='column_type')
+                'Setting the key not yet supported', data='key', field_name='column_type')
         return data
 
 
@@ -275,7 +271,6 @@ class TableRow(db.Model):
     row_index = db.Column(db.Integer, primary_key=True)
     row_name = db.Column(db.String, nullable=False)
     row_type = db.Column(db.String, nullable=False)
-    row_mask = db.Column(db.Boolean, nullable=True)
 
     csv_file = db.relationship(
         CSVFile, backref=db.backref('rows', lazy=True, order_by='TableRow.row_index'))
@@ -288,7 +283,6 @@ class TableRowSchema(BaseSchema):
     row_name = fields.Str(required=True, nullable=False)
     row_index = fields.Int(required=True, validate=validate.Range(min=0))
     row_type = fields.Str(required=True, validate=validate.OneOf(TABLE_ROW_TYPES))
-    row_mask = fields.Bool(required=True, allow_none=True)
 
     csv_file = fields.Nested(
         CSVFileSchema, exclude=['rows', 'columns', 'transforms'], dump_only=True)
@@ -296,7 +290,6 @@ class TableRowSchema(BaseSchema):
 
 class ModifyRowSchema(Schema):
     row_type = fields.Str(required=False, validate=validate.OneOf(TABLE_ROW_TYPES))
-    row_mask = fields.Bool(required=False, allow_none=True)
 
     @pre_load
     def validate_not_empty(self, data):
