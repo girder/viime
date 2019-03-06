@@ -172,8 +172,7 @@ def delete_transform(csv_id, transform_id):
 @csv_bp.route('/csv/<uuid:csv_id>/plot/box', methods=['GET'])
 def get_box_plot(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
-    table = csv_file.table
-    fig = make_box_plot(table)
+    fig = make_box_plot(csv_file.measurement_table)
     return Response(fig, mimetype='image/png')
 
 

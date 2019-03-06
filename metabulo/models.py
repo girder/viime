@@ -82,11 +82,11 @@ class CSVFile(db.Model):
 
     def filter_table_by_types(self, row_type, column_type):
         rows = [
-            row.row_index - 1 for row in self.rows
+            row.row_index for row in self.rows
             if row.row_type in (row_type,)
         ]
         columns = [
-            column.column_index - 1 for column in self.columns
+            column.column_index for column in self.columns
             if column.column_type in (column_type,)
         ]
         return self.table.iloc[rows, columns]
@@ -112,16 +112,19 @@ class CSVFile(db.Model):
         schema = TableTransformSchema()
         return schema.load(data)
 
+    def modify_index(self, axis: str, index: int):
+        pass
+
     def save_table(self, table):
         if hasattr(self, '_raw_table'):
             del self._raw_table
         return self._save_csv_file_data(self.uri, table.to_csv(index=False, header=False))
 
-    def _guess_table_indexes(self):
+    def _guess_table_structure(self):
         # TODO: a real implementation.  Pandas isn't adequate for this
         # Assume first row and first column are primary keys
         # Assume no meta to begin with
-        return -1, -1, list(), list(),
+        return 0, 0, [1], [1],
 
     def _generate_table_columns(self, row_index: int, col_index: int, meta: list):
         table_column_schema = TableColumnSchema()
@@ -159,7 +162,7 @@ class CSVFile(db.Model):
             if index == row_index:
                 row_type = TABLE_ROW_TYPES.INDEX
             elif index in meta:
-                row_type = TABLE_COLUMN_TYPES.METADATA
+                row_type = TABLE_ROW_TYPES.METADATA
             else:
                 row_type = TABLE_ROW_TYPES.DATA
 
@@ -182,7 +185,7 @@ class CSVFile(db.Model):
     def create_csv_file(cls, id, name, table, meta=None):
         csv_file = cls(id=id, name=name, meta=meta)
         cls._save_csv_file_data(csv_file.uri, table)
-        row_index, col_index, row_meta, col_meta = csv_file._guess_table_indexes()
+        row_index, col_index, row_meta, col_meta = csv_file._guess_table_structure()
         rows = csv_file._generate_table_rows(row_index, col_index, row_meta)
         columns = csv_file._generate_table_columns(row_index, col_index, col_meta)
         return csv_file, rows, columns
@@ -279,13 +282,6 @@ class ModifyColumnSchema(Schema):
             raise ValidationError('JSON params required', data=data)
         return data
 
-    @post_load
-    def validate_type(self, data):
-        if data.get('column_type') == 'key':
-            raise ValidationError(
-                'Setting the key not yet supported', data='key', field_name='column_type')
-        return data
-
 
 class TableRow(db.Model):
     __table_args__ = (
@@ -321,14 +317,6 @@ class ModifyRowSchema(Schema):
     def validate_not_empty(self, data):
         if data is None or data == {}:
             raise ValidationError('JSON params required', data=data)
-        return data
-
-    @post_load
-    def validate_type(self, data):
-        if data.get('row_type') == TABLE_ROW_TYPES.INDEX:
-            raise ValidationError(
-                'Setting row primary key not yet supported',
-                data=data.get('row_type'), field_name='row_type')
         return data
 
 

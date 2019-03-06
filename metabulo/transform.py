@@ -67,10 +67,9 @@ class SetValueSchema(BaseSchema, RowMixin, ColumnMixin):
 
 def normalize(table):
     for column in table:
-        if str(table[column].dtype) != 'object':
-            column_data = table[[column]].values.astype(float)
-            min_max_scalar = preprocessing.MinMaxScaler()
-            table[[column]] = min_max_scalar.fit_transform(column_data)
+        column_data = table[[column]].values.astype(float)
+        min_max_scalar = preprocessing.MinMaxScaler()
+        table[[column]] = min_max_scalar.fit_transform(column_data)
     return table
 
 
