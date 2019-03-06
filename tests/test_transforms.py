@@ -89,4 +89,4 @@ def test_generate_transform(csv_file):
 
     correct = table.copy()
     correct[:] = [[0.0, 0.0], [1.0, 1.0]]
-    assert_frame_equal(csv_file.table, correct)
+    assert_frame_equal(csv_file.metabolite_table, correct)

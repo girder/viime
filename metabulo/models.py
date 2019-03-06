@@ -50,14 +50,22 @@ class CSVFile(db.Model):
     meta = db.Column(JSONType, nullable=False)
 
     @property
-    def raw_table(self):
+    def table(self):
         if not hasattr(self, '_raw_table'):
             self._raw_table = pandas.read_csv(self.uri, index_col=0)
         return self._raw_table.copy()
 
     @property
-    def table(self):
-        return self.apply_transforms(self.raw_table)
+    def metabolite_table(self):
+        return self.apply_transforms()
+
+    @property
+    def metabolite_metadata(self):
+        return self.filter_table_by_types('metadata', 'metabolite')
+
+    @property
+    def sample_metadata(self):
+        return self.filter_table_by_types('sample', 'metadata')
 
     @property
     def transforms(self):
@@ -69,8 +77,19 @@ class CSVFile(db.Model):
         id = str(self.id)
         return Path(current_app.config['UPLOAD_FOLDER']) / id[:3] / id
 
+    def filter_table_by_types(self, row_type, column_type):
+        rows = [
+            row.row_index - 1 for row in self.rows
+            if row.row_type in (row_type,)
+        ]
+        columns = [
+            column.column_index - 1 for column in self.columns
+            if column.column_type in (column_type,)
+        ]
+        return self.table.iloc[rows, columns]
+
     def apply_transforms(self, last=None):
-        table = self.raw_table
+        table = self.filter_table_by_types('sample', 'metabolite')
         for t in self.transforms:
             table = t.apply(table)
             if str(t.id) == str(last):
@@ -97,7 +116,7 @@ class CSVFile(db.Model):
 
     def _generate_table_columns(self):
         table_column_schema = TableColumnSchema()
-        table = self.raw_table
+        table = self.table
 
         columns = []
         if table.index.name is None:
@@ -133,7 +152,7 @@ class CSVFile(db.Model):
 
     def _generate_table_rows(self):
         table_row_schema = TableRowSchema()
-        table = self.raw_table
+        table = self.table
 
         # Assuming the first row contains the header for the table.  Removing this assumption
         # would probably mean reading the table by something other than pandas.read_csv.
@@ -200,6 +219,10 @@ class CSVFileSchema(BaseSchema):
     transforms = fields.List(
         fields.Nested('TableTransformSchema', exclude=['csv_file']), dump_only=True)
 
+    metabolite_table = fields.Raw(dump_only=True)
+    metabolite_metadata = fields.Raw(dump_only=True)
+    sample_metadata = fields.Raw(dump_only=True)
+
     @post_load
     def fix_file_name(self, data):
         data['name'] = secure_filename(data['name'])
@@ -208,6 +231,9 @@ class CSVFileSchema(BaseSchema):
     @post_dump
     def read_csv_file(self, data):
         data['table'] = data['table'].to_csv()
+        data['metabolite_table'] = data['metabolite_table'].to_csv()
+        data['metabolite_metadata'] = data['metabolite_metadata'].to_csv()
+        data['sample_metadata'] = data['sample_metadata'].to_csv()
         return data
 
     @post_load
