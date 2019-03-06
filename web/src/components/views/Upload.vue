@@ -72,7 +72,7 @@ v-container(fill-height)
       dropzone.filezone(v-if="files.length === 0", :multiple="true",
         :message="message", @change="onFileChange")
     v-layout(row, wrap, shrink)
-        v-card.ma-2.filecard(v-for="(file, idx) in files")
+        v-card.ma-2.filecard(v-for="(file, idx) in files", :key="file.file.name")
           v-card-title(primary-title)
             v-btn(icon, @click="files.splice(idx, 1)")
               v-icon {{ $vuetify.icons.close }}

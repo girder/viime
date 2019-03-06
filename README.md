@@ -8,13 +8,23 @@ Metabulo is configured from a `.env` file present in the current directory
 where it is executed.  See the included [.env_example](./.env_example) for an
 example.  Once the environment is in place, you will need to initialize the
 tables by running
-```
+
+```sh
 metabulo-create-tables
 ```
 
 Start the development server by running:
-```
+
+```sh
 flask run
+```
+
+To start the frontend, run:
+
+```sh
+cd web/
+yarn
+yarn serve
 ```
 
 R Processing Functions using OpenCPU
@@ -23,12 +33,15 @@ R Processing Functions using OpenCPU
 The [devops](./devops) directory contains everything needed to spin up an
 [OpenCPU](https://www.opencpu.org/) instance with all dependencies necessary
 for the processing backend.  To run it locally, build the docker container
-```
+
+```sh
 cd devops
 docker build -t metabulo .
 ```
+
 and start the instance
-```
+
+```sh
 docker run -it -p 8004:8004 metabulo
 ```
 
