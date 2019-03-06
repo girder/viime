@@ -1,6 +1,7 @@
 from collections import namedtuple
 from datetime import datetime
 from io import BytesIO
+from math import isnan
 from pathlib import Path, PurePath
 from uuid import uuid4
 
@@ -54,7 +55,7 @@ class CSVFile(db.Model):
     @property
     def table(self):
         if not hasattr(self, '_raw_table'):
-            self._raw_table = pandas.read_csv(self.uri, index_col=0)
+            self._raw_table = pandas.read_csv(self.uri, header=None)
         return self._raw_table.copy()
 
     @property
@@ -114,69 +115,65 @@ class CSVFile(db.Model):
     def save_table(self, table):
         if hasattr(self, '_raw_table'):
             del self._raw_table
-        return self._save_csv_file_data(self.uri, table.to_csv())
+        return self._save_csv_file_data(self.uri, table.to_csv(index=False, header=False))
 
-    def _generate_table_columns(self):
+    def _guess_table_indexes(self):
+        # TODO: a real implementation.  Pandas isn't adequate for this
+        # Assume first row and first column are primary keys
+        # Assume no meta to begin with
+        return -1, -1, list(), list(),
+
+    def _generate_table_columns(self, row_index: int, col_index: int, meta: list):
         table_column_schema = TableColumnSchema()
         table = self.table
-
         columns = []
-        if table.index.name is None:
-            raise ValidationError('No primary key column detected')
-
-        index = 0
-        columns.append(
-            table_column_schema.load({
-                'csv_file_id': self.id,
-                'column_header': table.index.name,
-                'column_index': index,
-                'column_type': TABLE_COLUMN_TYPES.INDEX,
-            })
-        )
-        index += 1
-        for column_header, dtype in table.dtypes.items():
-            # There are probably better heuristics for this.
-            if dtype == np.object:
+        for index, dtype in table.dtypes.items():
+            
+            if index == col_index:
+                column_type = TABLE_COLUMN_TYPES.INDEX
+            elif index in meta:
                 column_type = TABLE_COLUMN_TYPES.METADATA
             else:
                 column_type = TABLE_COLUMN_TYPES.DATA
+        
+            if row_index >= 0:
+                column_header = table.iat[row_index, index]
+            else:
+                column_header = str(index)
 
             columns.append(
                 table_column_schema.load({
                     'csv_file_id': self.id,
-                    'column_header': column_header,
+                    'column_header': column_header if type(column_header) is str else '',
                     'column_index': index,
                     'column_type': column_type,
                 })
             )
-            index += 1
         return columns
 
-    def _generate_table_rows(self):
+    def _generate_table_rows(self, row_index: int, col_index: int, meta: list):
         table_row_schema = TableRowSchema()
         table = self.table
+        rows = []
+        for index, row in table.iterrows():
+            if index == row_index:
+                row_type = TABLE_ROW_TYPES.INDEX
+            elif index in meta:
+                row_type = TABLE_COLUMN_TYPES.METADATA
+            else:
+                row_type = TABLE_ROW_TYPES.DATA
 
-        # Assuming the first row contains the header for the table.  Removing this assumption
-        # would probably mean reading the table by something other than pandas.read_csv.
-        rows = [
-            table_row_schema.load({
-                'csv_file_id': self.id,
-                'row_name': '',  # or null?
-                'row_index': 0,
-                'row_type': TABLE_ROW_TYPES.INDEX,
-            })
-        ]
+            if col_index >= 0:
+                row_name = table.iat[index, col_index]
+            else:
+                row_name = str(index)
 
-        # Assume all other rows are samples.  There may be other heuristics
-        # to apply here in the future.  Or maybe mask rows with too many
-        # NaN's.
-        for index, row_name in enumerate(table.index):
             rows.append(
                 table_row_schema.load({
                     'csv_file_id': self.id,
-                    'row_name': row_name,
-                    'row_index': index + 1,
-                    'row_type': TABLE_ROW_TYPES.DATA,
+                    'row_name': row_name if type(row_name) is str else '',
+                    'row_index': index,
+                    'row_type': row_type,
                 })
             )
         return rows
@@ -185,8 +182,9 @@ class CSVFile(db.Model):
     def create_csv_file(cls, id, name, table, meta=None):
         csv_file = cls(id=id, name=name, meta=meta)
         cls._save_csv_file_data(csv_file.uri, table)
-        rows = csv_file._generate_table_rows()
-        columns = csv_file._generate_table_columns()
+        row_index, col_index, row_meta, col_meta = csv_file._guess_table_indexes()
+        rows = csv_file._generate_table_rows(row_index, col_index, row_meta)
+        columns = csv_file._generate_table_columns(row_index, col_index, col_meta)
         return csv_file, rows, columns
 
     @classmethod
@@ -232,10 +230,10 @@ class CSVFileSchema(BaseSchema):
 
     @post_dump
     def read_csv_file(self, data):
-        data['table'] = data['table'].to_csv()
-        data['measurement_table'] = data['measurement_table'].to_csv()
-        data['measurement_metadata'] = data['measurement_metadata'].to_csv()
-        data['sample_metadata'] = data['sample_metadata'].to_csv()
+        data['table'] = data['table'].to_csv(index=False, header=False)
+        data['measurement_table'] = data['measurement_table'].to_csv(index=False, header=False)
+        data['measurement_metadata'] = data['measurement_metadata'].to_csv(index=False, header=False)
+        data['sample_metadata'] = data['sample_metadata'].to_csv(index=False, header=False)
         return data
 
     @post_load
