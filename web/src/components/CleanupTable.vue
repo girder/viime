@@ -61,7 +61,7 @@ export default {
                 v-for="option in colMenuOptions",
                 :value="option",
                 :key="`column${idx}${option}`") {{ option }}
-            option(v-show="dataset['column'].labels[idx] !== colPrimaryKey") disable
+            option(v-show="dataset['column'].labels[idx] !== colPrimaryKey") masked
 
     tbody
       tr(v-for="(row, idx) in dataset.sourcerows",
@@ -76,7 +76,7 @@ export default {
                 v-for="option in rowMenuOptions",
                 :value="option",
                 :key="`row${idx}${option}`") {{ option }}
-            option(v-show="dataset['row'].labels[idx] !== rowPrimaryKey") disable
+            option(v-show="dataset['row'].labels[idx] !== rowPrimaryKey") masked
         td.px-1.row(
             :class="dataset.column.labels[idx2]"
             v-for="(col, idx2) in row",
@@ -117,24 +117,24 @@ tr {
   &.header {
     background-color: #03b803;
   }
-  &.secondary-key {
+  &.metadata {
     background-color: lightgreen;
   }
 
-  &.header, &.secondary-key {
-    td.qualitative, td.secondary-key {
+  &.header, &.metadata {
+    td.header, td.metadata {
       background-color: lightgray;
     }
   }
   td {
-    &.qualitative {
+    &.key {
       background-color: cyan;
     }
-    &.secondary-key {
+    &.metadata {
       background-color: lightblue;
     }
   }
-  &.disable td, td.disable {
+  &.masked td, td.masked {
     background-color: lightgray !important;
   }
 }
