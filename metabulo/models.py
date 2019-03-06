@@ -31,7 +31,7 @@ metadata = MetaData(naming_convention={
 db = SQLAlchemy(metadata=metadata)
 
 TableTypes = namedtuple('TableTypes', ['INDEX', 'METADATA', 'DATA', 'MASK'])
-TABLE_COLUMN_TYPES = TableTypes('key', 'metadata', 'metabolite', 'masked')
+TABLE_COLUMN_TYPES = TableTypes('key', 'metadata', 'measurement', 'masked')
 TABLE_ROW_TYPES = TableTypes('header', 'metadata', 'sample', 'masked')
 
 
@@ -58,16 +58,16 @@ class CSVFile(db.Model):
         return self._raw_table.copy()
 
     @property
-    def metabolite_table(self):
+    def measurement_table(self):
         return self.apply_transforms()
 
     @property
-    def metabolite_metadata(self):
-        return self.filter_table_by_types('metadata', 'metabolite')
+    def measurement_metadata(self):
+        return self.filter_table_by_types(TABLE_ROW_TYPES.METADATA, TABLE_COLUMN_TYPES.DATA)
 
     @property
     def sample_metadata(self):
-        return self.filter_table_by_types('sample', 'metadata')
+        return self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.METADATA)
 
     @property
     def transforms(self):
@@ -91,7 +91,7 @@ class CSVFile(db.Model):
         return self.table.iloc[rows, columns]
 
     def apply_transforms(self, last=None):
-        table = self.filter_table_by_types('sample', 'metabolite')
+        table = self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.DATA)
         for t in self.transforms:
             table = t.apply(table)
             if str(t.id) == str(last):
@@ -221,8 +221,8 @@ class CSVFileSchema(BaseSchema):
     transforms = fields.List(
         fields.Nested('TableTransformSchema', exclude=['csv_file']), dump_only=True)
 
-    metabolite_table = fields.Raw(dump_only=True)
-    metabolite_metadata = fields.Raw(dump_only=True)
+    measurement_table = fields.Raw(dump_only=True)
+    measurement_metadata = fields.Raw(dump_only=True)
     sample_metadata = fields.Raw(dump_only=True)
 
     @post_load
@@ -233,8 +233,8 @@ class CSVFileSchema(BaseSchema):
     @post_dump
     def read_csv_file(self, data):
         data['table'] = data['table'].to_csv()
-        data['metabolite_table'] = data['metabolite_table'].to_csv()
-        data['metabolite_metadata'] = data['metabolite_metadata'].to_csv()
+        data['measurement_table'] = data['measurement_table'].to_csv()
+        data['measurement_metadata'] = data['measurement_metadata'].to_csv()
         data['sample_metadata'] = data['sample_metadata'].to_csv()
         return data
 
