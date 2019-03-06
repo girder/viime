@@ -1,3 +1,4 @@
+from collections import namedtuple
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path, PurePath
@@ -29,14 +30,9 @@ metadata = MetaData(naming_convention={
 })
 db = SQLAlchemy(metadata=metadata)
 
-TABLE_COLUMN_TYPES = ['key', 'metadata', 'data', 'masked']
-COLUMN_KEY_INDEX = 0
-COLUMN_METADATA_INDEX = 1
-COLUMN_DATA_INDEX = 2
-TABLE_ROW_TYPES = ['header', 'metadata', 'sample', 'masked']
-ROW_KEY_INDEX = 0
-ROW_METADATA_INDEX = 1
-ROW_DATA_INDEX = 2
+TableTypes = namedtuple('TableTypes', ['INDEX', 'METADATA', 'DATA', 'MASK'])
+TABLE_COLUMN_TYPES = TableTypes('key', 'metadata', 'metabolite', 'masked')
+TABLE_ROW_TYPES = TableTypes('header', 'metadata', 'sample', 'masked')
 
 
 class BaseSchema(Schema):
@@ -134,16 +130,16 @@ class CSVFile(db.Model):
                 'csv_file_id': self.id,
                 'column_header': table.index.name,
                 'column_index': index,
-                'column_type': TABLE_COLUMN_TYPES[COLUMN_KEY_INDEX],
+                'column_type': TABLE_COLUMN_TYPES.INDEX,
             })
         )
         index += 1
         for column_header, dtype in table.dtypes.items():
             # There are probably better heuristics for this.
             if dtype == np.object:
-                column_type = TABLE_COLUMN_TYPES[COLUMN_METADATA_INDEX]
+                column_type = TABLE_COLUMN_TYPES.METADATA
             else:
-                column_type = TABLE_COLUMN_TYPES[COLUMN_DATA_INDEX]
+                column_type = TABLE_COLUMN_TYPES.DATA
 
             columns.append(
                 table_column_schema.load({
@@ -167,7 +163,7 @@ class CSVFile(db.Model):
                 'csv_file_id': self.id,
                 'row_name': '',  # or null?
                 'row_index': 0,
-                'row_type': TABLE_ROW_TYPES[ROW_KEY_INDEX],
+                'row_type': TABLE_ROW_TYPES.INDEX,
             })
         ]
 
@@ -180,7 +176,7 @@ class CSVFile(db.Model):
                     'csv_file_id': self.id,
                     'row_name': row_name,
                     'row_index': index + 1,
-                    'row_type': TABLE_ROW_TYPES[ROW_DATA_INDEX],
+                    'row_type': TABLE_ROW_TYPES.DATA,
                 })
             )
         return rows
@@ -331,7 +327,7 @@ class ModifyRowSchema(Schema):
 
     @post_load
     def validate_type(self, data):
-        if data.get('row_type') == TABLE_ROW_TYPES[ROW_KEY_INDEX]:
+        if data.get('row_type') == TABLE_ROW_TYPES.INDEX:
             raise ValidationError(
                 'Setting row primary key not yet supported',
                 data=data.get('row_type'), field_name='row_type')
