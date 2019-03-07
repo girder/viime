@@ -19,8 +19,8 @@ def test_post_transform(client, csv_file):
     assert resp.status_code == 201
 
     table = pandas.read_csv(
-        BytesIO(resp.json['csv_file']['measurement_table'].encode()), index_col=0)
-    assert table.at['row1', 'col1'] == 100
+        BytesIO(resp.json['csv_file']['measurement_table'].encode()), header=None)
+    assert table.iat[1,1] == 100
 
 
 def test_delete_transform(client, csv_file):

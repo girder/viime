@@ -52,13 +52,18 @@ const mutations = {
   [ADD_SOURCE_DATA](state, { data }) {
     const key = data.id;
     
-    const rows = Array(data.rows.length).fill();
+    const rows = {};
+    let row_primary = null;
     data.rows.forEach((r) => {
-      rows[r.row_index] = r;
+      rows[r.id] = r;
+      if (r.row_type === 'header') row_primary = r;
     });
-    const cols = Array(data.columns.length).fill();
+
+    const cols = {};
+    let col_primary = null;
     data.columns.forEach((c) => {
-      cols[c.column_index] = c;
+      cols[c.id] = c;
+      if (c.column_type === 'key') col_primary = c;
     });
     
     const { data: sourcerows } = convertCsvToRows(data.table);
@@ -69,12 +74,12 @@ const mutations = {
       height: sourcerows.length, // TODO: get from server
       // user- and server-generated lables for rows and columns
       row: {
-        labels: rows.map(r => r.row_type),
-        primary_key: 0,
+        labels: rows,
+        primary_key: row_primary,
       },
       column: {
-        labels: cols.map(c => c.column_type),
-        primary_key: 0,
+        labels: cols,
+        primary_key: col_primary,
       },
       // JSON serialized copy of data.table
       sourcerows,
@@ -98,16 +103,17 @@ const mutations = {
     delete state.datasets[key].transformations[tx_key];
   },
 
-  [SET_AXIS_LABEL](state, { key, axis, index, value, isPrimary }) {
-    Vue.set(state.datasets[key][axis].labels, index, value);
+  [SET_AXIS_LABEL](state, { key, axis, axis_id, value, isPrimary }) {
+    const newprimary = state.datasets[key][axis].labels[axis_id];
     const oldprimary = state.datasets[key][axis].primary_key;
-    const default_axis_label = axis === 'col' ? defaultColOption : defaultRowOption;
+    Vue.set(state.datasets[key][axis].labels[axis_id], `${axis}_type`, value);
+    const default_axis_label = (axis === 'col') ? defaultColOption : defaultRowOption;
     if (isPrimary) {
       if (oldprimary !== null) {
-        Vue.set(state.datasets[key][axis].labels, oldprimary, default_axis_label);
+        Vue.set(state.datasets[key][axis].labels[oldprimary.id], `${axis}_type`, default_axis_label);
       }
-      Vue.set(state.datasets[key][axis], 'primary_key', index);
-    } else if (index === oldprimary) {
+      Vue.set(state.datasets[key][axis], 'primary_key', newprimary);
+    } else if (axis_id === oldprimary.id) {
       Vue.set(state.datasets[key][axis], 'primary_key', null);
     }
   },
@@ -178,16 +184,16 @@ const actions = {
     }
   },
   
-  async [CHANGE_AXIS_LABEL]({commit}, { dataset_id, axis, label, index }) {
+  async [CHANGE_AXIS_LABEL]({commit}, { dataset_id, axis, label, axis_id }) {
     const params = {};
     params[`${axis}_type`] = label;
 
     try {
-      await CSVService.updateAxis(dataset_id, axis, index, params);
+      await CSVService.updateAxis(dataset_id, axis, axis_id, params);
       commit(SET_AXIS_LABEL, {
         key: dataset_id,
         axis,
-        index,
+        axis_id,
         value: label,
         isPrimary: [rowPrimaryKey, colPrimaryKey].indexOf(label) >= 0,
       });

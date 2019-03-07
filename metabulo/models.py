@@ -1,8 +1,9 @@
 from collections import namedtuple
 from datetime import datetime
 from io import BytesIO
-from math import isnan
+from math import isnan, floor
 from pathlib import Path, PurePath
+from typing import Iterable
 from uuid import uuid4
 
 from flask import current_app
@@ -19,6 +20,13 @@ from werkzeug.utils import secure_filename
 
 from metabulo import transform
 
+def find(f, seq):
+    """Return first item in sequence where f(item) == True."""
+    for item in seq:
+        if f(item): 
+            return item
+    return None
+     
 
 # This is to avoid having to manually name all constraints
 # See: http://alembic.zzzcomputing.com/en/latest/naming.html
@@ -38,13 +46,12 @@ TABLE_ROW_TYPES = TableTypes('header', 'metadata', 'sample', 'masked')
 
 class BaseSchema(Schema):
     __model__ = None
-
+    id = fields.UUID(missing=uuid4)
     @post_load
     def make_object(self, data):
         if self.__model__ is not None:
             return self.__model__(**data)
         return data
-
 
 class CSVFile(db.Model):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
@@ -80,15 +87,17 @@ class CSVFile(db.Model):
         id = str(self.id)
         return Path(current_app.config['UPLOAD_FOLDER']) / id[:3] / id
 
+    @property
+    def index_row(self):
+        return find(lambda r: r.row_type == TABLE_ROW_TYPES.INDEX, self.rows)
+
+    @property
+    def index_column(self):
+        return find(lambda r: r.column_type == TABLE_COLUMN_TYPES.INDEX, self.columns)
+    
     def filter_table_by_types(self, row_type, column_type):
-        rows = [
-            row.row_index for row in self.rows
-            if row.row_type in (row_type,)
-        ]
-        columns = [
-            column.column_index for column in self.columns
-            if column.column_type in (column_type,)
-        ]
+        rows = CSVFile.get_indexes_by_type(self.rows, 'row', row_type)
+        columns = CSVFile.get_indexes_by_type(self.columns, 'column', column_type)
         return self.table.iloc[rows, columns]
 
     def apply_transforms(self, last=None):
@@ -112,83 +121,76 @@ class CSVFile(db.Model):
         schema = TableTransformSchema()
         return schema.load(data)
 
-    def modify_index(self, axis: str, index: int):
-        pass
-
     def save_table(self, table):
         if hasattr(self, '_raw_table'):
             del self._raw_table
         return self._save_csv_file_data(self.uri, table.to_csv(index=False, header=False))
 
     def _guess_table_structure(self):
-        # TODO: a real implementation.  Pandas isn't adequate for this
+        # TODO: a real implementation.  Pandas isn't adequate for this because of row metadata
         # Assume first row and first column are primary keys
-        # Assume no meta to begin with
-        return 0, 0, [1], [1],
-
-    def _generate_table_columns(self, row_index: int, col_index: int, meta: list):
         table_column_schema = TableColumnSchema()
         table = self.table
-        columns = []
-        for index, dtype in table.dtypes.items():
-            
-            if index == col_index:
-                column_type = TABLE_COLUMN_TYPES.INDEX
-            elif index in meta:
-                column_type = TABLE_COLUMN_TYPES.METADATA
-            else:
-                column_type = TABLE_COLUMN_TYPES.DATA
+        row_half = floor(table.shape[0] / 2)
+        col_half = floor(table.shape[1] / 2)
         
-            if row_index >= 0:
-                column_header = table.iat[row_index, index]
-            else:
-                column_header = str(index)
-
+        columns = []
+        index = 0
+        keyfound = False
+        for cell in table.iloc[row_half]:
             columns.append(
                 table_column_schema.load({
                     'csv_file_id': self.id,
-                    'column_header': column_header if type(column_header) is str else '',
                     'column_index': index,
-                    'column_type': column_type,
+                    'column_type': TABLE_COLUMN_TYPES.DATA,
                 })
             )
-        return columns
-
-    def _generate_table_rows(self, row_index: int, col_index: int, meta: list):
+            index += 1
+        
         table_row_schema = TableRowSchema()
-        table = self.table
         rows = []
+        index = 0
+        keyfound = False
         for index, row in table.iterrows():
-            if index == row_index:
-                row_type = TABLE_ROW_TYPES.INDEX
-            elif index in meta:
-                row_type = TABLE_ROW_TYPES.METADATA
-            else:
-                row_type = TABLE_ROW_TYPES.DATA
-
-            if col_index >= 0:
-                row_name = table.iat[index, col_index]
-            else:
-                row_name = str(index)
-
             rows.append(
                 table_row_schema.load({
                     'csv_file_id': self.id,
-                    'row_name': row_name if type(row_name) is str else '',
                     'row_index': index,
-                    'row_type': row_type,
+                    'row_type': TABLE_ROW_TYPES.DATA,
                 })
             )
-        return rows
+            index += 1
+        return rows, columns
+
+    def modify_row_key(self, new_key_row_id):
+        old_key_row = self.index_row
+        new_key_row = find(lambda r: r.id == new_key_row_id, self.rows)
+        if old_key_row is not None:
+            old_key_row.row_type = TABLE_ROW_TYPES.METADATA
+        new_key_row.row_type = TABLE_ROW_TYPES.INDEX
+
+    def modify_column_key(self, new_key_column_id):
+        old_key_column = self.index_column
+        new_key_column = find(lambda r: r.id == new_key_column_id, self.columns)
+        if old_key_column is not None:
+            old_key_column.column_type = TABLE_COLUMN_TYPES.METADATA
+        new_key_column.column_type = TABLE_COLUMN_TYPES.INDEX
 
     @classmethod
     def create_csv_file(cls, id, name, table, meta=None):
         csv_file = cls(id=id, name=name, meta=meta)
         cls._save_csv_file_data(csv_file.uri, table)
-        row_index, col_index, row_meta, col_meta = csv_file._guess_table_structure()
-        rows = csv_file._generate_table_rows(row_index, col_index, row_meta)
-        columns = csv_file._generate_table_columns(row_index, col_index, col_meta)
+        rows, columns = csv_file._guess_table_structure()
         return csv_file, rows, columns
+    
+    @classmethod
+    def get_indexes_by_type(cls, axis: Iterable, axis_name: str, axis_type: TableTypes):
+        type_key = f'{axis_name}_type'
+        index_key = f'{axis_name}_index'
+        return [
+            getattr(item, index_key) for item in axis
+            if getattr(item, type_key) in (axis_type,)
+        ]
 
     @classmethod
     def _save_csv_file_data(cls, uri, table_data):
@@ -211,7 +213,6 @@ def _validate_name(name):
 
 
 class CSVFileSchema(BaseSchema):
-    id = fields.UUID(missing=uuid4)
     created = fields.DateTime(dump_only=True)
     name = fields.Str(required=True, validate=_validate_name)
     table = fields.Raw(required=True, validate=_validate_table_data)
@@ -225,6 +226,9 @@ class CSVFileSchema(BaseSchema):
     measurement_table = fields.Raw(dump_only=True)
     measurement_metadata = fields.Raw(dump_only=True)
     sample_metadata = fields.Raw(dump_only=True)
+
+    index_row = fields.Nested('TableRowSchema', exclude=['csv_file'])
+    index_column = fields.Nested('TableColumnSchema', exclude=['csv_file'])
 
     @post_load
     def fix_file_name(self, data):
@@ -249,13 +253,19 @@ class CSVFileSchema(BaseSchema):
 
 class TableColumn(db.Model):
     __table_args__ = (
-        UniqueConstraint('column_header', 'csv_file_id'),
+        UniqueConstraint('id', 'csv_file_id'),
     )
-
+    id = db.Column(UUIDType(binary=False), default=uuid4)
     csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     column_index = db.Column(db.Integer, primary_key=True)
-    column_header = db.Column(db.String, nullable=False)
     column_type = db.Column(db.String, nullable=False)
+
+    @property
+    def column_header(self):
+        if self.csv_file.index_row is not None:
+            index = self.csv_file.index_row.row_index
+            return self.csv_file.table.iat[index, self.column_index]
+        return ''
 
     csv_file = db.relationship(
         CSVFile, backref=db.backref('columns', lazy=True, order_by='TableColumn.column_index'))
@@ -263,14 +273,14 @@ class TableColumn(db.Model):
 
 class TableColumnSchema(BaseSchema):
     __model__ = TableColumn
-
     csv_file_id = fields.UUID(required=True, load_only=True)
-    column_header = fields.Str(required=True, nullable=False)
     column_index = fields.Int(required=True, validate=validate.Range(min=0))
     column_type = fields.Str(required=True, validate=validate.OneOf(TABLE_COLUMN_TYPES))
-
+    column_header = fields.Str(required=True, dump_only=True)
+    
     csv_file = fields.Nested(
-        CSVFileSchema, exclude=['rows', 'columns', 'transforms'], dump_only=True)
+        CSVFileSchema, exclude=['rows', 'columns', 'transforms', 'index_row', 'index_column'], dump_only=True)
+
 
 
 class ModifyColumnSchema(Schema):
@@ -285,29 +295,34 @@ class ModifyColumnSchema(Schema):
 
 class TableRow(db.Model):
     __table_args__ = (
-        UniqueConstraint('row_name', 'csv_file_id'),
+        UniqueConstraint('id', 'csv_file_id'),
     )
 
-    csv_file_id = db.Column(
-        UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
+    id = db.Column(UUIDType(binary=False), default=uuid4)
+    csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     row_index = db.Column(db.Integer, primary_key=True)
-    row_name = db.Column(db.String, nullable=False)
     row_type = db.Column(db.String, nullable=False)
 
     csv_file = db.relationship(
         CSVFile, backref=db.backref('rows', lazy=True, order_by='TableRow.row_index'))
 
+    @property
+    def row_name(self):
+        if self.csv_file.index_column is not None:
+            index = self.csv_file.index_column.column_index
+            return self.csv_file.table.iat[self.row_index, index]
+        return ''
+
 
 class TableRowSchema(BaseSchema):
     __model__ = TableRow
-
     csv_file_id = fields.UUID(required=True, load_only=True)
-    row_name = fields.Str(required=True, nullable=False)
     row_index = fields.Int(required=True, validate=validate.Range(min=0))
     row_type = fields.Str(required=True, validate=validate.OneOf(TABLE_ROW_TYPES))
+    row_name = fields.Str(required=True, dump_only=True)
 
     csv_file = fields.Nested(
-        CSVFileSchema, exclude=['rows', 'columns', 'transforms'], dump_only=True)
+        CSVFileSchema, exclude=['rows', 'columns', 'transforms', 'index_row', 'index_column'], dump_only=True)
 
 
 class ModifyRowSchema(Schema):
@@ -344,7 +359,6 @@ class TableTransform(db.Model):
 class TableTransformSchema(BaseSchema):
     __model__ = TableTransform
 
-    id = fields.UUID(missing=uuid4)
     csv_file_id = fields.UUID(required=True, load_only=True)
     created = fields.DateTime(dump_only=True)
     transform_type = fields.Str(required=True, validate=validate.OneOf(transform.registry.keys()))

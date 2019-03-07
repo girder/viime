@@ -5,15 +5,16 @@ from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from metabulo import opencpu
 from metabulo.models import CSVFile, CSVFileSchema, db, \
     ModifyColumnSchema, ModifyRowSchema, \
-    TableColumn, TableColumnSchema, TableRow, TableRowSchema, \
+    TableColumn, TableColumnSchema, TABLE_COLUMN_TYPES, \
+    TableRow, TableRowSchema, TABLE_ROW_TYPES, \
     TableTransform, TableTransformSchema
 from metabulo.plot import make_box_plot, pca
 
 csv_file_schema = CSVFileSchema()
 modify_column_schema = ModifyColumnSchema()
 modify_row_schema = ModifyRowSchema()
-table_column_schema = TableColumnSchema(exclude=['csv_file'])
-table_row_schema = TableRowSchema(exclude=['csv_file'])
+table_column_schema = TableColumnSchema()
+table_row_schema = TableRowSchema()
 table_transform_schema = TableTransformSchema()
 
 csv_bp = Blueprint('csv', __name__)
@@ -106,16 +107,16 @@ def list_columns(csv_id):
     ))
 
 
-@csv_bp.route('/csv/<uuid:csv_id>/column/<int:column_index>', methods=['GET'])
-def get_column(csv_id, column_index):
+@csv_bp.route('/csv/<uuid:csv_id>/column/<uuid:column_id>', methods=['GET'])
+def get_column(csv_id, column_id):
     return jsonify(table_column_schema.dump(
-        TableColumn.query.get_or_404((csv_id, column_index))
+        TableColumn.query.get_or_404((csv_id, column_id))
     ))
 
 
-@csv_bp.route('/csv/<uuid:csv_id>/column/<int:column_index>', methods=['PUT'])
-def modify_column(csv_id, column_index):
-    column = TableColumn.query.get_or_404((csv_id, column_index))
+@csv_bp.route('/csv/<uuid:csv_id>/column/<uuid:column_id>', methods=['PUT'])
+def modify_column(csv_id, column_id):
+    column = TableColumn.query.get_or_404((csv_id, column_id))
     args = modify_column_schema.load(request.json or {})
     for key, value in args.items():
         setattr(column, key, value)
@@ -133,20 +134,24 @@ def list_rows(csv_id):
     ))
 
 
-@csv_bp.route('/csv/<uuid:csv_id>/row/<int:row_index>', methods=['GET'])
-def get_row(csv_id, row_index):
+@csv_bp.route('/csv/<uuid:csv_id>/row/<uuid:row_id>', methods=['GET'])
+def get_row(csv_id, row_id):
     return jsonify(table_row_schema.dump(
-        TableRow.query.get_or_404((csv_id, row_index))
+        TableRow.query.get_or_404((csv_id, row_id))
     ))
 
 
-@csv_bp.route('/csv/<uuid:csv_id>/row/<int:row_index>', methods=['PUT'])
-def modify_row(csv_id, row_index):
-    row = TableRow.query.get_or_404((csv_id, row_index))
+@csv_bp.route('/csv/<uuid:csv_id>/row/<uuid:row_id>', methods=['PUT'])
+def modify_row(csv_id, row_id):
+    row = TableRow.query.get_or_404((csv_id, row_id))
+    csv_file = CSVFile.query.get_or_404(csv_id)
     args = modify_row_schema.load(request.json or {})
     for key, value in args.items():
         setattr(row, key, value)
+        if key == 'row_type' and value == TABLE_ROW_TYPES.INDEX:
+            csv_file.modify_row_key(row_id)
     db.session.add(row)
+    db.session.add(csv_file)
     db.session.commit()
     return jsonify(table_row_schema.dump(row))
 

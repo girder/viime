@@ -75,7 +75,7 @@ export const CSVService = {
     return ApiService.delete(`csv/${csvSlug}/transform/${transformSlug}`);
   },
 
-  updateAxis(csvSlug, axis, index, args) {
-    return ApiService.put(`csv/${csvSlug}/${axis}/${index}`, args);
+  updateAxis(csvSlug, axis, axis_id, args) {
+    return ApiService.put(`csv/${csvSlug}/${axis}/${axis_id}`, args);
   },
 };

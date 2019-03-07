@@ -29,12 +29,13 @@ export default {
     dataset() { return this.$store.getters.dataset(this.datasetId); },
   },
   methods: {
-    selectOption(label, index, axis) {
+    selectOption(label, id, axis) {
       this.$store.dispatch(CHANGE_AXIS_LABEL, {
         dataset_id: this.datasetId,
-        axis, label, index });
+        axis, label, axis_id: id });
     },
-    getDisplayValue(axis, idx) {
+    getDisplayValue(axis, id, idx) {
+      console.log(axis, id, idx)
       const val = this.dataset[axis].labels[idx];
       if (axis === 'row')
         return val === defaultRowOption ? `${idx + 1}` : val;
@@ -54,8 +55,8 @@ export default {
         th <!-- empty -->
         th.control(v-for="(col, idx) in dataset.column.labels") 
           select.pa-1(
-              :value="getDisplayValue('column', idx)",
-              @input="selectOption($event.target.value, idx, 'column')")
+              :value="getDisplayValue('column', col.id, idx)",
+              @input="selectOption($event.target.value, col.id, 'column')")
             option(style="display: none;") {{ idx + 1 }}
             option(
                 v-for="option in colMenuOptions",
@@ -63,24 +64,24 @@ export default {
                 :key="`column${idx}${option}`") {{ option }}
             option(v-show="dataset['column'].labels[idx] !== colPrimaryKey") masked
 
-    tbody
-      tr(v-for="(row, idx) in dataset.sourcerows",
-          :key="`${idx}${row[0]}`",
-          :class="dataset.row.labels[idx]",)
-        td.control
-          select.pa-1(
-              :value="getDisplayValue('row', idx)",
-              @input="selectOption($event.target.value, idx, 'row')")
-            option(style="display: none;") {{ idx + 1 }}
-            option(
-                v-for="option in rowMenuOptions",
-                :value="option",
-                :key="`row${idx}${option}`") {{ option }}
-            option(v-show="dataset['row'].labels[idx] !== rowPrimaryKey") masked
-        td.px-1.row(
-            :class="dataset.column.labels[idx2]"
-            v-for="(col, idx2) in row",
-            :key="`${idx}.${idx2}`") {{ col }}
+    //- tbody
+    //-   tr(v-for="(row, idx) in dataset.row.labels",
+    //-       :key="`${idx}${row.id}`",
+    //-       :class="dataset.row.labels[row.id].row_type",)
+    //-     td.control
+    //-       select.pa-1(
+    //-           :value="getDisplayValue('row', row.id, idx)",
+    //-           @input="selectOption($event.target.value, idx, 'row')")
+    //-         option(style="display: none;") {{ idx + 1 }}
+    //-         option(
+    //-             v-for="option in rowMenuOptions",
+    //-             :value="option",
+    //-             :key="`row${idx}${option}`") {{ option }}
+    //-         option(v-show="dataset['row'].labels[idx] !== rowPrimaryKey") masked
+    //-     td.px-1.row(
+    //-         :class="dataset.column.labels[]"
+    //-         v-for="(col, idx2) in dataset.sourcerows[idx]",
+    //-         :key="`${idx}.${idx2}`") {{ col }}
 </template>
 
 <style lang="scss" scoped>
@@ -122,7 +123,7 @@ tr {
   }
 
   &.header, &.metadata {
-    td.header, td.metadata {
+    td.key, td.metadata {
       background-color: lightgray;
     }
   }
