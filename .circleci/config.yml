@@ -41,9 +41,9 @@ jobs:
           working_directory: ./devops
           name: Build and push Docker image
           command: |
-            docker build -t dozturk2/metabulo:latest .
+            docker build -t metabulo/opencpu:latest .
             echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USERNAME --password-stdin
-            docker push dozturk2/metabulo:latest
+            docker push metabulo/opencpu:latest
 
 workflows:
   version: 2
