@@ -139,7 +139,7 @@ class CSVFile(db.Model):
         columns = []
         index = 0
         keyfound = False
-        for cell in table.iloc[row_half]:
+        for cell in table.iloc[row_half].fillna('').astype(str):
             if (len(cell) > 0 and not keyfound):
                 keyfound = True
                 column_type = TABLE_COLUMN_TYPES.INDEX
@@ -164,7 +164,7 @@ class CSVFile(db.Model):
         rows = []
         index = 0
         keyfound = False
-        for cell in table.iloc[:,col_half]:
+        for cell in table.iloc[:,col_half].fillna('').astype(str):
             if (len(cell) > 0 and not keyfound):
                 keyfound = True
                 row_type = TABLE_ROW_TYPES.INDEX
