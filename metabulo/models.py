@@ -98,6 +98,8 @@ class CSVFile(db.Model):
     def filter_table_by_types(self, row_type, column_type):
         rows = CSVFile.get_indexes_by_type(self.rows, 'row', row_type)
         columns = CSVFile.get_indexes_by_type(self.columns, 'column', column_type)
+        print(row_type, column_type)
+        print(rows, columns)
         return self.table.iloc[rows, columns]
 
     def apply_transforms(self, last=None):
@@ -133,30 +135,52 @@ class CSVFile(db.Model):
         table = self.table
         row_half = floor(table.shape[0] / 2)
         col_half = floor(table.shape[1] / 2)
-        
+
         columns = []
         index = 0
         keyfound = False
         for cell in table.iloc[row_half]:
+            if (len(cell) > 0 and not keyfound):
+                keyfound = True
+                column_type = TABLE_COLUMN_TYPES.INDEX
+            elif (len(cell) == 0):
+                column_type = TABLE_COLUMN_TYPES.MASK
+            else:
+                try:
+                    floatcell = float(cell)
+                    column_type = TABLE_COLUMN_TYPES.DATA
+                except:
+                    column_type = TABLE_COLUMN_TYPES.METADATA
             columns.append(
                 table_column_schema.load({
                     'csv_file_id': self.id,
                     'column_index': index,
-                    'column_type': TABLE_COLUMN_TYPES.DATA,
+                    'column_type': column_type,
                 })
             )
             index += 1
-        
+
         table_row_schema = TableRowSchema()
         rows = []
         index = 0
         keyfound = False
-        for index, row in table.iterrows():
+        for cell in table.iloc[:,col_half]:
+            if (len(cell) > 0 and not keyfound):
+                keyfound = True
+                row_type = TABLE_ROW_TYPES.INDEX
+            elif (len(cell) == 0):
+                row_type = TABLE_ROW_TYPES.MASK
+            else:
+                try:
+                    floatcell = float(cell)
+                    row_type = TABLE_ROW_TYPES.DATA
+                except:
+                    row_type = TABLE_ROW_TYPES.METADATA
             rows.append(
                 table_row_schema.load({
                     'csv_file_id': self.id,
                     'row_index': index,
-                    'row_type': TABLE_ROW_TYPES.DATA,
+                    'row_type': row_type,
                 })
             )
             index += 1
