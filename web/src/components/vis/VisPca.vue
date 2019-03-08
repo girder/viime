@@ -83,12 +83,28 @@ export default {
 
       const axes = master.select('g.axes');
 
-      axes.append('g')
-        .attr('transform', `translate(0,${dheight})`)
-        .call(xAxis);
+      if (axes.select('.x-axis').size() === 0) {
+        axes.append('g')
+          .classed('x-axis', true)
+          .attr('transform', `translate(0,${dheight})`)
+          .call(xAxis);
+      } else {
+        axes.select('.x-axis')
+          .transition()
+          .duration(200)
+          .call(xAxis);
+      }
 
-      axes.append('g')
-        .call(yAxis);
+      if (axes.select('.y-axis').size() === 0) {
+        axes.append('g')
+          .classed('y-axis', true)
+          .call(yAxis);
+      } else {
+        axes.select('.y-axis')
+          .transition()
+          .duration(200)
+          .call(yAxis);
+      }
 
       // Draw the data.
       const cmap = scaleOrdinal(['red', 'blue']);

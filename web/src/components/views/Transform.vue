@@ -65,9 +65,18 @@ export default {
       const pcaData = await CSVService.getPlot(this.dataset_id, 'pca');
       this.points = pcaData.data;
     },
+    async loadPCADataShift () {
+      const data = await CSVService.getPlot(this.dataset_id, 'pca');
+      this.points = data.data.map(d => {
+        d.x += (Math.random() * 2 - 1) * 0.1 * d.x;
+        d.y += (Math.random() * 2 - 1) * 0.1 * d.y;
+        return d;
+      });
+    },
   },
   mounted () {
     this.loadPCAData();
+    window.setTimeout(() => this.loadPCADataShift(), 1000);
   },
   computed: {
     ...mapState({
