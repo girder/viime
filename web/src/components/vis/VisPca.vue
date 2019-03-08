@@ -83,6 +83,8 @@ export default {
 
       const axes = master.select('g.axes');
 
+      const duration = 500;
+
       if (axes.select('.x-axis').size() === 0) {
         axes.append('g')
           .classed('x-axis', true)
@@ -91,7 +93,7 @@ export default {
       } else {
         axes.select('.x-axis')
           .transition()
-          .duration(200)
+          .duration(duration)
           .call(xAxis);
       }
 
@@ -102,7 +104,7 @@ export default {
       } else {
         axes.select('.y-axis')
           .transition()
-          .duration(200)
+          .duration(duration)
           .call(yAxis);
       }
 
@@ -118,7 +120,7 @@ export default {
           .attr('r', 0)
         )
         .transition()
-        .duration(200)
+        .duration(duration)
         .delay((d, i) => i * 5)
         .attr('r', 2)
         .attr('cx', d => x(d.x))

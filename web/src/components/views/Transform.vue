@@ -61,8 +61,8 @@ export default {
       if (tx && 'transform_type' in tx) return tx.transform_type;
       return null;
     },
-    async loadPCAData () {
-      const pcaData = await CSVService.getPlot(this.dataset_id, 'pca');
+    async loadPCAData (csv) {
+      const pcaData = await CSVService.getPlot(csv, 'pca');
       this.points = pcaData.data;
     },
     async loadPCADataShift () {
@@ -75,18 +75,23 @@ export default {
     },
   },
   mounted () {
-    this.loadPCAData();
-    window.setTimeout(() => this.loadPCADataShift(), 1000);
+    this.loadPCAData(this.dataset_id);
   },
   computed: {
     ...mapState({
       norm(state) { return this.txTypeOrNull(state.datasets[this.dataset_id].normalization) },
       trans(state) { return this.txTypeOrNull(state.datasets[this.dataset_id].transformation) },
       scaling(state) { return this.txTypeOrNull(state.datasets[this.dataset_id].scaling) },
+      transformed(state) { return state.datasets[this.dataset_id].transformed },
     }),
     boxUrl() { return CSVService.getChartUrl(this.dataset_id, 'box'); },
     loadingsUrl() { return CSVService.getChartUrl(this.dataset_id, 'loadings'); },
   },
+  watch: {
+    transformed () {
+      this.loadPCAData(this.transformed.id);
+    }
+  }
 }
 </script>
 
