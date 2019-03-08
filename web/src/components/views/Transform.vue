@@ -3,6 +3,7 @@ import { mapState } from 'vuex';
 
 import { CSVService } from '../../common/api.service';
 import { MUTEX_TRANSFORM_TABLE } from '../../store/actions.type';
+import VisPca from '@/components/vis/VisPca';
 
 const normalize_methods = [
   { label: 'None', value: null },
@@ -31,12 +32,16 @@ const all_methods = [
 ];
 
 export default {
+  components: {
+    VisPca,
+  },
   data() {
     return {
       dataset_id: this.$router.currentRoute.params.id,
       normalize_methods,
       transform_methods,
       scaling_methods,
+      points: [],
     };
   },
   methods: {
@@ -55,7 +60,14 @@ export default {
     txTypeOrNull(tx) {
       if (tx && 'transform_type' in tx) return tx.transform_type;
       return null;
-    }
+    },
+    async loadPCAData () {
+      const pcaData = await CSVService.getPlot(this.dataset_id, 'pca');
+      this.points = pcaData.data;
+    },
+  },
+  mounted () {
+    this.loadPCAData();
   },
   computed: {
     ...mapState({
@@ -95,6 +107,9 @@ v-container(fill-height)
             v-radio(v-for="m in scaling_methods", :label="m.label",
                 :value="m.value", :key="`scale${m.value}`")
     v-layout(column).pa-2
+      v-card
+        vis-pca(:width="500" :height="400" :points="points")
+
       v-card
         img(:src="`${boxUrl}?cachebust=${norm}${trans}${scaling}`" style="width: 100%;")
 </template>
