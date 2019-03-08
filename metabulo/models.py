@@ -121,14 +121,14 @@ class CSVFile(db.Model):
         table = self.table
 
         columns = []
-        if table.index.name is None:
+        if table.index is None:
             raise ValidationError('No primary key column detected')
 
         index = 0
         columns.append(
             table_column_schema.load({
                 'csv_file_id': self.id,
-                'column_header': table.index.name,
+                'column_header': table.index.name or '',
                 'column_index': index,
                 'column_type': TABLE_COLUMN_TYPES.INDEX,
             })

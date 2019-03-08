@@ -1,16 +1,20 @@
 const rowMenuOptions = [
   'sample',
   'header',
+  'metadata',
+  'masked',
 ];
 const defaultRowOption = 'sample';
 const rowPrimaryKey = 'header';
 
 const colMenuOptions = [
-  'qualitative',
-  'numeric',
+  'key',
+  'metadata',
+  'measurement',
+  'masked',
 ];
-const defaultColOption = 'numeric';
-const colPrimaryKey = null; // No key exists
+const defaultColOption = 'measurement';
+const colPrimaryKey = 'key';
 
 export {
   rowMenuOptions,

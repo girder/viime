@@ -11,9 +11,9 @@ def make_box_plot(frame):
     data = []
     fig1, ax1 = plt.subplots()
     ax1.set_title('A plot')
-    for a in t[1:]:
+    for a in t:
         arr = list(a)
-        data.append(np.array(arr[2:]))
+        data.append(np.array(arr[1:]))
     ax1.boxplot(data)
     output = io.BytesIO()
     FigureCanvas(fig1).print_png(output)

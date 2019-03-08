@@ -117,24 +117,24 @@ tr {
   &.header {
     background-color: #03b803;
   }
-  &.secondary-key {
+  &.metadata {
     background-color: lightgreen;
   }
 
-  &.header, &.secondary-key {
-    td.qualitative, td.secondary-key {
+  &.header, &.metadata {
+    td.key, td.metadata {
       background-color: lightgray;
     }
   }
   td {
-    &.qualitative {
+    &.key {
       background-color: cyan;
     }
-    &.secondary-key {
+    &.metadata {
       background-color: lightblue;
     }
   }
-  &.disable td, td.disable {
+  &.masked td, td.masked {
     background-color: lightgray !important;
   }
 }

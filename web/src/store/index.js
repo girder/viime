@@ -21,7 +21,6 @@ import {
   ADD_SOURCE_DATA,
   REMOVE_TRANSFORMATION,
   SET_AXIS_LABEL,
-  SET_AXIS_MASK,
   SET_TRANSFORMATION,
   SET_TRANSFORM_DATA,
   SET_LAST_ERROR,
@@ -71,12 +70,10 @@ const mutations = {
       // user- and server-generated lables for rows and columns
       row: {
         labels: rows.map(r => r.row_type),
-        mask: rows.map(r => r.row_mask),
         primary_key: 0,
       },
       column: {
         labels: cols.map(c => c.column_type),
-        mask: cols.map(c => c.column_mask),
         primary_key: 0,
       },
       // JSON serialized copy of data.table
@@ -113,10 +110,6 @@ const mutations = {
     } else if (index === oldprimary) {
       Vue.set(state.datasets[key][axis], 'primary_key', null);
     }
-  },
-
-  [SET_AXIS_MASK](state, { key, axis, index, value}) {
-    Vue.set(state.datasets[key][axis].mask, index, value);
   },
 
   [SET_LAST_ERROR](state, { err }) {
@@ -187,13 +180,7 @@ const actions = {
   
   async [CHANGE_AXIS_LABEL]({commit}, { dataset_id, axis, label, index }) {
     const params = {};
-    if (label === 'disable') {
-      params[`${axis}_mask`] = true;
-    }
-    else {
-      params[`${axis}_mask`] = false;
-      params[`${axis}_type`] = label;
-    }
+    params[`${axis}_type`] = label;
     try {
       await CSVService.updateAxis(dataset_id, axis, index, params);
       commit(SET_AXIS_LABEL, {
@@ -202,12 +189,6 @@ const actions = {
         index,
         value: label,
         isPrimary: [rowPrimaryKey, colPrimaryKey].indexOf(label) >= 0,
-      });
-      commit(SET_AXIS_MASK, {
-        key: dataset_id,
-        axis,
-        index,
-        value: params[`${axis}_mask`],
       });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
