@@ -11,6 +11,7 @@ from marshmallow.exceptions import ValidationError
 import numpy as np
 import pandas
 from sqlalchemy import MetaData
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy_utils.types.json import JSONType
 from sqlalchemy_utils.types.uuid import UUIDType
@@ -52,10 +53,16 @@ class CSVFile(db.Model):
     meta = db.Column(JSONType, nullable=False)
 
     @property
-    def table(self):
+    def raw_table(self):
         if not hasattr(self, '_raw_table'):
-            self._raw_table = pandas.read_csv(self.uri, index_col=0)
+            self._raw_table = pandas.read_csv(self.uri, index_col=None, header=None)
         return self._raw_table.copy()
+
+    @property
+    def table(self):
+        if not hasattr(self, '_table'):
+            self._table = pandas.read_csv(self.uri, index_col=0)
+        return self._table.copy()
 
     @property
     def measurement_table(self):
@@ -78,6 +85,47 @@ class CSVFile(db.Model):
     def uri(self):
         id = str(self.id)
         return Path(current_app.config['UPLOAD_FOLDER']) / id[:3] / id
+
+    @hybrid_property
+    def header_row_index(self):
+        row = self.find_first_entity(lambda r: r.row_type == TABLE_ROW_TYPES.INDEX, self.rows)
+        return row and row.row_index
+
+    @header_row_index.expression
+    def header_row_index(cls):  # noqa: N805
+        return TableRow.query\
+            .filter_by(csv_file_id=cls.id, row_type=TABLE_ROW_TYPES.INDEX)\
+            .with_entities(TableRow.row_index)\
+            .scalar()
+
+    @property
+    def headers(self):
+        idx = self.header_row_index
+        # TODO:
+        assert idx is not None, 'Tables without headers are not supported'
+
+        return list(self.raw_table.iloc[idx, :])
+
+    @hybrid_property
+    def key_column_index(self):
+        column = self.find_first_entity(
+            lambda c: c.column_type == TABLE_COLUMN_TYPES.INDEX, self.columns)
+        return column and column.column_index
+
+    @key_column_index.expression
+    def key_column_index(cls):  # noqa: N805
+        return TableColumn.query\
+            .filter_by(csv_file_id=cls.id, column_type=TABLE_COLUMN_TYPES.INDEX)\
+            .with_entities(TableColumn.column_index)\
+            .scalar()
+
+    @property
+    def keys(self):
+        idx = self.key_column_index
+        # TODO:
+        assert idx is not None, 'Tables without primary keys are not supported'
+
+        return list(self.raw_table.iloc[:, idx])
 
     def filter_table_by_types(self, row_type, column_type):
         rows = [
@@ -114,6 +162,8 @@ class CSVFile(db.Model):
     def save_table(self, table):
         if hasattr(self, '_raw_table'):
             del self._raw_table
+        if hasattr(self, '_table'):
+            del self._table
         return self._save_csv_file_data(self.uri, table.to_csv())
 
     def _generate_table_columns(self):
@@ -128,7 +178,6 @@ class CSVFile(db.Model):
         columns.append(
             table_column_schema.load({
                 'csv_file_id': self.id,
-                'column_header': table.index.name or '',
                 'column_index': index,
                 'column_type': TABLE_COLUMN_TYPES.INDEX,
             })
@@ -144,7 +193,6 @@ class CSVFile(db.Model):
             columns.append(
                 table_column_schema.load({
                     'csv_file_id': self.id,
-                    'column_header': column_header,
                     'column_index': index,
                     'column_type': column_type,
                 })
@@ -161,7 +209,6 @@ class CSVFile(db.Model):
         rows = [
             table_row_schema.load({
                 'csv_file_id': self.id,
-                'row_name': '',  # or null?
                 'row_index': 0,
                 'row_type': TABLE_ROW_TYPES.INDEX,
             })
@@ -174,7 +221,6 @@ class CSVFile(db.Model):
             rows.append(
                 table_row_schema.load({
                     'csv_file_id': self.id,
-                    'row_name': row_name,
                     'row_index': index + 1,
                     'row_type': TABLE_ROW_TYPES.DATA,
                 })
@@ -195,6 +241,13 @@ class CSVFile(db.Model):
         with open(uri, 'w') as f:
             f.write(table_data)
         return table_data
+
+    @classmethod
+    def find_first_entity(cls, criterion, iterable):
+        for entity in iterable:
+            if criterion(entity):
+                return entity
+        return None
 
 
 def _validate_table_data(table):
@@ -247,24 +300,23 @@ class CSVFileSchema(BaseSchema):
 
 
 class TableColumn(db.Model):
-    __table_args__ = (
-        UniqueConstraint('column_header', 'csv_file_id'),
-    )
-
     csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     column_index = db.Column(db.Integer, primary_key=True)
-    column_header = db.Column(db.String, nullable=False)
     column_type = db.Column(db.String, nullable=False)
 
     csv_file = db.relationship(
         CSVFile, backref=db.backref('columns', lazy=True, order_by='TableColumn.column_index'))
+
+    @property
+    def column_header(self):
+        return self.csv_file.headers[self.column_index]
 
 
 class TableColumnSchema(BaseSchema):
     __model__ = TableColumn
 
     csv_file_id = fields.UUID(required=True, load_only=True)
-    column_header = fields.Str(required=True, nullable=False)
+    column_header = fields.Str(dump_only=True)
     column_index = fields.Int(required=True, validate=validate.Range(min=0))
     column_type = fields.Str(required=True, validate=validate.OneOf(TABLE_COLUMN_TYPES))
 
@@ -290,25 +342,24 @@ class ModifyColumnSchema(Schema):
 
 
 class TableRow(db.Model):
-    __table_args__ = (
-        UniqueConstraint('row_name', 'csv_file_id'),
-    )
-
     csv_file_id = db.Column(
         UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     row_index = db.Column(db.Integer, primary_key=True)
-    row_name = db.Column(db.String, nullable=False)
     row_type = db.Column(db.String, nullable=False)
 
     csv_file = db.relationship(
         CSVFile, backref=db.backref('rows', lazy=True, order_by='TableRow.row_index'))
+
+    @property
+    def row_name(self):
+        return self.csv_file.keys[self.row_index]
 
 
 class TableRowSchema(BaseSchema):
     __model__ = TableRow
 
     csv_file_id = fields.UUID(required=True, load_only=True)
-    row_name = fields.Str(required=True, nullable=False)
+    row_name = fields.Str(dump_only=True)
     row_index = fields.Int(required=True, validate=validate.Range(min=0))
     row_type = fields.Str(required=True, validate=validate.OneOf(TABLE_ROW_TYPES))
 

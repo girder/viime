@@ -52,7 +52,7 @@ def test_list_rows(client, table):
         url_for('csv.list_rows', csv_id=table.id))
     assert resp.status_code == 200
     assert resp.json == [{
-        'row_name': '',
+        'row_name': 'id',
         'row_index': 0,
         'row_type': 'header'
     }, {
