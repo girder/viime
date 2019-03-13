@@ -1,1 +1,6 @@
 *.simg
+.vagrant
+*.retry
+ansible/roles
+*.crt
+*.key

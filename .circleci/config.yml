@@ -29,6 +29,13 @@ jobs:
             curl https://bootstrap.pypa.io/get-pip.py | python
             pip install tox
             tox -e release
+      - run:
+          name: Copy to a standard location
+          command: cp dist/metabulo* dist/metabulo-sdist.tar.gz
+      - persist_to_workspace:
+          root: .
+          paths:
+            - dist
 
   publish:
     docker:
@@ -45,6 +52,55 @@ jobs:
             echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USERNAME --password-stdin
             docker push metabulo/opencpu:latest
 
+  deploy:
+    docker:
+      - image: circleci/python:3.6.1
+    environment:
+      AWS_DEFAULT_OUTPUT: json
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/metabulo
+      - run:
+          name: Install jq
+          command: sudo apt-get update && sudo apt-get install -y jq
+      - run:
+          name: Create a virtualenv for deployment
+          command: |
+            python3 -m venv deployment_env
+            . deployment_env/bin/activate
+      - run:
+          name: Activate virtual environment
+          command: echo ". $CIRCLE_WORKING_DIRECTORY/deployment_env/bin/activate" >> $BASH_ENV
+      - run:
+          name: Upgrade pip
+          command: pip install -U pip
+      - run:
+          name: Install the AWS CLI
+          command: pip install awscli
+      - run:
+          name: Install ansible
+          command: pip  install ansible
+      - run:
+          name: Install ansible galaxy requirements
+          command: ansible-galaxy install -r devops/ansible/requirements.yml
+      - run:
+          name: Install ssh key for the production instance
+          command: |
+            aws secretsmanager get-secret-value --secret-id "metabolomics.prod_ssh_key" | jq -r .SecretString > /tmp/metabolomics.pem
+            chmod og-rwx /tmp/metabolomics.pem
+            echo "eval $(ssh-agent) ssh-add /tmp/metabolomics.pem" >> $BASH_ENV
+      - run:
+          name: Add ssl certificate
+          command: |
+            aws secretsmanager get-secret-value --secret-id "metabolomics.ssl.crt" | jq -r .SecretString > data/nginx/ssl/metabolomics.kitware.com.crt
+            aws secretsmanager get-secret-value --secret-id "metabolomics.ssl.key" | jq -r .SecretString > data/nginx/ssl/metabolomics.kitware.com.key
+          working_directory: devops/ansible
+      - run:
+          name: Run ansible
+          command: ansible-playbook -e "flask_secret=$FLASK_SECRET" --inventory inventory site.yml
+          working_directory: devops/ansible
+
 workflows:
   version: 2
   test_and_publish:
@@ -59,6 +115,13 @@ workflows:
       - publish:
           requires:
             - test_python
+          filters:
+            branches:
+              only: master
+      - deploy:
+          requires:
+            - publish
+            - release
           filters:
             branches:
               only: master
