@@ -109,7 +109,14 @@ export default {
       }
 
       // Draw the data.
+      //
+      // Set up a colormap.
       const cmap = scaleOrdinal(['red', 'blue']);
+
+      // Select an arbitrary label to color the points by.
+      const label = Object.keys(points[0].labels)[0];
+
+      // Plot the points in the scatter plot.
       let plot = select(this.$refs.svg)
         .select('g.plot')
         .selectAll('circle')
@@ -125,7 +132,7 @@ export default {
         .attr('r', 2)
         .attr('cx', d => x(d.x))
         .attr('cy', d => y(d.y))
-        .attr('fill', d => cmap(d.labels[1]))
+        .attr('fill', d => cmap(d.labels[label]))
     }
   },
 };
