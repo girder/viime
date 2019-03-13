@@ -8,6 +8,7 @@
     upload_folder: "/home/gunicorn/files"
     opencpu_api_root: "http://localhost:8004/ocpu/library"
     deploy_domain: "metabolomics.kitware.com"
+    metabulo_sdist_path: "/tmp/metabulo/dist/metabulo-sdist.tar.gz"
 
   pre_tasks:
     - name: Install core system dependencies
@@ -18,14 +19,10 @@
           - python3-pip
           - nginx
           - sqlite3
+        update_cache: true
       become: true
 
   tasks:
-    - name: Check if path for sdist is specified
-      fail:
-        msg: "Should pass metabulo_sdist_path variable as an extra arg"
-      when: metabulo_sdist_path is not defined
-
     - name: Include docker role
       include_role:
         name: geerlingguy.docker
@@ -40,7 +37,7 @@
     - name: Start opencpu container
       docker_container:
         name: opencpu
-        image: dozturk2/metabulo
+        image: metabulo/opencpu
         published_ports:
           - 127.0.0.1:8004:8004
       become: true
@@ -138,10 +135,10 @@
       notify: Restart nginx
       become: true
 
-    - name: Create database
+    - name: Delete old database
       file:
         path: "{{ sqlalchemy_database_path }}"
-        state: "touch"
+        state: "absent"
       become: true
       become_user: gunicorn
 
