@@ -3,6 +3,9 @@
     <g class="master">
       <g class="axes"></g>
       <g class="plot"></g>
+      <g class="ellipse" transform="translate(0, 0) rotate(0) scale(1, 1)">
+        <circle cx="0" cy="0" r="1" style="fill: none; stroke: black;" vector-effect="non-scaling-stroke" />
+      </g>
     </g>
   </svg>
 </template>
@@ -22,6 +25,17 @@ function minmax (data, padding = 0.0) {
     min - pad,
     max + pad,
   ];
+}
+
+function covar (xs, ys) {
+  const sum = arr => arr.reduce((acc, x) => acc + x, 0);
+  const mean = arr => sum(arr) / arr.length;
+
+  const e_xy = mean(xs.map((x, i) => x * ys[i]));
+  const e_xx = mean(xs);
+  const e_yy = mean(ys);
+
+  return e_xy - e_xx * e_yy;
 }
 
 export default {
@@ -133,6 +147,36 @@ export default {
         .attr('cx', d => x(d.x))
         .attr('cy', d => y(d.y))
         .attr('fill', d => cmap(d.labels[label]))
+
+      // Compute and display the data ellipse.
+      const xs = points.map(d => d.x);
+      const ys = points.map(d => d.y);
+
+      const xMean = xs.reduce((acc, x) => acc + x, 0) / xs.length;
+      const yMean = ys.reduce((acc, y) => acc + y, 0) / ys.length;
+
+      const xx = covar(xs, xs);
+      const yy = covar(ys, ys);
+      const xy = covar(xs, ys);
+
+      const trace = xx + yy;
+      const det = xx * yy - xy * xy;
+
+      const eigval = [
+        trace / 2 + Math.sqrt(trace * trace / 4 - det),
+        trace / 2 - Math.sqrt(trace * trace / 4 - det)
+      ];
+
+      const eigvec = Math.abs(xy) < 1e-10 ? [[1, 0], [0, 1]] :
+        [[eigval[0] - yy, xy],
+         [eigval[1] - yy, xy]];
+
+      const rotation = Math.acos(eigvec[0][0]);
+
+      select('g.ellipse')
+        .transition()
+        .duration(duration)
+        .attr('transform', `translate(${x(xMean)}, ${y(yMean)}) rotate(${-180 * rotation / Math.PI}) scale(${0.5 * x(Math.sqrt(eigval[0]))}, ${0.5 * y(Math.sqrt(eigval[1]))})`);
     }
   },
 };
