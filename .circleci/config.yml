@@ -11,13 +11,37 @@ jobs:
   test_web:
     docker:
       - image: circleci/node:10
+    steps:
       - checkout
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
+      - run:
+          working_directory: ./web
+          name: Install node dependencies
+          command: yarn
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+      - run:
+          working_directory: ./web
+          command: yarn lint --no-fix
+      - run:
+          working_directory: ./web
+          command: yarn lint:pug
 
   release:
     docker:
       - image: node:10
     steps:
       - checkout
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
       - run:
           working_directory: ./web
           name: Install node dependencies
@@ -111,14 +135,17 @@ workflows:
   test_and_publish:
     jobs:
       - test_python
+      - test_web
       - release:
           requires:
+            - test_web
             - test_python
           filters:
             branches:
               only: master
       - publish:
           requires:
+            - test_web
             - test_python
           filters:
             branches:
