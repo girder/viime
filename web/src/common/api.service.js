@@ -19,7 +19,7 @@ const ApiService = {
   post(resource, data) {
     return Vue.axios.post(resource, data);
   },
-  
+
   put(resource, data) {
     return Vue.axios.put(resource, data);
   },
@@ -36,13 +36,13 @@ const ApiService = {
 
   download(resource, slug) {
     return Vue.axios.get(`${resource}/${slug}/download`);
-  }
+  },
 };
 
 export default ApiService;
 
 export const CSVService = {
-  
+
   get(slug) {
     return ApiService.get('csv', slug);
   },
@@ -56,7 +56,7 @@ export const CSVService = {
   },
 
   post(data) {
-    return ApiService.post('csv', data)
+    return ApiService.post('csv', data);
   },
 
   upload(data) {

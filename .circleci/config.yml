@@ -8,6 +8,11 @@ jobs:
       - run: pip install -U 'tox>=3.7'
       - run: tox -p auto -o
 
+  test_web:
+    docker:
+      - image: circleci/node:10
+      - checkout
+
   release:
     docker:
       - image: node:10

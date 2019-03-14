@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@girder/components": "https://github.com/girder/girder_web_components#master",
+    
     "axios": "^0.18.0",
     "lodash": "^4.17.11",
     "material-design-icons": "^3.0.1",
@@ -24,6 +25,7 @@
     "@vue/cli-plugin-babel": "^3.0.4",
     "@vue/cli-plugin-eslint": "^3.0.4",
     "@vue/cli-service": "^3.0.4",
+    "@vue/eslint-config-airbnb": "^4.0.0",
     "babel-eslint": "^10.0.1",
     "eslint": "^5.8.0",
     "eslint-plugin-vue": "^5.0.0",
@@ -32,7 +34,8 @@
     "pug": "^2.0.3",
     "pug-plain-loader": "^1.0.0",
     "sass-loader": "^7.1.0",
-    "vue-template-compiler": "^2.5.21"
+    "vue-template-compiler": "^2.5.21",
+    "webpack": "^4.29.6"
   },
   "eslintConfig": {
     "root": true,
@@ -40,10 +43,20 @@
       "node": true
     },
     "extends": [
-      "plugin:vue/essential",
-      "eslint:recommended"
+      "plugin:vue/recommended",
+      "@vue/airbnb"
     ],
-    "rules": {},
+    "rules": {
+      "camelcase": 0,
+      "no-param-reassign": [
+        "error",
+        {
+          "props": false
+        }
+      ],
+      "no-underscore-dangle": 0,
+      "import/prefer-default-export": 0
+    },
     "parserOptions": {
       "parser": "babel-eslint"
     }
