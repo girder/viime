@@ -55,15 +55,14 @@ export default {
       transformed(state) { return state.datasets[this.dataset_id].transformed; },
     }),
     boxUrl() { return CSVService.getChartUrl(this.dataset_id, 'box'); },
-    loadingsUrl() { return CSVService.getChartUrl(this.dataset_id, 'loadings'); },
   },
   watch: {
     transformed() {
-      this.loadPCAData(this.transformed.id);
+      this.loadPCAData(this.dataset_id);
     },
   },
   mounted() {
-    this.loadPCAData();
+    this.loadPCAData(this.dataset_id);
   },
   methods: {
     methodFromValue(value) {
@@ -118,6 +117,5 @@ v-container(fill-height)
                 :value="m.value", :key="`scale${m.value}`")
     v-layout.pa-2(column)
       v-card
-        img(:src="`${boxUrl}?cachebust=${norm}${trans}${scaling}`", style="width: 100%;")
         vis-pca(:width="500", :height="400", :points="points")
 </template>

@@ -47,10 +47,6 @@ export const CSVService = {
     return ApiService.get('csv', slug);
   },
 
-  getChartUrl(slug, type) {
-    return ApiService.buildUrl(`csv/${slug}/plot/${type}`);
-  },
-
   getPlot(slug, type, params = {}) {
     return ApiService.get('csv', `${slug}/plot/${type}`, params);
   },
