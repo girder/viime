@@ -1,10 +1,24 @@
 <template>
-  <svg ref="svg" :width="width" :height="height" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    ref="svg"
+    :width="width"
+    :height="height"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <g class="master">
-      <g class="axes"></g>
-      <g class="plot"></g>
-      <g class="ellipse" transform="translate(0, 0) rotate(0) scale(1, 1)">
-        <circle cx="0" cy="0" r="1" style="fill: none; stroke: black;" vector-effect="non-scaling-stroke" />
+      <g class="axes" />
+      <g class="plot" />
+      <g
+        class="ellipse"
+        transform="translate(0, 0) rotate(0) scale(1, 1)"
+      >
+        <circle
+          cx="0"
+          cy="0"
+          r="1"
+          style="fill: none; stroke: black;"
+          vector-effect="non-scaling-stroke"
+        />
       </g>
     </g>
   </svg>
@@ -16,7 +30,7 @@ import { scaleLinear, scaleOrdinal } from 'd3-scale';
 import { axisBottom, axisLeft } from 'd3-axis';
 import 'd3-transition';
 
-function minmax (data, padding = 0.0) {
+function minmax(data, padding = 0.0) {
   const min = Math.min(...data);
   const max = Math.max(...data);
   const pad = padding * (max - min);
@@ -27,7 +41,7 @@ function minmax (data, padding = 0.0) {
   ];
 }
 
-function covar (xs, ys) {
+function covar(xs, ys) {
   const sum = arr => arr.reduce((acc, x) => acc + x, 0);
   const mean = arr => sum(arr) / arr.length;
 
@@ -40,19 +54,28 @@ function covar (xs, ys) {
 
 export default {
   props: {
-    width: Number,
-    height: Number,
-    points: Array,
+    width: {
+      type: Number,
+      default: 400,
+    },
+    height: {
+      type: Number,
+      default: 300,
+    },
+    points: {
+      type: Array,
+      required: true,
+    },
   },
   watch: {
-    points (newVal) {
+    points(newVal) {
       if (newVal) {
         this.update();
       }
     },
   },
   methods: {
-    update () {
+    update() {
       // Grab the input props.
       const {
         width,
@@ -80,16 +103,16 @@ export default {
       const xrange = minmax(points.map(d => d.x), 0.1);
       const yrange = minmax(points.map(d => d.y), 0.1);
 
-      const x = scaleLinear()
+      const scalex = scaleLinear()
         .domain(xrange)
         .range([0, dwidth]);
 
-      const y = scaleLinear()
+      const scaley = scaleLinear()
         .domain(yrange)
         .range([dheight, 0]);
 
-      const xAxis = axisBottom(x);
-      const yAxis = axisLeft(y);
+      const xAxis = axisBottom(scalex);
+      const yAxis = axisLeft(scaley);
 
       // Draw axes.
       const master = svg.select('g.master')
@@ -131,22 +154,21 @@ export default {
       const label = Object.keys(points[0].labels)[0];
 
       // Plot the points in the scatter plot.
-      let plot = select(this.$refs.svg)
+      select(this.$refs.svg)
         .select('g.plot')
         .selectAll('circle')
         .data(points)
         .join(enter => enter.append('circle')
           .attr('cx', (d, i, nodes) => 60000 * Math.cos(i * Math.PI / nodes.length))
           .attr('cy', (d, i, nodes) => 60000 * Math.sin(i * Math.PI / nodes.length))
-          .attr('r', 0)
-        )
+          .attr('r', 0))
         .transition()
         .duration(duration)
         .delay((d, i) => i * 5)
         .attr('r', 2)
-        .attr('cx', d => x(d.x))
-        .attr('cy', d => y(d.y))
-        .attr('fill', d => cmap(d.labels[label]))
+        .attr('cx', d => scalex(d.x))
+        .attr('cy', d => scaley(d.y))
+        .attr('fill', d => cmap(d.labels[label]));
 
       // Compute and display the data ellipse.
       const xs = points.map(d => d.x);
@@ -164,20 +186,20 @@ export default {
 
       const eigval = [
         trace / 2 + Math.sqrt(trace * trace / 4 - det),
-        trace / 2 - Math.sqrt(trace * trace / 4 - det)
+        trace / 2 - Math.sqrt(trace * trace / 4 - det),
       ];
 
-      const eigvec = Math.abs(xy) < 1e-10 ? [[1, 0], [0, 1]] :
-        [[eigval[0] - yy, xy],
-         [eigval[1] - yy, xy]];
+      const eigvec = Math.abs(xy) < 1e-10 ? [[1, 0], [0, 1]]
+        : [[eigval[0] - yy, xy],
+          [eigval[1] - yy, xy]];
 
       const rotation = Math.acos(eigvec[0][0]);
 
       select('g.ellipse')
         .transition()
         .duration(duration)
-        .attr('transform', `translate(${x(xMean)}, ${y(yMean)}) rotate(${-180 * rotation / Math.PI}) scale(${0.5 * x(Math.sqrt(eigval[0]))}, ${0.5 * y(Math.sqrt(eigval[1]))})`);
-    }
+        .attr('transform', `translate(${scalex(xMean)}, ${scaley(yMean)}) rotate(${-180 * rotation / Math.PI}) scale(${0.5 * scalex(Math.sqrt(eigval[0]))}, ${0.5 * scaley(Math.sqrt(eigval[1]))})`);
+    },
   },
 };
 </script>
