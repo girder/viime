@@ -94,7 +94,7 @@ v-container(fill-height)
           v-radio-group(:value="scaling", @change="transformTable($event, 'scaling')")
             v-radio(v-for="m in scaling_methods", :label="m.label",
                 :value="m.value", :key="`scale${m.value}`")
-    v-layout(column).pa-2
+    v-layout.pa-2(column)
       v-card
-        img(:src="`${boxUrl}?cachebust=${norm}${trans}${scaling}`" style="width: 100%;")
+        img(:src="`${boxUrl}?cachebust=${norm}${trans}${scaling}`", style="width: 100%;")
 </template>

@@ -52,7 +52,7 @@ export default {
 
     thead
       tr
-        th <!-- empty -->
+        th<!--empty-->
         th.control(v-for="(col, idx) in dataset.column.labels")
           select.pa-1(
               :value="getDisplayValue('column', idx)",
@@ -67,7 +67,7 @@ export default {
     tbody
       tr(v-for="(row, idx) in dataset.sourcerows",
           :key="`${idx}${row[0]}`",
-          :class="dataset.row.labels[idx]",)
+          :class="dataset.row.labels[idx]")
         td.control
           select.pa-1(
               :value="getDisplayValue('row', idx)",
@@ -79,7 +79,7 @@ export default {
                 :key="`row${idx}${option}`") {{ option }}
             option(v-show="dataset['row'].labels[idx] !== rowPrimaryKey") disable
         td.px-1.row(
-            :class="dataset.column.labels[idx2]"
+            :class="dataset.column.labels[idx2]",
             v-for="(col, idx2) in row",
             :key="`${idx}.${idx2}`") {{ col }}
 </template>
