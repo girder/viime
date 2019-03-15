@@ -33,6 +33,7 @@ const all_methods = [
 ];
 
 export default {
+  mixins: [loadDataset],
   data() {
     return {
       dataset_id: this.$router.currentRoute.params.id,
@@ -50,7 +51,6 @@ export default {
     boxUrl() { return CSVService.getChartUrl(this.dataset_id, 'box'); },
     loadingsUrl() { return CSVService.getChartUrl(this.dataset_id, 'loadings'); },
   },
-  mixins: [loadDataset],
   methods: {
     methodFromValue(value) {
       return all_methods.find(m => m.value === value);

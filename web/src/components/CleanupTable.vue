@@ -31,7 +31,10 @@ export default {
     selectOption(label, index, axis_name) {
       this.$store.dispatch(CHANGE_AXIS_LABEL, {
         dataset_id: this.datasetId,
-        axis_name, label, index });
+        axis_name,
+        label,
+        index,
+      });
     },
     getDisplayValue(axis, idx) {
       const val = this.dataset[axis].labels[idx];
@@ -47,8 +50,8 @@ export default {
 .cleanup-wrapper
   v-layout(v-if="!dataset", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
-  
-  table.cleanup-table(v-else)  
+
+  table.cleanup-table(v-else)
     thead
       tr
         th<!--empty-->
