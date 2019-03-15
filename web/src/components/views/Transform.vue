@@ -4,6 +4,8 @@ import { mapState } from 'vuex';
 import { CSVService } from '../../common/api.service';
 import { MUTEX_TRANSFORM_TABLE } from '../../store/actions.type';
 
+import { loadDataset } from '@/utils/mixins';
+
 const normalize_methods = [
   { label: 'None', value: null },
   { label: 'Min Max', value: 'normalize', priority: 10 },
@@ -48,6 +50,7 @@ export default {
     boxUrl() { return CSVService.getChartUrl(this.dataset_id, 'box'); },
     loadingsUrl() { return CSVService.getChartUrl(this.dataset_id, 'loadings'); },
   },
+  mixins: [loadDataset],
   methods: {
     methodFromValue(value) {
       return all_methods.find(m => m.value === value);

@@ -1,10 +1,12 @@
 <script>
+import { loadDataset } from '@/utils/mixins';
 import CleanupTable from '../CleanupTable.vue';
 
 export default {
   components: {
     CleanupTable,
   },
+  mixins: [loadDataset],
   data() {
     return {
       dataset_id: this.$router.currentRoute.params.id,
