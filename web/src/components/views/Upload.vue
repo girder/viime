@@ -21,18 +21,18 @@ const dataTypes = [
 ];
 
 export default {
+  components: {
+    FileList,
+    Dropzone,
+  },
   mixins: [sizeFormatter],
   data() {
     return {
-      files:  [],
+      files: [],
       message: 'Drop files here or click to upload',
       dataTypes,
       sampleTypes,
     };
-  },
-  components: {
-    FileList,
-    Dropzone,
   },
   methods: {
     onFileChange(targetFiles) {
@@ -43,7 +43,7 @@ export default {
       })));
     },
     async upload() {
-      const promises = this.files.map(async file => {
+      const promises = this.files.map(async (file) => {
         file.status = 'uploading';
         try {
           await this.$store.dispatch(UPLOAD_CSV, { file: file.file });
@@ -70,22 +70,24 @@ v-container(fill-height)
         p Choose a file from your computer
     v-card
       dropzone.filezone(v-if="files.length === 0", :multiple="true",
-        :message="message", @change="onFileChange")
+          :message="message", @change="onFileChange")
     v-layout(row, wrap, shrink)
-        v-card.ma-2.filecard(v-for="(file, idx) in files", :key="file.file.name")
-          v-card-title(primary-title)
-            v-btn(icon, @click="files.splice(idx, 1)")
-              v-icon {{ $vuetify.icons.close }}
-            div.ml-2
-              h3.headline {{ file.file.name }}
-              h3 {{ formatSize(file.file.size) }}
-          v-card-text
-            v-select.pa-2(label="Type of sample",
-                :items="sampleTypes", item-text="name", item-value="value")
-            v-select.pa-2(label="Type of data",
-                :items="dataTypes", item-text="name", item-value="value")
-        v-card.ma-2.filecard(v-if="files.length > 0")
-          dropzone(:multiple="true", message="Add more files", @change="onFileChange")
+      v-card.ma-2.filecard(v-for="(file, idx) in files", :key="file.file.name")
+        v-card-title(primary-title)
+          v-btn(icon, @click="files.splice(idx, 1)")
+            v-icon {{ $vuetify.icons.close }}
+          .ml-2
+            h3.headline {{ file.file.name }}
+            h3 {{ formatSize(file.file.size) }}
+        v-card-text
+          v-select.pa-2(
+              :items="sampleTypes", label="Type of sample",
+              item-text="name", item-value="value")
+          v-select.pa-2(
+              :items="dataTypes", label="Type of data",
+              item-text="name", item-value="value")
+      v-card.ma-2.filecard(v-if="files.length > 0")
+        dropzone(:multiple="true", message="Add more files", @change="onFileChange")
     v-layout.my-4(row)
       v-spacer
       v-btn.ma-0(:disabled="!files.length", large, depressed, color="primary", @click="upload")

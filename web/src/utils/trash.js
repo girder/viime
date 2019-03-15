@@ -11,4 +11,4 @@ function convertCsvToRows(csvstring) {
 
 export {
   convertCsvToRows,
-}
+};

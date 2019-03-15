@@ -32,26 +32,28 @@ Vue.use(Vuex);
  * Dataset schema
  * @typedef {Object} Dataset
  * @property {Array} source the unaltered source data
+ * @property {Number} width raw width
+ * @property {Number} height raw height
  * @property {Array} transformed the most recent transform data
  * @property {Array} transformations a list of all transformations on the dataset
  * @property {String} normalization there can only be 1.
  */
 
-const state = {
+const appstate = {
   // map of all datasets in the session by csv UUID
   datasets: {},
   lasterror: null,
 };
 
 const getters = {
-  dataset: (state) => (id) => state.datasets[id],
+  dataset: state => id => state.datasets[id],
 };
 
 const mutations = {
 
   [ADD_SOURCE_DATA](state, { data }) {
     const key = data.id;
-    
+
     const rows = Array(data.rows.length).fill();
     data.rows.forEach((r) => {
       rows[r.row_index] = r;
@@ -60,10 +62,10 @@ const mutations = {
     data.columns.forEach((c) => {
       cols[c.column_index] = c;
     });
-    
+
     const { data: sourcerows } = convertCsvToRows(data.table);
     Vue.set(state.datasets, key, {
-      // API response from 
+      // API response from server
       source: data,
       width: sourcerows[0].length, // TODO: get from server
       height: sourcerows.length, // TODO: get from server
@@ -98,7 +100,9 @@ const mutations = {
     delete state.datasets[key].transformations[tx_key];
   },
 
-  [SET_AXIS_LABEL](state, { key, axis, index, value, isPrimary }) {
+  [SET_AXIS_LABEL](state, {
+    key, axis, index, value, isPrimary,
+  }) {
     Vue.set(state.datasets[key][axis].labels, index, value);
     const oldprimary = state.datasets[key][axis].primary_key;
     const default_axis_label = axis === 'col' ? defaultColOption : defaultRowOption;
@@ -138,14 +142,16 @@ const actions = {
     try {
       const { data } = await CSVService.upload(formData);
       commit(ADD_SOURCE_DATA, { data });
-    } catch (err){
+    } catch (err) {
       commit(SET_LAST_ERROR, err);
       throw err;
     }
   },
 
   // set mutually exclusive transformation within category.
-  async [MUTEX_TRANSFORM_TABLE]({state, commit}, { category, dataset_id, transform_type, args }) {
+  async [MUTEX_TRANSFORM_TABLE]({ state, commit }, {
+    category, dataset_id, transform_type, args,
+  }) {
     const key = dataset_id;
     const last = state.datasets[key][category];
     if (transform_type === null || last) {
@@ -153,7 +159,7 @@ const actions = {
       try {
         await CSVService.dropTransform(key, last.id);
         if (last) commit(REMOVE_TRANSFORMATION, { key, tx_key: last.id, category });
-      } catch (err){
+      } catch (err) {
         commit(SET_LAST_ERROR, err);
         throw err;
       }
@@ -163,7 +169,7 @@ const actions = {
       try {
         const { data } = await CSVService.addTransform(key, { transform_type, args });
         commit(SET_TRANSFORMATION, { key, data, category });
-      } catch (err){
+      } catch (err) {
         commit(SET_LAST_ERROR, err);
         throw err;
       }
@@ -172,20 +178,22 @@ const actions = {
     try {
       const { data } = await CSVService.get(key);
       commit(SET_TRANSFORM_DATA, { data });
-    } catch (err){
+    } catch (err) {
       commit(SET_LAST_ERROR, err);
       throw err;
     }
   },
-  
-  async [CHANGE_AXIS_LABEL]({commit}, { dataset_id, axis, label, index }) {
+
+  async [CHANGE_AXIS_LABEL]({ commit }, {
+    dataset_id, axis: axis_name, label, index,
+  }) {
     const params = {};
-    params[`${axis}_type`] = label;
+    params[`${axis_name}_type`] = label;
     try {
-      await CSVService.updateAxis(dataset_id, axis, index, params);
+      await CSVService.updateAxis(dataset_id, axis_name, index, params);
       commit(SET_AXIS_LABEL, {
         key: dataset_id,
-        axis,
+        axis_name,
         index,
         value: label,
         isPrimary: [rowPrimaryKey, colPrimaryKey].indexOf(label) >= 0,
@@ -198,8 +206,8 @@ const actions = {
 };
 
 export default new Vuex.Store({
-  state,
+  state: appstate,
   getters,
   mutations,
-  actions
+  actions,
 });
