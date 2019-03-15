@@ -1,5 +1,4 @@
 <script>
-import { mapState } from 'vuex';
 import { CHANGE_AXIS_LABEL } from '../store/actions.type';
 import {
   rowMenuOptions,
@@ -32,15 +31,17 @@ export default {
     selectOption(label, index, axis) {
       this.$store.dispatch(CHANGE_AXIS_LABEL, {
         dataset_id: this.datasetId,
-        axis, label, index });
+        axis,
+        label,
+        index,
+      });
     },
     getDisplayValue(axis, idx) {
       const val = this.dataset[axis].labels[idx];
-      if (axis === 'row')
-        return val === defaultRowOption ? `${idx + 1}` : val;
-      else if (axis === 'column')
-        return val === defaultColOption ? `${idx + 1}` : val;
-    }
+      if (axis === 'row') return val === defaultRowOption ? `${idx + 1}` : val;
+      if (axis === 'column') return val === defaultColOption ? `${idx + 1}` : val;
+      throw new Error(`${axis} is not a valid axis name`);
+    },
   },
 };
 </script>
@@ -48,11 +49,11 @@ export default {
 <template lang="pug">
 .cleanup-wrapper
   table.cleanup-table
-    
+
     thead
       tr
         th <!-- empty -->
-        th.control(v-for="(col, idx) in dataset.column.labels") 
+        th.control(v-for="(col, idx) in dataset.column.labels")
           select.pa-1(
               :value="getDisplayValue('column', idx)",
               @input="selectOption($event.target.value, idx, 'column')")
@@ -97,7 +98,7 @@ export default {
   th, td {
     white-space: nowrap;
     border: 2px solid gray;
-    
+
     &.control {
       background-color: lightgray;
       // border-radius: 5px;

@@ -1,5 +1,4 @@
 <script>
-import { mapState } from 'vuex';
 import CleanupTable from '../CleanupTable.vue';
 
 export default {

@@ -21,18 +21,18 @@ const dataTypes = [
 ];
 
 export default {
+  components: {
+    FileList,
+    Dropzone,
+  },
   mixins: [sizeFormatter],
   data() {
     return {
-      files:  [],
+      files: [],
       message: 'Drop files here or click to upload',
       dataTypes,
       sampleTypes,
     };
-  },
-  components: {
-    FileList,
-    Dropzone,
   },
   methods: {
     onFileChange(targetFiles) {
@@ -43,7 +43,7 @@ export default {
       })));
     },
     async upload() {
-      const promises = this.files.map(async file => {
+      const promises = this.files.map(async (file) => {
         file.status = 'uploading';
         try {
           await this.$store.dispatch(UPLOAD_CSV, { file: file.file });
