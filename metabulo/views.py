@@ -5,9 +5,9 @@ from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from metabulo import opencpu
 from metabulo.models import CSVFile, CSVFileSchema, db, \
     ModifyColumnSchema, ModifyRowSchema, \
-    TableColumn, TableColumnSchema, TABLE_COLUMN_TYPES, \
-    TableRow, TableRowSchema, TABLE_ROW_TYPES, \
-    TableTransform, TableTransformSchema
+    TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
+    TableColumn, TableColumnSchema, TableRow, \
+    TableRowSchema, TableTransform, TableTransformSchema
 from metabulo.plot import make_box_plot, pca
 
 csv_file_schema = CSVFileSchema()
@@ -123,7 +123,7 @@ def modify_column(csv_id, column_index):
         if key == 'column_type' and value == TABLE_COLUMN_TYPES.INDEX:
             if csv_file.key_column_index is not None:
                 csv_file.columns[csv_file.key_column_index].column_type = TABLE_COLUMN_TYPES.DATA
-        setattr(column, key, value) 
+        setattr(column, key, value)
     db.session.add(column)
     db.session.add(csv_file)
     db.session.commit()
