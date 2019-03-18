@@ -6,7 +6,8 @@
 import papa from 'papaparse';
 
 function convertCsvToRows(csvstring) {
-  return papa.parse(csvstring);
+  const { data } = papa.parse(csvstring);
+  return { data: data.slice(0, data.length - 1) };
 }
 
 export {
