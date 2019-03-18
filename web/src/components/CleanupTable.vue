@@ -64,7 +64,6 @@ export default {
                 v-for="option in colMenuOptions",
                 :value="option",
                 :key="`column${idx}${option}`") {{ option }}
-            option(v-show="dataset['column'].labels[idx] !== colPrimaryKey") disable
     tbody
       tr(v-for="(row, idx) in dataset.sourcerows",
           :key="`${idx}${row[0]}`",
@@ -78,7 +77,6 @@ export default {
                 v-for="option in rowMenuOptions",
                 :value="option",
                 :key="`row${idx}${option}`") {{ option }}
-            option(v-show="dataset['row'].labels[idx] !== rowPrimaryKey") disable
         td.px-1.row(
             :class="dataset.column.labels[idx2]",
             v-for="(col, idx2) in row",

@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from flask import Blueprint, current_app, jsonify, request, Response, send_file
+from flask import Blueprint, current_app, jsonify, request, send_file
 
 from metabulo import opencpu
 from metabulo.models import CSVFile, CSVFileSchema, db, \
@@ -8,7 +8,7 @@ from metabulo.models import CSVFile, CSVFileSchema, db, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     TableColumn, TableColumnSchema, TableRow, \
     TableRowSchema, TableTransform, TableTransformSchema
-from metabulo.plot import make_box_plot, pca
+from metabulo.plot import pca
 
 csv_file_schema = CSVFileSchema()
 modify_column_schema = ModifyColumnSchema()
@@ -178,14 +178,6 @@ def delete_transform(csv_id, transform_id):
     db.session.delete(transform_)
     db.session.commit()
     return '', 204
-
-
-@csv_bp.route('/csv/<uuid:csv_id>/plot/box', methods=['GET'])
-def get_box_plot(csv_id):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    table = csv_file.measurement_table
-    fig = make_box_plot(table)
-    return Response(fig, mimetype='image/png')
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/plot/pca', methods=['GET'])

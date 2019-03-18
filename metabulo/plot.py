@@ -1,23 +1,4 @@
-import io
-
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-import matplotlib.pyplot as plt
-import numpy as np
 from sklearn.decomposition import PCA
-
-
-def make_box_plot(frame):
-    t = frame.to_records()
-    data = []
-    fig1, ax1 = plt.subplots()
-    ax1.set_title('A plot')
-    for a in t:
-        arr = list(a)
-        data.append(np.array(arr[1:]))
-    ax1.boxplot(data)
-    output = io.BytesIO()
-    FigureCanvas(fig1).print_png(output)
-    return output.getvalue()
 
 
 def pca(measurements, metadata, x_component_index, y_component_index):

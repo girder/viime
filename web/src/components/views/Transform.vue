@@ -3,6 +3,7 @@ import { mapState } from 'vuex';
 
 import { CSVService } from '../../common/api.service';
 import { MUTEX_TRANSFORM_TABLE } from '../../store/actions.type';
+import VisPca from '@/components/vis/VisPca.vue';
 
 import { loadDataset } from '@/utils/mixins';
 
@@ -33,6 +34,9 @@ const all_methods = [
 ];
 
 export default {
+  components: {
+    VisPca,
+  },
   mixins: [loadDataset],
   data() {
     return {
@@ -40,6 +44,7 @@ export default {
       normalize_methods,
       transform_methods,
       scaling_methods,
+      points: [],
     };
   },
   computed: {
@@ -47,9 +52,17 @@ export default {
       norm(state) { return this.txTypeOrNull(state.datasets[this.dataset_id].normalization); },
       trans(state) { return this.txTypeOrNull(state.datasets[this.dataset_id].transformation); },
       scaling(state) { return this.txTypeOrNull(state.datasets[this.dataset_id].scaling); },
+      transformed(state) { return state.datasets[this.dataset_id].transformed; },
     }),
     boxUrl() { return CSVService.getChartUrl(this.dataset_id, 'box'); },
-    loadingsUrl() { return CSVService.getChartUrl(this.dataset_id, 'loadings'); },
+  },
+  watch: {
+    transformed() {
+      this.loadPCAData(this.dataset_id);
+    },
+  },
+  mounted() {
+    this.loadPCAData(this.dataset_id);
   },
   methods: {
     methodFromValue(value) {
@@ -68,7 +81,12 @@ export default {
       if (tx && 'transform_type' in tx) return tx.transform_type;
       return null;
     },
+    async loadPCAData(csv) {
+      const pcaData = await CSVService.getPlot(csv, 'pca');
+      this.points = pcaData.data;
+    },
   },
+
 };
 </script>
 
@@ -99,5 +117,5 @@ v-container(fill-height)
                 :value="m.value", :key="`scale${m.value}`")
     v-layout.pa-2(column)
       v-card
-        img(:src="`${boxUrl}?cachebust=${norm}${trans}${scaling}`", style="width: 100%;")
+        vis-pca(:width="500", :height="400", :points="points")
 </template>
