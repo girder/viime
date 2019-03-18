@@ -1,7 +1,7 @@
 from flask import url_for
 import pytest
 
-from metabulo.models import CSVFileSchema, db
+from metabulo.models import CSVFile, CSVFileSchema, db
 
 csv_file_schema = CSVFileSchema()
 
@@ -35,7 +35,7 @@ def test_list_columns(client, table):
     }, {
         'column_header': 'meta',
         'column_index': 1,
-        'column_type': 'metadata'
+        'column_type': 'measurement'
     }, {
         'column_header': 'col1',
         'column_index': 2,
@@ -77,7 +77,7 @@ def test_get_column(client, table):
     assert resp.json == {
         'column_header': 'meta',
         'column_index': 1,
-        'column_type': 'metadata'
+        'column_type': 'measurement'
     }
 
 
@@ -120,3 +120,90 @@ def test_modify_row(client, table):
         'row_index': 1,
         'row_type': 'masked'
     }
+
+
+def test_delete_key_column(client, table):
+    resp = client.put(
+        url_for('csv.modify_column', csv_id=table.id, column_index=0),
+        json={
+            'column_type': 'metadata'
+        }
+    )
+    assert resp.status_code == 200
+    assert resp.json['column_type'] == 'metadata'
+
+
+def test_delete_header_row(client, table):
+    resp = client.put(
+        url_for('csv.modify_row', csv_id=table.id, row_index=0),
+        json={
+            'row_type': 'metadata'
+        }
+    )
+    assert resp.status_code == 200
+    assert resp.json['row_type'] == 'metadata'
+
+
+def test_modify_csv_file_header_index(client):
+    table = """
+,,
+row1,0.5,2.0
+row2,1.5,0
+id,header1,header2
+"""
+    csv_file = csv_file_schema.load({
+        'table': table,
+        'name': 'test_csv_file.csv'
+    })
+    db.session.add(csv_file)
+    db.session.commit()
+
+    csv_id = csv_file.id
+    resp = client.put(
+        url_for('csv.modify_row', csv_id=csv_id, row_index=0),
+        json={'row_type': 'masked'}
+    )
+    assert resp.status_code == 200
+
+    resp = client.put(
+        url_for('csv.modify_row', csv_id=csv_id, row_index=3),
+        json={'row_type': 'header'}
+    )
+    assert resp.status_code == 200
+    assert (CSVFile.query.get(csv_id).measurement_table.columns == ['header1', 'header2']).all()
+
+
+def test_modify_csv_file_key_index(client):
+    table = """
+header1,id,header2,header3,extra
+0,row1,0.5,2.0,
+0,row2,1.5,0,
+"""
+    csv_file = csv_file_schema.load({
+        'table': table,
+        'name': 'test_csv_file.csv'
+    })
+    db.session.add(csv_file)
+    db.session.commit()
+
+    csv_id = csv_file.id
+    resp = client.put(
+        url_for('csv.modify_column', csv_id=csv_id, column_index=1),
+        json={'column_type': 'key'}
+    )
+    assert resp.status_code == 200
+
+    resp = client.put(
+        url_for('csv.modify_column', csv_id=csv_id, column_index=4),
+        json={'column_type': 'masked'}
+    )
+    assert resp.status_code == 200
+    assert (CSVFile.query.get(csv_id).measurement_table.columns == ['header2', 'header3']).all()
+
+    resp = client.put(
+        url_for('csv.modify_column', csv_id=csv_id, column_index=0),
+        json={'column_type': 'measurement'}
+    )
+    assert resp.status_code == 200
+    assert (CSVFile.query.get(csv_id).measurement_table.columns ==
+            ['header1', 'header2', 'header3']).all()

@@ -121,9 +121,9 @@ def modify_column(csv_id, column_index):
     args = modify_column_schema.load(request.json or {})
     for key, value in args.items():
         if key == 'column_type' and value == TABLE_COLUMN_TYPES.INDEX:
-            if csv_file.key_column_index is not None:
-                csv_file.columns[csv_file.key_column_index].column_type = TABLE_COLUMN_TYPES.DATA
-        setattr(column, key, value)
+            csv_file.key_column_index = column_index
+        else:
+            setattr(column, key, value)
     db.session.add(column)
     db.session.add(csv_file)
     db.session.commit()
@@ -153,9 +153,9 @@ def modify_row(csv_id, row_index):
     args = modify_row_schema.load(request.json or {})
     for key, value in args.items():
         if key == 'row_type' and value == TABLE_ROW_TYPES.INDEX:
-            if csv_file.header_row_index is not None:
-                csv_file.rows[csv_file.header_row_index].row_type = TABLE_ROW_TYPES.DATA
-        setattr(row, key, value)
+            csv_file.header_row_index = row_index
+        else:
+            setattr(row, key, value)
     db.session.add(row)
     db.session.add(csv_file)
     db.session.commit()
