@@ -34,10 +34,10 @@ const all_methods = [
 ];
 
 export default {
-  mixins: [loadDataset],
   components: {
     VisPca,
   },
+  mixins: [loadDataset],
   data() {
     return {
       dataset_id: this.$router.currentRoute.params.id,

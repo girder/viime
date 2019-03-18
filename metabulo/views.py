@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from flask import Blueprint, current_app, jsonify, request, Response, send_file
+from flask import Blueprint, current_app, jsonify, request, send_file
 
 from metabulo import opencpu
 from metabulo.models import CSVFile, CSVFileSchema, db, \

@@ -1,8 +1,3 @@
-import io
-
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-import matplotlib.pyplot as plt
-import numpy as np
 from sklearn.decomposition import PCA
 
 
