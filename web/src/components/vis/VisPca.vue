@@ -5,10 +5,10 @@ svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/s
     g.plot
     g.ellipse(transform="translate(0, 0) rotate(0) scale(1, 1)")
       circle(cx="0",
-             cy="0",
-             r="1",
-             style="fill: none; stroke: black;",
-             vector-effect="non-scaling-stroke")
+          cy="0",
+          r="1",
+          style="fill: none; stroke: black;",
+          vector-effect="non-scaling-stroke")
 </template>
 
 <script>
