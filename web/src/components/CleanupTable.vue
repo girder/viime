@@ -54,7 +54,7 @@ export default {
   table.cleanup-table(v-else)
     thead
       tr
-        th<!--empty-->
+        th
         th.control(v-for="(col, idx) in dataset.column.labels")
           select.pa-1(
               :value="getDisplayValue('column', idx)",
