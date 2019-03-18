@@ -4,6 +4,8 @@ import { mapState } from 'vuex';
 import { CSVService } from '../../common/api.service';
 import { MUTEX_TRANSFORM_TABLE } from '../../store/actions.type';
 
+import { loadDataset } from '@/utils/mixins';
+
 const normalize_methods = [
   { label: 'None', value: null },
   { label: 'Min Max', value: 'normalize', priority: 10 },
@@ -31,6 +33,7 @@ const all_methods = [
 ];
 
 export default {
+  mixins: [loadDataset],
   data() {
     return {
       dataset_id: this.$router.currentRoute.params.id,

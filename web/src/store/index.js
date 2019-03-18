@@ -15,6 +15,7 @@ import {
   CHANGE_AXIS_LABEL,
   UPLOAD_CSV,
   MUTEX_TRANSFORM_TABLE,
+  LOAD_DATASET,
 } from './actions.type';
 
 import {
@@ -54,16 +55,18 @@ const mutations = {
   [ADD_SOURCE_DATA](state, { data }) {
     const key = data.id;
 
-    const rows = Array(data.rows.length).fill();
-    data.rows.forEach((r) => {
-      rows[r.row_index] = r;
-    });
-    const cols = Array(data.columns.length).fill();
-    data.columns.forEach((c) => {
-      cols[c.column_index] = c;
-    });
+    // Server doesn't guarantee order of indices.
+    const rows = data.rows.sort((a, b) => a.row_index - b.row_index);
+    const row_key_index = rows.find(r => r.row_type === rowPrimaryKey);
+    const cols = data.columns.sort((a, b) => a.column_index - b.column_index);
+    const col_key_index = cols.find(c => c.column_type === colPrimaryKey);
 
+    // TODO: look for mutually exclusive transformations
+    // pending #46
+
+    // serialize CSV string as JSON
     const { data: sourcerows } = convertCsvToRows(data.table);
+
     Vue.set(state.datasets, key, {
       // API response from server
       source: data,
@@ -72,11 +75,11 @@ const mutations = {
       // user- and server-generated lables for rows and columns
       row: {
         labels: rows.map(r => r.row_type),
-        primary_key: 0,
+        primary_key: row_key_index ? row_key_index.row_index : null,
       },
       column: {
         labels: cols.map(c => c.column_type),
-        primary_key: 0,
+        primary_key: col_key_index ? col_key_index.column_index : null,
       },
       // JSON serialized copy of data.table
       sourcerows,
@@ -101,38 +104,44 @@ const mutations = {
   },
 
   [SET_AXIS_LABEL](state, {
-    key, axis, index, value, isPrimary,
+    key, axis_name, index, value, isPrimary,
   }) {
-    Vue.set(state.datasets[key][axis].labels, index, value);
-    const oldprimary = state.datasets[key][axis].primary_key;
-    const default_axis_label = axis === 'col' ? defaultColOption : defaultRowOption;
+    Vue.set(state.datasets[key][axis_name].labels, index, value);
+    const oldprimary = state.datasets[key][axis_name].primary_key;
+
+    let default_axis_label = null;
+    if (axis_name === 'row') {
+      default_axis_label = defaultRowOption;
+    } else if (axis_name === 'column') {
+      default_axis_label = defaultColOption;
+    }
+
     if (isPrimary) {
       if (oldprimary !== null) {
-        Vue.set(state.datasets[key][axis].labels, oldprimary, default_axis_label);
+        Vue.set(state.datasets[key][axis_name].labels, oldprimary, default_axis_label);
       }
-      Vue.set(state.datasets[key][axis], 'primary_key', index);
+      Vue.set(state.datasets[key][axis_name], 'primary_key', index);
     } else if (index === oldprimary) {
-      Vue.set(state.datasets[key][axis], 'primary_key', null);
+      Vue.set(state.datasets[key][axis_name], 'primary_key', null);
     }
   },
 
   [SET_LAST_ERROR](state, { err }) {
-    state.lasterror = err;
+    Vue.set(state, 'lasterror', err);
   },
 
   [SET_TRANSFORM_DATA](state, { data }) {
     const key = data.id;
-    state.datasets[key].transformed = data;
+    Vue.set(state.datasets[key], 'transformed', data);
   },
 
   [SET_TRANSFORMATION](state, { key, data, category }) {
     const tx_key = data.id;
     if (category) {
-      state.datasets[key][category] = data;
+      Vue.set(state.datasets[key], category, data);
     }
-    state.datasets[key].transformations[tx_key] = data;
+    Vue.set(state.datasets[key].transformations, tx_key, data);
   },
-
 };
 
 const actions = {
@@ -141,6 +150,16 @@ const actions = {
     formData.append('file', file);
     try {
       const { data } = await CSVService.upload(formData);
+      commit(ADD_SOURCE_DATA, { data });
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      throw err;
+    }
+  },
+
+  async [LOAD_DATASET]({ commit }, { dataset_id }) {
+    try {
+      const { data } = await CSVService.get(dataset_id);
       commit(ADD_SOURCE_DATA, { data });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
@@ -175,6 +194,7 @@ const actions = {
       }
     }
 
+    // after modifying transforms, reapply all
     try {
       const { data } = await CSVService.get(key);
       commit(SET_TRANSFORM_DATA, { data });
@@ -185,7 +205,7 @@ const actions = {
   },
 
   async [CHANGE_AXIS_LABEL]({ commit }, {
-    dataset_id, axis: axis_name, label, index,
+    dataset_id, axis_name, label, index,
   }) {
     const params = {};
     params[`${axis_name}_type`] = label;

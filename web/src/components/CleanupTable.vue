@@ -28,10 +28,10 @@ export default {
     dataset() { return this.$store.getters.dataset(this.datasetId); },
   },
   methods: {
-    selectOption(label, index, axis) {
+    selectOption(label, index, axis_name) {
       this.$store.dispatch(CHANGE_AXIS_LABEL, {
         dataset_id: this.datasetId,
-        axis,
+        axis_name,
         label,
         index,
       });
@@ -48,11 +48,13 @@ export default {
 
 <template lang="pug">
 .cleanup-wrapper
-  table.cleanup-table
+  v-layout(v-if="!dataset", justify-center, align-center)
+    v-progress-circular(indeterminate, size="100", width="5")
 
+  table.cleanup-table(v-else)
     thead
       tr
-        th<!--empty-->
+        th
         th.control(v-for="(col, idx) in dataset.column.labels")
           select.pa-1(
               :value="getDisplayValue('column', idx)",
@@ -63,7 +65,6 @@ export default {
                 :value="option",
                 :key="`column${idx}${option}`") {{ option }}
             option(v-show="dataset['column'].labels[idx] !== colPrimaryKey") disable
-
     tbody
       tr(v-for="(row, idx) in dataset.sourcerows",
           :key="`${idx}${row[0]}`",

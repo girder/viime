@@ -333,13 +333,6 @@ class ModifyColumnSchema(Schema):
             raise ValidationError('JSON params required', data=data)
         return data
 
-    @post_load
-    def validate_type(self, data):
-        if data.get('column_type') == 'key':
-            raise ValidationError(
-                'Setting the key not yet supported', data='key', field_name='column_type')
-        return data
-
 
 class TableRow(db.Model):
     csv_file_id = db.Column(
@@ -374,14 +367,6 @@ class ModifyRowSchema(Schema):
     def validate_not_empty(self, data):
         if data is None or data == {}:
             raise ValidationError('JSON params required', data=data)
-        return data
-
-    @post_load
-    def validate_type(self, data):
-        if data.get('row_type') == TABLE_ROW_TYPES.INDEX:
-            raise ValidationError(
-                'Setting row primary key not yet supported',
-                data=data.get('row_type'), field_name='row_type')
         return data
 
 

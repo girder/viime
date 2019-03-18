@@ -5,8 +5,9 @@ from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from metabulo import opencpu
 from metabulo.models import CSVFile, CSVFileSchema, db, \
     ModifyColumnSchema, ModifyRowSchema, \
-    TableColumn, TableColumnSchema, TableRow, TableRowSchema, \
-    TableTransform, TableTransformSchema
+    TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
+    TableColumn, TableColumnSchema, TableRow, \
+    TableRowSchema, TableTransform, TableTransformSchema
 from metabulo.plot import make_box_plot, pca
 
 csv_file_schema = CSVFileSchema()
@@ -116,10 +117,15 @@ def get_column(csv_id, column_index):
 @csv_bp.route('/csv/<uuid:csv_id>/column/<int:column_index>', methods=['PUT'])
 def modify_column(csv_id, column_index):
     column = TableColumn.query.get_or_404((csv_id, column_index))
+    csv_file = CSVFile.query.get_or_404(csv_id)
     args = modify_column_schema.load(request.json or {})
     for key, value in args.items():
+        if key == 'column_type' and value == TABLE_COLUMN_TYPES.INDEX:
+            if csv_file.key_column_index is not None:
+                csv_file.columns[csv_file.key_column_index].column_type = TABLE_COLUMN_TYPES.DATA
         setattr(column, key, value)
     db.session.add(column)
+    db.session.add(csv_file)
     db.session.commit()
     return jsonify(table_column_schema.dump(column))
 
@@ -143,10 +149,15 @@ def get_row(csv_id, row_index):
 @csv_bp.route('/csv/<uuid:csv_id>/row/<int:row_index>', methods=['PUT'])
 def modify_row(csv_id, row_index):
     row = TableRow.query.get_or_404((csv_id, row_index))
+    csv_file = CSVFile.query.get_or_404(csv_id)
     args = modify_row_schema.load(request.json or {})
     for key, value in args.items():
+        if key == 'row_type' and value == TABLE_ROW_TYPES.INDEX:
+            if csv_file.header_row_index is not None:
+                csv_file.rows[csv_file.header_row_index].row_type = TABLE_ROW_TYPES.DATA
         setattr(row, key, value)
     db.session.add(row)
+    db.session.add(csv_file)
     db.session.commit()
     return jsonify(table_row_schema.dump(row))
 
