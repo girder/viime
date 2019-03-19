@@ -8,7 +8,6 @@ from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow import fields, post_dump, post_load, pre_load, Schema, validate
 from marshmallow.exceptions import ValidationError
-import numpy as np
 import pandas
 from sqlalchemy import MetaData
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -36,6 +35,17 @@ TABLE_COLUMN_TYPES = TableTypes('key', 'metadata', 'measurement', 'masked')
 TABLE_ROW_TYPES = TableTypes('header', 'metadata', 'sample', 'masked')
 
 
+def _guess_table_structure(raw_table):
+    # TODO: Implement this for real, this is just a dumb placeholder
+    rows = [TABLE_ROW_TYPES.INDEX] + [
+        TABLE_ROW_TYPES.DATA for i in range(raw_table.shape[0] - 1)
+    ]
+    columns = [TABLE_COLUMN_TYPES.INDEX] + [
+        TABLE_COLUMN_TYPES.DATA for i in range(raw_table.shape[1] - 1)
+    ]
+    return rows, columns
+
+
 class BaseSchema(Schema):
     __model__ = None
 
@@ -61,7 +71,31 @@ class CSVFile(db.Model):
     @property
     def table(self):
         if not hasattr(self, '_table'):
-            self._table = pandas.read_csv(self.uri, index_col=0)
+            kwargs = {}
+
+            # handle column names
+            header_row = self.header_row_index
+            kwargs['header'] = header_row
+            if header_row is None:
+                kwargs['names'] = self.headers
+
+            # handle row ids
+            kwargs['index_col'] = False
+            key_column = self.key_column_index
+            if key_column is not None:
+                kwargs['index_col'] = key_column
+
+            self._table = pandas.read_csv(self.uri, **kwargs)
+
+            # inject the computed keys in case the csv file does not have a primary key column
+            if key_column is None:
+                keys = self.keys
+
+                # exclude the header row from the primary key index if present
+                if header_row is not None:
+                    keys = keys[1:]
+                self._table.index = pandas.Index(keys)
+
         return self._table.copy()
 
     @property
@@ -98,11 +132,28 @@ class CSVFile(db.Model):
             .with_entities(TableRow.row_index)\
             .scalar()
 
+    @header_row_index.setter
+    def header_row_index(self, value):
+        if hasattr(self, '_table'):
+            del self._table
+
+        if self.header_row_index is not None:
+            old_row = self.rows[self.header_row_index]
+            old_row.row_type = TABLE_ROW_TYPES.METADATA
+            db.session.add(old_row)
+
+        if value is not None:
+            new_row = self.rows[value]
+            new_row.row_type = TABLE_ROW_TYPES.INDEX
+            db.session.add(new_row)
+
     @property
     def headers(self):
         idx = self.header_row_index
-        # TODO:
-        assert idx is not None, 'Tables without headers are not supported'
+        if idx is None:
+            return [
+                f'col{i + 1}' for i in range(self.raw_table.shape[1])
+            ]
 
         return list(self.raw_table.iloc[idx, :])
 
@@ -119,24 +170,55 @@ class CSVFile(db.Model):
             .with_entities(TableColumn.column_index)\
             .scalar()
 
+    @key_column_index.setter
+    def key_column_index(self, value):
+        if hasattr(self, '_table'):
+            del self._table
+
+        if self.key_column_index is not None:
+            old_column = self.columns[self.key_column_index]
+            old_column.column_type = TABLE_COLUMN_TYPES.METADATA
+            db.session.add(old_column)
+
+        if value is not None:
+            new_column = self.columns[value]
+            new_column.column_type = TABLE_COLUMN_TYPES.INDEX
+            db.session.add(new_column)
+
     @property
     def keys(self):
         idx = self.key_column_index
-        # TODO:
-        assert idx is not None, 'Tables without primary keys are not supported'
+        if idx is None:
+            return [
+                f'row{i + 1}' for i in range(self.raw_table.shape[0])
+            ]
 
         return list(self.raw_table.iloc[:, idx])
 
     def filter_table_by_types(self, row_type, column_type):
         rows = [
-            row.row_index - 1 for row in self.rows
-            if row.row_type in (row_type,)
+            row.row_index for row in self.rows
+            if row.row_type == row_type
         ]
+        if self.header_row_index is not None:
+            rows = [self.header_row_index] + rows
+            current_app.logger.warn('No header row is set.')
+
         columns = [
-            column.column_index - 1 for column in self.columns
-            if column.column_type in (column_type,)
+            column.column_index for column in self.columns
+            if column.column_type == column_type
         ]
-        return self.table.iloc[rows, columns]
+        if self.key_column_index is not None:
+            index_col = 0
+            columns = [self.key_column_index] + columns
+        else:
+            index_col = None
+
+        return pandas.read_csv(
+            BytesIO(
+                self.raw_table.iloc[rows, columns].to_csv(header=False, index=False).encode()
+            ), index_col=index_col
+        )
 
     def apply_transforms(self, last=None):
         table = self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.DATA)
@@ -166,73 +248,26 @@ class CSVFile(db.Model):
             del self._table
         return self._save_csv_file_data(self.uri, table.to_csv())
 
-    def _generate_table_columns(self):
-        table_column_schema = TableColumnSchema()
-        table = self.table
-
-        columns = []
-        if table.index is None:
-            raise ValidationError('No primary key column detected')
-
-        index = 0
-        columns.append(
-            table_column_schema.load({
-                'csv_file_id': self.id,
-                'column_index': index,
-                'column_type': TABLE_COLUMN_TYPES.INDEX,
-            })
-        )
-        index += 1
-        for column_header, dtype in table.dtypes.items():
-            # There are probably better heuristics for this.
-            if dtype == np.object:
-                column_type = TABLE_COLUMN_TYPES.METADATA
-            else:
-                column_type = TABLE_COLUMN_TYPES.DATA
-
-            columns.append(
-                table_column_schema.load({
-                    'csv_file_id': self.id,
-                    'column_index': index,
-                    'column_type': column_type,
-                })
-            )
-            index += 1
-        return columns
-
-    def _generate_table_rows(self):
-        table_row_schema = TableRowSchema()
-        table = self.table
-
-        # Assuming the first row contains the header for the table.  Removing this assumption
-        # would probably mean reading the table by something other than pandas.read_csv.
-        rows = [
-            table_row_schema.load({
-                'csv_file_id': self.id,
-                'row_index': 0,
-                'row_type': TABLE_ROW_TYPES.INDEX,
-            })
-        ]
-
-        # Assume all other rows are samples.  There may be other heuristics
-        # to apply here in the future.  Or maybe mask rows with too many
-        # NaN's.
-        for index, row_name in enumerate(table.index):
-            rows.append(
-                table_row_schema.load({
-                    'csv_file_id': self.id,
-                    'row_index': index + 1,
-                    'row_type': TABLE_ROW_TYPES.DATA,
-                })
-            )
-        return rows
-
     @classmethod
     def create_csv_file(cls, id, name, table, meta=None):
         csv_file = cls(id=id, name=name, meta=meta)
         cls._save_csv_file_data(csv_file.uri, table)
-        rows = csv_file._generate_table_rows()
-        columns = csv_file._generate_table_columns()
+        row_types, column_types = _guess_table_structure(csv_file.raw_table)
+
+        rows = []
+        table_row_schema = TableRowSchema()
+        for index, row_type in enumerate(row_types):
+            rows.append(table_row_schema.load({
+                'csv_file_id': id, 'row_index': index, 'row_type': row_type
+            }))
+
+        columns = []
+        table_column_schema = TableColumnSchema()
+        for index, column_type in enumerate(column_types):
+            columns.append(table_column_schema.load({
+                'csv_file_id': id, 'column_index': index, 'column_type': column_type
+            }))
+
         return csv_file, rows, columns
 
     @classmethod
