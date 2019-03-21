@@ -5,8 +5,16 @@ import { LOAD_DATASET } from '../store/actions.type';
  * dataset_id is defined
  */
 const loadDataset = {
+  data() {
+    return {
+      loaded: !!this.$store.state.datasets[this.dataset_id],
+    };
+  },
   created() {
-    this.$store.dispatch(LOAD_DATASET, { dataset_id: this.dataset_id });
+    const dataset = this.$store.getters.dataset(this.dataset_id);
+    if (!dataset) {
+      this.$store.dispatch(LOAD_DATASET, { dataset_id: this.dataset_id });
+    }
   },
 };
 

@@ -2,7 +2,7 @@
 v-layout(column, fill-height)
   .content-area
     slot
-  slot(name='footer')
+  slot(name="footer")
 </template>
 
 <script>

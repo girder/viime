@@ -1,15 +1,15 @@
 <script>
+import { CSVService } from '@/common/api.service';
+import { MUTEX_TRANSFORM_TABLE } from '@/store/actions.type';
 import {
   normalize_methods,
   scaling_methods,
   transform_methods,
 } from '@/utils/constants';
-import { CSVService } from '@/common/api.service';
-import { MUTEX_TRANSFORM_TABLE } from '@/store/actions.type';
+import { loadDataset } from '@/utils/mixins';
+
 import VisPca from '@/components/vis/VisPca.vue';
 import FooterContainer from '@/components/containers/FooterContainer.vue';
-
-import { loadDataset } from '@/utils/mixins';
 
 const all_methods = [
   ...normalize_methods,
@@ -26,20 +26,21 @@ export default {
   data() {
     return {
       dataset_id: this.$router.currentRoute.params.id,
-      normalizeEnabled: false,
-      transformEnabled: false,
-      scaleEnabled: false,
       normalize_methods,
       transform_methods,
       scaling_methods,
-      points: [],
+      pcaPoints: [],
     };
   },
   computed: {
     dataset() { return this.$store.getters.dataset(this.dataset_id); },
+    loading() { return this.$store.state.loading; },
     norm() { return this.$store.getters.txType(this.dataset_id, 'normalization'); },
+    normEnabled() { return this.dataset.normalization.enabled; },
     trans() { return this.$store.getters.txType(this.dataset_id, 'transformation'); },
+    transEnabled() { return this.dataset.transformation.enabled; },
     scaling() { return this.$store.getters.txType(this.dataset_id, 'scaling'); },
+    scalingEnabled() { return this.dataset.scaling.enabled; },
     transformed() { return this.dataset && this.dataset.transformed; },
   },
   watch: {
@@ -54,18 +55,33 @@ export default {
     methodFromValue(value) {
       return all_methods.find(m => m.value === value);
     },
-    transformTable(value, category) {
-      const method = this.methodFromValue(value);
+    async transformTable(value, category) {
+      let txtype = value;
+      if (value === false) {
+        txtype = null;
+      } else if (value === true) {
+        switch (category) {
+          case 'normalization':
+            txtype = normalize_methods[0].value; break;
+          case 'transformation':
+            txtype = transform_methods[0].value; break;
+          case 'scaling':
+            txtype = scaling_methods[0].value; break;
+          default:
+            throw new Error(`${category} is not valid.`);
+        }
+      }
+      const method = this.methodFromValue(txtype);
       this.$store.dispatch(MUTEX_TRANSFORM_TABLE, {
         dataset_id: this.dataset_id,
-        transform_type: value,
+        transform_type: txtype,
         args: { priority: method.priority },
         category,
       });
     },
     async loadPCAData(csv) {
       const pcaData = await CSVService.getPlot(csv, 'pca');
-      this.points = pcaData.data;
+      this.pcaPoints = pcaData.data;
     },
   },
 };
@@ -76,45 +92,48 @@ footer-container.transform-view
   v-layout(row, fill-height, justify-center, align-center, ref="contentarea")
     div
       h3.headline.ml-5 Principal Component Analysis
-      vis-pca(:width="800", :height="600", :points="points")
+      vis-pca(:width="800", :height="600", :points="pcaPoints")
 
   template(#footer)
-    v-layout(row, wrap, grow)
+    v-layout(row, wrap, grow, v-if="dataset")
 
-      v-card.transform-container(flat).grow
+      v-card.transform-container.grow(flat)
         v-toolbar.darken-3(color="secondary", dark, flat, dense, :card="false")
           v-toolbar-title Normalize
           v-spacer
-          v-switch.shrink(hide-details, :value="norm !== null")
+          v-switch.shrink(hide-details, :input-value="normEnabled",
+              @change="transformTable($event, 'normalization')", :disabled="loading")
         v-card-actions.pl-3
-          v-radio-group(:disabled="norm === null", :value="norm",
+          v-radio-group(:disabled="!normEnabled || loading", :value="norm",
               @change="transformTable($event, 'normalization')")
             v-radio(v-for="m in normalize_methods", :label="m.label",
-                :value="m.value", :key="`norm${m.value}`")
+                v-if="m.value", :value="m.value", :key="`norm${m.value}`")
 
-      v-card.transform-container(flat).grow
+      v-card.transform-container.grow(flat)
         v-toolbar.darken-3(color="secondary", dark, flat, dense, :card="false")
           v-toolbar-title Transform
           v-spacer
-          v-switch.shrink(hide-details, :value="trans !== null")
+          v-switch.shrink(hide-details, :input-value="transEnabled",
+              @change="transformTable($event, 'transformation')", :disabled="true")
         v-card-actions.pl-3
-          v-radio-group(:disabled="trans === null", :value="trans",
+          v-radio-group(:disabled="!transEnabled || loading", :value="trans",
               @change="transformTable($event, 'transformation')")
             v-radio(v-for="m in transform_methods", :label="m.label",
-                :value="m.value", :key="`trans${m.value}`")
+                v-if="m.value", :value="m.value", :key="`trans${m.value}`")
 
-      v-card.transform-container(flat).grow
+      v-card.transform-container.grow(flat)
         v-toolbar.darken-3(color="secondary", dark, flat, dense)
           v-toolbar-title Scale
           v-spacer
-          v-switch.shrink(hide-details, :value="scaling !== null")
+          v-switch.shrink(hide-details, :input-value="scalingEnabled",
+              @change="transformTable($event, 'scaling')", :disabled="true")
         v-card-actions.pl-3
-          v-radio-group(:disabled="scaling === null", :value="scaling",
+          v-radio-group(:disabled="!scalingEnabled || loading", :value="scaling",
               @change="transformTable($event, 'scaling')")
             v-radio(v-for="m in scaling_methods", :label="m.label",
-                :value="m.value", :key="`scale${m.value}`")
+                v-if="m.value", :value="m.value", :key="`scale${m.value}`")
 
-    v-toolbar
+    v-toolbar(flat)
       v-btn(depressed, color="accent", :to="`/cleanup/${dataset_id}`")
         v-icon.pr-1 {{ $vuetify.icons.arrowLeft }}
         | Go Back

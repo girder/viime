@@ -23,7 +23,7 @@ footer-container
   cleanup-table.cleanup-table-flex(:dataset-id="dataset_id")
 
   template(#footer)
-    v-toolbar
+    v-toolbar(flat)
       v-btn(depressed, color="accent", :to="`/select`")
         v-icon.pr-1 {{ $vuetify.icons.arrowLeft }}
         | Go Back
