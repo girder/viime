@@ -19,7 +19,7 @@ v-layout.footer-container(column, fill-height)
   }
 
   .v-toolbar.footer {
-    border-top: 3px solid #cdd0d1;   
+    border-top: 3px solid #cdd0d1;
   }
 }
 </style>
