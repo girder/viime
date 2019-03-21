@@ -1,31 +1,15 @@
 <script>
-import { mapState } from 'vuex';
-
-import { CSVService } from '../../common/api.service';
-import { MUTEX_TRANSFORM_TABLE } from '../../store/actions.type';
-import VisPca from '@/components/vis/VisPca.vue';
-
+import { CSVService } from '@/common/api.service';
+import { MUTEX_TRANSFORM_TABLE } from '@/store/actions.type';
+import {
+  normalize_methods,
+  scaling_methods,
+  transform_methods,
+} from '@/utils/constants';
 import { loadDataset } from '@/utils/mixins';
 
-const normalize_methods = [
-  { label: 'None', value: null },
-  { label: 'Min Max', value: 'normalize', priority: 10 },
-];
-
-const scaling_methods = [
-  { label: 'None', value: null },
-  { label: 'Autoscaling', value: 'auto_scaling', priority: 200 },
-  { label: 'Pareto Scaling', value: 'pareto_scaling', priority: 201 },
-  { label: 'Range Scaling', value: 'range_scaling', priority: 202 },
-  { label: 'Vast Scaling', value: 'vast_scaling', priority: 203 },
-];
-
-const transform_methods = [
-  { label: 'None', value: null },
-  { label: 'Log 2', value: 'log_2', priority: 100 },
-  { label: 'Log 10', value: 'log_10', priority: 101 },
-  { label: 'Cube Root', value: 'cube_root', priority: 102 },
-];
+import VisPca from '@/components/vis/VisPca.vue';
+import FooterContainer from '@/components/containers/FooterContainer.vue';
 
 const all_methods = [
   ...normalize_methods,
@@ -35,6 +19,7 @@ const all_methods = [
 
 export default {
   components: {
+    FooterContainer,
     VisPca,
   },
   mixins: [loadDataset],
@@ -44,17 +29,19 @@ export default {
       normalize_methods,
       transform_methods,
       scaling_methods,
-      points: [],
+      pcaPoints: [],
     };
   },
   computed: {
-    ...mapState({
-      norm(state) { return this.txTypeOrNull(state.datasets[this.dataset_id].normalization); },
-      trans(state) { return this.txTypeOrNull(state.datasets[this.dataset_id].transformation); },
-      scaling(state) { return this.txTypeOrNull(state.datasets[this.dataset_id].scaling); },
-      transformed(state) { return state.datasets[this.dataset_id].transformed; },
-    }),
-    boxUrl() { return CSVService.getChartUrl(this.dataset_id, 'box'); },
+    dataset() { return this.$store.getters.dataset(this.dataset_id); },
+    loading() { return this.$store.state.loading; },
+    norm() { return this.$store.getters.txType(this.dataset_id, 'normalization'); },
+    normEnabled() { return this.dataset.normalization.enabled; },
+    trans() { return this.$store.getters.txType(this.dataset_id, 'transformation'); },
+    transEnabled() { return this.dataset.transformation.enabled; },
+    scaling() { return this.$store.getters.txType(this.dataset_id, 'scaling'); },
+    scalingEnabled() { return this.dataset.scaling.enabled; },
+    transformed() { return this.dataset && this.dataset.transformed; },
   },
   watch: {
     transformed() {
@@ -68,54 +55,112 @@ export default {
     methodFromValue(value) {
       return all_methods.find(m => m.value === value);
     },
-    transformTable(value, category) {
-      const method = this.methodFromValue(value);
+    async transformTable(value, category) {
+      let txtype = value;
+      if (value === false) {
+        txtype = null;
+      } else if (value === true) {
+        switch (category) {
+          case 'normalization':
+            txtype = normalize_methods[0].value; break;
+          case 'transformation':
+            txtype = transform_methods[0].value; break;
+          case 'scaling':
+            txtype = scaling_methods[0].value; break;
+          default:
+            throw new Error(`${category} is not valid.`);
+        }
+      }
+      const method = this.methodFromValue(txtype);
       this.$store.dispatch(MUTEX_TRANSFORM_TABLE, {
         dataset_id: this.dataset_id,
-        transform_type: value,
+        transform_type: txtype,
         args: { priority: method.priority },
         category,
       });
     },
-    txTypeOrNull(tx) {
-      if (tx && 'transform_type' in tx) return tx.transform_type;
-      return null;
-    },
     async loadPCAData(csv) {
       const pcaData = await CSVService.getPlot(csv, 'pca');
-      this.points = pcaData.data;
+      this.pcaPoints = pcaData.data;
     },
   },
-
 };
 </script>
 
 <template lang="pug">
-v-container(fill-height)
-  v-layout(row, wrap, align-content-start)
-    .cardcontainer.grow.pa-2
-      v-card.pa-3
-        v-card-title
-          h3.headline Normalize
-        v-card-actions
-          v-radio-group(:value="norm", @change="transformTable($event, 'normalization')")
+footer-container.transform-view
+  v-layout(row, fill-height, justify-center, align-center, ref="contentarea")
+    div
+      h3.headline.ml-5 Principal Component Analysis
+      vis-pca(:width="800", :height="600", :points="pcaPoints")
+
+  template(#footer)
+    v-layout(row, wrap, grow, v-if="dataset")
+
+      v-card.transform-container.grow(flat)
+        v-toolbar.darken-3(color="secondary", dark, flat, dense, :card="false")
+          v-toolbar-title Normalize
+          v-spacer
+          v-switch.shrink(hide-details, :input-value="normEnabled",
+              @change="transformTable($event, 'normalization')", :disabled="loading")
+        v-card-actions.pl-3
+          v-radio-group(:disabled="!normEnabled || loading", :value="norm",
+              @change="transformTable($event, 'normalization')")
             v-radio(v-for="m in normalize_methods", :label="m.label",
-                :value="m.value", :key="`norm${m.value}`")
+                v-if="m.value", :value="m.value", :key="`norm${m.value}`")
 
-        v-card-title
-          h3.headline Transform
-        v-card-actions
-          v-radio-group(:value="trans", @change="transformTable($event, 'transformation')")
+      v-card.transform-container.grow(flat)
+        v-toolbar.darken-3(color="secondary", dark, flat, dense, :card="false")
+          v-toolbar-title Transform
+          v-spacer
+          v-switch.shrink(hide-details, :input-value="transEnabled",
+              @change="transformTable($event, 'transformation')", :disabled="true")
+        v-card-actions.pl-3
+          v-radio-group(:disabled="!transEnabled || loading", :value="trans",
+              @change="transformTable($event, 'transformation')")
             v-radio(v-for="m in transform_methods", :label="m.label",
-                :value="m.value", :key="`trans${m.value}`")
+                v-if="m.value", :value="m.value", :key="`trans${m.value}`")
 
-        v-card-title
-          h3.headline Scale
-        v-card-actions
-          v-radio-group(:value="scaling", @change="transformTable($event, 'scaling')")
+      v-card.transform-container.grow(flat)
+        v-toolbar.darken-3(color="secondary", dark, flat, dense)
+          v-toolbar-title Scale
+          v-spacer
+          v-switch.shrink(hide-details, :input-value="scalingEnabled",
+              @change="transformTable($event, 'scaling')", :disabled="true")
+        v-card-actions.pl-3
+          v-radio-group(:disabled="!scalingEnabled || loading", :value="scaling",
+              @change="transformTable($event, 'scaling')")
             v-radio(v-for="m in scaling_methods", :label="m.label",
-                :value="m.value", :key="`scale${m.value}`")
-    v-layout.pa-2(column)
-      v-card
-        vis-pca(:width="500", :height="400", :points="points")
+                v-if="m.value", :value="m.value", :key="`scale${m.value}`")
+
+    v-toolbar(flat)
+      v-btn(depressed, color="accent", :to="`/cleanup/${dataset_id}`")
+        v-icon.pr-1 {{ $vuetify.icons.arrowLeft }}
+        | Go Back
+      v-spacer
+      v-btn(depressed, disabled)
+        | Continue
+        v-icon.pl-1 {{ $vuetify.icons.arrowRight }}
 </template>
+
+<style lang="scss">
+.transform-view {
+  .transform-container {
+    &>.v-toolbar {
+      border-top-left-radius: 0 !important;
+      border-top-right-radius: 0 !important;
+    }
+
+    &:nth-child(odd) {
+      background-color: #eeeeee;
+    }
+
+    &:nth-child(even) {
+      background-color: #e6e6e6;
+      .v-toolbar {
+        background-color: #222d32 !important;
+      }
+    }
+  }
+}
+</style>

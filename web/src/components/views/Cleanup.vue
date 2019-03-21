@@ -1,10 +1,12 @@
 <script>
 import { loadDataset } from '@/utils/mixins';
-import CleanupTable from '../CleanupTable.vue';
+import CleanupTable from '@/components/CleanupTable.vue';
+import FooterContainer from '@/components/containers/FooterContainer.vue';
 
 export default {
   components: {
     CleanupTable,
+    FooterContainer,
   },
   mixins: [loadDataset],
   data() {
@@ -16,13 +18,17 @@ export default {
 </script>
 
 <template lang="pug">
-v-layout(column, fill-height)
+footer-container
+
   cleanup-table.cleanup-table-flex(:dataset-id="dataset_id")
-  v-toolbar(dense, dark)
-    v-toolbar-title Table cleanup controls
-    v-spacer
-    v-toolbar-title
-      v-btn(flat, :to="`/transform/${dataset_id}`")
+
+  template(#footer)
+    v-toolbar(flat)
+      v-btn(depressed, color="accent", :to="`/select`")
+        v-icon.pr-1 {{ $vuetify.icons.arrowLeft }}
+        | Go Back
+      v-spacer
+      v-btn(depressed, color="accent", :to="`/transform/${dataset_id}`")
         | Continue
         v-icon.pl-1 {{ $vuetify.icons.arrowRight }}
 </template>

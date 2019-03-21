@@ -2,7 +2,9 @@
 import { sizeFormatter } from '@girder/components/src/utils/mixins';
 import Dropzone from '@girder/components/src/components/Presentation/Dropzone.vue';
 import FileList from '@girder/components/src/components/Presentation/FileUploadList.vue';
-import { UPLOAD_CSV } from '../../store/actions.type';
+import { UPLOAD_CSV } from '@/store/actions.type';
+
+import FooterContainer from '@/components/containers/FooterContainer.vue';
 
 const sampleTypes = [
   { name: 'Serum', value: 'serum' },
@@ -23,16 +25,24 @@ const dataTypes = [
 export default {
   components: {
     FileList,
+    FooterContainer,
     Dropzone,
   },
   mixins: [sizeFormatter],
   data() {
     return {
       files: [],
-      message: 'Drop files here or click to upload',
       dataTypes,
       sampleTypes,
     };
+  },
+  computed: {
+    message() {
+      if (this.files.length) {
+        return 'Add more files';
+      }
+      return 'Drag file here or click to select one';
+    },
   },
   methods: {
     onFileChange(targetFiles) {
@@ -62,44 +72,56 @@ export default {
 </script>
 
 <template lang="pug">
-v-container(fill-height)
-  v-layout(column)
+footer-container
+
+  v-container
     v-card-title(primary-title)
       div
         h3.headline Upload your data (csv or txt)
         p Choose a file from your computer
-    v-card
-      dropzone.filezone(v-if="files.length === 0", :multiple="true",
-          :message="message", @change="onFileChange")
-    v-layout(row, wrap, shrink)
-      v-card.ma-2.filecard(v-for="(file, idx) in files", :key="file.file.name")
-        v-card-title(primary-title)
-          v-btn(icon, @click="files.splice(idx, 1)")
-            v-icon {{ $vuetify.icons.close }}
-          .ml-2
-            h3.headline {{ file.file.name }}
-            h3 {{ formatSize(file.file.size) }}
-        v-card-text
-          v-select.pa-2(
-              :items="sampleTypes", label="Type of sample",
-              item-text="name", item-value="value")
-          v-select.pa-2(
-              :items="dataTypes", label="Type of data",
-              item-text="name", item-value="value")
-      v-card.ma-2.filecard(v-if="files.length > 0")
-        dropzone(:multiple="true", message="Add more files", @change="onFileChange")
-    v-layout.my-4(row)
+
+    .my-2(v-if="files.length")
+      v-toolbar.darken-3(color="secondary", dark, flat, dense)
+        v-toolbar-title Pending files
+        v-spacer
+        v-btn(flat, small, @click="files = []")
+          v-icon.pr-1 {{ $vuetify.icons.clearAll }}
+          | clear all
+      v-list.upload-list
+        template(v-for="(file, idx) in files")
+          v-list-tile.pa-2(:key="file.file.name")
+            v-list-tile-action
+              v-btn(icon, @click="files.splice(idx, 1)")
+                v-icon {{ $vuetify.icons.close }}
+            v-list-tile-content
+              v-list-tile-title(v-text="file.file.name")
+              v-list-tile-sub-title(v-text="formatSize(file.file.size)")
+            v-spacer
+            v-layout(row, shrink)
+              v-select.pa-2.tag-selection(hide-details,
+                  :items="sampleTypes", label="Type of sample",
+                  item-text="name", item-value="value")
+              v-select.pa-2.tag-selection(hide-details,
+                  :items="dataTypes", label="Type of data",
+                  item-text="name", item-value="value")
+          v-divider(v-if="idx + 1 < files.length", :key="idx")
+    dropzone.filezone(:multiple="true", :message="message", @change="onFileChange")
+
+  template(#footer)
+    v-toolbar(flat)
       v-spacer
-      v-btn.ma-0(:disabled="!files.length", large, depressed, color="primary", @click="upload")
+      v-btn.ma-0(:disabled="!files.length", depressed, color="accent", @click="upload")
         | Continue
         v-icon.pl-1 {{ $vuetify.icons.arrowRight }}
 </template>
 
 <style scoped>
-.filezone {
-  max-height: 200px !important;
+.tag-selection {
+  width: 200px;
 }
-.filecard {
-  min-width: 363px;
+
+.filezone {
+  min-width: 300px;
+  min-height: 250px;
 }
 </style>

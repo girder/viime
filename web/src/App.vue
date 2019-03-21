@@ -1,18 +1,14 @@
 <template lang="pug">
 v-app
-  v-toolbar(dark)
+  v-toolbar.darken-3(dark, flat, color="secondary")
     v-toolbar-title
       img(src="./assets/logo.png", width="48px", height="48px")
     v-spacer
     v-toolbar-title
-      b Biomarker Analysis
+      b Biomarker Analysis > {{ $router.currentRoute.name }}
     v-spacer
     v-btn(icon)
       v-icon {{ $vuetify.icons.more }}
-  v-toolbar(flat, dense, dark, color="primary")
-    v-spacer
-    b 1.0 {{ $router.currentRoute.name }}
-    v-spacer
   v-container.pa-0.d-flex(fluid, column)
     router-view.grow
 </template>
