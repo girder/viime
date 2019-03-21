@@ -115,7 +115,6 @@ export default {
       select {
         width: 100%;
         appearance: menulist !important;
-        // background-color: lightgray !important; 
       }
     }
   }
@@ -164,7 +163,7 @@ tr.datarow {
       background-color: #9E9E9E;
     }
   }
-  
+
   td {
     &:nth-child(odd) {
       background-color: rgba(236, 239, 241, 0.4);
@@ -177,7 +176,7 @@ tr.datarow {
       background-color: #BDBDBD;
     }
   }
-  
+
   &.masked td, td.masked {
     background-color: lightgray !important;
   }
