@@ -15,8 +15,10 @@ export default {
     info: colors.lightBlue.lighten1,
   },
   icons: {
+    arrowLeft: 'mdi-arrow-left-box',
+    arrowRight: 'mdi-arrow-right-box',
+    clearAll: 'mdi-notification-clear-all',
     more: 'mdi-dots-horizontal',
     menuDown: 'mdi-menu-down',
-    arrowRight: 'mdi-arrow-right-box',
   },
 };

@@ -9,6 +9,9 @@ import {
   defaultColOption,
   rowPrimaryKey,
   colPrimaryKey,
+  // normalize_methods,
+  // scaling_methods,
+  // transform_methods,
 } from '../utils/constants';
 
 import {
@@ -20,6 +23,7 @@ import {
 
 import {
   ADD_SOURCE_DATA,
+  DISABLE_CATEGORY,
   REMOVE_TRANSFORMATION,
   SET_AXIS_LABEL,
   SET_TRANSFORMATION,
@@ -48,6 +52,9 @@ const appstate = {
 
 const getters = {
   dataset: state => id => state.datasets[id],
+  txType: state => (id, category) => (state.datasets[id]
+    && state.datasets[id][category]
+    && state.datasets[id][category].transform_type) || null,
 };
 
 const mutations = {
@@ -90,17 +97,27 @@ const mutations = {
       // mutually exclusive transformation categories
       // if SET_TRANSFORMATION is called for one of these names,
       // the current transform is deleted and replaced with the new one.
-      normalization: null,
-      transformation: null,
-      scaling: null,
+      normalization: {
+        value: null,
+        enabled: false,
+      },
+      transformation: {
+        value: null,
+        enabled: false,
+      },
+      scaling: {
+        value: null,
+        enabled: false,
+      },
     });
   },
 
-  [REMOVE_TRANSFORMATION](state, { key, tx_key, category }) {
-    if (category) {
-      state.datasets[key][category] = null;
-    }
-    delete state.datasets[key].transformations[tx_key];
+  [DISABLE_CATEGORY](state, { key, category }) {
+    Vue.set(state.datasets[key][category], 'enabled', false);
+  },
+
+  [REMOVE_TRANSFORMATION](state, { key, tx_key }) {
+    Vue.delete(state.datasets[key].transformations, tx_key);
   },
 
   [SET_AXIS_LABEL](state, {
@@ -138,7 +155,12 @@ const mutations = {
   [SET_TRANSFORMATION](state, { key, data, category }) {
     const tx_key = data.id;
     if (category) {
-      Vue.set(state.datasets[key], category, data);
+      if (data) {
+        Vue.set(state.datasets[key][category], 'value', data);
+        Vue.set(state.datasets[key][category], 'enabled', true);
+      } else {
+        Vue.set(state.datasets[key][category], 'enabled', false);
+      }
     }
     Vue.set(state.datasets[key].transformations, tx_key, data);
   },
@@ -172,12 +194,14 @@ const actions = {
     category, dataset_id, transform_type, args,
   }) {
     const key = dataset_id;
-    const last = state.datasets[key][category];
-    if (transform_type === null || last) {
+    const previous = state.datasets[key][category];
+    if (transform_type === null) {
       // remove the existing transform
+      if (!previous.enabled) throw new Error('Cannot drop transform without having set one first');
       try {
-        await CSVService.dropTransform(key, last.id);
-        if (last) commit(REMOVE_TRANSFORMATION, { key, tx_key: last.id, category });
+        await CSVService.dropTransform(key, previous.value.id);
+        commit(REMOVE_TRANSFORMATION, { key, tx_key: previous.value.id, category });
+        commit(DISABLE_CATEGORY, { key, category });
       } catch (err) {
         commit(SET_LAST_ERROR, err);
         throw err;

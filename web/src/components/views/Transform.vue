@@ -1,31 +1,15 @@
 <script>
-import { mapState } from 'vuex';
-
-import { CSVService } from '../../common/api.service';
-import { MUTEX_TRANSFORM_TABLE } from '../../store/actions.type';
+import {
+  normalize_methods,
+  scaling_methods,
+  transform_methods,
+} from '@/utils/constants';
+import { CSVService } from '@/common/api.service';
+import { MUTEX_TRANSFORM_TABLE } from '@/store/actions.type';
 import VisPca from '@/components/vis/VisPca.vue';
+import FooterContainer from '@/components/containers/FooterContainer.vue';
 
 import { loadDataset } from '@/utils/mixins';
-
-const normalize_methods = [
-  { label: 'None', value: null },
-  { label: 'Min Max', value: 'normalize', priority: 10 },
-];
-
-const scaling_methods = [
-  { label: 'None', value: null },
-  { label: 'Autoscaling', value: 'auto_scaling', priority: 200 },
-  { label: 'Pareto Scaling', value: 'pareto_scaling', priority: 201 },
-  { label: 'Range Scaling', value: 'range_scaling', priority: 202 },
-  { label: 'Vast Scaling', value: 'vast_scaling', priority: 203 },
-];
-
-const transform_methods = [
-  { label: 'None', value: null },
-  { label: 'Log 2', value: 'log_2', priority: 100 },
-  { label: 'Log 10', value: 'log_10', priority: 101 },
-  { label: 'Cube Root', value: 'cube_root', priority: 102 },
-];
 
 const all_methods = [
   ...normalize_methods,
@@ -35,12 +19,16 @@ const all_methods = [
 
 export default {
   components: {
+    FooterContainer,
     VisPca,
   },
   mixins: [loadDataset],
   data() {
     return {
       dataset_id: this.$router.currentRoute.params.id,
+      normalizeEnabled: false,
+      transformEnabled: false,
+      scaleEnabled: false,
       normalize_methods,
       transform_methods,
       scaling_methods,
@@ -48,13 +36,11 @@ export default {
     };
   },
   computed: {
-    ...mapState({
-      norm(state) { return this.txTypeOrNull(state.datasets[this.dataset_id].normalization); },
-      trans(state) { return this.txTypeOrNull(state.datasets[this.dataset_id].transformation); },
-      scaling(state) { return this.txTypeOrNull(state.datasets[this.dataset_id].scaling); },
-      transformed(state) { return state.datasets[this.dataset_id].transformed; },
-    }),
-    boxUrl() { return CSVService.getChartUrl(this.dataset_id, 'box'); },
+    dataset() { return this.$store.getters.dataset(this.dataset_id); },
+    norm() { return this.$store.getters.txType(this.dataset_id, 'normalization'); },
+    trans() { return this.$store.getters.txType(this.dataset_id, 'transformation'); },
+    scaling() { return this.$store.getters.txType(this.dataset_id, 'scaling'); },
+    transformed() { return this.dataset && this.dataset.transformed; },
   },
   watch: {
     transformed() {
@@ -77,45 +63,85 @@ export default {
         category,
       });
     },
-    txTypeOrNull(tx) {
-      if (tx && 'transform_type' in tx) return tx.transform_type;
-      return null;
-    },
     async loadPCAData(csv) {
       const pcaData = await CSVService.getPlot(csv, 'pca');
       this.points = pcaData.data;
     },
   },
-
 };
 </script>
 
 <template lang="pug">
-v-container(fill-height)
-  v-layout(row, wrap, align-content-start)
-    .cardcontainer.grow.pa-2
-      v-card.pa-3
-        v-card-title
-          h3.headline Normalize
-        v-card-actions
-          v-radio-group(:value="norm", @change="transformTable($event, 'normalization')")
+footer-container.transform-view
+  v-layout(row, fill-height, justify-center, align-center, ref="contentarea")
+    div
+      h3.headline.ml-5 Principal Component Analysis
+      vis-pca(:width="800", :height="600", :points="points")
+
+  template(#footer)
+    v-layout(row, wrap, grow)
+
+      v-card.transform-container(flat).grow
+        v-toolbar.darken-3(color="secondary", dark, flat, dense, :card="false")
+          v-toolbar-title Normalize
+          v-spacer
+          v-switch.shrink(hide-details, :value="norm !== null")
+        v-card-actions.pl-3
+          v-radio-group(:disabled="norm === null", :value="norm",
+              @change="transformTable($event, 'normalization')")
             v-radio(v-for="m in normalize_methods", :label="m.label",
                 :value="m.value", :key="`norm${m.value}`")
 
-        v-card-title
-          h3.headline Transform
-        v-card-actions
-          v-radio-group(:value="trans", @change="transformTable($event, 'transformation')")
+      v-card.transform-container(flat).grow
+        v-toolbar.darken-3(color="secondary", dark, flat, dense, :card="false")
+          v-toolbar-title Transform
+          v-spacer
+          v-switch.shrink(hide-details, :value="trans !== null")
+        v-card-actions.pl-3
+          v-radio-group(:disabled="trans === null", :value="trans",
+              @change="transformTable($event, 'transformation')")
             v-radio(v-for="m in transform_methods", :label="m.label",
                 :value="m.value", :key="`trans${m.value}`")
 
-        v-card-title
-          h3.headline Scale
-        v-card-actions
-          v-radio-group(:value="scaling", @change="transformTable($event, 'scaling')")
+      v-card.transform-container(flat).grow
+        v-toolbar.darken-3(color="secondary", dark, flat, dense)
+          v-toolbar-title Scale
+          v-spacer
+          v-switch.shrink(hide-details, :value="scaling !== null")
+        v-card-actions.pl-3
+          v-radio-group(:disabled="scaling === null", :value="scaling",
+              @change="transformTable($event, 'scaling')")
             v-radio(v-for="m in scaling_methods", :label="m.label",
                 :value="m.value", :key="`scale${m.value}`")
-    v-layout.pa-2(column)
-      v-card
-        vis-pca(:width="500", :height="400", :points="points")
+
+    v-toolbar
+      v-btn(depressed, color="accent", :to="`/cleanup/${dataset_id}`")
+        v-icon.pr-1 {{ $vuetify.icons.arrowLeft }}
+        | Go Back
+      v-spacer
+      v-btn(depressed, disabled)
+        | Continue
+        v-icon.pl-1 {{ $vuetify.icons.arrowRight }}
 </template>
+
+<style lang="scss">
+.transform-view {
+  .transform-container {
+    &>.v-toolbar {
+      border-top-left-radius: 0 !important;
+      border-top-right-radius: 0 !important;
+    }
+
+    &:nth-child(odd) {
+      background-color: #eeeeee;
+    }
+
+    &:nth-child(even) {
+      background-color: #e6e6e6;
+      .v-toolbar {
+        background-color: #222d32 !important;
+      }
+    }
+  }
+}
+</style>
