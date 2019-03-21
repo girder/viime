@@ -53,7 +53,7 @@ export default {
 
   table.cleanup-table(v-else)
     thead
-      tr
+      tr.controlrow
         th
         th.control(v-for="(col, idx) in dataset.column.labels")
           select.pa-1(
@@ -65,7 +65,7 @@ export default {
                 :value="option",
                 :key="`column${idx}${option}`") {{ option }}
     tbody
-      tr(v-for="(row, idx) in dataset.sourcerows",
+      tr.datarow(v-for="(row, idx) in dataset.sourcerows",
           :key="`${idx}${row[0]}`",
           :class="dataset.row.labels[idx]")
         td.control
@@ -94,13 +94,20 @@ export default {
   height: 100%;
   border-collapse: collapse;
 
+  .key, .metadata, .header {
+    font-weight: 700;
+    color: white;
+    text-align: left;
+  }
+
   th, td {
     white-space: nowrap;
-    border: 2px solid gray;
+    padding: 2px;
+    text-align: center;
 
     &.control {
-      background-color: lightgray;
-      // border-radius: 5px;
+      background-color: lightgray !important;
+      color: black;
       min-width: 100px;
       font-weight: 700;
       cursor: pointer;
@@ -113,27 +120,63 @@ export default {
   }
 }
 
-tr {
+tr:nth-child(odd) {
+  background-color: #ECEFF1;
+
+  &.datarow td:nth-child(odd) {
+    background-color: rgb(218, 225, 228);
+  }
+}
+
+tr.datarow {
   &.header {
-    background-color: #03b803;
+    td:nth-child(odd) {
+      background-color: #8BC34A;
+    }
+    td:nth-child(even) {
+      background-color: #9CCC65;
+    }
   }
   &.metadata {
-    background-color: lightgreen;
+    td:nth-child(odd) {
+      background-color: #9E9E9E;
+    }
+    td {
+      background-color: #BDBDBD;
+    }
   }
 
   &.header, &.metadata {
-    td.key, td.metadata {
-      background-color: lightgray;
+    .key, .metadata {
+      background-color: lightgray !important;
+      font-weight: 300;
+      color: black;
     }
   }
+
+  &:nth-child(odd) {
+    td.key {
+      background-color: #546E7A;
+    }
+
+    td.metadata {
+      background-color: #9E9E9E;
+    }
+  }
+
   td {
+    &:nth-child(odd) {
+      background-color: rgba(236, 239, 241, 0.4);
+    }
+
     &.key {
-      background-color: cyan;
+      background-color: #78909C;
     }
     &.metadata {
-      background-color: lightblue;
+      background-color: #BDBDBD;
     }
   }
+
   &.masked td, td.masked {
     background-color: lightgray !important;
   }
