@@ -108,7 +108,7 @@ footer-container
     dropzone.filezone(:multiple="true", :message="message", @change="onFileChange")
 
   template(#footer)
-    v-toolbar(flat)
+    v-toolbar.footer(flat)
       v-spacer
       v-btn.ma-0(:disabled="!files.length", depressed, color="accent", @click="upload")
         | Continue

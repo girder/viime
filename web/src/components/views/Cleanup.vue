@@ -2,11 +2,13 @@
 import { loadDataset } from '@/utils/mixins';
 import CleanupTable from '@/components/CleanupTable.vue';
 import FooterContainer from '@/components/containers/FooterContainer.vue';
+import SaveStatus from '@/components/SaveStatus.vue';
 
 export default {
   components: {
     CleanupTable,
     FooterContainer,
+    SaveStatus,
   },
   mixins: [loadDataset],
   data() {
@@ -23,10 +25,12 @@ footer-container
   cleanup-table.cleanup-table-flex(:dataset-id="dataset_id")
 
   template(#footer)
-    v-toolbar(flat)
+    v-toolbar.footer(flat)
       v-btn(depressed, color="accent", :to="`/select`")
         v-icon.pr-1 {{ $vuetify.icons.arrowLeft }}
         | Go Back
+      v-spacer
+      save-status
       v-spacer
       v-btn(depressed, color="accent", :to="`/transform/${dataset_id}`")
         | Continue

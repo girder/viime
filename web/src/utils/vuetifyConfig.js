@@ -17,8 +17,10 @@ export default {
   icons: {
     arrowLeft: 'mdi-arrow-left-box',
     arrowRight: 'mdi-arrow-right-box',
+    check: 'mdi-check',
     clearAll: 'mdi-notification-clear-all',
     more: 'mdi-dots-horizontal',
     menuDown: 'mdi-menu-down',
+    save: 'mdi-content-save',
   },
 };
