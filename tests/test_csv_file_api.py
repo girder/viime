@@ -76,3 +76,31 @@ def test_post_csv_file_error(client):
 
     assert resp.status_code == 400
     assert resp.json == {'table': ['No columns to parse from file']}
+
+
+def test_row_order_after_reindexing(client, pathological_table):
+    table = pathological_table
+    resp = client.get(url_for('csv.get_csv_file', csv_id=table.id))
+    assert resp.status_code == 200
+
+    table_from_api = resp.json['table']
+
+    resp = client.put(
+        url_for('csv.modify_column', csv_id=table.id, column_index=1),
+        json={'column_type': 'key'}
+    )
+    assert resp.status_code == 200
+
+    resp = client.get(url_for('csv.get_csv_file', csv_id=table.id))
+    assert resp.status_code == 200
+    assert table_from_api == resp.json['table']
+
+    resp = client.put(
+        url_for('csv.modify_row', csv_id=table.id, row_index=3),
+        json={'row_type': 'header'}
+    )
+    assert resp.status_code == 200
+
+    resp = client.get(url_for('csv.get_csv_file', csv_id=table.id))
+    assert resp.status_code == 200
+    assert table_from_api == resp.json['table']

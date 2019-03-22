@@ -1,3 +1,4 @@
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import dotenv
@@ -7,6 +8,7 @@ from metabulo.app import create_app
 from metabulo.models import CSVFileSchema, db
 
 csv_file_schema = CSVFileSchema()
+pathological_file_path = Path(__file__).parent / 'pathological.csv'
 
 
 @pytest.fixture(autouse=True)
@@ -45,6 +47,18 @@ def csv_file(client):
         'table': 'id,col1,col2\nrow1,0.5,2.0\nrow2,1.5,0\n',
         'name': 'test_csv_file.csv'
     })
+    db.session.add(csv_file)
+    db.session.commit()
+    yield csv_file
+
+
+@pytest.fixture
+def pathological_table(client):
+    with open(pathological_file_path) as f:
+        csv_file = csv_file_schema.load({
+            'table': f.read(),
+            'name': 'pathological.csv'
+        })
     db.session.add(csv_file)
     db.session.commit()
     yield csv_file

@@ -70,7 +70,7 @@ def test_dispatch_invalid_argument_error(table):
 
 
 def test_generate_transform(csv_file):
-    table = csv_file.table
+    table = csv_file.indexed_table
     table.at['row1', 'col2'] = nan
     csv_file.save_table(table)
 
