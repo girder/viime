@@ -72,7 +72,7 @@ def get_csv_file(csv_id):
 @csv_bp.route('/csv/<uuid:csv_id>/download', methods=['GET'])
 def download_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
-    fp = BytesIO(csv_file.table.to_csv().encode())
+    fp = BytesIO(csv_file.table.to_csv(header=False, index=False).encode())
     return send_file(fp, mimetype='text/csv', as_attachment=True, attachment_filename=csv_file.name)
 
 

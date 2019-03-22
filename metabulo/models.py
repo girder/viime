@@ -321,7 +321,7 @@ class CSVFileSchema(BaseSchema):
 
     @post_dump
     def read_csv_file(self, data):
-        data['table'] = data['table'].to_csv()
+        data['table'] = data['table'].to_csv(header=False, index=False)
         data['measurement_table'] = data['measurement_table'].to_csv()
         data['measurement_metadata'] = data['measurement_metadata'].to_csv()
         data['sample_metadata'] = data['sample_metadata'].to_csv()
