@@ -3,12 +3,7 @@ svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/s
   g.master
     g.axes
     g.plot
-    g.ellipse(transform="translate(0, 0) rotate(0) scale(1, 1)")
-      circle(cx="0",
-          cy="0",
-          r="1",
-          style="fill: none; stroke: black;",
-          vector-effect="non-scaling-stroke")
+    g.ellipses
 </template>
 
 <script>
@@ -38,6 +33,13 @@ function covar(xs, ys) {
   const e_yy = mean(ys);
 
   return e_xy - e_xx * e_yy;
+}
+
+function unit(matrix) {
+  return matrix.map(row => {
+    const mag = Math.sqrt(row[0]*row[0] + row[1]*row[1]);
+    return row.map(d => d / mag);
+  });
 }
 
 export default {
@@ -165,35 +167,76 @@ export default {
           .attr('fill', (d, i) => cmap(rawPoints.labels[label][i]));
       }
 
-      // Compute and display the data ellipse.
-      const xs = points.map(d => d.x);
-      const ys = points.map(d => d.y);
+      // Decompose the data into its label categories.
+      let streams = {};
+      points.forEach((p, i) => {
+        const category = rawPoints.labels[label][i];
+        if (!streams[category]) {
+          streams[category] = [];
+        }
+        streams[category].push(p);
+      });
 
-      const xMean = xs.reduce((acc, x) => acc + x, 0) / xs.length;
-      const yMean = ys.reduce((acc, y) => acc + y, 0) / ys.length;
+      // Compute the ellipse data for each subset.
+      let ellipses = [];
+      Object.keys(streams).forEach(category => {
+        const data = streams[category];
 
-      const xx = covar(xs, xs);
-      const yy = covar(ys, ys);
-      const xy = covar(xs, ys);
+        const xs = data.map(d => d.x);
+        const ys = data.map(d => d.y);
 
-      const trace = xx + yy;
-      const det = xx * yy - xy * xy;
+        const xMean = xs.reduce((acc, x) => acc + x, 0) / xs.length;
+        const yMean = ys.reduce((acc, y) => acc + y, 0) / ys.length;
 
-      const eigval = [
-        trace / 2 + Math.sqrt(trace * trace / 4 - det),
-        trace / 2 - Math.sqrt(trace * trace / 4 - det),
-      ];
+        const xx = covar(xs, xs);
+        const yy = covar(ys, ys);
+        const xy = covar(xs, ys);
 
-      const eigvec = Math.abs(xy) < 1e-10 ? [[1, 0], [0, 1]]
-        : [[eigval[0] - yy, xy],
-          [eigval[1] - yy, xy]];
+        const trace = xx + yy;
+        const det = xx * yy - xy * xy;
 
-      const rotation = Math.acos(eigvec[0][0]);
+        const eigval = [
+          trace / 2 + Math.sqrt(trace * trace / 4 - det),
+          trace / 2 - Math.sqrt(trace * trace / 4 - det),
+        ];
 
-      select('g.ellipse')
+        const eigvec = Math.abs(xy) < 1e-10 ? [[1, 0], [0, 1]]
+          : unit([[eigval[0] - yy, xy],
+                  [eigval[1] - yy, xy]]);
+
+        const rotation = Math.acos(eigvec[0][0]);
+
+        ellipses.push({
+          xMean,
+          yMean,
+          rotation,
+          eigval,
+          category,
+        });
+      });
+
+      // Draw the ellipses.
+      select('g.ellipses')
+        .selectAll('g.ellipse')
+        .data(ellipses)
+        .enter()
+        .append('g')
+        .classed('ellipse', true)
+        .attr('transform', 'translate(0, 0) rotate(0) scale(1, 1)')
+        .append('circle')
+        .attr('cx', 0)
+        .attr('cy', 0)
+        .attr('r', 1)
+        .attr('style', 'fill: none; stroke: black;')
+        .attr('vector-effect', 'non-scaling-stroke')
+        .style('stroke', d => cmap(d.category));
+
+      select('g.ellipses')
+        .selectAll('g.ellipse')
+        .data(ellipses)
         .transition()
         .duration(duration)
-        .attr('transform', `translate(${scalex(xMean)}, ${scaley(yMean)}) rotate(${-180 * rotation / Math.PI}) scale(${0.5 * scalex(Math.sqrt(eigval[0]))}, ${0.5 * scaley(Math.sqrt(eigval[1]))})`);
+        .attr('transform', d => `translate(${scalex(d.xMean)}, ${scaley(d.yMean)}) rotate(${-180 * d.rotation / Math.PI}) scale(${0.5 * scalex(Math.sqrt(d.eigval[0]))}, ${0.5 * scaley(Math.sqrt(d.eigval[1]))})`)
     },
   },
 };
