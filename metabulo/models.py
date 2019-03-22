@@ -35,13 +35,13 @@ TABLE_COLUMN_TYPES = TableTypes('key', 'metadata', 'measurement', 'masked')
 TABLE_ROW_TYPES = TableTypes('header', 'metadata', 'sample', 'masked')
 
 
-def _guess_table_structure(raw_table):
+def _guess_table_structure(table):
     # TODO: Implement this for real, this is just a dumb placeholder
     rows = [TABLE_ROW_TYPES.INDEX] + [
-        TABLE_ROW_TYPES.DATA for i in range(raw_table.shape[0] - 1)
+        TABLE_ROW_TYPES.DATA for i in range(table.shape[0] - 1)
     ]
     columns = [TABLE_COLUMN_TYPES.INDEX] + [
-        TABLE_COLUMN_TYPES.DATA for i in range(raw_table.shape[1] - 1)
+        TABLE_COLUMN_TYPES.DATA for i in range(table.shape[1] - 1)
     ]
     return rows, columns
 
@@ -63,14 +63,14 @@ class CSVFile(db.Model):
     meta = db.Column(JSONType, nullable=False)
 
     @property
-    def raw_table(self):
-        if not hasattr(self, '_raw_table'):
-            self._raw_table = pandas.read_csv(self.uri, index_col=None, header=None)
-        return self._raw_table.copy()
-
-    @property
     def table(self):
         if not hasattr(self, '_table'):
+            self._table = pandas.read_csv(self.uri, index_col=None, header=None)
+        return self._table.copy()
+
+    @property
+    def indexed_table(self):
+        if not hasattr(self, '_indexed_table'):
             kwargs = {}
 
             # handle column names
@@ -85,7 +85,7 @@ class CSVFile(db.Model):
             if key_column is not None:
                 kwargs['index_col'] = key_column
 
-            self._table = pandas.read_csv(self.uri, **kwargs)
+            self._indexed_table = pandas.read_csv(self.uri, **kwargs)
 
             # inject the computed keys in case the csv file does not have a primary key column
             if key_column is None:
@@ -94,9 +94,9 @@ class CSVFile(db.Model):
                 # exclude the header row from the primary key index if present
                 if header_row is not None:
                     keys = keys[1:]
-                self._table.index = pandas.Index(keys)
+                self._indexed_table.index = pandas.Index(keys)
 
-        return self._table.copy()
+        return self._indexed_table.copy()
 
     @property
     def measurement_table(self):
@@ -134,8 +134,8 @@ class CSVFile(db.Model):
 
     @header_row_index.setter
     def header_row_index(self, value):
-        if hasattr(self, '_table'):
-            del self._table
+        if hasattr(self, '_indexed_table'):
+            del self._indexed_table
 
         if self.header_row_index is not None:
             old_row = self.rows[self.header_row_index]
@@ -152,10 +152,10 @@ class CSVFile(db.Model):
         idx = self.header_row_index
         if idx is None:
             return [
-                f'col{i + 1}' for i in range(self.raw_table.shape[1])
+                f'col{i + 1}' for i in range(self.table.shape[1])
             ]
 
-        return list(self.raw_table.iloc[idx, :])
+        return list(self.table.iloc[idx, :])
 
     @hybrid_property
     def key_column_index(self):
@@ -172,8 +172,8 @@ class CSVFile(db.Model):
 
     @key_column_index.setter
     def key_column_index(self, value):
-        if hasattr(self, '_table'):
-            del self._table
+        if hasattr(self, '_indexed_table'):
+            del self._indexed_table
 
         if self.key_column_index is not None:
             old_column = self.columns[self.key_column_index]
@@ -190,10 +190,10 @@ class CSVFile(db.Model):
         idx = self.key_column_index
         if idx is None:
             return [
-                f'row{i + 1}' for i in range(self.raw_table.shape[0])
+                f'row{i + 1}' for i in range(self.table.shape[0])
             ]
 
-        return list(self.raw_table.iloc[:, idx])
+        return list(self.table.iloc[:, idx])
 
     def filter_table_by_types(self, row_type, column_type):
         rows = [
@@ -202,7 +202,8 @@ class CSVFile(db.Model):
         ]
         if self.header_row_index is not None:
             rows = [self.header_row_index] + rows
-            current_app.logger.warn('No header row is set.')
+        else:
+            current_app.logger.warning('No header row is set.')
 
         columns = [
             column.column_index for column in self.columns
@@ -216,7 +217,7 @@ class CSVFile(db.Model):
 
         return pandas.read_csv(
             BytesIO(
-                self.raw_table.iloc[rows, columns].to_csv(header=False, index=False).encode()
+                self.table.iloc[rows, columns].to_csv(header=False, index=False).encode()
             ), index_col=index_col
         )
 
@@ -242,8 +243,8 @@ class CSVFile(db.Model):
         return schema.load(data)
 
     def save_table(self, table):
-        if hasattr(self, '_raw_table'):
-            del self._raw_table
+        if hasattr(self, '_indexed_table'):
+            del self._indexed_table
         if hasattr(self, '_table'):
             del self._table
         return self._save_csv_file_data(self.uri, table.to_csv())
@@ -252,7 +253,7 @@ class CSVFile(db.Model):
     def create_csv_file(cls, id, name, table, meta=None):
         csv_file = cls(id=id, name=name, meta=meta)
         cls._save_csv_file_data(csv_file.uri, table)
-        row_types, column_types = _guess_table_structure(csv_file.raw_table)
+        row_types, column_types = _guess_table_structure(csv_file.table)
 
         rows = []
         table_row_schema = TableRowSchema()

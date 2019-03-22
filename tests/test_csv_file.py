@@ -26,7 +26,7 @@ c,7,8,9
         db.session.commit()
 
         assert csv.headers == ['col1', 'col2', 'col3', 'col4']
-        assert list(csv.table.columns) == ['col2', 'col3', 'col4']
+        assert list(csv.indexed_table.columns) == ['col2', 'col3', 'col4']
 
 
 def test_no_primary_key(app):
@@ -43,7 +43,7 @@ a,b,c
         db.session.commit()
 
         assert csv.keys == ['row1', 'row2', 'row3', 'row4']
-        assert list(csv.table.index) == ['row2', 'row3', 'row4']
+        assert list(csv.indexed_table.index) == ['row2', 'row3', 'row4']
 
 
 def test_no_header_or_primary_key(app):
@@ -60,10 +60,10 @@ def test_no_header_or_primary_key(app):
         db.session.commit()
 
         assert csv.headers == ['col1', 'col2', 'col3']
-        assert list(csv.table.columns) == ['col1', 'col2', 'col3']
+        assert list(csv.indexed_table.columns) == ['col1', 'col2', 'col3']
 
         assert csv.keys == ['row1', 'row2', 'row3']
-        assert list(csv.table.index) == ['row1', 'row2', 'row3']
+        assert list(csv.indexed_table.index) == ['row1', 'row2', 'row3']
 
 
 def test_set_primary_key(app):
