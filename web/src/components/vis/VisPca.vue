@@ -13,7 +13,7 @@ svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/s
 
 <script>
 import { select } from 'd3-selection';
-import { scaleLinear, scaleOrdinal } from 'd3-scale';
+import { scaleLinear } from 'd3-scale';
 import { axisBottom, axisLeft } from 'd3-axis';
 import 'd3-transition';
 
@@ -56,7 +56,7 @@ export default {
   },
   computed: {
     points() {
-      return this.rawPoints.map(p => ({x: p[0], y: p[1]}));
+      return this.rawPoints.map(p => ({ x: p[0], y: p[1] }));
     },
   },
   watch: {
@@ -74,7 +74,7 @@ export default {
         height,
       } = this.$props;
 
-      const points = this.points;
+      const { points } = this;
 
       // Grab the root SVG element.
       const svg = select(this.$refs.svg);
@@ -140,9 +140,6 @@ export default {
 
       // Draw the data.
       //
-      // Set up a colormap.
-      const cmap = scaleOrdinal(['red', 'blue']);
-
       // Plot the points in the scatter plot.
       select(this.$refs.svg)
         .select('g.plot')
