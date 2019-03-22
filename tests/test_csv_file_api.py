@@ -55,7 +55,7 @@ def test_get_csv_file(client, csv_file):
 
     assert resp.status_code == 200
     assert 'application/json' in resp.headers['Content-Type']
-    assert resp.json['table'] == csv_file.table.to_csv()
+    assert resp.json['table'] == csv_file.table.to_csv(header=False, index=False)
 
 
 def test_delete_csv_file(client, csv_file):
