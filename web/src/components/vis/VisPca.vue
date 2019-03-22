@@ -14,6 +14,7 @@ svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/s
 <script>
 import { select } from 'd3-selection';
 import { scaleLinear, scaleOrdinal } from 'd3-scale';
+import { schemeCategory10 } from 'd3-scale-chromatic';
 import { axisBottom, axisLeft } from 'd3-axis';
 import 'd3-transition';
 
@@ -50,17 +51,12 @@ export default {
       default: 300,
     },
     rawPoints: {
-      type: Array,
+      type: Object,
       required: true,
     },
   },
-  computed: {
-    points() {
-      return this.rawPoints.map(p => ({x: p[0], y: p[1]}));
-    },
-  },
   watch: {
-    points(newVal) {
+    rawPoints(newVal) {
       if (newVal) {
         this.update();
       }
@@ -72,9 +68,13 @@ export default {
       const {
         width,
         height,
+        rawPoints,
       } = this.$props;
 
-      const points = this.points;
+      const points = rawPoints.x.map(p => ({
+        x: p[0],
+        y: p[1],
+      }));
 
       // Grab the root SVG element.
       const svg = select(this.$refs.svg);
@@ -140,11 +140,8 @@ export default {
 
       // Draw the data.
       //
-      // Set up a colormap.
-      const cmap = scaleOrdinal(['red', 'blue']);
-
       // Plot the points in the scatter plot.
-      select(this.$refs.svg)
+      const sel = select(this.$refs.svg)
         .select('g.plot')
         .selectAll('circle')
         .data(points)
@@ -158,6 +155,15 @@ export default {
         .attr('r', 2)
         .attr('cx', d => scalex(d.x))
         .attr('cy', d => scaley(d.y));
+
+      // Set up a colormap and select an arbitrary label to color the nodes.
+      const cmap = scaleOrdinal(schemeCategory10);
+      const label = Object.keys(rawPoints.labels)[0];
+      if (label) {
+        sel.transition()
+          .duration(duration)
+          .attr('fill', (d, i) => cmap(rawPoints.labels[label][i]));
+      }
 
       // Compute and display the data ellipse.
       const xs = points.map(d => d.x);
