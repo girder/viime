@@ -36,8 +36,8 @@ function covar(xs, ys) {
 }
 
 function unit(matrix) {
-  return matrix.map(row => {
-    const mag = Math.sqrt(row[0]*row[0] + row[1]*row[1]);
+  return matrix.map((row) => {
+    const mag = Math.sqrt(row[0] * row[0] + row[1] * row[1]);
     return row.map(d => d / mag);
   });
 }
@@ -168,7 +168,7 @@ export default {
       }
 
       // Decompose the data into its label categories.
-      let streams = {};
+      const streams = {};
       points.forEach((p, i) => {
         const category = rawPoints.labels[label][i];
         if (!streams[category]) {
@@ -178,8 +178,8 @@ export default {
       });
 
       // Compute the ellipse data for each subset.
-      let ellipses = [];
-      Object.keys(streams).forEach(category => {
+      const ellipses = [];
+      Object.keys(streams).forEach((category) => {
         const data = streams[category];
 
         const xs = data.map(d => d.x);
@@ -202,7 +202,7 @@ export default {
 
         const eigvec = Math.abs(xy) < 1e-10 ? [[1, 0], [0, 1]]
           : unit([[eigval[0] - yy, xy],
-                  [eigval[1] - yy, xy]]);
+            [eigval[1] - yy, xy]]);
 
         const rotation = Math.acos(eigvec[0][0]);
 
@@ -236,7 +236,7 @@ export default {
         .data(ellipses)
         .transition()
         .duration(duration)
-        .attr('transform', d => `translate(${scalex(d.xMean)}, ${scaley(d.yMean)}) rotate(${-180 * d.rotation / Math.PI}) scale(${0.5 * scalex(Math.sqrt(d.eigval[0]))}, ${0.5 * scaley(Math.sqrt(d.eigval[1]))})`)
+        .attr('transform', d => `translate(${scalex(d.xMean)}, ${scaley(d.yMean)}) rotate(${-180 * d.rotation / Math.PI}) scale(${0.5 * scalex(Math.sqrt(d.eigval[0]))}, ${0.5 * scaley(Math.sqrt(d.eigval[1]))})`);
     },
   },
 };
