@@ -185,6 +185,14 @@ def get_pca_plot(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
     max_components = int(request.args.get('max_components', 5))
     data = pca(csv_file.measurement_table, max_components)
+
+    labels = csv_file.sample_metadata.to_dict()
+
+    def arraify(obj):
+        return list(map(lambda i: obj['S{}'.format(i + 1)], range(len(obj.keys()))))
+
+    data['labels'] = {k: arraify(v) for k, v in labels.items()}
+
     return jsonify(data), 200
 
 
