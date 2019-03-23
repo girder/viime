@@ -183,11 +183,8 @@ def delete_transform(csv_id, transform_id):
 @csv_bp.route('/csv/<uuid:csv_id>/plot/pca', methods=['GET'])
 def get_pca_plot(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
-    x_component_index = int(request.args.get('x_component_index', 0))
-    y_component_index = int(request.args.get('y_component_index', 1))
-    data = pca(csv_file.measurement_table,
-               csv_file.sample_metadata,
-               x_component_index, y_component_index)
+    max_components = int(request.args.get('max_components', 5))
+    data = pca(csv_file.measurement_table, max_components)
     return jsonify(data), 200
 
 

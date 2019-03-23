@@ -13,7 +13,7 @@ svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/s
 
 <script>
 import { select } from 'd3-selection';
-import { scaleLinear, scaleOrdinal } from 'd3-scale';
+import { scaleLinear } from 'd3-scale';
 import { axisBottom, axisLeft } from 'd3-axis';
 import 'd3-transition';
 
@@ -49,9 +49,14 @@ export default {
       type: Number,
       default: 300,
     },
-    points: {
+    rawPoints: {
       type: Array,
       required: true,
+    },
+  },
+  computed: {
+    points() {
+      return this.rawPoints.map(p => ({ x: p[0], y: p[1] }));
     },
   },
   watch: {
@@ -67,8 +72,9 @@ export default {
       const {
         width,
         height,
-        points,
       } = this.$props;
+
+      const { points } = this;
 
       // Grab the root SVG element.
       const svg = select(this.$refs.svg);
@@ -134,12 +140,6 @@ export default {
 
       // Draw the data.
       //
-      // Set up a colormap.
-      const cmap = scaleOrdinal(['red', 'blue']);
-
-      // Select an arbitrary label to color the points by.
-      const label = Object.keys(points[0].labels)[0];
-
       // Plot the points in the scatter plot.
       select(this.$refs.svg)
         .select('g.plot')
@@ -154,8 +154,7 @@ export default {
         .delay((d, i) => i * 5)
         .attr('r', 2)
         .attr('cx', d => scalex(d.x))
-        .attr('cy', d => scaley(d.y))
-        .attr('fill', d => cmap(d.labels[label]));
+        .attr('cy', d => scaley(d.y));
 
       // Compute and display the data ellipse.
       const xs = points.map(d => d.x);
