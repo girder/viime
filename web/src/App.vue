@@ -1,8 +1,9 @@
 <template lang="pug">
 v-app
-  v-toolbar.darken-3(dark, flat, color="secondary")
-    v-toolbar-title
-      img(src="./assets/logo.png", width="48px", height="48px")
+  v-toolbar.main-toolbar.darken-3(dark, flat, color="secondary")
+    v-toolbar-items
+      v-btn.px-0.square-button.darken-4(flat, color="white")
+        v-icon {{ $vuetify.icons.close }}
     v-spacer
     v-toolbar-title
       b Biomarker Analysis > {{ $router.currentRoute.name }}
@@ -26,5 +27,12 @@ export default {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   max-height: 100vh;
+  .main-toolbar .v-toolbar__content {
+    padding-left: 0px;
+
+    .square-button {
+      min-width: 64px;
+    }
+  }
 }
 </style>

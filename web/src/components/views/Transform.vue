@@ -9,8 +9,9 @@ import {
 import { loadDataset } from '@/utils/mixins';
 
 import VisPca from '@/components/vis/VisPca.vue';
-import FooterContainer from '@/components/containers/FooterContainer.vue';
+import HeaderFooterContainer from '@/components/containers/HeaderFooter.vue';
 import SaveStatus from '@/components/SaveStatus.vue';
+import Stepper from '@/components/stepper/Stepper.vue';
 
 const all_methods = [
   ...normalize_methods,
@@ -20,9 +21,10 @@ const all_methods = [
 
 export default {
   components: {
-    FooterContainer,
+    HeaderFooterContainer,
     SaveStatus,
     VisPca,
+    Stepper,
   },
   mixins: [loadDataset],
   data() {
@@ -34,6 +36,8 @@ export default {
       pcaPoints: {
         x: [],
       },
+      stepperCollapsed: false,
+      stepperModel: 2,
     };
   },
   computed: {
@@ -92,7 +96,10 @@ export default {
 </script>
 
 <template lang="pug">
-footer-container.transform-view
+header-footer-container.transform-view
+  template(#header)
+      stepper(v-model="stepperModel", :collapsed.sync="stepperCollapsed")
+
   v-layout(row, fill-height, justify-center, align-center, ref="contentarea")
     div
       h3.headline.ml-5 Principal Component Analysis
@@ -137,7 +144,7 @@ footer-container.transform-view
             v-radio(v-for="m in scaling_methods", :label="m.label",
                 v-if="m.value", :value="m.value", :key="`scale${m.value}`")
 
-    v-toolbar.footer(flat)
+    v-toolbar.footer(flat, dense)
       v-btn(depressed, color="accent", :to="`/cleanup/${dataset_id}`")
         v-icon.pr-1 {{ $vuetify.icons.arrowLeft }}
         | Go Back
