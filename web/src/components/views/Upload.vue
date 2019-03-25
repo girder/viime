@@ -4,7 +4,8 @@ import Dropzone from '@girder/components/src/components/Presentation/Dropzone.vu
 import FileList from '@girder/components/src/components/Presentation/FileUploadList.vue';
 import { UPLOAD_CSV } from '@/store/actions.type';
 
-import FooterContainer from '@/components/containers/FooterContainer.vue';
+import HeaderFooterContainer from '@/components/containers/HeaderFooter.vue';
+import Stepper from '@/components/stepper/Stepper.vue';
 
 const sampleTypes = [
   { name: 'Serum', value: 'serum' },
@@ -25,8 +26,9 @@ const dataTypes = [
 export default {
   components: {
     FileList,
-    FooterContainer,
+    HeaderFooterContainer,
     Dropzone,
+    Stepper,
   },
   mixins: [sizeFormatter],
   data() {
@@ -34,6 +36,8 @@ export default {
       files: [],
       dataTypes,
       sampleTypes,
+      stepperCollapsed: false,
+      stepperModel: 0,
     };
   },
   computed: {
@@ -72,8 +76,9 @@ export default {
 </script>
 
 <template lang="pug">
-footer-container
-
+header-footer-container
+  template(#header)
+    stepper(v-model="stepperModel", :collapsed.sync="stepperCollapsed")
   v-container
     v-card-title(primary-title)
       div
@@ -108,7 +113,7 @@ footer-container
     dropzone.filezone(:multiple="true", :message="message", @change="onFileChange")
 
   template(#footer)
-    v-toolbar.footer(flat)
+    v-toolbar.footer(flat, dense)
       v-spacer
       v-btn.ma-0(:disabled="!files.length", depressed, color="accent", @click="upload")
         | Continue
