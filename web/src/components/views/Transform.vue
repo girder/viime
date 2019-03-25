@@ -96,7 +96,7 @@ footer-container.transform-view
   v-layout(row, fill-height, justify-center, align-center, ref="contentarea")
     div
       h3.headline.ml-5 Principal Component Analysis
-      vis-pca(:width="800", :height="600", :raw-points="pcaPoints.x")
+      vis-pca(:width="800", :height="600", :raw-points="pcaPoints")
 
   template(#footer)
     v-layout(row, wrap, grow, v-if="dataset")

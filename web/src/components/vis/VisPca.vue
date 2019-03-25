@@ -3,17 +3,13 @@ svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/s
   g.master
     g.axes
     g.plot
-    g.ellipse(transform="translate(0, 0) rotate(0) scale(1, 1)")
-      circle(cx="0",
-          cy="0",
-          r="1",
-          style="fill: none; stroke: black;",
-          vector-effect="non-scaling-stroke")
+    g.ellipses
 </template>
 
 <script>
 import { select } from 'd3-selection';
-import { scaleLinear } from 'd3-scale';
+import { scaleLinear, scaleOrdinal } from 'd3-scale';
+import { schemeCategory10 } from 'd3-scale-chromatic';
 import { axisBottom, axisLeft } from 'd3-axis';
 import 'd3-transition';
 
@@ -39,6 +35,13 @@ function covar(xs, ys) {
   return e_xy - e_xx * e_yy;
 }
 
+function unit(matrix) {
+  return matrix.map((row) => {
+    const mag = Math.sqrt(row[0] * row[0] + row[1] * row[1]);
+    return row.map(d => d / mag);
+  });
+}
+
 export default {
   props: {
     width: {
@@ -50,17 +53,12 @@ export default {
       default: 300,
     },
     rawPoints: {
-      type: Array,
+      type: Object,
       required: true,
     },
   },
-  computed: {
-    points() {
-      return this.rawPoints.map(p => ({ x: p[0], y: p[1] }));
-    },
-  },
   watch: {
-    points(newVal) {
+    rawPoints(newVal) {
       if (newVal) {
         this.update();
       }
@@ -72,9 +70,13 @@ export default {
       const {
         width,
         height,
+        rawPoints,
       } = this.$props;
 
-      const { points } = this;
+      const points = rawPoints.x.map(p => ({
+        x: p[0],
+        y: p[1],
+      }));
 
       // Grab the root SVG element.
       const svg = select(this.$refs.svg);
@@ -141,7 +143,7 @@ export default {
       // Draw the data.
       //
       // Plot the points in the scatter plot.
-      select(this.$refs.svg)
+      const sel = select(this.$refs.svg)
         .select('g.plot')
         .selectAll('circle')
         .data(points)
@@ -156,35 +158,85 @@ export default {
         .attr('cx', d => scalex(d.x))
         .attr('cy', d => scaley(d.y));
 
-      // Compute and display the data ellipse.
-      const xs = points.map(d => d.x);
-      const ys = points.map(d => d.y);
+      // Set up a colormap and select an arbitrary label to color the nodes.
+      const cmap = scaleOrdinal(schemeCategory10);
+      const label = Object.keys(rawPoints.labels)[0];
+      if (label) {
+        sel.transition()
+          .duration(duration)
+          .attr('fill', (d, i) => cmap(rawPoints.labels[label][i]));
+      }
 
-      const xMean = xs.reduce((acc, x) => acc + x, 0) / xs.length;
-      const yMean = ys.reduce((acc, y) => acc + y, 0) / ys.length;
+      // Decompose the data into its label categories.
+      const streams = {};
+      points.forEach((p, i) => {
+        const category = rawPoints.labels[label][i];
+        if (!streams[category]) {
+          streams[category] = [];
+        }
+        streams[category].push(p);
+      });
 
-      const xx = covar(xs, xs);
-      const yy = covar(ys, ys);
-      const xy = covar(xs, ys);
+      // Compute the ellipse data for each subset.
+      const ellipses = [];
+      Object.keys(streams).forEach((category) => {
+        const data = streams[category];
 
-      const trace = xx + yy;
-      const det = xx * yy - xy * xy;
+        const xs = data.map(d => d.x);
+        const ys = data.map(d => d.y);
 
-      const eigval = [
-        trace / 2 + Math.sqrt(trace * trace / 4 - det),
-        trace / 2 - Math.sqrt(trace * trace / 4 - det),
-      ];
+        const xMean = xs.reduce((acc, x) => acc + x, 0) / xs.length;
+        const yMean = ys.reduce((acc, y) => acc + y, 0) / ys.length;
 
-      const eigvec = Math.abs(xy) < 1e-10 ? [[1, 0], [0, 1]]
-        : [[eigval[0] - yy, xy],
-          [eigval[1] - yy, xy]];
+        const xx = covar(xs, xs);
+        const yy = covar(ys, ys);
+        const xy = covar(xs, ys);
 
-      const rotation = Math.acos(eigvec[0][0]);
+        const trace = xx + yy;
+        const det = xx * yy - xy * xy;
 
-      select('g.ellipse')
+        const eigval = [
+          trace / 2 + Math.sqrt(trace * trace / 4 - det),
+          trace / 2 - Math.sqrt(trace * trace / 4 - det),
+        ];
+
+        const eigvec = Math.abs(xy) < 1e-10 ? [[1, 0], [0, 1]]
+          : unit([[eigval[0] - yy, xy],
+            [eigval[1] - yy, xy]]);
+
+        const rotation = Math.acos(eigvec[0][0]);
+
+        ellipses.push({
+          xMean,
+          yMean,
+          rotation,
+          eigval,
+          category,
+        });
+      });
+
+      // Draw the ellipses.
+      select('g.ellipses')
+        .selectAll('g.ellipse')
+        .data(ellipses)
+        .enter()
+        .append('g')
+        .classed('ellipse', true)
+        .attr('transform', 'translate(0, 0) rotate(0) scale(1, 1)')
+        .append('circle')
+        .attr('cx', 0)
+        .attr('cy', 0)
+        .attr('r', 1)
+        .attr('style', 'fill: none; stroke: black;')
+        .attr('vector-effect', 'non-scaling-stroke')
+        .style('stroke', d => cmap(d.category));
+
+      select('g.ellipses')
+        .selectAll('g.ellipse')
+        .data(ellipses)
         .transition()
         .duration(duration)
-        .attr('transform', `translate(${scalex(xMean)}, ${scaley(yMean)}) rotate(${-180 * rotation / Math.PI}) scale(${0.5 * scalex(Math.sqrt(eigval[0]))}, ${0.5 * scaley(Math.sqrt(eigval[1]))})`);
+        .attr('transform', d => `translate(${scalex(d.xMean)}, ${scaley(d.yMean)}) rotate(${-180 * d.rotation / Math.PI}) scale(${0.5 * scalex(Math.sqrt(d.eigval[0]))}, ${0.5 * scaley(Math.sqrt(d.eigval[1]))})`);
     },
   },
 };
