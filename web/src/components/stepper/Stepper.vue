@@ -21,7 +21,7 @@ const step4 = {
   description: '',
   icon: 'checkedFlag',
 };
-const steps = [ step1, step2, step3, step4 ];
+const steps = [step1, step2, step3, step4];
 
 export default {
   components: {

@@ -19,7 +19,7 @@ export default {
     },
     state: {
       type: Number,
-      required: true
+      required: true,
     },
   },
   computed: {

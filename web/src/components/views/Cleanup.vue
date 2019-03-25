@@ -27,8 +27,8 @@ export default {
 header-footer-container
 
   template(#header)
-      stepper(v-model="stepperModel", :collapsed.sync="stepperCollapsed")
-  
+    stepper(v-model="stepperModel", :collapsed.sync="stepperCollapsed")
+
   cleanup-table.cleanup-table-flex(:dataset-id="dataset_id")
 
   template(#footer)

@@ -98,7 +98,7 @@ export default {
 <template lang="pug">
 header-footer-container.transform-view
   template(#header)
-      stepper(v-model="stepperModel", :collapsed.sync="stepperCollapsed")
+    stepper(v-model="stepperModel", :collapsed.sync="stepperCollapsed")
 
   v-layout(row, fill-height, justify-center, align-center, ref="contentarea")
     div
