@@ -12,6 +12,7 @@
     "@girder/components": "https://github.com/girder/girder_web_components#master",
     "axios": "^0.18.0",
     "d3-axis": "^1.0.12",
+    "d3-format": "^1.3.2",
     "d3-scale": "^2.2.2",
     "d3-scale-chromatic": "^1.3.3",
     "d3-selection": "^1.4.0",
