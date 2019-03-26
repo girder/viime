@@ -5,7 +5,7 @@ div
       g.axes
       g.plot
       g.ellipses
-  div.tooltip(ref="tooltip")
+  .tooltip(ref="tooltip")
 </template>
 
 <style scoped lang="scss">
