@@ -26,6 +26,7 @@ div.tooltip {
 
 <script>
 import { select, event } from 'd3-selection';
+import { format } from 'd3-format';
 import { scaleLinear, scaleOrdinal } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { axisBottom, axisLeft } from 'd3-axis';
@@ -162,6 +163,7 @@ export default {
       //
       // Plot the points in the scatter plot.
       const tooltip = select(this.$refs.tooltip);
+      const coordFormat = format('.1f');
       const sel = select(this.$refs.svg)
         .select('g.plot')
         .selectAll('circle')
@@ -174,7 +176,7 @@ export default {
             tooltip.transition()
               .duration(200)
               .style('opacity', 0.9);
-            tooltip.html(`PC1: ${d.x}<br>PC2: ${d.y}`)
+            tooltip.html(`PC1: ${coordFormat(d.x)}<br>PC2: ${coordFormat(d.y)}`)
               .style('left', `${event.pageX}px`)
               .style('top', `${event.pageY - 30}px`);
           })
