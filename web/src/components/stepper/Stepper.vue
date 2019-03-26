@@ -2,22 +2,22 @@
 import Step from './Step.vue';
 
 const step1 = {
-  name: '1. Choose data',
+  name: 'Choose data',
   description: 'Upload or select input data',
   icon: 'upload',
 };
 const step2 = {
-  name: '2. Clean up data',
+  name: 'Clean Up',
   description: 'Inputation, filtering, and key selection',
   icon: 'tableEdit',
 };
 const step3 = {
-  name: '3. Transform data',
+  name: 'Transform',
   description: 'Normalize, transform, and scale your data',
   icon: 'transform',
 };
 const step4 = {
-  name: '4. Analysis',
+  name: 'Analysis',
   description: '',
   icon: 'checkedFlag',
 };
@@ -45,7 +45,7 @@ export default {
 
 <template lang="pug">
 v-card.stepper
-  v-layout.py-2.px-5(row, justify-space-between)
+  v-layout.py-2.px-4(row, justify-space-between)
     step(
         v-for="(step, idx) in steps",
         :step="idx",
@@ -87,7 +87,7 @@ v-card.stepper
     }
 
     &.spacers {
-      padding: 0 100px;
+      padding: 0 80px;
       z-index: 1;
       top: 36px;
 
