@@ -40,7 +40,7 @@ export default {
 
 <template lang="pug">
 .step
-  v-layout(column, align-center)
+  v-layout.px-3(column, align-center)
     .outer-wrap.shrink
       .icon-wrapper
         v-icon.icon(
@@ -87,7 +87,7 @@ export default {
   }
 
   .narrow {
-    max-width: 150px;
+    max-width: 120px;
     text-align: center;
     line-height: 1;
   }
