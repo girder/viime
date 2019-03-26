@@ -1,13 +1,31 @@
 <template lang="pug">
-svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
-  g.master
-    g.axes
-    g.plot
-    g.ellipses
+div
+  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
+    g.master
+      g.axes
+      g.plot
+      g.ellipses
+  div.tooltip(ref="tooltip")
 </template>
 
+<style scoped lang="scss">
+div.tooltip {
+  position: absolute;
+  text-align: center;
+  width: 60px;
+  height: 28px;
+  padding: 2px;
+  font: 12px sans-serif;
+  background: lightsteelblue;
+  border: 0px;
+  border-radius: 8px;
+  pointer-events: none;
+  opacity: 0;
+}
+</style>
+
 <script>
-import { select } from 'd3-selection';
+import { select, event } from 'd3-selection';
 import { scaleLinear, scaleOrdinal } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { axisBottom, axisLeft } from 'd3-axis';
@@ -143,6 +161,7 @@ export default {
       // Draw the data.
       //
       // Plot the points in the scatter plot.
+      const tooltip = select(this.$refs.tooltip);
       const sel = select(this.$refs.svg)
         .select('g.plot')
         .selectAll('circle')
@@ -150,7 +169,20 @@ export default {
         .join(enter => enter.append('circle')
           .attr('cx', (d, i, nodes) => 60000 * Math.cos(i * Math.PI / nodes.length))
           .attr('cy', (d, i, nodes) => 60000 * Math.sin(i * Math.PI / nodes.length))
-          .attr('r', 0))
+          .attr('r', 0)
+          .on('mouseover', d => {
+            tooltip.transition()
+              .duration(200)
+              .style('opacity', 0.9);
+            tooltip.html(`PC1: ${d.x}<br>PC2: ${d.y}`)
+              .style('left', `${event.pageX}px`)
+              .style('top', `${event.pageY - 28}px`);
+          })
+          .on('mouseout', () => {
+            tooltip.transition()
+              .duration(500)
+              .style('opacity', 0.0);
+          }))
         .transition()
         .duration(duration)
         .delay((d, i) => i * 5)
