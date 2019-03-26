@@ -109,7 +109,7 @@ header-footer-container.transform-view
     v-layout(row, wrap, grow, v-if="dataset")
 
       v-card.transform-container.grow(flat)
-        v-toolbar.darken-3(color="secondary", dark, flat, dense, :card="false")
+        v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
           v-toolbar-title Normalize
           v-spacer
           v-switch.shrink(hide-details, :input-value="normEnabled",
@@ -121,7 +121,7 @@ header-footer-container.transform-view
                 v-if="m.value", :value="m.value", :key="`norm${m.value}`")
 
       v-card.transform-container.grow(flat)
-        v-toolbar.darken-3(color="secondary", dark, flat, dense, :card="false")
+        v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
           v-toolbar-title Transform
           v-spacer
           v-switch.shrink(hide-details, :input-value="transEnabled",
@@ -133,7 +133,7 @@ header-footer-container.transform-view
                 v-if="m.value", :value="m.value", :key="`trans${m.value}`")
 
       v-card.transform-container.grow(flat)
-        v-toolbar.darken-3(color="secondary", dark, flat, dense)
+        v-toolbar.darken-3(color="primary", dark, flat, dense)
           v-toolbar-title Scale
           v-spacer
           v-switch.shrink(hide-details, :input-value="scalingEnabled",
