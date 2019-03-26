@@ -18,7 +18,7 @@ div.tooltip {
   font: 12px sans-serif;
   background: lightsteelblue;
   border: 0px;
-  border-radius: 8px;
+  border-radius: 3px;
   pointer-events: none;
   opacity: 0;
 }
