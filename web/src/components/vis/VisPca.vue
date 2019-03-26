@@ -12,8 +12,8 @@ div
 div.tooltip {
   position: absolute;
   text-align: center;
-  width: 60px;
-  height: 28px;
+  width: 120px;
+  height: 30px;
   padding: 2px;
   font: 12px sans-serif;
   background: lightsteelblue;
@@ -176,7 +176,7 @@ export default {
               .style('opacity', 0.9);
             tooltip.html(`PC1: ${d.x}<br>PC2: ${d.y}`)
               .style('left', `${event.pageX}px`)
-              .style('top', `${event.pageY - 28}px`);
+              .style('top', `${event.pageY - 30}px`);
           })
           .on('mouseout', () => {
             tooltip.transition()
