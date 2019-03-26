@@ -172,7 +172,12 @@ export default {
           .attr('cx', (d, i, nodes) => 60000 * Math.cos(i * Math.PI / nodes.length))
           .attr('cy', (d, i, nodes) => 60000 * Math.sin(i * Math.PI / nodes.length))
           .attr('r', 0)
-          .on('mouseover', d => {
+          .on('mouseover', function (d) {
+            select(this)
+              .transition()
+              .duration(200)
+              .attr('r', 4);
+
             tooltip.transition()
               .duration(200)
               .style('opacity', 0.9);
@@ -180,7 +185,12 @@ export default {
               .style('left', `${event.pageX}px`)
               .style('top', `${event.pageY - 30}px`);
           })
-          .on('mouseout', () => {
+          .on('mouseout', function () {
+            select(this)
+              .transition()
+              .duration(500)
+              .attr('r', 2);
+
             tooltip.transition()
               .duration(500)
               .style('opacity', 0.0);
