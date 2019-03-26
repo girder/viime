@@ -92,7 +92,7 @@ jobs:
           at: /tmp/metabulo
       - run:
           name: Install jq
-          command: sudo apt-get update && sudo apt-get install -y jq
+          command: sudo apt-get update ; sudo apt-get install -y jq
       - run:
           name: Create a virtualenv for deployment
           command: |
