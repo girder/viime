@@ -79,11 +79,11 @@ export default {
 header-footer-container
   template(#header)
     stepper(v-model="stepperModel", :collapsed.sync="stepperCollapsed")
-  v-container
+  v-container(fluid)
     v-card-title(primary-title)
       div
-        h3.headline Upload your data (csv or txt)
-        p Choose a file from your computer
+        h3.headline.font-weight-bold.primary--text.text--darken-3 Upload your data (csv or txt)
+        p.secondary--text.text--lighten-1 Choose a file from your computer
 
     .my-2(v-if="files.length")
       v-toolbar.darken-3(color="primary", dark, flat, dense)

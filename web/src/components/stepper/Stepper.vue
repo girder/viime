@@ -45,7 +45,9 @@ export default {
 
 <template lang="pug">
 v-card.stepper
-  v-layout.py-2.px-4(row, justify-space-between)
+  v-layout.px-4(
+      row, justify-space-between,
+      :class="{ 'pt-3': !collapsed, 'py-2': collapsed }")
     step(
         v-for="(step, idx) in steps",
         :step="idx",
@@ -89,7 +91,7 @@ v-card.stepper
     &.spacers {
       padding: 0 80px;
       z-index: 1;
-      top: 36px;
+      top: 42px;
 
       &.collapsed {
         top: 22px;

@@ -8,6 +8,7 @@ import ApiService from './common/api.service';
 import App from './App.vue';
 import router from './router';
 import store from './store';
+import './stylus/main.styl';
 import vuetifyConfig from './utils/vuetifyConfig';
 
 Vue.use(Girder);

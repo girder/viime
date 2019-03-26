@@ -24,7 +24,6 @@ export default {
 
 <style lang="scss">
 #app {
-  font-family: 'Barlow Condensed', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   max-height: 100vh;
