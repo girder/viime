@@ -172,7 +172,7 @@ export default {
           .attr('cx', (d, i, nodes) => 60000 * Math.cos(i * Math.PI / nodes.length))
           .attr('cy', (d, i, nodes) => 60000 * Math.sin(i * Math.PI / nodes.length))
           .attr('r', 0)
-          .on('mouseover', function (d) {
+          .on('mouseover', function mouseover(d) {
             select(this)
               .transition()
               .duration(200)
@@ -185,7 +185,7 @@ export default {
               .style('left', `${event.pageX}px`)
               .style('top', `${event.pageY - 30}px`);
           })
-          .on('mouseout', function () {
+          .on('mouseout', function mouseout() {
             select(this)
               .transition()
               .duration(500)
