@@ -50,6 +50,7 @@ v-card.stepper
       :class="{ 'pt-3': !collapsed, 'py-2': collapsed }")
     step(
         v-for="(step, idx) in steps",
+        :key="step.name",
         :step="idx",
         :name="step.name",
         :description="step.description",
@@ -57,7 +58,7 @@ v-card.stepper
         :state="value - idx",
         :icon="step.icon")
   v-layout.shadow.spacers(row, :class="{ collapsed }")
-    v-spacer.step-spacer(v-for="step in steps")
+    v-spacer.step-spacer(v-for="step in steps", :key="step.name")
   v-layout.shadow.expansor(row, justify-center)
     .expansor-box
       v-icon.icon(@click="$emit('update:collapsed', !collapsed)")
