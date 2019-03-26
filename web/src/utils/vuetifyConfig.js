@@ -8,8 +8,8 @@ import colors from 'vuetify/es5/util/colors';
 
 export default {
   theme: {
-    primary: colors.lightGreen.lighten1,
-    secondary: colors.blueGrey,
+    primary: colors.blueGrey,
+    secondary: colors.grey,
     accent: colors.lightGreen,
     error: colors.red,
     info: colors.lightBlue.lighten1,

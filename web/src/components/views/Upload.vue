@@ -86,7 +86,7 @@ header-footer-container
         p Choose a file from your computer
 
     .my-2(v-if="files.length")
-      v-toolbar.darken-3(color="secondary", dark, flat, dense)
+      v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title Pending files
         v-spacer
         v-btn(flat, small, @click="files = []")

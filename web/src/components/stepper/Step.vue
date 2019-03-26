@@ -47,7 +47,7 @@ export default {
             :large="!small",
             :small="small",
             :class="classes") {{ this.done ? $vuetify.icons.check : $vuetify.icons[icon] }}
-    h4.subtitle(v-if="!small") {{ name }}
+    h4.title.pa-1(v-if="!small") {{ name }}
     p.narrow.caption(v-if="!small") {{ description }}
 </template>
 
