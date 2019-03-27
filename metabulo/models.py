@@ -11,12 +11,11 @@ from marshmallow.exceptions import ValidationError
 import pandas
 from sqlalchemy import MetaData
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy_utils.types.json import JSONType
 from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
 
-from metabulo import transform
+from metabulo.normalization import NORMALIZATION_METHODS, normalize
 
 
 # This is to avoid having to manually name all constraints
@@ -60,6 +59,7 @@ class CSVFile(db.Model):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     name = db.Column(db.String, nullable=False)
+    normalization = db.Column(db.String, nullable=True)
     meta = db.Column(JSONType, nullable=False)
 
     @property
@@ -100,20 +100,23 @@ class CSVFile(db.Model):
 
     @property
     def measurement_table(self):
+        """Return the processed metabolite date table."""
         return self.apply_transforms()
 
     @property
     def measurement_metadata(self):
+        """Return metadata rows."""
         return self.filter_table_by_types(TABLE_ROW_TYPES.METADATA, TABLE_COLUMN_TYPES.DATA)
 
     @property
     def sample_metadata(self):
+        """Return metadata columns."""
         return self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.METADATA)
 
     @property
-    def transforms(self):
-        query = TableTransform.query.filter_by(csv_file_id=self.id)
-        return query.order_by(TableTransform.priority)
+    def raw_measurement_table(self):
+        """Return the metabolite data table before transformation."""
+        return self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.DATA)
 
     @property
     def uri(self):
@@ -221,26 +224,8 @@ class CSVFile(db.Model):
             ), index_col=index_col
         )
 
-    def apply_transforms(self, last=None):
-        table = self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.DATA)
-        for t in self.transforms:
-            table = t.apply(table)
-            if str(t.id) == str(last):
-                break
-        return table
-
-    def generate_transform(self, data):
-        args = data.copy()
-        transform_type = args.pop('transform_type', None)
-        priority = args.pop('priority', None)
-        data = {
-            'csv_file_id': str(self.id),
-            'transform_type': transform_type,
-            'args': args,
-            'priority': priority
-        }
-        schema = TableTransformSchema()
-        return schema.load(data)
+    def apply_transforms(self):
+        return normalize(self.normalization, self.raw_measurement_table)
 
     def save_table(self, table):
         if hasattr(self, '_indexed_table'):
@@ -250,8 +235,8 @@ class CSVFile(db.Model):
         return self._save_csv_file_data(self.uri, table.to_csv())
 
     @classmethod
-    def create_csv_file(cls, id, name, table, meta=None):
-        csv_file = cls(id=id, name=name, meta=meta)
+    def create_csv_file(cls, id, name, table, **kwargs):
+        csv_file = cls(id=id, name=name, **kwargs)
         cls._save_csv_file_data(csv_file.uri, table)
         row_types, column_types = _guess_table_structure(csv_file.table)
 
@@ -303,12 +288,11 @@ class CSVFileSchema(BaseSchema):
     created = fields.DateTime(dump_only=True)
     name = fields.Str(required=True, validate=_validate_name)
     table = fields.Raw(required=True, validate=_validate_table_data)
+    normalization = fields.Str(missing=None, validate=validate.OneOf(NORMALIZATION_METHODS))
     meta = fields.Dict(missing=dict)
 
     columns = fields.List(fields.Nested('TableColumnSchema', exclude=['csv_file']))
     rows = fields.List(fields.Nested('TableRowSchema', exclude=['csv_file']))
-    transforms = fields.List(
-        fields.Nested('TableTransformSchema', exclude=['csv_file']), dump_only=True)
 
     measurement_table = fields.Raw(dump_only=True)
     measurement_metadata = fields.Raw(dump_only=True)
@@ -357,7 +341,7 @@ class TableColumnSchema(BaseSchema):
     column_type = fields.Str(required=True, validate=validate.OneOf(TABLE_COLUMN_TYPES))
 
     csv_file = fields.Nested(
-        CSVFileSchema, exclude=['rows', 'columns', 'transforms'], dump_only=True)
+        CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
 
 
 class ModifyColumnSchema(Schema):
@@ -393,7 +377,7 @@ class TableRowSchema(BaseSchema):
     row_type = fields.Str(required=True, validate=validate.OneOf(TABLE_ROW_TYPES))
 
     csv_file = fields.Nested(
-        CSVFileSchema, exclude=['rows', 'columns', 'transforms'], dump_only=True)
+        CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
 
 
 class ModifyRowSchema(Schema):
@@ -404,37 +388,3 @@ class ModifyRowSchema(Schema):
         if data is None or data == {}:
             raise ValidationError('JSON params required', data=data)
         return data
-
-
-class TableTransform(db.Model):
-    __table_args__ = (UniqueConstraint('id', 'priority'),)
-
-    id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
-    csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), nullable=False)
-    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    transform_type = db.Column(db.String, nullable=False)
-    args = db.Column(JSONType, nullable=False)
-    priority = db.Column(db.Float, nullable=False)
-
-    csv_file = db.relationship(CSVFile)
-
-    def apply(self, table):
-        kwargs = dict(
-            table=table,
-            transform_type=self.transform_type,
-            **self.args
-        )
-        return transform.dispatch(**kwargs)
-
-
-class TableTransformSchema(BaseSchema):
-    __model__ = TableTransform
-
-    id = fields.UUID(missing=uuid4)
-    csv_file_id = fields.UUID(required=True, load_only=True)
-    created = fields.DateTime(dump_only=True)
-    transform_type = fields.Str(required=True, validate=validate.OneOf(transform.registry.keys()))
-    args = fields.Dict(missing=dict)
-    priority = fields.Float(required=True)
-
-    csv_file = fields.Nested(CSVFileSchema, exclude=['transforms'], dump_only=True)
