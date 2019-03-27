@@ -102,10 +102,11 @@ def delete_csv_file(csv_id):
 def set_normalization_method(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
     args = request.json
-    if args is not None and args not in NORMALIZATION_METHODS:
-        raise ValidationError('Invalid normalization method', data=args)
+    method = args['method']
+    if method is not None and method not in NORMALIZATION_METHODS:
+        raise ValidationError('Invalid normalization method', data=method)
     try:
-        csv_file.normalization = args
+        csv_file.normalization = method
         db.session.add(csv_file)
         db.session.commit()
         return jsonify(csv_file_schema.dump(csv_file))
