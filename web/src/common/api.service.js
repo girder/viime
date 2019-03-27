@@ -63,12 +63,8 @@ export const CSVService = {
     return ApiService.download('csv', slug);
   },
 
-  addTransform(slug, { transform_type, args }) {
-    return ApiService.post(`csv/${slug}/transform`, { transform_type, ...args });
-  },
-
-  dropTransform(csvSlug, transformSlug) {
-    return ApiService.delete(`csv/${csvSlug}/transform/${transformSlug}`);
+  setTransform(slug, category, transform_type) {
+    return ApiService.put(`csv/${slug}/${category}`, { method: transform_type });
   },
 
   updateAxis(csvSlug, axis, index, args) {

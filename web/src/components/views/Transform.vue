@@ -13,12 +13,6 @@ import HeaderFooterContainer from '@/components/containers/HeaderFooter.vue';
 import SaveStatus from '@/components/SaveStatus.vue';
 import Stepper from '@/components/stepper/Stepper.vue';
 
-const all_methods = [
-  ...normalize_methods,
-  ...scaling_methods,
-  ...transform_methods,
-];
-
 export default {
   components: {
     HeaderFooterContainer,
@@ -44,11 +38,8 @@ export default {
     dataset() { return this.$store.getters.dataset(this.dataset_id); },
     loading() { return this.$store.state.loading; },
     norm() { return this.$store.getters.txType(this.dataset_id, 'normalization'); },
-    normEnabled() { return this.dataset.normalization.enabled; },
     trans() { return this.$store.getters.txType(this.dataset_id, 'transformation'); },
-    transEnabled() { return this.dataset.transformation.enabled; },
     scaling() { return this.$store.getters.txType(this.dataset_id, 'scaling'); },
-    scalingEnabled() { return this.dataset.scaling.enabled; },
     transformed() { return this.dataset && this.dataset.transformed; },
   },
   watch: {
@@ -60,9 +51,6 @@ export default {
     this.loadPCAData(this.dataset_id);
   },
   methods: {
-    methodFromValue(value) {
-      return all_methods.find(m => m.value === value);
-    },
     async transformTable(value, category) {
       let txtype = value;
       if (value === false) {
@@ -79,11 +67,9 @@ export default {
             throw new Error(`${category} is not valid.`);
         }
       }
-      const method = this.methodFromValue(txtype);
       this.$store.dispatch(MUTEX_TRANSFORM_TABLE, {
         dataset_id: this.dataset_id,
         transform_type: txtype,
-        args: { priority: method.priority },
         category,
       });
     },
@@ -112,10 +98,10 @@ header-footer-container.transform-view
         v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
           v-toolbar-title Normalize
           v-spacer
-          v-switch.shrink(hide-details, :input-value="normEnabled",
+          v-switch.shrink(hide-details, :input-value="norm",
               @change="transformTable($event, 'normalization')", :disabled="loading")
         v-card-actions.pl-3
-          v-radio-group(:disabled="!normEnabled || loading", :value="norm",
+          v-radio-group(:disabled="!norm || loading", :value="norm",
               @change="transformTable($event, 'normalization')")
             v-radio(v-for="m in normalize_methods", :label="m.label",
                 v-if="m.value", :value="m.value", :key="`norm${m.value}`")
@@ -124,10 +110,10 @@ header-footer-container.transform-view
         v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
           v-toolbar-title Transform
           v-spacer
-          v-switch.shrink(hide-details, :input-value="transEnabled",
+          v-switch.shrink(hide-details, :input-value="trans",
               @change="transformTable($event, 'transformation')", :disabled="true")
         v-card-actions.pl-3
-          v-radio-group(:disabled="!transEnabled || loading", :value="trans",
+          v-radio-group(:disabled="!trans || loading", :value="trans",
               @change="transformTable($event, 'transformation')")
             v-radio(v-for="m in transform_methods", :label="m.label",
                 v-if="m.value", :value="m.value", :key="`trans${m.value}`")
@@ -136,10 +122,10 @@ header-footer-container.transform-view
         v-toolbar.darken-3(color="primary", dark, flat, dense)
           v-toolbar-title Scale
           v-spacer
-          v-switch.shrink(hide-details, :input-value="scalingEnabled",
+          v-switch.shrink(hide-details, :input-value="scaling",
               @change="transformTable($event, 'scaling')", :disabled="true")
         v-card-actions.pl-3
-          v-radio-group(:disabled="!scalingEnabled || loading", :value="scaling",
+          v-radio-group(:disabled="!scaling || loading", :value="scaling",
               @change="transformTable($event, 'scaling')")
             v-radio(v-for="m in scaling_methods", :label="m.label",
                 v-if="m.value", :value="m.value", :key="`scale${m.value}`")

@@ -1,13 +1,15 @@
 from io import BytesIO
 
 from flask import Blueprint, current_app, jsonify, request, send_file
+from marshmallow import ValidationError
 
 from metabulo import opencpu
 from metabulo.models import CSVFile, CSVFileSchema, db, \
     ModifyColumnSchema, ModifyRowSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     TableColumn, TableColumnSchema, TableRow, \
-    TableRowSchema, TableTransform, TableTransformSchema
+    TableRowSchema
+from metabulo.normalization import NORMALIZATION_METHODS
 from metabulo.plot import pca
 
 csv_file_schema = CSVFileSchema()
@@ -15,7 +17,6 @@ modify_column_schema = ModifyColumnSchema()
 modify_row_schema = ModifyRowSchema()
 table_column_schema = TableColumnSchema(exclude=['csv_file'])
 table_row_schema = TableRowSchema(exclude=['csv_file'])
-table_transform_schema = TableTransformSchema()
 
 csv_bp = Blueprint('csv', __name__)
 
@@ -96,6 +97,23 @@ def delete_csv_file(csv_id):
 
     return '', 204
 
+# Ingest transforms
+@csv_bp.route('/csv/<uuid:csv_id>/normalization', methods=['PUT'])
+def set_normalization_method(csv_id):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    args = request.json
+    method = args['method']
+    if method is not None and method not in NORMALIZATION_METHODS:
+        raise ValidationError('Invalid normalization method', data=method)
+    try:
+        csv_file.normalization = method
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
+
 
 # Row/Column API
 @csv_bp.route('/csv/<uuid:csv_id>/column', methods=['GET'])
@@ -160,24 +178,6 @@ def modify_row(csv_id, row_index):
     db.session.add(csv_file)
     db.session.commit()
     return jsonify(table_row_schema.dump(row))
-
-
-# Transform API
-@csv_bp.route('/csv/<uuid:csv_id>/transform', methods=['POST'])
-def create_transform(csv_id):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    transform_ = csv_file.generate_transform(request.json or {})
-    db.session.add(transform_)
-    db.session.commit()
-    return jsonify(table_transform_schema.dump(transform_)), 201
-
-
-@csv_bp.route('/csv/<uuid:csv_id>/transform/<uuid:transform_id>', methods=['DELETE'])
-def delete_transform(csv_id, transform_id):
-    transform_ = TableTransform.query.get_or_404(transform_id)
-    db.session.delete(transform_)
-    db.session.commit()
-    return '', 204
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/plot/pca', methods=['GET'])

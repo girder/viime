@@ -17,7 +17,7 @@ const defaultColOption = 'measurement';
 const colPrimaryKey = 'key';
 
 const normalize_methods = [
-  { label: 'Min Max', value: 'normalize', priority: 10 },
+  { label: 'Min Max', value: 'minmax', priority: 10 },
   { label: 'None', value: null },
 ];
 

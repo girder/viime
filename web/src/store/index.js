@@ -23,8 +23,6 @@ import {
 
 import {
   ADD_SOURCE_DATA,
-  DISABLE_CATEGORY,
-  REMOVE_TRANSFORMATION,
   SET_AXIS_LABEL,
   SET_TRANSFORMATION,
   SET_TRANSFORM_DATA,
@@ -54,11 +52,7 @@ const appstate = {
 
 const getters = {
   dataset: state => id => state.datasets[id],
-  txType: state => (id, category) => (
-    state.datasets[id]
-    && state.datasets[id][category]
-    && state.datasets[id][category].value
-    && state.datasets[id][category].value.transform_type) || null,
+  txType: state => (id, category) => state.datasets[id] && state.datasets[id][category],
 };
 
 const mutations = {
@@ -71,9 +65,6 @@ const mutations = {
     const row_key_index = rows.find(r => r.row_type === rowPrimaryKey);
     const cols = data.columns.sort((a, b) => a.column_index - b.column_index);
     const col_key_index = cols.find(c => c.column_type === colPrimaryKey);
-
-    // TODO: look for mutually exclusive transformations
-    // pending #46
 
     // serialize CSV string as JSON
     const { data: sourcerows } = convertCsvToRows(data.table);
@@ -96,32 +87,11 @@ const mutations = {
       sourcerows,
       // most recent copy of data with all transforms applied.
       transformed: data,
-      // full map of all transformations on source
-      transformations: {},
       // mutually exclusive transformation categories
-      // if SET_TRANSFORMATION is called for one of these names,
-      // the current transform is deleted and replaced with the new one.
-      normalization: {
-        value: null,
-        enabled: false,
-      },
-      transformation: {
-        value: null,
-        enabled: false,
-      },
-      scaling: {
-        value: null,
-        enabled: false,
-      },
+      normalization: data.normalization,
+      transformation: null, // TODO: add
+      scaling: null, // TODO: add
     });
-  },
-
-  [DISABLE_CATEGORY](state, { key, category }) {
-    Vue.set(state.datasets[key][category], 'enabled', false);
-  },
-
-  [REMOVE_TRANSFORMATION](state, { key, tx_key }) {
-    Vue.delete(state.datasets[key].transformations, tx_key);
   },
 
   [SET_AXIS_LABEL](state, {
@@ -157,16 +127,7 @@ const mutations = {
   },
 
   [SET_TRANSFORMATION](state, { key, data, category }) {
-    const tx_key = data.id;
-    if (category) {
-      if (data) {
-        Vue.set(state.datasets[key][category], 'value', data);
-        Vue.set(state.datasets[key][category], 'enabled', true);
-      } else {
-        Vue.set(state.datasets[key][category], 'enabled', false);
-      }
-    }
-    Vue.set(state.datasets[key].transformations, tx_key, data);
+    Vue.set(state.datasets[key], category, data);
   },
 
   [SET_LOADING](state, loading) {
@@ -201,40 +162,14 @@ const actions = {
   },
 
   // set mutually exclusive transformation within category.
-  async [MUTEX_TRANSFORM_TABLE]({ state, commit }, {
-    category, dataset_id, transform_type, args,
+  async [MUTEX_TRANSFORM_TABLE]({ commit }, {
+    category, dataset_id, transform_type,
   }) {
     const key = dataset_id;
-    const previous = state.datasets[key][category];
     commit(SET_LOADING, true);
-    if (transform_type === null) {
-      // remove the existing transform
-      if (!previous.enabled) throw new Error('Cannot drop transform without having set one first');
-      try {
-        await CSVService.dropTransform(key, previous.value.id);
-        commit(REMOVE_TRANSFORMATION, { key, tx_key: previous.value.id, category });
-        commit(DISABLE_CATEGORY, { key, category });
-      } catch (err) {
-        commit(SET_LAST_ERROR, err);
-        commit(SET_LOADING, false);
-        throw err;
-      }
-    }
-    if (transform_type !== null) {
-      // create new transform
-      try {
-        const { data } = await CSVService.addTransform(key, { transform_type, args });
-        commit(SET_TRANSFORMATION, { key, data, category });
-      } catch (err) {
-        commit(SET_LAST_ERROR, err);
-        commit(SET_LOADING, false);
-        throw err;
-      }
-    }
-
-    // after modifying transforms, reapply all
     try {
-      const { data } = await CSVService.get(key);
+      const { data } = await CSVService.setTransform(key, category, transform_type);
+      commit(SET_TRANSFORMATION, { key, data: transform_type, category });
       commit(SET_TRANSFORM_DATA, { data });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
