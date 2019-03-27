@@ -289,7 +289,7 @@ export default {
         .data(ellipses)
         .transition()
         .duration(duration)
-        .attr('transform', d => {
+        .attr('transform', (d) => {
           const xMean = scalex(d.xMean);
           const yMean = scaley(d.yMean);
           const rotation = -180 * d.rotation / Math.PI;
