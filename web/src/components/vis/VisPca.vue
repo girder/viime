@@ -229,16 +229,23 @@ export default {
         const xs = data.map(d => d.x);
         const ys = data.map(d => d.y);
 
+        // Compute the means.
         const xMean = xs.reduce((acc, x) => acc + x, 0) / xs.length;
         const yMean = ys.reduce((acc, y) => acc + y, 0) / ys.length;
 
+        // Compute the covariance matrix. Note that "xy" = "yx" in this case so
+        // we just compute xy.
         const xx = covar(xs, xs);
         const yy = covar(ys, ys);
         const xy = covar(xs, ys);
 
+        // Compute the trace and determinant.
         const trace = xx + yy;
         const det = xx * yy - xy * xy;
 
+        // Compute the eigenvalues and eigenvectors of the covariance matrix
+        // according to
+        // http://www.math.harvard.edu/archive/21b_fall_04/exhibits/2dmatrices/
         const eigval = [
           trace / 2 + Math.sqrt(trace * trace / 4 - det),
           trace / 2 - Math.sqrt(trace * trace / 4 - det),
@@ -248,7 +255,9 @@ export default {
           : unit([[eigval[0] - yy, xy],
             [eigval[1] - yy, xy]]);
 
-        const rotation = Math.acos(eigvec[0][0]);
+        // Compute the rotation of the ellipse, taking into account the quadrant
+        // the eigenvectors are pointing into.
+        const rotation = Math.sign(eigvec[0][1]) * Math.acos(eigvec[0][0]);
 
         ellipses.push({
           xMean,
@@ -280,7 +289,15 @@ export default {
         .data(ellipses)
         .transition()
         .duration(duration)
-        .attr('transform', d => `translate(${scalex(d.xMean)}, ${scaley(d.yMean)}) rotate(${-180 * d.rotation / Math.PI}) scale(${0.5 * scalex(Math.sqrt(d.eigval[0]))}, ${0.5 * scaley(Math.sqrt(d.eigval[1]))})`);
+        .attr('transform', (d) => {
+          const xMean = scalex(d.xMean);
+          const yMean = scaley(d.yMean);
+          const rotation = -180 * d.rotation / Math.PI;
+          const xScale = scalex(Math.sqrt(d.eigval[0])) - scalex(0);
+          const yScale = scaley(Math.sqrt(d.eigval[1])) - scaley(0);
+
+          return `translate(${xMean}, ${yMean}) rotate(${rotation}) scale(${xScale}, ${yScale})`;
+        });
     },
   },
 };
