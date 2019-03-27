@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from flask import current_app, Flask, jsonify
 from marshmallow import ValidationError
-from werkzeug.contrib.fixers import ProxyFix
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from metabulo.models import db
 from metabulo.views import csv_bp
