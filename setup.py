@@ -36,7 +36,8 @@ setup(
         'python-dotenv',
         'requests',
         'sklearn',
-        'sqlalchemy-utils'
+        'sqlalchemy-utils',
+        'Werkzeug>=0.15'
     ],
     license='Apache Software License 2.0',
     data_files=data_files,
