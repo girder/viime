@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from flask import Blueprint, current_app, jsonify, request, send_file
+from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import ValidationError
 
 from metabulo import opencpu
@@ -195,4 +195,5 @@ def get_pca_plot(csv_id):
 @csv_bp.route('/csv/<uuid:csv_id>/pca-overview', methods=['GET'])
 def get_pca_overview(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
-    return opencpu.generate_image('/metabulo/R/pca_overview_plot', csv_file.table)
+    png_content = opencpu.generate_image('/metabulo/R/pca_overview_plot', csv_file.table)
+    return Response(png_content, mimetype='image/png')

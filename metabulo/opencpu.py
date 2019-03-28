@@ -5,31 +5,51 @@ import pandas
 import requests
 
 
-# TODO: accept extra params
-def process_table(uri, table):
-    api_root = current_app.config['OPENCPU_API_ROOT']
+class OpenCPUException(Exception):
+    def __init__(self, msg, response):
+        super().__init__(self, msg)
+        self.response = response
+
+    @property
+    def error_response(self):
+        return Response(self.response.content, status=self.response.status_code,
+                        mimetype='text/plain')
+
+
+def opencpu_request(method, files=None, params=None, return_type='csv'):
+    files = files or {}
+    params = params or {}
+    url = current_app.config['OPENCPU_API_ROOT'] + '/metabulo/R/' + method
+    if return_type == 'csv':
+        url += '/csv?row.names=true'
+    elif return_type == 'png':
+        url += '/png'
+    else:
+        raise Exception('Unknown return type')
+
+    resp = requests.post(url, files=files, data=params)
+    if not resp.ok:
+        raise OpenCPUException(f'OpenCPU error calling {method}', resp)
+
+    result = resp.content
+    if return_type == 'csv':
+        result = pandas.read_csv(BytesIO(resp.content), index_col=0)
+    return result
+
+
+def process_table(method, table, params=None):
     files = {
         'table': ('table.csv', table.to_csv().encode())
     }
-    resp = requests.post(api_root + uri + '/csv?row.names=true', files=files)
-    if not resp.ok:
-        return Response(resp.content, status=resp.status_code, mimetype='text/plain')
-
-    result = pandas.read_csv(BytesIO(resp.content), index_col=0)
+    result = opencpu_request(method, files=files, params=params)
     return Response(result.to_csv(), mimetype='text/csv')
 
 
-def generate_image(uri, table, params=None):
-    api_root = current_app.config['OPENCPU_API_ROOT']
-    params = params or {}
-
+def generate_image(method, table, params=None):
     files = {
         'table': ('table.csv', table.to_csv().encode())
     }
-    resp = requests.post(api_root + uri + '/png', files=files, params=params)
-    if not resp.ok:
-        return Response(resp.content, status=resp.status_code, mimetype='text/plain')
-    return Response(resp.content, mimetype='image/png')
+    return opencpu_request(method, files=files, params=params, return_type='png')
 
 
 if __name__ == '__main__':
