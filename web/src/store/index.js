@@ -13,32 +13,22 @@ import {
 
 import {
   CHANGE_AXIS_LABEL,
-  UPLOAD_CSV,
   MUTEX_TRANSFORM_TABLE,
   LOAD_DATASET,
+  LOAD_PLOT,
+  UPLOAD_CSV,
 } from './actions.type';
 
 import {
   ADD_SOURCE_DATA,
+  REFRESH_PLOT,
   SET_AXIS_LABEL,
   SET_TRANSFORMATION,
-  SET_TRANSFORM_DATA,
   SET_LAST_ERROR,
   SET_LOADING,
 } from './mutations.type';
 
 Vue.use(Vuex);
-
-/**
- * Dataset schema
- * @typedef {Object} Dataset
- * @property {Array} source the unaltered source data
- * @property {Number} width raw width
- * @property {Number} height raw height
- * @property {Array} transformed the most recent transform data
- * @property {Array} transformations a list of all transformations on the dataset
- * @property {String} normalization there can only be 1.
- */
 
 const appstate = {
   // map of all datasets in the session by csv UUID
@@ -50,7 +40,19 @@ const appstate = {
 const getters = {
   dataset: state => id => state.datasets[id],
   txType: state => (id, category) => state.datasets[id] && state.datasets[id][category],
+  plotData: state => (id, name) => state.datasets[id] && state.datasets[id].plots[name].data,
+  plotValid: state => (id, name) => state.datasets[id] && state.datasets[id].plots[name].valid,
 };
+
+
+/*
+ * Private mutation helpers
+ */
+function _invalidatePlots(state, { key, plotList }) {
+  plotList.forEach((name) => {
+    Vue.set(state.datasets[key].plots[name], 'valid', false);
+  });
+}
 
 const mutations = {
 
@@ -127,12 +129,23 @@ const mutations = {
       normalization: data.normalization,
       transformation: null, // TODO: add
       scaling: null, // TODO: add
+      // data for visualizations
+      plots: {
+        // logic for which mutations invalidate plot data cache is internal to vuex state
+        // this could be more granular.  for now, mutations invalidate all plots.
+        // enumerate plot types
+        pca: {
+          data: null,
+          valid: false,
+        },
+      },
     });
   },
 
   [SET_AXIS_LABEL](state, {
     key, axis_name, index, value, isPrimary,
   }) {
+    _invalidatePlots(state, { key, plotList: ['pca'] });
     Vue.set(state.datasets[key][axis_name].labels, index, value);
     const oldprimary = state.datasets[key][axis_name].primary_key;
 
@@ -153,17 +166,21 @@ const mutations = {
     }
   },
 
+  [REFRESH_PLOT](state, { key, name, data }) {
+    Vue.set(state.datasets[key].plots[name], 'data', data);
+    Vue.set(state.datasets[key].plots[name], 'valid', true);
+  },
+
   [SET_LAST_ERROR](state, { err }) {
     Vue.set(state, 'lasterror', err);
   },
 
-  [SET_TRANSFORM_DATA](state, { data }) {
-    const key = data.id;
+  [SET_TRANSFORMATION](state, {
+    key, data, transform_type, category,
+  }) {
+    _invalidatePlots(state, { key, plotList: ['pca'] });
+    Vue.set(state.datasets[key], category, transform_type);
     Vue.set(state.datasets[key], 'transformed', data);
-  },
-
-  [SET_TRANSFORMATION](state, { key, data, category }) {
-    Vue.set(state.datasets[key], category, data);
   },
 
   [SET_LOADING](state, loading) {
@@ -205,8 +222,9 @@ const actions = {
     commit(SET_LOADING, true);
     try {
       const { data } = await CSVService.setTransform(key, category, transform_type);
-      commit(SET_TRANSFORMATION, { key, data: transform_type, category });
-      commit(SET_TRANSFORM_DATA, { data });
+      commit(SET_TRANSFORMATION, {
+        key, data, transform_type, category,
+      });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
       commit(SET_LOADING, false);
@@ -244,6 +262,16 @@ const actions = {
       throw err;
     }
     commit(SET_LOADING, false);
+  },
+
+  async [LOAD_PLOT]({ commit }, { dataset_id, name }) {
+    try {
+      const { data } = await CSVService.getPlot(dataset_id, name);
+      commit(REFRESH_PLOT, { key: dataset_id, name, data });
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      throw err;
+    }
   },
 };
 
