@@ -204,9 +204,9 @@ id,g,header1,header2
 
 def test_modify_csv_file_key_index(client):
     table = """
-header1,id,header2,header3,extra
-0,row1,0.5,2.0,
-0,row2,1.5,0,
+header1,group,id,header2,header3,extra
+0,a,row1,0.5,2.0,
+0,b,row2,1.5,0,
 """
     csv_file = csv_file_schema.load({
         'table': table,
@@ -217,13 +217,13 @@ header1,id,header2,header3,extra
 
     csv_id = csv_file.id
     resp = client.put(
-        url_for('csv.modify_column', csv_id=csv_id, column_index=1),
+        url_for('csv.modify_column', csv_id=csv_id, column_index=2),
         json={'column_type': 'key'}
     )
     assert resp.status_code == 200
 
     resp = client.put(
-        url_for('csv.modify_column', csv_id=csv_id, column_index=4),
+        url_for('csv.modify_column', csv_id=csv_id, column_index=5),
         json={'column_type': 'masked'}
     )
     assert resp.status_code == 200

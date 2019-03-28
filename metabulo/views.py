@@ -70,6 +70,12 @@ def get_csv_file(csv_id):
     return jsonify(csv_file_schema.dump(csv_file))
 
 
+@csv_bp.route('/csv/<uuid:csv_id>/validation', methods=['GET'])
+def get_csv_file_validation(csv_id):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    return jsonify(csv_file.table_validation)
+
+
 @csv_bp.route('/csv/<uuid:csv_id>/download', methods=['GET'])
 def download_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)

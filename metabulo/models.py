@@ -64,6 +64,19 @@ class CSVFile(db.Model):
     meta = db.Column(JSONType, nullable=False)
 
     @property
+    def table_validation(self):
+        """Return a list of issues with the table or None if everything is okay."""
+        errors = []
+        if self.header_row_index is None:
+            errors.append('No header row')
+        if self.key_column_index is None:
+            errors.append('No primary key column')
+        if self.group_column_index is None:
+            errors.append('No group column')
+
+        return errors or None
+
+    @property
     def table(self):
         if not hasattr(self, '_table'):
             self._table = pandas.read_csv(self.uri, index_col=None, header=None)
@@ -102,6 +115,8 @@ class CSVFile(db.Model):
     @property
     def measurement_table(self):
         """Return the processed metabolite date table."""
+        if self.raw_measurement_table is None:
+            return
         return self.apply_transforms()
 
     @property
@@ -230,6 +245,8 @@ class CSVFile(db.Model):
         return list(self.table.iloc[:, idx])
 
     def filter_table_by_types(self, row_type, column_type):
+        if self.table_validation is not None:
+            return
         rows = [
             row.row_index for row in self.rows
             if row.row_type == row_type
@@ -325,10 +342,11 @@ class CSVFileSchema(BaseSchema):
     columns = fields.List(fields.Nested('TableColumnSchema', exclude=['csv_file']))
     rows = fields.List(fields.Nested('TableRowSchema', exclude=['csv_file']))
 
-    measurement_table = fields.Raw(dump_only=True)
-    measurement_metadata = fields.Raw(dump_only=True)
-    sample_metadata = fields.Raw(dump_only=True)
-    groups = fields.Raw(dump_only=True)
+    table_validation = fields.List(fields.Str, dump_only=True, allow_none=True)
+    measurement_table = fields.Raw(dump_only=True, allow_none=True)
+    measurement_metadata = fields.Raw(dump_only=True, allow_none=True)
+    sample_metadata = fields.Raw(dump_only=True, allow_none=True)
+    groups = fields.Raw(dump_only=True, allow_none=True)
 
     @post_load
     def fix_file_name(self, data):
@@ -337,11 +355,15 @@ class CSVFileSchema(BaseSchema):
 
     @post_dump
     def read_csv_file(self, data):
+        def get_csv(key):
+            if data.get(key) is not None:
+                return data[key].to_csv()
+
         data['table'] = data['table'].to_csv(header=False, index=False)
-        data['measurement_table'] = data['measurement_table'].to_csv()
-        data['measurement_metadata'] = data['measurement_metadata'].to_csv()
-        data['sample_metadata'] = data['sample_metadata'].to_csv()
-        data['groups'] = data['groups'].to_csv()
+        data['measurement_table'] = get_csv('measurement_table')
+        data['measurement_metadata'] = get_csv('measurement_metadata')
+        data['sample_metadata'] = get_csv('sample_metadata')
+        data['groups'] = get_csv('groups')
         return data
 
     @post_load
