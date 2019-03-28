@@ -140,6 +140,8 @@ def modify_column(csv_id, column_index):
     for key, value in args.items():
         if key == 'column_type' and value == TABLE_COLUMN_TYPES.INDEX:
             csv_file.key_column_index = column_index
+        elif key == 'column_type' and value == TABLE_COLUMN_TYPES.GROUP:
+            csv_file.group_column_index = column_index
         else:
             setattr(column, key, value)
     db.session.add(column)

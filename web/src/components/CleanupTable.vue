@@ -94,7 +94,7 @@ export default {
   height: 100%;
   border-collapse: collapse;
 
-  .key, .metadata, .header {
+  .key, .metadata, .header, .group {
     font-weight: 700;
     color: white;
     text-align: left;
@@ -147,7 +147,7 @@ tr.datarow {
   }
 
   &.header, &.metadata {
-    .key, .metadata {
+    .key, .metadata, .group {
       background-color: lightgray !important;
       font-weight: 300;
       color: black;
@@ -159,7 +159,7 @@ tr.datarow {
       background-color: #546E7A;
     }
 
-    td.metadata {
+    td.metadata,td.group {
       background-color: #9E9E9E;
     }
   }
@@ -172,7 +172,7 @@ tr.datarow {
     &.key {
       background-color: #78909C;
     }
-    &.metadata {
+    &.metadata,&.group {
       background-color: #BDBDBD;
     }
   }

@@ -6,10 +6,10 @@ from metabulo.models import CSVFile, CSVFileSchema, db
 csv_file_schema = CSVFileSchema()
 
 table_data = """
-id,meta,col1,col2
-row1,a,0.5,2.0
-row2,b,1.5,0
-row3,b,4,0.5
+id,group,meta,col1,col2
+row1,g1,a,0.5,2.0
+row2,g1,b,1.5,0
+row3,g2,b,4,0.5
 """
 
 
@@ -33,16 +33,20 @@ def test_list_columns(client, table):
         'column_index': 0,
         'column_type': 'key'
     }, {
-        'column_header': 'meta',
+        'column_header': 'group',
         'column_index': 1,
-        'column_type': 'measurement'
+        'column_type': 'group'
     }, {
-        'column_header': 'col1',
+        'column_header': 'meta',
         'column_index': 2,
         'column_type': 'measurement'
     }, {
-        'column_header': 'col2',
+        'column_header': 'col1',
         'column_index': 3,
+        'column_type': 'measurement'
+    }, {
+        'column_header': 'col2',
+        'column_index': 4,
         'column_type': 'measurement'
     }]
 
@@ -72,11 +76,11 @@ def test_list_rows(client, table):
 
 def test_get_column(client, table):
     resp = client.get(
-        url_for('csv.get_column', csv_id=table.id, column_index=1))
+        url_for('csv.get_column', csv_id=table.id, column_index=2))
     assert resp.status_code == 200
     assert resp.json == {
         'column_header': 'meta',
-        'column_index': 1,
+        'column_index': 2,
         'column_type': 'measurement'
     }
 
@@ -101,7 +105,7 @@ def test_modify_column(client, table):
     )
     assert resp.status_code == 200
     assert resp.json == {
-        'column_header': 'meta',
+        'column_header': 'group',
         'column_index': 1,
         'column_type': 'metadata'
     }
@@ -144,12 +148,37 @@ def test_delete_header_row(client, table):
     assert resp.json['row_type'] == 'metadata'
 
 
+def test_modify_group_column(client, table):
+    resp = client.put(
+        url_for('csv.modify_column', csv_id=table.id, column_index=2),
+        json={
+            'column_type': 'group'
+        }
+    )
+    assert resp.status_code == 200
+    assert resp.json == {
+        'column_header': 'meta',
+        'column_index': 2,
+        'column_type': 'group'
+    }
+
+    resp = client.get(
+        url_for('csv.get_column', csv_id=table.id, column_index=1)
+    )
+    assert resp.status_code == 200
+    assert resp.json == {
+        'column_header': 'group',
+        'column_index': 1,
+        'column_type': 'metadata'
+    }
+
+
 def test_modify_csv_file_header_index(client):
     table = """
-,,
-row1,0.5,2.0
-row2,1.5,0
-id,header1,header2
+,,,
+row1,g,0.5,2.0
+row2,g,1.5,0
+id,g,header1,header2
 """
     csv_file = csv_file_schema.load({
         'table': table,

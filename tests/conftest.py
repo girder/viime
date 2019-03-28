@@ -44,7 +44,7 @@ def client(app):
 @pytest.fixture
 def csv_file(client):
     csv_file = csv_file_schema.load({
-        'table': 'id,col1,col2\nrow1,0.5,2.0\nrow2,1.5,0\n',
+        'table': 'id,g,col1,col2\nrow1,g,0.5,2.0\nrow2,g,1.5,0\n',
         'name': 'test_csv_file.csv'
     })
     db.session.add(csv_file)
