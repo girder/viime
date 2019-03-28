@@ -6,11 +6,16 @@ from marshmallow import ValidationError
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from metabulo.models import db
+from metabulo.opencpu import OpenCPUException
 from metabulo.views import csv_bp
 
 
 def handle_validation_error(e):
     return jsonify(e.messages), 400
+
+
+def handle_opencpu_error(e):
+    return e.error_response
 
 
 def handle_general_error(e):
@@ -37,6 +42,7 @@ def create_app(config=None):
     app.register_blueprint(csv_bp, url_prefix='/api/v1')
 
     app.register_error_handler(ValidationError, handle_validation_error)
+    app.register_error_handler(OpenCPUException, handle_opencpu_error)
     if app.config['ENV'] == 'production':
         app.register_error_handler(500, handle_general_error)
 
