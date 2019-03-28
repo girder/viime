@@ -15,6 +15,7 @@ from sqlalchemy_utils.types.json import JSONType
 from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
 
+from metabulo.cache import region
 from metabulo.imputation import impute_missing
 from metabulo.normalization import NORMALIZATION_METHODS, normalize
 
@@ -45,6 +46,11 @@ def _guess_table_structure(table):
         TABLE_COLUMN_TYPES.DATA for i in range(table.shape[1] - 2)
     ]
     return rows, columns
+
+
+@region.cache_on_arguments()
+def _read_csv_file(path, **kwargs):
+    return pandas.read_csv(path, **kwargs)
 
 
 class BaseSchema(Schema):
@@ -85,39 +91,36 @@ class CSVFile(db.Model):
 
     @property
     def table(self):
-        if not hasattr(self, '_table'):
-            self._table = pandas.read_csv(self.uri, index_col=None, header=None)
-        return self._table.copy()
+        return _read_csv_file(self.uri, index_col=None, header=None)
 
     @property
     def indexed_table(self):
-        if not hasattr(self, '_indexed_table'):
-            kwargs = {}
+        kwargs = {}
 
-            # handle column names
-            header_row = self.header_row_index
-            kwargs['header'] = header_row
-            if header_row is None:
-                kwargs['names'] = self.headers
+        # handle column names
+        header_row = self.header_row_index
+        kwargs['header'] = header_row
+        if header_row is None:
+            kwargs['names'] = self.headers
 
-            # handle row ids
-            kwargs['index_col'] = False
-            key_column = self.key_column_index
-            if key_column is not None:
-                kwargs['index_col'] = key_column
+        # handle row ids
+        kwargs['index_col'] = False
+        key_column = self.key_column_index
+        if key_column is not None:
+            kwargs['index_col'] = key_column
 
-            self._indexed_table = pandas.read_csv(self.uri, **kwargs)
+        indexed_table = _read_csv_file(self.uri, **kwargs)
 
-            # inject the computed keys in case the csv file does not have a primary key column
-            if key_column is None:
-                keys = self.keys
+        # inject the computed keys in case the csv file does not have a primary key column
+        if key_column is None:
+            keys = self.keys
 
-                # exclude the header row from the primary key index if present
-                if header_row is not None:
-                    keys = keys[1:]
-                self._indexed_table.index = pandas.Index(keys)
+            # exclude the header row from the primary key index if present
+            if header_row is not None:
+                keys = keys[1:]
+            indexed_table.index = pandas.Index(keys)
 
-        return self._indexed_table.copy()
+        return indexed_table
 
     @property
     def measurement_table(self):
@@ -166,9 +169,6 @@ class CSVFile(db.Model):
 
     @header_row_index.setter
     def header_row_index(self, value):
-        if hasattr(self, '_indexed_table'):
-            del self._indexed_table
-
         if self.header_row_index is not None:
             old_row = self.rows[self.header_row_index]
             old_row.row_type = TABLE_ROW_TYPES.METADATA
@@ -204,9 +204,6 @@ class CSVFile(db.Model):
 
     @key_column_index.setter
     def key_column_index(self, value):
-        if hasattr(self, '_indexed_table'):
-            del self._indexed_table
-
         if self.key_column_index is not None:
             old_column = self.columns[self.key_column_index]
             old_column.column_type = TABLE_COLUMN_TYPES.METADATA
@@ -287,10 +284,9 @@ class CSVFile(db.Model):
         return normalize(self.normalization, table)
 
     def save_table(self, table):
-        if hasattr(self, '_indexed_table'):
-            del self._indexed_table
-        if hasattr(self, '_table'):
-            del self._table
+        # TODO: Delete cache entries if a file at self.uri exists already
+        # For now, there is no API for changing the data contained in an uploaded
+        # file, so this is not important.
         return self._save_csv_file_data(self.uri, table.to_csv())
 
     @classmethod

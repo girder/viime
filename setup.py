@@ -28,6 +28,7 @@ setup(
     packages=find_packages(include=['metabulo']),
     include_package_data=True,
     install_requires=[
+        'dogpile.cache',
         'flask',
         'flask-sqlalchemy',
         'marshmallow>=3.0.0rc4',
@@ -39,6 +40,9 @@ setup(
         'sqlalchemy-utils',
         'Werkzeug>=0.15'
     ],
+    extras_require={
+        'memcached': ['pylibmc']
+    },
     license='Apache Software License 2.0',
     data_files=data_files,
     entry_points={
