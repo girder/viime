@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 import dotenv
 import pytest
 
+from metabulo import models
 from metabulo.app import create_app
 from metabulo.models import CSVFileSchema, db
 
@@ -17,6 +18,14 @@ def mock_load_dotenv(monkeypatch):
         pass
 
     monkeypatch.setattr(dotenv, 'load_dotenv', do_nothing)
+
+
+@pytest.fixture(autouse=True)
+def mock_imputation(monkeypatch):
+    def noop(table, groups):
+        return table.copy()
+
+    monkeypatch.setattr(models, 'impute_missing', noop)
 
 
 @pytest.fixture
