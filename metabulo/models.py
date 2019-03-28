@@ -15,6 +15,7 @@ from sqlalchemy_utils.types.json import JSONType
 from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
 
+from metabulo.imputation import impute_missing
 from metabulo.normalization import NORMALIZATION_METHODS, normalize
 
 
@@ -273,7 +274,9 @@ class CSVFile(db.Model):
         )
 
     def apply_transforms(self):
-        return normalize(self.normalization, self.raw_measurement_table)
+        table = self.raw_measurement_table
+        table = impute_missing(table, self.groups)
+        return normalize(self.normalization, table)
 
     def save_table(self, table):
         if hasattr(self, '_indexed_table'):
