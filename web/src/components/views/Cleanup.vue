@@ -1,45 +1,33 @@
 <script>
 import { loadDataset } from '@/utils/mixins';
 import CleanupTable from '@/components/CleanupTable.vue';
-import HeaderFooterContainer from '@/components/containers/HeaderFooter.vue';
 import SaveStatus from '@/components/SaveStatus.vue';
 
 export default {
   components: {
     CleanupTable,
-    HeaderFooterContainer,
     SaveStatus,
   },
   mixins: [loadDataset],
   data() {
     return {
       dataset_id: this.$router.currentRoute.params.id,
+      datasets: this.$store.state.datasets,
     };
   },
 };
 </script>
 
 <template lang="pug">
-header-footer-container
-
-  cleanup-table.cleanup-table-flex(:dataset-id="dataset_id")
-
-  template(#footer)
-    v-toolbar.footer(flat, dense)
-      v-btn(depressed, color="accent", :to="`/select`")
-        v-icon.pr-1 {{ $vuetify.icons.arrowLeft }}
-        | Go Back
+v-layout(row, fill-height)
+  v-navigation-drawer(permanent, style="width: 200px; min-width: 200px;")
+    v-layout(column, fill-height)
+      v-list
+        v-list-tile(v-for="(dataset, index) in datasets")
+          v-list-tile-title {{ dataset.source.id }}
       v-spacer
-      save-status
-      v-spacer
-      v-btn(depressed, color="accent", :to="`/transform/${dataset_id}`")
-        | Continue
-        v-icon.pl-1 {{ $vuetify.icons.arrowRight }}
+      v-btn.accent Next
+  v-layout
+    cleanup-table.cleanup-table-flex(:dataset-id="dataset_id")
 </template>
 
-<style>
-.cleanup-table-flex {
-  display: flex;
-  flex-basis: 100%;
-}
-</style>

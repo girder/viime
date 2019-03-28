@@ -1,6 +1,6 @@
 <template lang="pug">
 v-app
-  v-toolbar.main-toolbar.darken-3(dark, flat, color="primary")
+  v-toolbar.main-toolbar.darken-3(dark, dense, flat, color="primary")
     v-toolbar-items
       v-btn.px-0.square-button.darken-4(flat, color="white")
         v-icon {{ $vuetify.icons.close }}
@@ -11,7 +11,7 @@ v-app
     v-spacer
     v-btn(icon)
       v-icon {{ $vuetify.icons.more }}
-  v-container.pa-0.d-flex(fluid, column)
+  v-container.pa-0.d-flex(fluid)
     router-view.grow
 </template>
 
@@ -35,6 +35,10 @@ export default {
         min-width: 64px;
       }
     }
+  }
+
+  .overflow-auto {
+    overflow: auto;
   }
 }
 </style>

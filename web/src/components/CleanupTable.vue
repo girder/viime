@@ -5,9 +5,8 @@ import {
   defaultRowOption,
   colMenuOptions,
   defaultColOption,
-  rowPrimaryKey,
-  colPrimaryKey,
-} from '../utils/constants';
+} from '@/utils/constants';
+import { base26Converter } from '@/utils';
 
 export default {
   props: {
@@ -18,16 +17,18 @@ export default {
   },
   data() {
     return {
-      rowMenuOptions,
-      colMenuOptions,
-      rowPrimaryKey,
-      colPrimaryKey,
+      tagOptions: {
+        row: rowMenuOptions,
+        column: colMenuOptions,
+      },
+      selected: { type: 'row', index: 0 },
     };
   },
   computed: {
     dataset() { return this.$store.getters.dataset(this.datasetId); },
   },
   methods: {
+    base26Converter,
     selectOption(label, index, axis_name) {
       this.$store.dispatch(CHANGE_AXIS_LABEL, {
         dataset_id: this.datasetId,
@@ -42,45 +43,54 @@ export default {
       if (axis === 'column') return val === defaultColOption ? `${idx + 1}` : val;
       throw new Error(`${axis} is not a valid axis name`);
     },
+    isActive(index, axisName) {
+      return this.selected.index === index
+          && this.selected.type === axisName;
+    }
   },
 };
 </script>
 
 <template lang="pug">
 .cleanup-wrapper
-  v-layout(v-if="!dataset", justify-center, align-center)
-    v-progress-circular(indeterminate, size="100", width="5")
 
-  table.cleanup-table(v-else)
-    thead
-      tr.controlrow
-        th
-        th.control(v-for="(col, idx) in dataset.column.labels")
-          select.pa-1(
-              :value="getDisplayValue('column', idx)",
-              @input="selectOption($event.target.value, idx, 'column')")
-            option(style="display: none;") {{ idx + 1 }}
-            option(
-                v-for="option in colMenuOptions",
-                :value="option",
-                :key="`column${idx}${option}`") {{ option }}
-    tbody
-      tr.datarow(v-for="(row, idx) in dataset.sourcerows",
-          :key="`${idx}${row[0]}`",
-          :class="dataset.row.labels[idx]")
-        td.control
-          select.pa-1(
-              :value="getDisplayValue('row', idx)",
-              @input="selectOption($event.target.value, idx, 'row')")
-            option(style="display: none;") {{ idx + 1 }}
-            option(
-                v-for="option in rowMenuOptions",
-                :value="option",
-                :key="`row${idx}${option}`") {{ option }}
-        td.px-1.row(
-            :class="dataset.column.labels[idx2]",
-            v-for="(col, idx2) in row",
-            :key="`${idx}.${idx2}`") {{ col }}
+  v-layout(v-if="!dataset", fill-height, justify-center, align-center)
+    v-progress-circular(indeterminate, size="100", width="5")
+    h4.display-1.pa-3 Loading Table
+  
+  v-layout(v-else, fill-height, column)
+    v-toolbar.primary(dense)
+      v-btn-toggle(
+          :value="dataset[selected.type].labels[selected.index]",
+          @change="selectOption($event, selected.index, selected.type)")
+        v-btn(v-for="option in tagOptions[selected.type]",
+            flat,
+            :key="option.value",
+            :value="option.value")
+          v-icon.pr-1 {{ $vuetify.icons[option.icon] }}
+          | {{ option.title }}
+    
+    .overflow-auto
+      table.cleanup-table
+        
+        thead
+          tr
+            th
+            th.control.px-2(
+                v-for="(col, index) in dataset.column.labels",
+                :class="{ 'active': isActive(index, 'column') }",
+                @click="selected = { type: 'column', index }")
+              | {{ base26Converter(index + 1) }}
+        
+        tbody
+          tr.datarow(v-for="(row, index) in dataset.sourcerows",
+              :key="`${index}${row[0]}`",
+              :class="{ [dataset.row.labels[index]]: true, 'active': isActive(index, 'row') }")
+            td.control.px-2(@click="selected = { type: 'row', index }") {{ index + 1 }}
+            td.px-2.row(
+                v-for="(col, idx2) in row",
+                :class="{ [dataset.column.labels[idx2]]: true, 'active': isActive(idx2, 'column') }",
+                :key="`${index}.${idx2}`") {{ col }}
 </template>
 
 <style lang="scss" scoped>
@@ -88,16 +98,17 @@ export default {
   width: 100%;
 }
 .cleanup-table {
-  overflow: auto;
-  display: block;
-  margin: auto;
-  height: 100%;
-  border-collapse: collapse;
+  border-spacing: 0px;
 
   .key, .metadata, .header, .group {
     font-weight: 700;
     color: white;
     text-align: left;
+  }
+
+  th.active, tr.active, td.active {
+    text-decoration: underline;
+    font-weight: 700;
   }
 
   th, td {
@@ -106,16 +117,8 @@ export default {
     text-align: center;
 
     &.control {
-      background-color: lightgray !important;
-      color: black;
-      min-width: 100px;
-      font-weight: 700;
       cursor: pointer;
-
-      select {
-        width: 100%;
-        appearance: menulist !important;
-      }
+      font-weight: 300;
     }
   }
 }

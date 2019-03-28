@@ -4,8 +4,6 @@ import Dropzone from '@girder/components/src/components/Presentation/Dropzone.vu
 import FileList from '@girder/components/src/components/Presentation/FileUploadList.vue';
 import { UPLOAD_CSV } from '@/store/actions.type';
 
-import HeaderFooterContainer from '@/components/containers/HeaderFooter.vue';
-
 const sampleTypes = [
   { name: 'Serum', value: 'serum' },
   { name: 'Urine', value: 'urine' },
@@ -25,7 +23,6 @@ const dataTypes = [
 export default {
   components: {
     FileList,
-    HeaderFooterContainer,
     Dropzone,
   },
   mixins: [sizeFormatter],
@@ -72,14 +69,14 @@ export default {
 </script>
 
 <template lang="pug">
-header-footer-container
-  v-container(fluid)
-    v-card-title(primary-title)
+v-layout(column, fill-height)
+  v-layout.overflow-auto(column, fill-height)
+    v-card-title.pa-4(primary-title)
       div
         h3.headline.font-weight-bold.primary--text.text--darken-3 Upload your data (csv or txt)
         p.secondary--text.text--lighten-1 Choose a file from your computer
 
-    .my-2(v-if="files.length")
+    .mb-0.mx-4(v-if="files.length")
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title Pending files
         v-spacer
@@ -104,14 +101,13 @@ header-footer-container
                   :items="dataTypes", label="Type of data",
                   item-text="name", item-value="value")
           v-divider(v-if="idx + 1 < files.length", :key="idx")
-    dropzone.filezone(:multiple="true", :message="message", @change="onFileChange")
+    dropzone.filezone.mx-4.my-2(:multiple="true", :message="message", @change="onFileChange")
 
-  template(#footer)
-    v-toolbar.footer(flat, dense)
-      v-spacer
-      v-btn.ma-0(:disabled="!files.length", depressed, color="accent", @click="upload")
-        | Continue
-        v-icon.pl-1 {{ $vuetify.icons.arrowRight }}
+  v-toolbar(flat, dense)
+    v-spacer
+    v-btn.ma-0(:disabled="!files.length", depressed, color="accent", @click="upload")
+      | Continue
+      v-icon.pl-1 {{ $vuetify.icons.arrowRight }}
 </template>
 
 <style scoped>

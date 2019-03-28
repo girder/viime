@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 
-import { convertCsvToRows } from '../utils/trash';
+import { convertCsvToRows } from '../utils';
 import { CSVService } from '../common/api.service';
 
 import {
@@ -9,9 +9,6 @@ import {
   defaultColOption,
   rowPrimaryKey,
   colPrimaryKey,
-  // normalize_methods,
-  // scaling_methods,
-  // transform_methods,
 } from '../utils/constants';
 
 import {
