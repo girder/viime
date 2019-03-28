@@ -9,6 +9,7 @@ const rowPrimaryKey = 'header';
 
 const colMenuOptions = [
   'key',
+  'group',
   'metadata',
   'measurement',
   'masked',

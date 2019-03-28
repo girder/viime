@@ -97,7 +97,8 @@ r3,16,17,18
         db.session.commit()
 
         assert csv.headers == ['--', 'c1', 'c2', 'c3']
-        assert list(csv.measurement_table.columns) == ['c1', 'c2', 'c3']
+        assert list(csv.groups.columns) == ['c1']
+        assert list(csv.measurement_table.columns) == ['c2', 'c3']
 
 
 def test_set_primary_key_and_header_row(app):

@@ -29,9 +29,10 @@ metadata = MetaData(naming_convention={
 })
 db = SQLAlchemy(metadata=metadata)
 
-TableTypes = namedtuple('TableTypes', ['INDEX', 'METADATA', 'DATA', 'MASK'])
-TABLE_COLUMN_TYPES = TableTypes('key', 'metadata', 'measurement', 'masked')
-TABLE_ROW_TYPES = TableTypes('header', 'metadata', 'sample', 'masked')
+TableColumnTypes = namedtuple('TableTypes', ['INDEX', 'METADATA', 'DATA', 'MASK', 'GROUP'])
+TableRowTypes = namedtuple('TableTypes', ['INDEX', 'METADATA', 'DATA', 'MASK'])
+TABLE_COLUMN_TYPES = TableColumnTypes('key', 'metadata', 'measurement', 'masked', 'group')
+TABLE_ROW_TYPES = TableRowTypes('header', 'metadata', 'sample', 'masked')
 
 
 def _guess_table_structure(table):
@@ -39,8 +40,8 @@ def _guess_table_structure(table):
     rows = [TABLE_ROW_TYPES.INDEX] + [
         TABLE_ROW_TYPES.DATA for i in range(table.shape[0] - 1)
     ]
-    columns = [TABLE_COLUMN_TYPES.INDEX] + [
-        TABLE_COLUMN_TYPES.DATA for i in range(table.shape[1] - 1)
+    columns = [TABLE_COLUMN_TYPES.INDEX, TABLE_COLUMN_TYPES.GROUP] + [
+        TABLE_COLUMN_TYPES.DATA for i in range(table.shape[1] - 2)
     ]
     return rows, columns
 
@@ -119,6 +120,11 @@ class CSVFile(db.Model):
         return self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.DATA)
 
     @property
+    def groups(self):
+        """Return a table containing the primary grouping column."""
+        return self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.GROUP)
+
+    @property
     def uri(self):
         id = str(self.id)
         return Path(current_app.config['UPLOAD_FOLDER']) / id[:3] / id
@@ -186,6 +192,31 @@ class CSVFile(db.Model):
         if value is not None:
             new_column = self.columns[value]
             new_column.column_type = TABLE_COLUMN_TYPES.INDEX
+            db.session.add(new_column)
+
+    @hybrid_property
+    def group_column_index(self):
+        column = self.find_first_entity(
+            lambda c: c.column_type == TABLE_COLUMN_TYPES.GROUP, self.columns)
+        return column and column.column_index
+
+    @group_column_index.expression
+    def group_column_index(cls):  # noqa: N805
+        return TableColumn.query\
+            .filter_by(csv_file_id=cls.id, column_type=TABLE_COLUMN_TYPES.GROUP)\
+            .with_entities(TableColumn.column_index)\
+            .scalar()
+
+    @group_column_index.setter
+    def group_column_index(self, value):
+        if self.group_column_index is not None:
+            old_column = self.columns[self.group_column_index]
+            old_column.column_type = TABLE_COLUMN_TYPES.METADATA
+            db.session.add(old_column)
+
+        if value is not None:
+            new_column = self.columns[value]
+            new_column.column_type = TABLE_COLUMN_TYPES.GROUP
             db.session.add(new_column)
 
     @property
@@ -297,6 +328,7 @@ class CSVFileSchema(BaseSchema):
     measurement_table = fields.Raw(dump_only=True)
     measurement_metadata = fields.Raw(dump_only=True)
     sample_metadata = fields.Raw(dump_only=True)
+    groups = fields.Raw(dump_only=True)
 
     @post_load
     def fix_file_name(self, data):
@@ -309,6 +341,7 @@ class CSVFileSchema(BaseSchema):
         data['measurement_table'] = data['measurement_table'].to_csv()
         data['measurement_metadata'] = data['measurement_metadata'].to_csv()
         data['sample_metadata'] = data['sample_metadata'].to_csv()
+        data['groups'] = data['groups'].to_csv()
         return data
 
     @post_load
