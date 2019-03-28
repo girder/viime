@@ -78,13 +78,8 @@ export default {
      */
     rawPoints: {
       required: true,
-      validator: (prop) => {
-        if (!prop) {
-          return true;
-        }
-        return typeof prop === 'object'
-            && ['x', 'labels'].every(key => key in prop);
-      },
+      validator: prop => !prop
+          || (typeof prop === 'object' && ['x', 'labels'].every(key => key in prop)),
     },
   },
   watch: {
