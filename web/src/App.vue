@@ -1,6 +1,6 @@
 <template lang="pug">
 v-app
-  v-toolbar.main-toolbar.darken-3(dark, dense, flat, color="primary")
+  v-toolbar.main-toolbar.darken-4(dark, dense, color="primary")
     v-toolbar-items
       v-btn.px-0.square-button.darken-4(flat, color="white")
         v-icon {{ $vuetify.icons.close }}

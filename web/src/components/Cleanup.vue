@@ -1,5 +1,5 @@
 <script>
-import { CHANGE_AXIS_LABEL } from '../store/actions.type';
+import { CHANGE_AXIS_LABEL } from '@/store/actions.type';
 import {
   rowMenuOptions,
   defaultRowOption,
@@ -46,7 +46,7 @@ export default {
     isActive(index, axisName) {
       return this.selected.index === index
           && this.selected.type === axisName;
-    }
+    },
   },
 };
 </script>
@@ -57,22 +57,20 @@ export default {
   v-layout(v-if="!dataset", fill-height, justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Table
-  
+
   v-layout(v-else, fill-height, column)
     v-toolbar.primary(dense)
       v-btn-toggle(
           :value="dataset[selected.type].labels[selected.index]",
           @change="selectOption($event, selected.index, selected.type)")
         v-btn(v-for="option in tagOptions[selected.type]",
-            flat,
-            :key="option.value",
-            :value="option.value")
+            flat, :key="option.value", :value="option.value")
           v-icon.pr-1 {{ $vuetify.icons[option.icon] }}
           | {{ option.title }}
-    
+
     .overflow-auto
       table.cleanup-table
-        
+
         thead
           tr
             th
@@ -81,15 +79,15 @@ export default {
                 :class="{ 'active': isActive(index, 'column') }",
                 @click="selected = { type: 'column', index }")
               | {{ base26Converter(index + 1) }}
-        
+
         tbody
           tr.datarow(v-for="(row, index) in dataset.sourcerows",
               :key="`${index}${row[0]}`",
-              :class="{ [dataset.row.labels[index]]: true, 'active': isActive(index, 'row') }")
+              :class="{[dataset.row.labels[index]]: true, 'active': isActive(index, 'row')}")
             td.control.px-2(@click="selected = { type: 'row', index }") {{ index + 1 }}
             td.px-2.row(
                 v-for="(col, idx2) in row",
-                :class="{ [dataset.column.labels[idx2]]: true, 'active': isActive(idx2, 'column') }",
+                :class="{[dataset.column.labels[idx2]]: true, 'active': isActive(idx2, 'column')}",
                 :key="`${index}.${idx2}`") {{ col }}
 </template>
 
@@ -120,6 +118,10 @@ export default {
       cursor: pointer;
       font-weight: 300;
     }
+  }
+
+  th:nth-child(odd) {
+    background-color: #dae1e4;
   }
 }
 
@@ -184,6 +186,4 @@ tr.datarow {
     background-color: lightgray !important;
   }
 }
-
-
 </style>

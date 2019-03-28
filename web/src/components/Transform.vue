@@ -7,13 +7,10 @@ import {
   transform_methods,
 } from '@/utils/constants';
 import { loadDataset } from '@/utils/mixins';
-
 import VisPca from '@/components/vis/VisPca.vue';
-import SaveStatus from '@/components/SaveStatus.vue';
 
 export default {
   components: {
-    SaveStatus,
     VisPca,
   },
   mixins: [loadDataset],
@@ -76,81 +73,46 @@ export default {
 </script>
 
 <template lang="pug">
-v-layout.transform-view(column)
-
-  v-layout(row, fill-height, justify-center, align-center, ref="contentarea")
-    div
-      h3.headline.ml-5 Principal Component Analysis
-      vis-pca(:width="800", :height="600", :raw-points="pcaPoints")
-
-  v-layout(row, wrap, grow, v-if="dataset")
-
-    v-card.transform-container.grow(flat)
-      v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
+v-layout.transform-view(row, fill-height)
+  v-navigation-drawer.primary.darken-3(permanent, style="width: 180px; min-width: 180px;")
+    v-layout(column, fill-height, v-if="dataset")
+      v-toolbar.primary.darken-3(dark, flat, dense, :card="false")
         v-toolbar-title Normalize
         v-spacer
         v-switch.shrink(hide-details, :input-value="norm",
             @change="transformTable($event, 'normalization')", :disabled="loading")
-      v-card-actions.pl-3
-        v-radio-group(:disabled="!norm || loading", :value="norm",
-            @change="transformTable($event, 'normalization')")
-          v-radio(v-for="m in normalize_methods", :label="m.label",
-              v-if="m.value", :value="m.value", :key="`norm${m.value}`")
+      v-card.transform-container.ma-3(flat)
+        v-card-actions
+          v-radio-group(:disabled="!norm || loading", :value="norm",
+              @change="transformTable($event, 'normalization')")
+            v-radio(v-for="m in normalize_methods", :label="m.label",
+                v-if="m.value", :value="m.value", :key="`norm${m.value}`")
 
-    v-card.transform-container.grow(flat)
       v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
         v-toolbar-title Transform
         v-spacer
         v-switch.shrink(hide-details, :input-value="trans",
             @change="transformTable($event, 'transformation')", :disabled="true")
-      v-card-actions.pl-3
-        v-radio-group(:disabled="!trans || loading", :value="trans",
-            @change="transformTable($event, 'transformation')")
-          v-radio(v-for="m in transform_methods", :label="m.label",
-              v-if="m.value", :value="m.value", :key="`trans${m.value}`")
+      v-card.transform-container.ma-3(flat)
+        v-card-actions
+          v-radio-group(:disabled="!trans || loading", :value="trans",
+              @change="transformTable($event, 'transformation')")
+            v-radio(v-for="m in transform_methods", :label="m.label",
+                v-if="m.value", :value="m.value", :key="`trans${m.value}`")
 
-    v-card.transform-container.grow(flat)
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title Scale
         v-spacer
         v-switch.shrink(hide-details, :input-value="scaling",
             @change="transformTable($event, 'scaling')", :disabled="true")
-      v-card-actions.pl-3
-        v-radio-group(:disabled="!scaling || loading", :value="scaling",
-            @change="transformTable($event, 'scaling')")
-          v-radio(v-for="m in scaling_methods", :label="m.label",
-              v-if="m.value", :value="m.value", :key="`scale${m.value}`")
-
-  v-toolbar.footer(flat, dense)
-    v-btn(depressed, color="accent", :to="`/cleanup/${dataset_id}`")
-      v-icon.pr-1 {{ $vuetify.icons.arrowLeft }}
-      | Go Back
-    v-spacer
-    save-status
-    v-spacer
-    v-btn(depressed, disabled)
-      | Continue
-      v-icon.pl-1 {{ $vuetify.icons.arrowRight }}
+      v-card.transform-container.ma-3(flat)
+        v-card-actions
+          v-radio-group(:disabled="!scaling || loading", :value="scaling",
+              @change="transformTable($event, 'scaling')")
+            v-radio(v-for="m in scaling_methods", :label="m.label",
+                v-if="m.value", :value="m.value", :key="`scale${m.value}`")
+  v-layout(row, fill-height, align-center, ref="contentarea")
+    div
+      h3.headline.ml-5 Principal Component Analysis
+      vis-pca(:width="800", :height="600", :raw-points="pcaPoints")
 </template>
-
-<style lang="scss">
-.transform-view {
-  .transform-container {
-    &>.v-toolbar {
-      border-top-left-radius: 0 !important;
-      border-top-right-radius: 0 !important;
-    }
-
-    &:nth-child(odd) {
-      background-color: #eeeeee;
-    }
-
-    &:nth-child(even) {
-      background-color: #e6e6e6;
-      .v-toolbar {
-        background-color: #222d32 !important;
-      }
-    }
-  }
-}
-</style>

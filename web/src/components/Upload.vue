@@ -62,7 +62,7 @@ export default {
       });
       await Promise.all(promises);
       const id = Object.keys(this.$store.state.datasets)[0];
-      this.$router.push({ path: `cleanup/${id}` });
+      this.$router.push({ path: `/pretreatment/${id}/cleanup` });
     },
   },
 };
