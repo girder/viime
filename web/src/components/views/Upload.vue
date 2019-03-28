@@ -5,7 +5,6 @@ import FileList from '@girder/components/src/components/Presentation/FileUploadL
 import { UPLOAD_CSV } from '@/store/actions.type';
 
 import HeaderFooterContainer from '@/components/containers/HeaderFooter.vue';
-import Stepper from '@/components/stepper/Stepper.vue';
 
 const sampleTypes = [
   { name: 'Serum', value: 'serum' },
@@ -28,7 +27,6 @@ export default {
     FileList,
     HeaderFooterContainer,
     Dropzone,
-    Stepper,
   },
   mixins: [sizeFormatter],
   data() {
@@ -36,8 +34,6 @@ export default {
       files: [],
       dataTypes,
       sampleTypes,
-      stepperCollapsed: false,
-      stepperModel: 0,
     };
   },
   computed: {
@@ -77,8 +73,6 @@ export default {
 
 <template lang="pug">
 header-footer-container
-  template(#header)
-    stepper(v-model="stepperModel", :collapsed.sync="stepperCollapsed")
   v-container(fluid)
     v-card-title(primary-title)
       div
