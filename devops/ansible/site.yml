@@ -40,6 +40,7 @@
         image: metabulo/opencpu
         published_ports:
           - 127.0.0.1:8004:8004
+        pull: true
       become: true
 
     - name: Create gunicorn user
