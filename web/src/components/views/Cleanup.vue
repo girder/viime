@@ -3,21 +3,17 @@ import { loadDataset } from '@/utils/mixins';
 import CleanupTable from '@/components/CleanupTable.vue';
 import HeaderFooterContainer from '@/components/containers/HeaderFooter.vue';
 import SaveStatus from '@/components/SaveStatus.vue';
-import Stepper from '@/components/stepper/Stepper.vue';
 
 export default {
   components: {
     CleanupTable,
     HeaderFooterContainer,
     SaveStatus,
-    Stepper,
   },
   mixins: [loadDataset],
   data() {
     return {
       dataset_id: this.$router.currentRoute.params.id,
-      stepperCollapsed: true,
-      stepperModel: 1,
     };
   },
 };
@@ -25,9 +21,6 @@ export default {
 
 <template lang="pug">
 header-footer-container
-
-  template(#header)
-    stepper(v-model="stepperModel", :collapsed.sync="stepperCollapsed")
 
   cleanup-table.cleanup-table-flex(:dataset-id="dataset_id")
 

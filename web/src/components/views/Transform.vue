@@ -11,14 +11,12 @@ import { loadDataset } from '@/utils/mixins';
 import VisPca from '@/components/vis/VisPca.vue';
 import HeaderFooterContainer from '@/components/containers/HeaderFooter.vue';
 import SaveStatus from '@/components/SaveStatus.vue';
-import Stepper from '@/components/stepper/Stepper.vue';
 
 export default {
   components: {
     HeaderFooterContainer,
     SaveStatus,
     VisPca,
-    Stepper,
   },
   mixins: [loadDataset],
   data() {
@@ -30,8 +28,6 @@ export default {
       pcaPoints: {
         x: [],
       },
-      stepperCollapsed: false,
-      stepperModel: 2,
     };
   },
   computed: {
@@ -83,8 +79,6 @@ export default {
 
 <template lang="pug">
 header-footer-container.transform-view
-  template(#header)
-    stepper(v-model="stepperModel", :collapsed.sync="stepperCollapsed")
 
   v-layout(row, fill-height, justify-center, align-center, ref="contentarea")
     div
