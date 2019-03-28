@@ -75,6 +75,12 @@ class CSVFile(db.Model):
         if self.group_column_index is None:
             errors.append('No group column')
 
+        if not errors:
+            try:
+                self.apply_transforms()
+            except Exception:
+                errors.append('Error applying transforms')
+
         return errors or None
 
     @property
@@ -116,9 +122,8 @@ class CSVFile(db.Model):
     @property
     def measurement_table(self):
         """Return the processed metabolite date table."""
-        if self.raw_measurement_table is None:
-            return
-        return self.apply_transforms()
+        if self.table_validation is None:
+            return self.apply_transforms()
 
     @property
     def measurement_metadata(self):
@@ -138,6 +143,8 @@ class CSVFile(db.Model):
     @property
     def groups(self):
         """Return a table containing the primary grouping column."""
+        if self.group_column_index is None:
+            return None
         return self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.GROUP)
 
     @property
@@ -246,7 +253,8 @@ class CSVFile(db.Model):
         return list(self.table.iloc[:, idx])
 
     def filter_table_by_types(self, row_type, column_type):
-        if self.table_validation is not None:
+        if self.header_row_index is None or \
+                self.key_column_index is None:
             return
         rows = [
             row.row_index for row in self.rows
