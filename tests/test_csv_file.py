@@ -69,14 +69,14 @@ def test_no_header_or_primary_key(app):
 def test_set_primary_key(app):
     with app.test_request_context():
         csv = generate_csv_file("""
-c1,--,c2,c3
-10,r1,11,12
-13,r2,14,15
-16,r3,17,18
+c1,g,--,c2,c3
+10,a,r1,11,12
+13,a,r2,14,15
+16,b,r3,17,18
 """)
         db.session.commit()
 
-        csv.key_column_index = 1
+        csv.key_column_index = 2
         db.session.commit()
 
         assert csv.keys == ['--', 'r1', 'r2', 'r3']
@@ -104,18 +104,18 @@ r3,16,17,18
 def test_set_primary_key_and_header_row(app):
     with app.test_request_context():
         csv = generate_csv_file("""
-m1,m2,m3,m4
-m5,--,c1,c2
-m6,r1,14,15
-m7,r2,17,18
+m1,a,m2,m3,m4
+m5,g,--,c1,c2
+m6,a,r1,14,15
+m7,b,r2,17,18
 """)
         db.session.commit()
 
         csv.header_row_index = 1
-        csv.key_column_index = 1
+        csv.key_column_index = 2
         db.session.commit()
 
-        assert csv.headers == ['m5', '--', 'c1', 'c2']
+        assert csv.headers == ['m5', 'g', '--', 'c1', 'c2']
         assert list(csv.measurement_table.columns) == ['c1', 'c2']
 
         assert csv.keys == ['m2', '--', 'r1', 'r2']
