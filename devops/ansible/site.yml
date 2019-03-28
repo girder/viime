@@ -19,6 +19,7 @@
           - python3-pip
           - nginx
           - sqlite3
+          - memcached
         update_cache: true
       become: true
 
@@ -81,7 +82,7 @@
 
     - name: Install metabulo python package
       pip:
-        name: "/tmp/metabulo-sdist.tar.gz"
+        name: "/tmp/metabulo-sdist.tar.gz[memcached]"
         state: "forcereinstall"
         extra_args: "--no-cache-dir"
         virtualenv: "{{ venv }}"

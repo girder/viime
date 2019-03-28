@@ -7,7 +7,4 @@ export UPLOAD_FOLDER={{ upload_folder }}
 export MAX_FILE_UPLOAD_SIZE=5242880
 
 export OPENCPU_API_ROOT={{ opencpu_api_root }}
-
-
-
-
+export MEMCACHED_URI=127.0.0.1
