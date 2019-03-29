@@ -50,10 +50,11 @@ export default {
       })));
     },
     async upload() {
-      const promises = this.files.map(async (file) => {
+      const promises = this.files.map(async (file, index) => {
         file.status = 'uploading';
         try {
-          await this.$store.dispatch(UPLOAD_CSV, { file: file.file });
+          await this.$store.dispatch(UPLOAD_CSV,
+            { file: file.file, visible: index === 0 });
           file.status = 'done';
         } catch (err) {
           file.status = 'error';

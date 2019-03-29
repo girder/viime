@@ -15,8 +15,10 @@ export default {
     info: colors.lightBlue.lighten1,
   },
   icons: {
+    alert: 'mdi-alert',
     arrowLeft: 'mdi-arrow-left-box',
     arrowRight: 'mdi-arrow-right-box',
+    bubbles: 'mdi-chart-bubble',
     check: 'mdi-check',
     checkedFlag: 'mdi-flag-checkered',
     chevronDown: 'mdi-chevron-down',

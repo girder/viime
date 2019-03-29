@@ -111,8 +111,8 @@ v-layout.transform-view(row, fill-height)
               @change="transformTable($event, 'scaling')")
             v-radio(v-for="m in scaling_methods", :label="m.label",
                 v-if="m.value", :value="m.value", :key="`scale${m.value}`")
-  v-layout(row, fill-height, align-center, ref="contentarea")
-    div
+  v-layout(row, fill-height, ref="contentarea")
+    .pa-4
       h3.headline.ml-5 Principal Component Analysis
       vis-pca(:width="800", :height="600", :raw-points="pcaPoints")
 </template>
