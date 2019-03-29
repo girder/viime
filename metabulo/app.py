@@ -5,9 +5,15 @@ from flask import current_app, Flask, jsonify
 from marshmallow import ValidationError
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+from metabulo.cache import region
 from metabulo.models import db
 from metabulo.opencpu import OpenCPUException
 from metabulo.views import csv_bp
+
+try:
+    import pylibmc
+except ImportError:
+    pylibmc = None
 
 
 def handle_validation_error(e):
@@ -35,6 +41,18 @@ def create_app(config=None):
     app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER')
     app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_FILE_UPLOAD_SIZE', 5 * 1024 * 1024))
     app.config['OPENCPU_API_ROOT'] = os.getenv('OPENCPU_API_ROOT')
+
+    if 'MEMCACHED_URI' in os.environ and pylibmc:
+        region.configure(
+            'dogpile.cache.pylibmc',
+            arguments={
+                'url': os.environ['MEMCACHED_URI'],
+                'binary': True
+            },
+            replace_existing_backend=True
+        )
+    else:
+        region.configure('dogpile.cache.memory', replace_existing_backend=True)
 
     app.config.update(config)
     db.init_app(app)
