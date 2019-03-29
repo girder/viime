@@ -89,6 +89,7 @@
         virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
       notify:
         - Restart gunicorn
+        - Flush cache
       become: true
       become_user: gunicorn
 
@@ -162,4 +163,8 @@
         name: "nginx.service"
         daemon_reload: true
         state: "reloaded"
+      become: true
+
+    - name: Flush cache
+      shell: "echo flush_all > /dev/tcp/127.0.0.1/11211"
       become: true
