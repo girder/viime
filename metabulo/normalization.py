@@ -1,8 +1,11 @@
 from sklearn import preprocessing
 
+from metabulo.cache import region
+
 NORMALIZATION_METHODS = {'minmax'}
 
 
+@region.cache_on_arguments()
 def normalize(method, table):
     if method is None:
         pass
