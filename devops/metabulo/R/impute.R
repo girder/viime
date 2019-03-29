@@ -9,6 +9,11 @@ imputation <- function (table, groups) {
     }
 
     table = read.csv(table, row.names=1)
+
+    if (sum(colSums(is.na(table))) == 0) {
+        return(table)
+    }
+
     groups = read.csv(groups, row.names=1)
 
     #-#-#-# STEP 1 : variables with any one group with more or equal than 70% of missing data, impute zero #-#-#-#
