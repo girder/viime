@@ -2,6 +2,7 @@ from io import BytesIO
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import ValidationError
+import pandas
 
 from metabulo import opencpu
 from metabulo.models import CSVFile, CSVFileSchema, db, \
@@ -195,7 +196,9 @@ def get_pca_plot(csv_id):
     data = pca(csv_file.measurement_table, max_components)
 
     # insert per row label metadata information
-    data['labels'] = csv_file.sample_metadata.to_dict('list')
+    labels = csv_file.sample_metadata
+    groups = csv_file.groups
+    data['labels'] = pandas.concat([groups, labels], axis=1).to_dict('list')
 
     return jsonify(data), 200
 
