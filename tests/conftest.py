@@ -6,6 +6,7 @@ import pytest
 
 from metabulo import models
 from metabulo.app import create_app
+from metabulo.cache import region
 from metabulo.models import CSVFileSchema, db
 
 csv_file_schema = CSVFileSchema()
@@ -41,6 +42,8 @@ def app():
         with app.app_context():
             db.create_all()
 
+        # disable cache
+        region.configure('dogpile.cache.null', replace_existing_backend=True)
         yield app
 
 
