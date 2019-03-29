@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 
-import { convertCsvToRows } from '../utils/trash';
+import { convertCsvToRows } from '../utils';
 import { CSVService } from '../common/api.service';
 
 import {
@@ -9,9 +9,6 @@ import {
   defaultColOption,
   rowPrimaryKey,
   colPrimaryKey,
-  // normalize_methods,
-  // scaling_methods,
-  // transform_methods,
 } from '../utils/constants';
 
 import {
@@ -57,7 +54,7 @@ const getters = {
 
 const mutations = {
 
-  [ADD_SOURCE_DATA](state, { data }) {
+  [ADD_SOURCE_DATA](state, { data, visible }) {
     const key = data.id;
 
     // Server doesn't guarantee order of indices.
@@ -72,6 +69,7 @@ const mutations = {
     Vue.set(state.datasets, key, {
       // API response from server
       source: data,
+      visible,
       width: sourcerows[0].length, // TODO: get from server
       height: sourcerows.length, // TODO: get from server
       // user- and server-generated lables for rows and columns
@@ -136,13 +134,13 @@ const mutations = {
 };
 
 const actions = {
-  async [UPLOAD_CSV]({ commit }, { file }) {
+  async [UPLOAD_CSV]({ commit }, { file, visible }) {
     const formData = new FormData();
     formData.append('file', file);
     commit(SET_LOADING, true);
     try {
       const { data } = await CSVService.upload(formData);
-      commit(ADD_SOURCE_DATA, { data });
+      commit(ADD_SOURCE_DATA, { data, visible });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
       commit(SET_LOADING, false);
@@ -154,7 +152,7 @@ const actions = {
   async [LOAD_DATASET]({ commit }, { dataset_id }) {
     try {
       const { data } = await CSVService.get(dataset_id);
-      commit(ADD_SOURCE_DATA, { data });
+      commit(ADD_SOURCE_DATA, { data, visible: true });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
       throw err;
