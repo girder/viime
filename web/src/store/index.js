@@ -81,6 +81,16 @@ const mutations = {
         labels: cols.map(c => c.column_type),
         primary_key: col_key_index ? col_key_index.column_index : null,
       },
+      validation: [
+        { severity: 'error', type: 'primary-key', title: 'Primary key missing' },
+        { severity: 'error', type: 'group-tag', title: 'Group tag missing' },
+        {
+          severity: 'error', type: 'missing-data', title: 'Missing data', data: [3, 4, 15, 18, 22, 23, 24, 25, 26, 27, 28, 29],
+        },
+        {
+          severity: 'warning', type: 'low-variance', title: 'Low variance', data: [5, 6, 7, 9, 12, 14],
+        },
+      ],
       // JSON serialized copy of data.table
       sourcerows,
       // most recent copy of data with all transforms applied.
@@ -177,7 +187,7 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [CHANGE_AXIS_LABEL]({ commit }, {
+  async [CHANGE_AXIS_LABEL]({ commit, dispatch }, {
     dataset_id, axis_name, label, index,
   }) {
     const params = {};
@@ -192,6 +202,14 @@ const actions = {
         value: label,
         isPrimary: [rowPrimaryKey, colPrimaryKey].indexOf(label) >= 0,
       });
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
+    // TODO: get table validation again after updates.
+    try {
+      await dispatch(LOAD_DATASET, { dataset_id });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
       commit(SET_LOADING, false);

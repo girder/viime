@@ -13,12 +13,18 @@ export default {
       div(v-if="loading")
         span(v-on="on") Saving...
       div(v-else)
-        span(v-on="on") All changes saved.
+        span(v-on="on") All changes saved
     span Changes you make on this page are automatically saved.
 </template>
 
-<style scoped>
-.save-status span {
-  text-decoration: underline;
+<style lang="scss" scoped>
+.save-status {
+  span {
+    text-decoration: none;
+  }
+
+  &.dark {
+    color: white;
+  }
 }
 </style>

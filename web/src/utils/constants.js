@@ -2,7 +2,7 @@ const rowMenuOptions = [
   { value: 'header', icon: 'key', title: 'Header' },
   { value: 'metadat', icon: 'tag', title: 'Metadata' },
   { value: 'sample', icon: 'eyedropper', title: 'Sample' },
-  { value: 'masked', icon: 'clearAll', title: 'Masked' },
+  { value: 'masked', icon: 'mask', title: 'Masked' },
 ];
 const defaultRowOption = 'sample';
 const rowPrimaryKey = 'header';
@@ -12,7 +12,7 @@ const colMenuOptions = [
   { value: 'group', icon: 'tag', title: 'Group' },
   { value: 'metadata', icon: 'tag', title: 'Metadata' },
   { value: 'measurement', icon: 'eyedropper', title: 'Measurement' },
-  { value: 'masked', icon: 'clearAll', title: 'Masked' },
+  { value: 'masked', icon: 'mask', title: 'Masked' },
 ];
 const defaultColOption = 'measurement';
 const colPrimaryKey = 'key';

@@ -24,7 +24,10 @@ export default {
     chevronDown: 'mdi-chevron-down',
     chevronUp: 'mdi-chevron-up',
     clearAll: 'mdi-notification-clear-all',
+    error: 'mdi-close',
     eyedropper: 'mdi-eyedropper',
+    info: 'mdi-information',
+    mask: 'mdi-filter-remove',
     more: 'mdi-dots-horizontal',
     menuDown: 'mdi-menu-down',
     key: 'mdi-key-variant',
@@ -33,5 +36,6 @@ export default {
     tag: 'mdi-tag',
     transform: 'mdi-set-right',
     upload: 'mdi-upload',
+    warning: 'mdi-alert',
   },
 };

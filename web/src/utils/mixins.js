@@ -7,13 +7,13 @@ import { LOAD_DATASET } from '../store/actions.type';
 const loadDataset = {
   data() {
     return {
-      loaded: !!this.$store.state.datasets[this.dataset_id],
+      loaded: !!this.$store.state.datasets[this.id],
     };
   },
   created() {
-    const dataset = this.$store.getters.dataset(this.dataset_id);
+    const dataset = this.$store.getters.dataset(this.id);
     if (!dataset) {
-      this.$store.dispatch(LOAD_DATASET, { dataset_id: this.dataset_id });
+      this.$store.dispatch(LOAD_DATASET, { dataset_id: this.id });
     }
   },
 };
