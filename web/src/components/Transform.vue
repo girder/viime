@@ -64,7 +64,7 @@ export default {
         }
       }
       this.$store.dispatch(MUTEX_TRANSFORM_TABLE, {
-        id: this.id,
+        dataset_id: this.id,
         transform_type: txtype,
         category,
       });
