@@ -25,6 +25,8 @@ export default {
         row: rowMenuOptions,
         column: colMenuOptions,
       },
+      defaultColOption,
+      defaultRowOption,
       selected: { type: 'column', index: 1 },
     };
   },
@@ -66,8 +68,7 @@ v-layout.cleanup-wrapper(row)
 
   v-layout(v-else, column)
     v-toolbar.primary(dense)
-      v-btn-toggle(dark, mandatory,
-          :active-class="'aktive'",
+      v-btn-toggle(mandatory,
           :value="dataset[selected.type].labels[selected.index]",
           @change="selectOption($event, selected.index, selected.type)")
         v-btn(v-for="option in tagOptions[selected.type]",
@@ -87,13 +88,16 @@ v-layout.cleanup-wrapper(row)
                 v-for="(col, index) in dataset.column.labels",
                 :class="{ 'active': isActive(index, 'column') }",
                 @click="selected = { type: 'column', index }")
-              | {{ base26Converter(index + 1) }}
+              span(v-if="col === defaultColOption") {{ base26Converter(index + 1) }}
+              v-icon(v-else, small) {{ $vuetify.icons[col] }}
 
         tbody
           tr.datarow(v-for="(row, index) in dataset.sourcerows",
               :key="`${index}${row[0]}`",
               :class="{[dataset.row.labels[index]]: true, 'active': isActive(index, 'row')}")
-            td.control.px-2(@click="selected = { type: 'row', index }") {{ index + 1 }}
+            td.control.px-2(@click="selected = { type: 'row', index }")
+              span(v-if="dataset.row.labels[index] === defaultRowOption") {{ index + 1 }}
+              v-icon(v-else, small) {{ $vuetify.icons[dataset.row.labels[index]] }}
             td.px-2.row(
                 v-for="(col, idx2) in row",
                 :class="{[dataset.column.labels[idx2]]: true, 'active': isActive(idx2, 'column')}",
@@ -105,7 +109,8 @@ v-layout.cleanup-wrapper(row)
   width: 100%;
 
   .v-btn--active {
-    background-color: #607d8b;
+    background-color: #78909C;
+    color: white !important;
   }
 
   .cleanup-table {

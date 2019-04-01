@@ -27,7 +27,9 @@ export default {
     },
     problemNav(problem) {
       if (problem.data) {
-        this.$router.push({ path: `/pretreatment/${this.id}/cleanup/${problem.type}` });
+        this.$router.push({
+          path: `/pretreatment/${this.id}/cleanup/${problem.type}`,
+        });
       }
     },
   },
@@ -46,7 +48,7 @@ v-layout.pretreatment(row, fill-height)
             @click="navigate(dataset.source.id)")
           template(v-slot:activator)
             v-list-tile
-              v-list-tile-title {{ dataset.source.name }}
+              v-list-tile-title.title {{ dataset.source.name }}
           v-list.view-list
 
             v-list-tile.ml-2(
@@ -66,7 +68,10 @@ v-layout.pretreatment(row, fill-height)
                     :color="problemData.severity") {{ $vuetify.icons[problemData.severity] }}
                 | {{ problemData.title }}
                 span.pl-1(v-if="problemData.data") ({{ problemData.data.length }})
-                v-icon.pl-1(small, v-else, @click="") {{ $vuetify.icons.info }}
+                v-tooltip(v-else, top)
+                  template(v-slot:activator="{ on }")
+                    v-icon.pl-1(small, @click="", v-on="on") {{ $vuetify.icons.info }}
+                  span {{ problemData.description }}
 
             v-list-tile.ml-2(
                 :class="{ active: $router.currentRoute.name === 'Transform Data' }",
@@ -109,5 +114,4 @@ v-layout.pretreatment(row, fill-height)
     }
   }
 }
-
 </style>

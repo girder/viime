@@ -82,13 +82,41 @@ const mutations = {
         primary_key: col_key_index ? col_key_index.column_index : null,
       },
       validation: [
-        { severity: 'error', type: 'primary-key', title: 'Primary key missing' },
-        { severity: 'error', type: 'group-tag', title: 'Group tag missing' },
         {
-          severity: 'error', type: 'missing-data', title: 'Missing data', data: [3, 4, 15, 18, 22, 23, 24, 25, 26, 27, 28, 29],
+          severity: 'error', type: 'primary-key', title: 'Primary key missing', description: 'Please ensure the column has a primary key',
         },
         {
-          severity: 'warning', type: 'low-variance', title: 'Low variance', data: [5, 6, 7, 9, 12, 14],
+          severity: 'error', type: 'group-tag', title: 'Group tag missing', description: 'Please ensure the column has a group',
+        },
+        {
+          severity: 'error',
+          type: 'missing-data',
+          title: 'Missing data',
+          data: [
+            { index: 3, info: '43% missing' },
+            { index: 6, info: '23% missing' },
+            { index: 8, info: '53% missing' },
+            { index: 11, info: '12% missing' },
+            { index: 13, info: '43% missing' },
+            { index: 18, info: '42% missing' },
+            { index: 22, info: '51% missing' },
+            { index: 25, info: '14% missing' },
+            { index: 26, info: '10% missing' },
+            { index: 27, info: '13% missing' },
+          ],
+        },
+        {
+          severity: 'warning',
+          type: 'low-variance',
+          title: 'Low variance',
+          data: [
+            { index: 30, info: 'r² .08' },
+            { index: 33, info: 'r² .15' },
+            { index: 34, info: 'r² 1.5' },
+            { index: 35, info: 'r² 1.1' },
+            { index: 36, info: 'r² .05' },
+            { index: 38, info: 'r² .06' },
+          ],
         },
       ],
       // JSON serialized copy of data.table
