@@ -14,9 +14,14 @@ export default {
     VisPca,
   },
   mixins: [loadDataset],
+  props: {
+    id: {
+      type: String,
+      required: true,
+    },
+  },
   data() {
     return {
-      dataset_id: this.$router.currentRoute.params.id,
       normalize_methods,
       transform_methods,
       scaling_methods,
@@ -26,20 +31,20 @@ export default {
     };
   },
   computed: {
-    dataset() { return this.$store.getters.dataset(this.dataset_id); },
+    dataset() { return this.$store.getters.dataset(this.id); },
     loading() { return this.$store.state.loading; },
-    norm() { return this.$store.getters.txType(this.dataset_id, 'normalization'); },
-    trans() { return this.$store.getters.txType(this.dataset_id, 'transformation'); },
-    scaling() { return this.$store.getters.txType(this.dataset_id, 'scaling'); },
+    norm() { return this.$store.getters.txType(this.id, 'normalization'); },
+    trans() { return this.$store.getters.txType(this.id, 'transformation'); },
+    scaling() { return this.$store.getters.txType(this.id, 'scaling'); },
     transformed() { return this.dataset && this.dataset.transformed; },
   },
   watch: {
     transformed() {
-      this.loadPCAData(this.dataset_id);
+      this.loadPCAData(this.id);
     },
   },
   mounted() {
-    this.loadPCAData(this.dataset_id);
+    this.loadPCAData(this.id);
   },
   methods: {
     async transformTable(value, category) {
@@ -59,7 +64,7 @@ export default {
         }
       }
       this.$store.dispatch(MUTEX_TRANSFORM_TABLE, {
-        dataset_id: this.dataset_id,
+        id: this.id,
         transform_type: txtype,
         category,
       });
@@ -74,14 +79,14 @@ export default {
 
 <template lang="pug">
 v-layout.transform-view(row, fill-height)
-  v-navigation-drawer.primary.darken-3(permanent, style="width: 180px; min-width: 180px;")
+  v-navigation-drawer.primary.darken-3(permanent, style="width: 200px; min-width: 200px;")
     v-layout(column, fill-height, v-if="dataset")
       v-toolbar.primary.darken-3(dark, flat, dense, :card="false")
         v-toolbar-title Normalize
         v-spacer
         v-switch.shrink(hide-details, :input-value="norm",
             @change="transformTable($event, 'normalization')", :disabled="loading")
-      v-card.transform-container.ma-3(flat)
+      v-card.ma-3(flat)
         v-card-actions
           v-radio-group(:disabled="!norm || loading", :value="norm",
               @change="transformTable($event, 'normalization')")
@@ -93,7 +98,7 @@ v-layout.transform-view(row, fill-height)
         v-spacer
         v-switch.shrink(hide-details, :input-value="trans",
             @change="transformTable($event, 'transformation')", :disabled="true")
-      v-card.transform-container.ma-3(flat)
+      v-card.ma-3(flat)
         v-card-actions
           v-radio-group(:disabled="!trans || loading", :value="trans",
               @change="transformTable($event, 'transformation')")
@@ -105,7 +110,7 @@ v-layout.transform-view(row, fill-height)
         v-spacer
         v-switch.shrink(hide-details, :input-value="scaling",
             @change="transformTable($event, 'scaling')", :disabled="true")
-      v-card.transform-container.ma-3(flat)
+      v-card.ma-3(flat)
         v-card-actions
           v-radio-group(:disabled="!scaling || loading", :value="scaling",
               @change="transformTable($event, 'scaling')")

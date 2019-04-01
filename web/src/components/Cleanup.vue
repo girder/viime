@@ -7,10 +7,14 @@ import {
   defaultColOption,
 } from '@/utils/constants';
 import { base26Converter } from '@/utils';
+import SaveStatus from '@/components/SaveStatus.vue';
 
 export default {
+  components: {
+    SaveStatus,
+  },
   props: {
-    datasetId: {
+    id: {
       type: String,
       required: true,
     },
@@ -21,22 +25,23 @@ export default {
         row: rowMenuOptions,
         column: colMenuOptions,
       },
+      defaultColOption,
+      defaultRowOption,
       selected: { type: 'column', index: 1 },
     };
   },
   computed: {
-    dataset() { return this.$store.getters.dataset(this.datasetId); },
+    dataset() { return this.$store.getters.dataset(this.id); },
   },
   methods: {
     base26Converter,
     async selectOption(label, index, axis_name) {
       await this.$store.dispatch(CHANGE_AXIS_LABEL, {
-        dataset_id: this.datasetId,
+        dataset_id: this.id,
         axis_name,
         label,
         index,
       });
-      this.selected = { type: this.selected.type, index: this.selected.index + 1 };
     },
     getDisplayValue(axis, idx) {
       const val = this.dataset[axis].labels[idx];
@@ -53,22 +58,25 @@ export default {
 </script>
 
 <template lang="pug">
-.cleanup-wrapper
+v-layout.cleanup-wrapper(row)
 
-  v-layout(v-if="!dataset", fill-height, justify-center, align-center)
+  router-view
+
+  v-layout(v-if="!dataset", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Table
 
-  v-layout(v-else, fill-height, column)
+  v-layout(v-else, column)
     v-toolbar.primary(dense)
-      v-btn-toggle(dark, mandatory,
-          :active-class="'aktive'",
+      v-btn-toggle(mandatory,
           :value="dataset[selected.type].labels[selected.index]",
           @change="selectOption($event, selected.index, selected.type)")
         v-btn(v-for="option in tagOptions[selected.type]",
             flat, :key="option.value", :value="option.value")
           v-icon.pr-1 {{ $vuetify.icons[option.icon] }}
           | {{ option.title }}
+      v-spacer
+      save-status.dark
 
     .overflow-auto
       table.cleanup-table
@@ -80,13 +88,16 @@ export default {
                 v-for="(col, index) in dataset.column.labels",
                 :class="{ 'active': isActive(index, 'column') }",
                 @click="selected = { type: 'column', index }")
-              | {{ base26Converter(index + 1) }}
+              span(v-if="col === defaultColOption") {{ base26Converter(index + 1) }}
+              v-icon(v-else, small) {{ $vuetify.icons[col] }}
 
         tbody
           tr.datarow(v-for="(row, index) in dataset.sourcerows",
               :key="`${index}${row[0]}`",
               :class="{[dataset.row.labels[index]]: true, 'active': isActive(index, 'row')}")
-            td.control.px-2(@click="selected = { type: 'row', index }") {{ index + 1 }}
+            td.control.px-2(@click="selected = { type: 'row', index }")
+              span(v-if="dataset.row.labels[index] === defaultRowOption") {{ index + 1 }}
+              v-icon(v-else, small) {{ $vuetify.icons[dataset.row.labels[index]] }}
             td.px-2.row(
                 v-for="(col, idx2) in row",
                 :class="{[dataset.column.labels[idx2]]: true, 'active': isActive(idx2, 'column')}",
@@ -98,7 +109,8 @@ export default {
   width: 100%;
 
   .v-btn--active {
-    background-color: #607d8b;
+    background-color: #78909C;
+    color: white !important;
   }
 
   .cleanup-table {

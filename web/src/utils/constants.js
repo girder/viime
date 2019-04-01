@@ -1,18 +1,18 @@
 const rowMenuOptions = [
   { value: 'header', icon: 'key', title: 'Header' },
-  { value: 'metadat', icon: 'tag', title: 'Metadata' },
+  { value: 'metadata', icon: 'metadata', title: 'Metadata' },
   { value: 'sample', icon: 'eyedropper', title: 'Sample' },
-  { value: 'masked', icon: 'clearAll', title: 'Masked' },
+  { value: 'masked', icon: 'masked', title: 'Masked' },
 ];
 const defaultRowOption = 'sample';
 const rowPrimaryKey = 'header';
 
 const colMenuOptions = [
   { value: 'key', icon: 'key', title: 'Primary Key' },
-  { value: 'group', icon: 'tag', title: 'Group' },
-  { value: 'metadata', icon: 'tag', title: 'Metadata' },
+  { value: 'group', icon: 'group', title: 'Group' },
+  { value: 'metadata', icon: 'metadata', title: 'Metadata' },
   { value: 'measurement', icon: 'eyedropper', title: 'Measurement' },
-  { value: 'masked', icon: 'clearAll', title: 'Masked' },
+  { value: 'masked', icon: 'masked', title: 'Masked' },
 ];
 const defaultColOption = 'measurement';
 const colPrimaryKey = 'key';
