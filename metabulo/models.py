@@ -53,6 +53,23 @@ def _read_csv_file(path, **kwargs):
     return pandas.read_csv(path, **kwargs)
 
 
+@region.cache_on_arguments()
+def _get_table_stats(table):
+    # Get global stats all once because it is more efficient than
+    # doing it per row/column.
+    nan_table = table != table
+    return {
+        'columns': {
+            'missing': (nan_table.sum(axis=0) / nan_table.shape[0]).to_list(),
+            'variance': table.var(axis=0).to_list()
+        },
+        'rows': {
+            'missing': (nan_table.sum(axis=1) / nan_table.shape[1]).to_list(),
+            'variance': table.var(axis=1).to_list()
+        }
+    }
+
+
 class BaseSchema(Schema):
     __model__ = None
 
@@ -71,6 +88,7 @@ class CSVFile(db.Model):
     meta = db.Column(JSONType, nullable=False)
 
     @property
+    @region.cache_on_arguments()
     def table_validation(self):
         """Return a list of issues with the table or None if everything is okay."""
         errors = []
@@ -289,6 +307,10 @@ class CSVFile(db.Model):
         # file, so this is not important.
         return self._save_csv_file_data(self.uri, table.to_csv())
 
+    @property
+    def _stats(self):
+        return _get_table_stats(self.raw_measurement_table)
+
     @classmethod
     def create_csv_file(cls, id, name, table, **kwargs):
         csv_file = cls(id=id, name=name, **kwargs)
@@ -355,6 +377,8 @@ class CSVFileSchema(BaseSchema):
     sample_metadata = fields.Raw(dump_only=True, allow_none=True)
     groups = fields.Raw(dump_only=True, allow_none=True)
 
+    _stats = fields.Raw(dump_only=True)
+
     @post_load
     def fix_file_name(self, data):
         data['name'] = secure_filename(data['name'])
@@ -390,8 +414,27 @@ class TableColumn(db.Model):
         CSVFile, backref=db.backref('columns', lazy=True, order_by='TableColumn.column_index'))
 
     @property
+    def data_column_index(self):
+        """Return the index in the measurement table or None if not a data column."""
+        if self.column_type != TABLE_COLUMN_TYPES.DATA:
+            return None
+        query = self.query.filter_by(
+            csv_file_id=self.csv_file_id, column_type=TABLE_COLUMN_TYPES.DATA)
+        return query.filter(TableColumn.column_index < self.column_index).count()
+
+    @property
     def column_header(self):
         return self.csv_file.headers[self.column_index]
+
+    @property
+    def missing_percent(self):
+        if self.column_type == TABLE_COLUMN_TYPES.DATA:
+            return self.csv_file._stats['columns']['missing'][self.data_column_index]
+
+    @property
+    def data_variance(self):
+        if self.column_type == TABLE_COLUMN_TYPES.DATA:
+            return self.csv_file._stats['columns']['variance'][self.data_column_index]
 
 
 class TableColumnSchema(BaseSchema):
@@ -401,6 +444,10 @@ class TableColumnSchema(BaseSchema):
     column_header = fields.Str(dump_only=True)
     column_index = fields.Int(required=True, validate=validate.Range(min=0))
     column_type = fields.Str(required=True, validate=validate.OneOf(TABLE_COLUMN_TYPES))
+    data_column_index = fields.Int(dump_only=True, allow_none=True)
+
+    missing_percent = fields.Float(dump_only=True, allow_none=True)
+    data_variance = fields.Float(dump_only=True, allow_none=True)
 
     csv_file = fields.Nested(
         CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
@@ -429,6 +476,24 @@ class TableRow(db.Model):
     def row_name(self):
         return self.csv_file.keys[self.row_index]
 
+    @property
+    def data_row_index(self):
+        """Return the index in the measurement table or None if not a data row."""
+        if self.row_type != TABLE_ROW_TYPES.DATA:
+            return None
+        query = self.query.filter_by(csv_file_id=self.csv_file_id, row_type=TABLE_ROW_TYPES.DATA)
+        return query.filter(TableRow.row_index < self.row_index).count()
+
+    @property
+    def missing_percent(self):
+        if self.row_type == TABLE_ROW_TYPES.DATA:
+            return self.csv_file._stats['rows']['missing'][self.data_row_index]
+
+    @property
+    def data_variance(self):
+        if self.row_type == TABLE_ROW_TYPES.DATA:
+            return self.csv_file._stats['rows']['variance'][self.data_row_index]
+
 
 class TableRowSchema(BaseSchema):
     __model__ = TableRow
@@ -437,6 +502,10 @@ class TableRowSchema(BaseSchema):
     row_name = fields.Str(dump_only=True)
     row_index = fields.Int(required=True, validate=validate.Range(min=0))
     row_type = fields.Str(required=True, validate=validate.OneOf(TABLE_ROW_TYPES))
+    data_row_index = fields.Int(dump_only=True, allow_none=True)
+
+    missing_percent = fields.Float(dump_only=True, allow_none=True)
+    data_variance = fields.Float(dump_only=True, allow_none=True)
 
     csv_file = fields.Nested(
         CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
