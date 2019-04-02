@@ -48,6 +48,9 @@ setup(
     entry_points={
         'console_scripts': [
             'metabulo-create-tables=metabulo.cli:create_tables'
+        ],
+        'dogpile.cache': [
+            'flask_request_local = metabulo.cache:FlaskRequestLocalBackend'
         ]
     }
 )
