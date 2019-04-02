@@ -39,16 +39,19 @@ export default {
 <template lang="pug">
 v-layout.pretreatment(row, fill-height)
 
-  v-navigation-drawer.navigation(floating, permanent, style="min-width: 240px; width: 240px;")
+  v-navigation-drawer.navigation(floating, permanent, style="min-width: 260px; width: 260px;")
     v-layout(column, fill-height)
       v-list.pt-0
         v-list-group(v-for="(dataset, index) in datasets",
             :key="dataset.source.id",
             :value="dataset.visible",
+            :append-icon="null",
             @click="navigate(dataset.source.id)")
           template(v-slot:activator)
-            v-list-tile
+            v-list-tile.file-name
               v-list-tile-title.title {{ dataset.source.name }}
+              v-list-tile-action(v-if="dataset.validation")
+                v-icon.pr-1(color="warning") {{ $vuetify.icons.warning }}
           v-list.view-list
 
             v-list-tile.ml-2(
@@ -102,6 +105,15 @@ v-layout.pretreatment(row, fill-height)
       color: white;
     }
   }
+  .file-name .v-list__tile {
+    padding-right: 0;
+
+    .v-list__tile__action{
+      min-width: 0;
+      padding-right: 16px;
+    }
+  }
+
   .view-list .v-list__tile--link {
     transition: none;
 

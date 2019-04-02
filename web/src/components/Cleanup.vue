@@ -28,6 +28,7 @@ export default {
       defaultColOption,
       defaultRowOption,
       selected: { type: 'column', index: 1 },
+      settingsDialog: false,
     };
   },
   computed: {
@@ -67,16 +68,40 @@ v-layout.cleanup-wrapper(row)
     h4.display-1.pa-3 Loading Table
 
   v-layout(v-else, column)
-    v-toolbar.primary(dense)
-      v-btn-toggle(mandatory,
+    v-toolbar.radio-toolbar(dense)
+
+      v-toolbar-title.ml-3.radio-title
+        .subheading.font-weight-bold.secondary--text.text--lighten-1  SELECT DATA TYPE
+        .body-2(style="margin-top: -8px;")
+          | {{ selected.type }}
+          | {{ selected.type === 'row' ? selected.index+1 : base26Converter(selected.index+1) }}
+      v-divider.mx-2(vertical, inset)
+      v-radio-group.mx-2.radio-group(mandatory, row, hide-details,
           :value="dataset[selected.type].labels[selected.index]",
           @change="selectOption($event, selected.index, selected.type)")
-        v-btn(v-for="option in tagOptions[selected.type]",
-            flat, :key="option.value", :value="option.value")
-          v-icon.pr-1 {{ $vuetify.icons[option.icon] }}
-          | {{ option.title }}
+        v-radio.grey.lighten-2.my-1(v-for="option in tagOptions[selected.type]",
+            color="black",
+            :value="option.value",
+            :label="option.title",
+            :key="option.value")
+          template(#label)
+            span {{ option.value }}
+            v-icon.radio-icon.mdi-light(small, :class="option.color")
+              | {{ $vuetify.icons[option.icon] }}
+
       v-spacer
-      save-status.dark
+
+      save-status
+      v-dialog(v-model="settingsDialog", max-width="500")
+        template(v-slot:activator="{ on }")
+          v-btn(icon, v-on="on")
+            v-icon {{ $vuetify.icons.settings }}
+        v-card
+          v-card-title.headline Imputation Settings
+          v-card-actions
+            v-spacer
+            v-btn(flat, @click="settingsDialog = false") Close
+            v-btn(depressed) Save
 
     .overflow-auto
       table.cleanup-table
@@ -104,13 +129,42 @@ v-layout.cleanup-wrapper(row)
                 :key="`${index}.${idx2}`") {{ col }}
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .cleanup-wrapper {
   width: 100%;
 
-  .v-btn--active {
-    background-color: #78909C;
-    color: white !important;
+  .radio-toolbar {
+    .v-toolbar__content {
+      height: inherit !important;
+      padding: 0px;
+    }
+
+    .v-input--selection-controls__input {
+      margin-right: 2px;
+    }
+
+    .radio-group {
+      padding-top: 0px;
+    }
+
+    .v-radio {
+      border-radius: 4px;
+      padding: 2px;
+    }
+
+    .radio-title {
+      min-width: 110px;
+    }
+
+    .v-divider {
+      height: 32px;
+    }
+
+    .radio-icon {
+      padding: 2px;
+      border-radius: 4px;
+      margin: 4px;
+    }
   }
 
   .cleanup-table {

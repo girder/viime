@@ -1,18 +1,63 @@
 const rowMenuOptions = [
-  { value: 'header', icon: 'key', title: 'Header' },
-  { value: 'metadata', icon: 'metadata', title: 'Metadata' },
-  { value: 'sample', icon: 'eyedropper', title: 'Sample' },
-  { value: 'masked', icon: 'masked', title: 'Masked' },
+  {
+    value: 'header',
+    icon: 'key',
+    title: 'Header',
+    color: 'light-green',
+  },
+  {
+    value: 'metadata',
+    icon: 'metadata',
+    title: 'Metadata',
+    color: 'purple',
+  },
+  {
+    value: 'masked',
+    icon: 'masked',
+    title: 'Masked',
+    color: 'grey',
+  },
+  {
+    value: 'sample',
+    icon: null,
+    title: 'Sample',
+    color: null,
+  },
 ];
 const defaultRowOption = 'sample';
 const rowPrimaryKey = 'header';
 
 const colMenuOptions = [
-  { value: 'key', icon: 'key', title: 'Primary Key' },
-  { value: 'group', icon: 'group', title: 'Group' },
-  { value: 'metadata', icon: 'metadata', title: 'Metadata' },
-  { value: 'measurement', icon: 'eyedropper', title: 'Measurement' },
-  { value: 'masked', icon: 'masked', title: 'Masked' },
+  {
+    value: 'key',
+    icon: 'key',
+    title: 'Primary Key',
+    color: 'blue-grey',
+  },
+  {
+    value: 'group',
+    icon: 'group',
+    title: 'Group',
+    color: 'pink',
+  },
+  {
+    value: 'metadata',
+    icon: 'metadata',
+    title: 'Metadata',
+    color: 'purple',
+  },
+  {
+    value: 'masked',
+    icon: 'masked',
+    title: 'Masked',
+    color: 'grey',
+  },
+  {
+    value: 'measurement',
+    icon: null,
+    title: 'Measurement',
+    color: null,
+  },
 ];
 const defaultColOption = 'measurement';
 const colPrimaryKey = 'key';

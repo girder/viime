@@ -26,7 +26,7 @@ export default {
 
 <template lang="pug">
 v-navigation-drawer.primary.darken-3(v-if="dataset",
-    touchless, floating, style="width: 200px; min-width: 200px;")
+    touchless, permanent, floating, style="width: 200px; min-width: 200px;")
 
   v-layout(column, fill-height)
 
