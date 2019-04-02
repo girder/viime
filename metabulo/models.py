@@ -15,7 +15,7 @@ from sqlalchemy_utils.types.json import JSONType
 from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
 
-from metabulo.cache import region
+from metabulo.cache import clear_cache, region
 from metabulo.imputation import impute_missing
 from metabulo.normalization import NORMALIZATION_METHODS, normalize
 
@@ -108,10 +108,12 @@ class CSVFile(db.Model):
         return errors or None
 
     @property
+    @region.cache_on_arguments()
     def table(self):
         return _read_csv_file(self.uri, index_col=None, header=None)
 
     @property
+    @region.cache_on_arguments()
     def indexed_table(self):
         kwargs = {}
 
@@ -141,27 +143,32 @@ class CSVFile(db.Model):
         return indexed_table
 
     @property
+    @region.cache_on_arguments()
     def measurement_table(self):
         """Return the processed metabolite date table."""
         if self.table_validation is None:
             return self.apply_transforms()
 
     @property
+    @region.cache_on_arguments()
     def measurement_metadata(self):
         """Return metadata rows."""
         return self.filter_table_by_types(TABLE_ROW_TYPES.METADATA, TABLE_COLUMN_TYPES.DATA)
 
     @property
+    @region.cache_on_arguments()
     def sample_metadata(self):
         """Return metadata columns."""
         return self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.METADATA)
 
     @property
+    @region.cache_on_arguments()
     def raw_measurement_table(self):
         """Return the metabolite data table before transformation."""
         return self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.DATA)
 
     @property
+    @region.cache_on_arguments()
     def groups(self):
         """Return a table containing the primary grouping column."""
         if self.group_column_index is None:
@@ -191,13 +198,16 @@ class CSVFile(db.Model):
             old_row = self.rows[self.header_row_index]
             old_row.row_type = TABLE_ROW_TYPES.METADATA
             db.session.add(old_row)
+            clear_cache()
 
         if value is not None:
             new_row = self.rows[value]
             new_row.row_type = TABLE_ROW_TYPES.INDEX
             db.session.add(new_row)
+            clear_cache()
 
     @property
+    @region.cache_on_arguments()
     def headers(self):
         idx = self.header_row_index
         if idx is None:
@@ -226,11 +236,13 @@ class CSVFile(db.Model):
             old_column = self.columns[self.key_column_index]
             old_column.column_type = TABLE_COLUMN_TYPES.METADATA
             db.session.add(old_column)
+            clear_cache()
 
         if value is not None:
             new_column = self.columns[value]
             new_column.column_type = TABLE_COLUMN_TYPES.INDEX
             db.session.add(new_column)
+            clear_cache()
 
     @hybrid_property
     def group_column_index(self):
@@ -251,13 +263,16 @@ class CSVFile(db.Model):
             old_column = self.columns[self.group_column_index]
             old_column.column_type = TABLE_COLUMN_TYPES.METADATA
             db.session.add(old_column)
+            clear_cache()
 
         if value is not None:
             new_column = self.columns[value]
             new_column.column_type = TABLE_COLUMN_TYPES.GROUP
             db.session.add(new_column)
+            clear_cache()
 
     @property
+    @region.cache_on_arguments()
     def keys(self):
         idx = self.key_column_index
         if idx is None:
@@ -267,6 +282,7 @@ class CSVFile(db.Model):
 
         return list(self.table.iloc[:, idx])
 
+    @region.cache_on_arguments()
     def filter_table_by_types(self, row_type, column_type):
         if self.header_row_index is None or \
                 self.key_column_index is None:
@@ -296,6 +312,7 @@ class CSVFile(db.Model):
             ), index_col=index_col
         )
 
+    @region.cache_on_arguments()
     def apply_transforms(self):
         table = self.raw_measurement_table
         table = impute_missing(table, self.groups)
@@ -338,6 +355,7 @@ class CSVFile(db.Model):
         uri.parent.mkdir(parents=True, exist_ok=True)
         with open(uri, 'w') as f:
             f.write(table_data)
+        clear_cache()
         return table_data
 
     @classmethod
@@ -414,6 +432,7 @@ class TableColumn(db.Model):
         CSVFile, backref=db.backref('columns', lazy=True, order_by='TableColumn.column_index'))
 
     @property
+    @region.cache_on_arguments()
     def data_column_index(self):
         """Return the index in the measurement table or None if not a data column."""
         if self.column_type != TABLE_COLUMN_TYPES.DATA:
@@ -423,15 +442,18 @@ class TableColumn(db.Model):
         return query.filter(TableColumn.column_index < self.column_index).count()
 
     @property
+    @region.cache_on_arguments()
     def column_header(self):
         return self.csv_file.headers[self.column_index]
 
     @property
+    @region.cache_on_arguments(namespace='TableColumn')
     def missing_percent(self):
         if self.column_type == TABLE_COLUMN_TYPES.DATA:
             return self.csv_file._stats['columns']['missing'][self.data_column_index]
 
     @property
+    @region.cache_on_arguments(namespace='TableColumn')
     def data_variance(self):
         if self.column_type == TABLE_COLUMN_TYPES.DATA:
             return self.csv_file._stats['columns']['variance'][self.data_column_index]
@@ -473,10 +495,12 @@ class TableRow(db.Model):
         CSVFile, backref=db.backref('rows', lazy=True, order_by='TableRow.row_index'))
 
     @property
+    @region.cache_on_arguments()
     def row_name(self):
         return self.csv_file.keys[self.row_index]
 
     @property
+    @region.cache_on_arguments()
     def data_row_index(self):
         """Return the index in the measurement table or None if not a data row."""
         if self.row_type != TABLE_ROW_TYPES.DATA:
@@ -485,11 +509,13 @@ class TableRow(db.Model):
         return query.filter(TableRow.row_index < self.row_index).count()
 
     @property
+    @region.cache_on_arguments(namespace='TableRow')
     def missing_percent(self):
         if self.row_type == TABLE_ROW_TYPES.DATA:
             return self.csv_file._stats['rows']['missing'][self.data_row_index]
 
     @property
+    @region.cache_on_arguments(namespace='TableRow')
     def data_variance(self):
         if self.row_type == TABLE_ROW_TYPES.DATA:
             return self.csv_file._stats['rows']['variance'][self.data_row_index]
