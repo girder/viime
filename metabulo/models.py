@@ -530,9 +530,6 @@ class TableRowSchema(BaseSchema):
     row_type = fields.Str(required=True, validate=validate.OneOf(TABLE_ROW_TYPES))
     data_row_index = fields.Int(dump_only=True, allow_none=True)
 
-    missing_percent = fields.Float(dump_only=True, allow_none=True)
-    data_variance = fields.Float(dump_only=True, allow_none=True)
-
     csv_file = fields.Nested(
         CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
 
