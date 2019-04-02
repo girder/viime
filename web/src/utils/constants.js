@@ -1,15 +1,27 @@
 const rowMenuOptions = [
   {
-    value: 'header', icon: 'key', title: 'Header', color: 'light-green',
+    value: 'header',
+    icon: 'key',
+    title: 'Header',
+    color: 'light-green',
   },
   {
-    value: 'metadata', icon: 'metadata', title: 'Metadata', color: 'purple',
+    value: 'metadata',
+    icon: 'metadata',
+    title: 'Metadata',
+    color: 'purple',
   },
   {
-    value: 'masked', icon: 'masked', title: 'Masked', color: 'grey',
+    value: 'masked',
+    icon: 'masked',
+    title: 'Masked',
+    color: 'grey',
   },
   {
-    value: 'sample', icon: null, title: 'Sample', color: null,
+    value: 'sample',
+    icon: null,
+    title: 'Sample',
+    color: null,
   },
 ];
 const defaultRowOption = 'sample';
@@ -17,19 +29,34 @@ const rowPrimaryKey = 'header';
 
 const colMenuOptions = [
   {
-    value: 'key', icon: 'key', title: 'Primary Key', color: 'blue-grey',
+    value: 'key',
+    icon: 'key',
+    title: 'Primary Key',
+    color: 'blue-grey',
   },
   {
-    value: 'group', icon: 'group', title: 'Group', color: 'pink',
+    value: 'group',
+    icon: 'group',
+    title: 'Group',
+    color: 'pink',
   },
   {
-    value: 'metadata', icon: 'metadata', title: 'Metadata', color: 'purple',
+    value: 'metadata',
+    icon: 'metadata',
+    title: 'Metadata',
+    color: 'purple',
   },
   {
-    value: 'masked', icon: 'masked', title: 'Masked', color: 'grey',
+    value: 'masked',
+    icon: 'masked',
+    title: 'Masked',
+    color: 'grey',
   },
   {
-    value: 'measurement', icon: null, title: 'Measurement', color: null,
+    value: 'measurement',
+    icon: null,
+    title: 'Measurement',
+    color: null,
   },
 ];
 const defaultColOption = 'measurement';
