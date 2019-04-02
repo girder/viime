@@ -2,7 +2,7 @@
 v-app
   v-toolbar.main-toolbar.darken-4(dark, dense, color="primary")
     v-toolbar-items
-      v-btn.px-0.square-button.darken-4(flat, color="white")
+      v-btn.px-0.square-button.darken-4(flat, color="white", to="/select")
         v-icon {{ $vuetify.icons.close }}
     v-spacer
     v-toolbar-title.title
