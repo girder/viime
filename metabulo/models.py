@@ -19,6 +19,7 @@ from werkzeug.utils import secure_filename
 from metabulo.cache import clear_cache, region
 from metabulo.imputation import impute_missing
 from metabulo.normalization import NORMALIZATION_METHODS, normalize
+from metabulo.table_validation import get_validation_list
 
 
 # This is to avoid having to manually name all constraints
@@ -69,7 +70,7 @@ class CSVFile(db.Model):
     @property
     def table_validation(self):
         """Return a list of issues with the table or None if everything is okay."""
-        return _table_validation(self)
+        return get_validation_list(self)
 
     @property
     def table(self):
@@ -82,7 +83,7 @@ class CSVFile(db.Model):
     @property
     def measurement_table(self):
         """Return the processed metabolite date table."""
-        if self.table_validation is None:
+        if not self.table_validation:
             return self.apply_transforms()
 
     @property
@@ -528,26 +529,6 @@ def _filter_table_by_types(csv_file, row_type, column_type):
             csv_file.table.iloc[rows, columns].to_csv(header=False, index=False).encode()
         ), index_col=index_col
     )
-
-
-@region.cache_on_arguments()
-def _table_validation(csv_file):
-    """Return a list of issues with the table or None if everything is okay."""
-    errors = []
-    if csv_file.header_row_index is None:
-        errors.append('No header row')
-    if csv_file.key_column_index is None:
-        errors.append('No primary key column')
-    if csv_file.group_column_index is None:
-        errors.append('No group column')
-
-    if not errors:
-        try:
-            csv_file.apply_transforms()
-        except Exception:
-            errors.append('Error applying transforms')
-
-    return errors or None
 
 
 @region.cache_on_arguments()
