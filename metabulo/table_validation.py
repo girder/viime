@@ -4,9 +4,8 @@ in the CSVFile model.
 """
 from collections import namedtuple
 
-from flask import current_app
 from marshmallow import fields, post_dump, Schema, validate
-from marshmallow.exceptions import ValidationError
+from pandas import Index
 
 from metabulo.cache import region
 
@@ -132,24 +131,16 @@ class ValidationSchema(Schema):
 
 @region.cache_on_arguments()
 def get_validation_list(csv_file):
-    errors = []
-    errors = _get_fatal_errors(csv_file)
+    errors = get_fatal_index_errors(csv_file)
 
-    # We cannot proceed with warnings when the table is not parsed correctly.
     if not errors:
-        errors = _get_warnings(csv_file)
+        errors = get_warnings(csv_file)
 
-    validation_schema = ValidationSchema()
-    try:
-        return validation_schema.dump(errors, many=True)
-    except ValidationError as e:
-        # This is an internal error so log the validation error and return
-        # a 500 to the endpoint.
-        current_app.logger.exception(e)
-        raise Exception('Could not serialize validation object')
+    return errors
 
 
-def _get_fatal_errors(csv_file):
+@region.cache_on_arguments()
+def get_missing_index_errors(csv_file):
     errors = []
     if csv_file.header_row_index is None:
         errors.append(PrimaryKeyMissing())
@@ -160,5 +151,44 @@ def _get_fatal_errors(csv_file):
     return errors
 
 
-def _get_warnings(csv_file):
+@region.cache_on_arguments()
+def get_fatal_index_errors(csv_file):
+    errors = get_missing_index_errors(csv_file)
+    if not errors:
+        errors = get_invalid_index_errors(csv_file)
+    return errors
+
+
+def check_valid_index(index):
+    """Check if pandas series can be a valid index."""
+    if index.hasnans:
+        return 'Contains NaN\'s'
+    if not index.is_unique:
+        return 'Values are not unique'
+
+
+def check_valid_groups(groups):
+    index = Index(groups.iloc[:, 0])
+    if index.hasnans:
+        return 'Contains NaN\'s'
+
+
+def get_invalid_index_errors(csv_file):
+    errors = []
+    error_data = check_valid_index(csv_file.raw_measurement_table.index)
+    if error_data:
+        errors.append(InvalidPrimaryKey(column_index=csv_file.key_column_index, data=error_data))
+
+    error_data = check_valid_index(csv_file.raw_measurement_table.columns)
+    if error_data:
+        errors.append(InvalidHeader(row_index=csv_file.header_row_index, data=error_data))
+
+    error_data = check_valid_groups(csv_file.groups)
+    if error_data:
+        errors.append(InvalidGroup(column_index=csv_file.group_column_index, data=error_data))
+
+    return errors
+
+
+def get_warnings(csv_file):
     return []

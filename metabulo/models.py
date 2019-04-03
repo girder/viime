@@ -84,7 +84,11 @@ class CSVFile(db.Model):
     def measurement_table(self):
         """Return the processed metabolite date table."""
         if not self.table_validation:
-            return self.apply_transforms()
+            try:
+                return self.apply_transforms()
+            except Exception as e:
+                # TODO: We should handle this better
+                current_app.logger.exception(e)
 
     @property
     def measurement_metadata(self):
@@ -277,13 +281,12 @@ class CSVFileSchema(BaseSchema):
     columns = fields.List(fields.Nested('TableColumnSchema', exclude=['csv_file']))
     rows = fields.List(fields.Nested('TableRowSchema', exclude=['csv_file']))
 
-    table_validation = fields.List(fields.Str, dump_only=True, allow_none=True)
+    table_validation = fields.List(
+        fields.Nested('ValidationSchema'), dump_only=True, allow_none=True)
     measurement_table = fields.Raw(dump_only=True, allow_none=True)
     measurement_metadata = fields.Raw(dump_only=True, allow_none=True)
     sample_metadata = fields.Raw(dump_only=True, allow_none=True)
     groups = fields.Raw(dump_only=True, allow_none=True)
-
-    _stats = fields.Raw(dump_only=True)
 
     @post_load
     def fix_file_name(self, data):

@@ -12,12 +12,14 @@ from metabulo.models import CSVFile, CSVFileSchema, db, \
     TableRowSchema
 from metabulo.normalization import NORMALIZATION_METHODS
 from metabulo.plot import pca
+from metabulo.table_validation import ValidationSchema
 
 csv_file_schema = CSVFileSchema()
 modify_column_schema = ModifyColumnSchema()
 modify_row_schema = ModifyRowSchema()
 table_column_schema = TableColumnSchema(exclude=['csv_file'])
 table_row_schema = TableRowSchema(exclude=['csv_file'])
+validation_schema = ValidationSchema()
 
 csv_bp = Blueprint('csv', __name__)
 
@@ -74,7 +76,7 @@ def get_csv_file(csv_id):
 @csv_bp.route('/csv/<uuid:csv_id>/validation', methods=['GET'])
 def get_csv_file_validation(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
-    return jsonify(csv_file.table_validation)
+    return jsonify(validation_schema.dump(csv_file.table_validation, many=True))
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/download', methods=['GET'])
