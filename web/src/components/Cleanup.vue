@@ -38,7 +38,7 @@ export default {
   computed: {
     dataset() { return this.$store.getters.dataset(this.id); },
     radioValue() {
-      const { type, last, ranges } = this.selected;
+      const { type, ranges } = this.selected;
       const { members } = ranges;
       const types = members.map(m => this.dataset[type].labels[m]);
       const unique = [...new Set(types)];
@@ -53,14 +53,12 @@ export default {
       const multi = members.length > 1;
       if (multi) {
         return `${members.length} ${this.selected.type}s selected`;
-      } else {
-        if (this.selected.type === 'row') {
-          return `Row ${members[0] + 1}`;
-        } else {
-          return `Column ${base26Converter(members[0] + 1)}`;
-        }
       }
-    }
+      if (this.selected.type === 'row') {
+        return `Row ${members[0] + 1}`;
+      }
+      return `Column ${base26Converter(members[0] + 1)}`;
+    },
   },
   methods: {
     base26Converter,
@@ -68,7 +66,7 @@ export default {
       const promises = [];
       const { ranges, type: axis_name } = this.selected;
       // TODO: Support batched operations
-      ranges.members.forEach(index => {
+      ranges.members.forEach((index) => {
         promises.push(this.$store.dispatch(CHANGE_AXIS_LABEL, {
           dataset_id: this.id,
           axis_name,
@@ -86,14 +84,13 @@ export default {
           first: includes.first,
           last: includes.last,
         };
-      } else {
-        return {};
       }
+      return {};
     },
     setSelection(event, axis, idx) {
       const { last, ranges, type } = this.selected;
       this.selected.last = idx;
-      if (event.shiftKey && axis === type ) {
+      if (event.shiftKey && axis === type) {
         ranges.add(last, idx);
       } else if (event.ctrlKey && axis === type) {
         ranges.add(idx);
@@ -256,7 +253,7 @@ v-layout.cleanup-wrapper(row)
           background-color: #CFD8DC;
         }
       }
-      
+
       td:nth-child(odd) {
         background-color: var(--v-primary-lighten5);
       }
@@ -323,7 +320,7 @@ v-layout.cleanup-wrapper(row)
         td.metadata {
           background-color: var(--v-accent2-lighten3);
         }
-        
+
         td.group {
           background-color: var(--v-accent3-lighten2);
         }

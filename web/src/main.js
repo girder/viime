@@ -1,9 +1,7 @@
 import '@mdi/font/css/materialdesignicons.min.css';
 
-import _ from 'lodash';
 import Vue from 'vue';
 import Vuetify from 'vuetify';
-import girderVuetifyConfig from '@girder/components/src/utils/vuetifyConfig';
 
 import ApiService from './common/api.service';
 import App from './App.vue';

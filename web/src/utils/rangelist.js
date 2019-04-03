@@ -18,7 +18,7 @@ export default class RangeList {
       const midIndex = Math.floor((lowIndex + highIndex) / 2);
       if (this.members[midIndex] === el) {
         return midIndex;
-      } else if (this.members[midIndex] < el) {
+      } if (this.members[midIndex] < el) {
         lowIndex = midIndex + 1;
       } else {
         highIndex = midIndex - 1;
@@ -28,8 +28,8 @@ export default class RangeList {
 
   /**
    * Add range to members
-   * @param {Number} a first index 
-   * @param {Number} b optional last index 
+   * @param {Number} a first index
+   * @param {Number} b optional last index
    */
   add(a, b = null) {
     let nin = a;
