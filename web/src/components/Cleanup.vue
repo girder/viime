@@ -6,7 +6,7 @@ import {
   colMenuOptions,
   defaultColOption,
 } from '@/utils/constants';
-import { base26Converter } from '@/utils';
+import { base26Converter, RangeList } from '@/utils';
 import SaveStatus from '@/components/SaveStatus.vue';
 
 export default {
@@ -21,38 +21,86 @@ export default {
   },
   data() {
     return {
-      tagOptions: {
+      privateTagOptions: {
         row: rowMenuOptions,
         column: colMenuOptions,
       },
       defaultColOption,
       defaultRowOption,
-      selected: { type: 'column', index: 1 },
+      selected: {
+        type: 'column',
+        last: 1,
+        ranges: new RangeList([1]),
+      },
       settingsDialog: false,
     };
   },
   computed: {
     dataset() { return this.$store.getters.dataset(this.id); },
+    radioValue() {
+      const { type, last, ranges } = this.selected;
+      const { members } = ranges;
+      const types = members.map(m => this.dataset[type].labels[m]);
+      const unique = [...new Set(types)];
+      return unique.length === 1 ? unique[0] : null;
+    },
+    tagOptions() {
+      return this.privateTagOptions[this.selected.type]
+        .filter(option => (this.selected.ranges.members.length > 1 ? !option.mutex : true));
+    },
+    selectedString() {
+      const { members } = this.selected.ranges;
+      const multi = members.length > 1;
+      if (multi) {
+        return `${members.length} ${this.selected.type}s selected`;
+      } else {
+        if (this.selected.type === 'row') {
+          return `Row ${members[0] + 1}`;
+        } else {
+          return `Column ${base26Converter(members[0] + 1)}`;
+        }
+      }
+    }
   },
   methods: {
     base26Converter,
-    async selectOption(label, index, axis_name) {
-      await this.$store.dispatch(CHANGE_AXIS_LABEL, {
-        dataset_id: this.id,
-        axis_name,
-        label,
-        index,
+    async selectOption(label) {
+      const promises = [];
+      const { ranges, type: axis_name } = this.selected;
+      // TODO: Support batched operations
+      ranges.members.forEach(index => {
+        promises.push(this.$store.dispatch(CHANGE_AXIS_LABEL, {
+          dataset_id: this.id,
+          axis_name,
+          label,
+          index,
+        }));
       });
+      await Promise.all(promises);
     },
-    getDisplayValue(axis, idx) {
-      const val = this.dataset[axis].labels[idx];
-      if (axis === 'row') return val === defaultRowOption ? `${idx + 1}` : val;
-      if (axis === 'column') return val === defaultColOption ? `${idx + 1}` : val;
-      throw new Error(`${axis} is not a valid axis name`);
+    activeClasses(index, axisName) {
+      if (axisName === this.selected.type) {
+        const includes = this.selected.ranges.includes(index);
+        return {
+          active: includes.member,
+          first: includes.first,
+          last: includes.last,
+        };
+      } else {
+        return {};
+      }
     },
-    isActive(index, axisName) {
-      return this.selected.index === index
-          && this.selected.type === axisName;
+    setSelection(event, axis, idx) {
+      const { last, ranges, type } = this.selected;
+      this.selected.last = idx;
+      if (event.shiftKey && axis === type ) {
+        ranges.add(last, idx);
+      } else if (event.ctrlKey && axis === type) {
+        ranges.add(idx);
+      } else if (!event.ctrlKey && !event.shiftKey) {
+        this.selected.ranges = new RangeList([idx]);
+        this.selected.type = axis;
+      }
     },
   },
 };
@@ -71,16 +119,14 @@ v-layout.cleanup-wrapper(row)
     v-toolbar.radio-toolbar(dense)
 
       v-toolbar-title.ml-3.radio-title
-        .subheading.font-weight-bold.secondary--text.text--lighten-1  SELECT DATA TYPE
-        .body-2(style="margin-top: -8px;")
-          | {{ selected.type }}
-          | {{ selected.type === 'row' ? selected.index+1 : base26Converter(selected.index+1) }}
+        .subheading.font-weight-bold.primary--text.text--lighten-1  SELECT DATA TYPE
+        .primary--text.text--darken-3.body-2(style="margin-top: -8px;") {{ selectedString }}
       v-divider.mx-2(vertical, inset)
       v-radio-group.mx-2.radio-group(mandatory, row, hide-details,
-          :value="dataset[selected.type].labels[selected.index]",
-          @change="selectOption($event, selected.index, selected.type)")
-        v-radio.grey.lighten-2.my-1(v-for="option in tagOptions[selected.type]",
-            color="black",
+          :value="radioValue",
+          @change="selectOption")
+        v-radio.my-1(v-for="option in tagOptions",
+            color="primary darken-3",
             :value="option.value",
             :label="option.title",
             :key="option.value")
@@ -102,6 +148,7 @@ v-layout.cleanup-wrapper(row)
             v-spacer
             v-btn(flat, @click="settingsDialog = false") Close
             v-btn(depressed) Save
+      v-icon {{ $vuetify.icons.download }}
 
     .overflow-auto
       table.cleanup-table
@@ -111,25 +158,31 @@ v-layout.cleanup-wrapper(row)
             th
             th.control.px-2(
                 v-for="(col, index) in dataset.column.labels",
-                :class="{ 'active': isActive(index, 'column') }",
-                @click="selected = { type: 'column', index }")
+                :class="activeClasses(index, 'column')",
+                @click="setSelection($event, 'column', index)")
               span(v-if="col === defaultColOption") {{ base26Converter(index + 1) }}
               v-icon(v-else, small) {{ $vuetify.icons[col] }}
 
         tbody
           tr.datarow(v-for="(row, index) in dataset.sourcerows",
               :key="`${index}${row[0]}`",
-              :class="{[dataset.row.labels[index]]: true, 'active': isActive(index, 'row')}")
-            td.control.px-2(@click="selected = { type: 'row', index }")
+              :class="{[dataset.row.labels[index]]: true, ...activeClasses(index, 'row')}")
+            td.control.px-2(@click="setSelection($event, 'row', index)")
               span(v-if="dataset.row.labels[index] === defaultRowOption") {{ index + 1 }}
               v-icon(v-else, small) {{ $vuetify.icons[dataset.row.labels[index]] }}
             td.px-2.row(
                 v-for="(col, idx2) in row",
-                :class="{[dataset.column.labels[idx2]]: true, 'active': isActive(idx2, 'column')}",
+                :class="{[dataset.column.labels[idx2]]: true, ...activeClasses(idx2, 'column')}",
                 :key="`${index}.${idx2}`") {{ col }}
 </template>
 
 <style lang="scss">
+@mixin masked() {
+  background-color: var(--v-secondary-lighten1);
+  font-weight: 300;
+  color: var(--v-secondary-darken1);
+}
+
 .cleanup-wrapper {
   width: 100%;
 
@@ -148,8 +201,13 @@ v-layout.cleanup-wrapper(row)
     }
 
     .v-radio {
-      border-radius: 4px;
+      border-radius: 3px;
       padding: 2px;
+      background-color: #dde0e1; // TODO: find a better way to get this color.
+
+      .v-label {
+        color: var(--v-primary-darken3);
+      }
     }
 
     .radio-title {
@@ -162,13 +220,14 @@ v-layout.cleanup-wrapper(row)
 
     .radio-icon {
       padding: 2px;
-      border-radius: 4px;
+      border-radius: 3px;
       margin: 4px;
     }
   }
 
   .cleanup-table {
     border-spacing: 0px;
+    user-select: none;
 
     .key, .metadata, .header, .group {
       font-weight: 700;
@@ -176,94 +235,122 @@ v-layout.cleanup-wrapper(row)
       text-align: left;
     }
 
-    tr.active td, td.active {
-      background-color:  #81D4FA !important;
-    }
+    tr {
+      th, td {
+        white-space: nowrap;
+        padding: 2px;
+        text-align: center;
 
-    th, td {
-      white-space: nowrap;
-      padding: 2px;
-      text-align: center;
-
-      &.control {
-        cursor: pointer;
-        font-weight: 300;
+        &.control {
+          cursor: pointer;
+          font-weight: 300;
+        }
       }
-    }
 
-    th:nth-child(odd):not(.masked) {
-      background-color: #dae1e4;
-    }
+      background-color: #fdfdfd;
 
-    tr:nth-child(odd):not(.masked) {
-      background-color: #ECEFF1;
+      &:nth-child(odd) {
+        background-color: var(--v-primary-lighten5);
 
-      &.datarow td:nth-child(odd) {
-        background-color: rgb(218, 225, 228);
+        td:nth-child(odd), th:nth-child(odd) {
+          background-color: #CFD8DC;
+        }
       }
-    }
+      
+      td:nth-child(odd) {
+        background-color: var(--v-primary-lighten5);
+      }
 
-    tr.datarow:not(.masked) {
-      &.header {
-        td:nth-child(odd):not(.masked) {
-          background-color: #8BC34A;
+      td.active, th.active {
+        &.first {
+          border-left: 2px solid var(--v-secondary-darken3);
         }
 
-        td:nth-child(even):not(.masked) {
-          background-color: #9CCC65;
+        &.last {
+          border-right: 2px solid var(--v-secondary-darken3);
+        }
+      }
+
+      &.active.first td {
+        border-top: 2px solid var(--v-secondary-darken3);
+      }
+
+      &.active.last td{
+        border-bottom: 2px solid var(--v-secondary-darken3);
+      }
+
+      &.active td,
+      td.active {
+        background: linear-gradient(0deg,rgba(161, 213, 255, 0.2),rgba(161, 213, 255, 0.2));
+      }
+    }
+
+    tr.datarow {
+      &.header {
+        td:nth-child(odd) {
+          background-color: var(--v-accent-base);
+        }
+
+        td {
+          background-color:var(--v-accent-lighten1);
         }
       }
 
       &.metadata {
         td:nth-child(odd) {
-          background-color: #9E9E9E;
+          background-color: var(--v-accent2-lighten2);
         }
 
         td {
-          background-color: #BDBDBD;
+          background-color: var(--v-accent2-lighten3);
         }
       }
 
-      &.header, &.metadata {
-        .key, .metadata, .group {
-          background-color: lightgray;
-          font-weight: 300;
-          color: black;
+      &.header,
+      &.header:nth-child(odd),
+      &.metadata,
+      &.metadata:nth-child(odd) {
+        td.key, td.metadata, td.group {
+          @include masked();
         }
       }
 
       &:nth-child(odd) {
         td.key {
-          background-color: #546E7A;
+          background-color: var(--v-primary-lighten1);
         }
 
-        td.metadata, td.group {
-          background-color: #9E9E9E;
+        td.metadata {
+          background-color: var(--v-accent2-lighten3);
+        }
+        
+        td.group {
+          background-color: var(--v-accent3-lighten2);
         }
       }
 
       td {
-        &:nth-child(odd) {
-          background-color: rgba(236, 239, 241, 0.4);
-
-          &.masked {
-            background-color: lightgray ;
-          }
-        }
-
         &.key {
-          background-color: #78909C;
+          background-color: var(--v-primary-base);
         }
 
-        &.metadata,&.group {
-          background-color: #BDBDBD;
+        &.metadata, {
+          background-color: var(--v-accent2-lighten2);
+        }
+
+        &.group {
+          background-color: var(--v-accent3-lighten1);
         }
       }
     }
 
-    tr {
-      &.masked td, td.masked, th.masked {
-        background-color: lightgray ;
+    tr.datarow,
+    tr.datarow:nth-child(odd) {
+      &.masked td,
+      td.masked:nth-child(odd),
+      td.masked,
+      th.masked {
+        @include masked();
       }
     }
   }

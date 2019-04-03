@@ -3,28 +3,33 @@ const rowMenuOptions = [
     value: 'header',
     icon: 'key',
     title: 'Header',
-    color: 'light-green',
+    color: 'accent',
+    mutex: true,
   },
   {
     value: 'metadata',
     icon: 'metadata',
     title: 'Metadata',
-    color: 'purple',
+    color: 'accent3',
+    mutex: false,
   },
   {
     value: 'masked',
     icon: 'masked',
     title: 'Masked',
-    color: 'grey',
+    color: 'secondary',
+    mutex: false,
   },
   {
     value: 'sample',
     icon: null,
     title: 'Sample',
     color: null,
+    mutex: false,
   },
 ];
 const defaultRowOption = 'sample';
+const rowFallbackType = 'metadata';
 const rowPrimaryKey = 'header';
 
 const colMenuOptions = [
@@ -32,34 +37,40 @@ const colMenuOptions = [
     value: 'key',
     icon: 'key',
     title: 'Primary Key',
-    color: 'blue-grey',
+    color: 'primary',
+    mutex: true,
   },
   {
     value: 'group',
     icon: 'group',
     title: 'Group',
-    color: 'pink',
+    color: 'accent3',
+    mutex: true,
   },
   {
     value: 'metadata',
     icon: 'metadata',
     title: 'Metadata',
-    color: 'purple',
+    color: 'accent2',
+    mutex: false,
   },
   {
     value: 'masked',
     icon: 'masked',
     title: 'Masked',
-    color: 'grey',
+    color: 'secondary',
+    mutex: false,
   },
   {
     value: 'measurement',
     icon: null,
     title: 'Measurement',
     color: null,
+    mutex: false,
   },
 ];
 const defaultColOption = 'measurement';
+const colFallbackType = 'metadata';
 const colPrimaryKey = 'key';
 
 const normalize_methods = [
@@ -86,10 +97,12 @@ export {
   rowMenuOptions,
   defaultRowOption,
   rowPrimaryKey,
+  rowFallbackType,
 
   colMenuOptions,
   defaultColOption,
   colPrimaryKey,
+  colFallbackType,
 
   normalize_methods,
   scaling_methods,

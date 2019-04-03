@@ -5,10 +5,10 @@ import { convertCsvToRows } from '../utils';
 import { CSVService } from '../common/api.service';
 
 import {
-  defaultRowOption,
-  defaultColOption,
   rowPrimaryKey,
   colPrimaryKey,
+  rowFallbackType,
+  colFallbackType,
 } from '../utils/constants';
 
 import {
@@ -138,9 +138,9 @@ const mutations = {
 
     let default_axis_label = null;
     if (axis_name === 'row') {
-      default_axis_label = defaultRowOption;
+      default_axis_label = rowFallbackType;
     } else if (axis_name === 'column') {
-      default_axis_label = defaultColOption;
+      default_axis_label = colFallbackType;
     }
 
     if (isPrimary) {
