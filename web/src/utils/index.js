@@ -1,5 +1,6 @@
 import papa from 'papaparse';
 
+import RangeList from './rangelist';
 /**
  * Convert decimal to base26 in upper case
  * where A = 1, Z = 26, AA = 27, and 0 cannot be encoded.
@@ -30,4 +31,5 @@ function convertCsvToRows(csvstring) {
 export {
   base26Converter,
   convertCsvToRows,
+  RangeList,
 };
