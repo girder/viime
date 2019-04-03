@@ -110,7 +110,7 @@ def test_get_csv_file_validation(client, csv_file):
     resp = client.get(
         url_for('csv.get_csv_file_validation', csv_id=csv_file.id)
     )
-    assert resp.json is None
+    assert resp.json == []
 
     resp = client.put(
         url_for('csv.modify_column', csv_id=csv_file.id, column_index=1),
@@ -123,4 +123,9 @@ def test_get_csv_file_validation(client, csv_file):
     resp = client.get(
         url_for('csv.get_csv_file_validation', csv_id=csv_file.id)
     )
-    assert resp.json == ['No group column']
+    assert resp.json == [{
+        'context': 'table',
+        'severity': 'error',
+        'title': 'No group column',
+        'type': 'group-missing'
+    }]
