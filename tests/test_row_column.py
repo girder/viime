@@ -9,7 +9,7 @@ table_data = """
 id,group,meta,col1,col2
 row1,g1,a,0.5,2.0
 row2,g1,b,1.5,0
-row3,g2,b,4,0.5
+row3,g2,b,4,-2.0
 """
 
 
@@ -31,23 +31,38 @@ def test_list_columns(client, table):
     assert resp.json == [{
         'column_header': 'id',
         'column_index': 0,
-        'column_type': 'key'
+        'column_type': 'key',
+        'data_column_index': None,
+        'data_variance': None,
+        'missing_percent': None
     }, {
         'column_header': 'group',
         'column_index': 1,
-        'column_type': 'group'
+        'column_type': 'group',
+        'data_column_index': None,
+        'data_variance': None,
+        'missing_percent': None
     }, {
         'column_header': 'meta',
         'column_index': 2,
-        'column_type': 'measurement'
+        'column_type': 'measurement',
+        'data_column_index': 0,
+        'data_variance': None,
+        'missing_percent': 1.0
     }, {
         'column_header': 'col1',
         'column_index': 3,
-        'column_type': 'measurement'
+        'column_type': 'measurement',
+        'data_column_index': 1,
+        'data_variance': 3.25,
+        'missing_percent': 0.0
     }, {
         'column_header': 'col2',
         'column_index': 4,
-        'column_type': 'measurement'
+        'column_type': 'measurement',
+        'data_column_index': 2,
+        'data_variance': 4.0,
+        'missing_percent': 0.0
     }]
 
 
@@ -58,30 +73,37 @@ def test_list_rows(client, table):
     assert resp.json == [{
         'row_name': 'id',
         'row_index': 0,
-        'row_type': 'header'
+        'row_type': 'header',
+        'data_row_index': None
     }, {
         'row_name': 'row1',
         'row_index': 1,
-        'row_type': 'sample'
+        'row_type': 'sample',
+        'data_row_index': 0
     }, {
         'row_name': 'row2',
         'row_index': 2,
-        'row_type': 'sample'
+        'row_type': 'sample',
+        'data_row_index': 1
     }, {
         'row_name': 'row3',
         'row_index': 3,
-        'row_type': 'sample'
+        'row_type': 'sample',
+        'data_row_index': 2
     }]
 
 
 def test_get_column(client, table):
     resp = client.get(
-        url_for('csv.get_column', csv_id=table.id, column_index=2))
+        url_for('csv.get_column', csv_id=table.id, column_index=3))
     assert resp.status_code == 200
     assert resp.json == {
-        'column_header': 'meta',
-        'column_index': 2,
-        'column_type': 'measurement'
+        'column_header': 'col1',
+        'column_index': 3,
+        'column_type': 'measurement',
+        'data_column_index': 1,
+        'data_variance': 3.25,
+        'missing_percent': 0.0
     }
 
 
@@ -92,7 +114,8 @@ def test_get_row(client, table):
     assert resp.json == {
         'row_name': 'row1',
         'row_index': 1,
-        'row_type': 'sample'
+        'row_type': 'sample',
+        'data_row_index': 0
     }
 
 
@@ -107,7 +130,10 @@ def test_modify_column(client, table):
     assert resp.json == {
         'column_header': 'group',
         'column_index': 1,
-        'column_type': 'metadata'
+        'column_type': 'metadata',
+        'data_column_index': None,
+        'data_variance': None,
+        'missing_percent': None
     }
 
 
@@ -122,7 +148,8 @@ def test_modify_row(client, table):
     assert resp.json == {
         'row_name': 'row1',
         'row_index': 1,
-        'row_type': 'masked'
+        'row_type': 'masked',
+        'data_row_index': None
     }
 
 
@@ -159,7 +186,10 @@ def test_modify_group_column(client, table):
     assert resp.json == {
         'column_header': 'meta',
         'column_index': 2,
-        'column_type': 'group'
+        'column_type': 'group',
+        'data_column_index': None,
+        'data_variance': None,
+        'missing_percent': None
     }
 
     resp = client.get(
@@ -169,7 +199,10 @@ def test_modify_group_column(client, table):
     assert resp.json == {
         'column_header': 'group',
         'column_index': 1,
-        'column_type': 'metadata'
+        'column_type': 'metadata',
+        'data_column_index': None,
+        'data_variance': None,
+        'missing_percent': None
     }
 
 
