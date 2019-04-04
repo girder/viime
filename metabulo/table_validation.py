@@ -142,9 +142,9 @@ def get_validation_list(csv_file):
 @region.cache_on_arguments()
 def get_missing_index_errors(csv_file):
     errors = []
-    if csv_file.header_row_index is None:
-        errors.append(PrimaryKeyMissing())
     if csv_file.key_column_index is None:
+        errors.append(PrimaryKeyMissing())
+    if csv_file.header_row_index is None:
         errors.append(HeaderMissing())
     if csv_file.group_column_index is None:
         errors.append(GroupMissing())

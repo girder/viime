@@ -218,7 +218,8 @@ class CSVFile(db.Model):
 
     @property
     def _stats(self):
-        return _get_table_stats(self.raw_measurement_table)
+        if self.raw_measurement_table is not None:
+            return _get_table_stats(self.raw_measurement_table)
 
     @classmethod
     def create_csv_file(cls, id, name, table, **kwargs):
@@ -333,12 +334,14 @@ class TableColumn(db.Model):
     @property
     def missing_percent(self):
         if self.column_type == TABLE_COLUMN_TYPES.DATA:
-            return self.csv_file._stats['columns']['missing'][self.data_column_index]
+            return self.csv_file._stats and \
+                self.csv_file._stats['columns']['missing'][self.data_column_index]
 
     @property
     def data_variance(self):
         if self.column_type == TABLE_COLUMN_TYPES.DATA:
-            return self.csv_file._stats['columns']['variance'][self.data_column_index]
+            return self.csv_file._stats and \
+                self.csv_file._stats['columns']['variance'][self.data_column_index]
 
 
 class TableColumnSchema(BaseSchema):
