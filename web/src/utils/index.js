@@ -7,7 +7,7 @@ import RangeList from './rangelist';
  * @param {Number} dec a decimal number to convert
  */
 function base26Converter(dec) {
-  if (dec < 0) {
+  if (dec < 1) {
     throw new Error('Numbers below 1 cannot be encoded.');
   }
   let str = '';
