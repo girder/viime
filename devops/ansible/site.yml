@@ -56,10 +56,13 @@
         shell: "/usr/sbin/nologin"
       become: true
 
-    - name: Install wheel package
+    - name: Update pip, setuptools and wheel
       pip:
-        name: "wheel"
-        state: "present"
+        name:
+          - pip
+          - setuptools
+          - wheel
+        state: "latest"
         virtualenv: "{{ venv }}"
         virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
       become: true
@@ -141,6 +144,13 @@
     - name: Delete old database
       file:
         path: "{{ sqlalchemy_database_path }}"
+        state: "absent"
+      become: true
+      become_user: gunicorn
+
+    - name: Delete old files
+      file:
+        path: "{{ upload_folder }}"
         state: "absent"
       become: true
       become_user: gunicorn
