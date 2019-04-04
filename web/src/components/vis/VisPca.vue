@@ -188,20 +188,19 @@ export default {
       //
       // Compute the total variance in all the PCs.
       const totVariance = rawPoints.sdev.reduce((acc, x) => acc + x, 0);
-      const pctFormat = format('.2%');
 
       axisLabel(1,
         rawPoints.sdev[0] / totVariance,
         select(this.$refs.svg).select('.label.x'),
-        (bbox) => dwidth / 2 - bbox.width / 2,
-        (bbox) => dheight + margin.bottom / 2 + bbox.height / 2,
+        bbox => dwidth / 2 - bbox.width / 2,
+        bbox => dheight + margin.bottom / 2 + bbox.height / 2,
         0);
 
       axisLabel(2,
         rawPoints.sdev[1] / totVariance,
         select(this.$refs.svg).select('.label.y'),
-        (bbox) => margin.left / 2 - bbox.height / 2,
-        (bbox) => dheight / 2 + bbox.width / 2,
+        bbox => margin.left / 2 - bbox.height / 2,
+        bbox => dheight / 2 + bbox.width / 2,
         -90);
 
       // Draw the data.
