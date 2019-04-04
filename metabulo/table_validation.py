@@ -169,8 +169,8 @@ def check_valid_index(index):
 
 def check_valid_groups(groups):
     index = Index(groups.iloc[:, 0])
-    if index.hasnans:
-        return 'Contains NaN\'s'
+    if index.hasnans or index.contains(''):
+        return 'Contains empty values'
 
 
 def get_invalid_index_errors(csv_file):
