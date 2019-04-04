@@ -63,18 +63,9 @@ export default {
   methods: {
     base26Converter,
     async selectOption(label) {
-      const promises = [];
-      const { ranges, type: axis_name } = this.selected;
-      // TODO: Support batched operations
-      ranges.members.forEach((index) => {
-        promises.push(this.$store.dispatch(CHANGE_AXIS_LABEL, {
-          dataset_id: this.id,
-          axis_name,
-          label,
-          index,
-        }));
-      });
-      await Promise.all(promises);
+      const { ranges, type: context } = this.selected;
+      const changes = ranges.members.map(index => ({ context, index, label }));
+      await this.$store.dispatch(CHANGE_AXIS_LABEL, { dataset_id: this.id, changes });
     },
     activeClasses(index, axisName) {
       if (axisName === this.selected.type) {
@@ -295,11 +286,11 @@ v-layout.cleanup-wrapper(row)
 
       &.metadata {
         td:nth-child(odd) {
-          background-color: var(--v-accent2-lighten2);
+          background: var(--v-accent2-lighten5)8C;
         }
 
         td {
-          background-color: var(--v-accent2-lighten3);
+          background-color: var(--v-accent2-lighten5);
         }
       }
 

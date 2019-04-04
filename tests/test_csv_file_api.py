@@ -86,8 +86,8 @@ def test_row_order_after_reindexing(client, pathological_table):
     table_from_api = resp.json['table']
 
     resp = client.put(
-        url_for('csv.modify_column', csv_id=table.id, column_index=1),
-        json={'column_type': 'key'}
+        url_for('csv.batch_modify_label', csv_id=table.id),
+        json={'changes': [{'context': 'column', 'index': 1, 'label': 'key'}]}
     )
     assert resp.status_code == 200
 
@@ -96,8 +96,8 @@ def test_row_order_after_reindexing(client, pathological_table):
     assert table_from_api == resp.json['table']
 
     resp = client.put(
-        url_for('csv.modify_row', csv_id=table.id, row_index=3),
-        json={'row_type': 'header'}
+        url_for('csv.batch_modify_label', csv_id=table.id),
+        json={'changes': [{'context': 'row', 'index': 3, 'label': 'header'}]}
     )
     assert resp.status_code == 200
 
@@ -113,10 +113,8 @@ def test_get_csv_file_validation(client, csv_file):
     assert resp.json == []
 
     resp = client.put(
-        url_for('csv.modify_column', csv_id=csv_file.id, column_index=1),
-        json={
-            'column_type': 'metadata'
-        }
+        url_for('csv.batch_modify_label', csv_id=csv_file.id),
+        json={'changes': [{'context': 'column', 'index': 1, 'label': 'metadata'}]}
     )
     assert resp.status_code == 200
 

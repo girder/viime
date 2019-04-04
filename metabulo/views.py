@@ -5,8 +5,8 @@ from marshmallow import ValidationError
 import pandas
 
 from metabulo import opencpu
-from metabulo.models import CSVFile, CSVFileSchema, db, \
-    ModifyColumnSchema, ModifyRowSchema, \
+from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
+    ModifyLabelListSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     TableColumn, TableColumnSchema, TableRow, \
     TableRowSchema
@@ -16,8 +16,7 @@ from metabulo.plot import pca
 from metabulo.table_validation import get_fatal_index_errors, ValidationSchema
 
 csv_file_schema = CSVFileSchema()
-modify_column_schema = ModifyColumnSchema()
-modify_row_schema = ModifyRowSchema()
+modify_label_list_schema = ModifyLabelListSchema()
 table_column_schema = TableColumnSchema(exclude=['csv_file'])
 table_row_schema = TableRowSchema(exclude=['csv_file'])
 validation_schema = ValidationSchema()
@@ -142,22 +141,34 @@ def get_column(csv_id, column_index):
     ))
 
 
-@csv_bp.route('/csv/<uuid:csv_id>/column/<int:column_index>', methods=['PUT'])
-def modify_column(csv_id, column_index):
-    column = TableColumn.query.get_or_404((csv_id, column_index))
+@csv_bp.route('/csv/<uuid:csv_id>/batch/label', methods=['PUT'])
+def batch_modify_label(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
-    args = modify_column_schema.load(request.json or {})
-    for key, value in args.items():
-        if key == 'column_type' and value == TABLE_COLUMN_TYPES.INDEX:
-            csv_file.key_column_index = column_index
-        elif key == 'column_type' and value == TABLE_COLUMN_TYPES.GROUP:
-            csv_file.group_column_index = column_index
-        else:
-            setattr(column, key, value)
-    db.session.add(column)
+    args = modify_label_list_schema.load(request.json or {})
+    for change in args['changes']:
+        index = change['index']
+        label = change['label']
+        context = change['context']
+
+        if context == AXIS_NAME_TYPES.ROW:
+            row = TableRow.query.get_or_404((csv_id, index))
+            if label == TABLE_ROW_TYPES.INDEX:
+                csv_file.header_row_index = index
+            setattr(row, 'row_type', label)
+            db.session.add(row)
+
+        elif context == AXIS_NAME_TYPES.COLUMN:
+            column = TableColumn.query.get_or_404((csv_id, index))
+            if label == TABLE_COLUMN_TYPES.INDEX:
+                csv_file.key_column_index = index
+            elif label == TABLE_COLUMN_TYPES.GROUP:
+                csv_file.group_column_index = index
+            setattr(column, 'column_type', label)
+            db.session.add(column)
+
     db.session.add(csv_file)
     db.session.commit()
-    return jsonify(table_column_schema.dump(column))
+    return jsonify(csv_file_schema.dump(csv_file))
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/row', methods=['GET'])
@@ -174,22 +185,6 @@ def get_row(csv_id, row_index):
     return jsonify(table_row_schema.dump(
         TableRow.query.get_or_404((csv_id, row_index))
     ))
-
-
-@csv_bp.route('/csv/<uuid:csv_id>/row/<int:row_index>', methods=['PUT'])
-def modify_row(csv_id, row_index):
-    row = TableRow.query.get_or_404((csv_id, row_index))
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    args = modify_row_schema.load(request.json or {})
-    for key, value in args.items():
-        if key == 'row_type' and value == TABLE_ROW_TYPES.INDEX:
-            csv_file.header_row_index = row_index
-        else:
-            setattr(row, key, value)
-    db.session.add(row)
-    db.session.add(csv_file)
-    db.session.commit()
-    return jsonify(table_row_schema.dump(row))
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/plot/pca', methods=['GET'])
