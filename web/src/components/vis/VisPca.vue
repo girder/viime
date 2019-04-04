@@ -71,17 +71,28 @@ export default {
       type: Number,
       default: 300,
     },
+    /* {{
+     *   x: Array<Array<Number>>,
+     *   labels: Object<string, Array<string>>
+     * }}
+     */
     rawPoints: {
-      type: Object,
       required: true,
+      validator: prop => !prop
+          || (typeof prop === 'object' && ['x', 'labels'].every(key => key in prop)),
     },
   },
   watch: {
-    rawPoints(newVal) {
-      if (newVal) {
+    rawPoints(newval) {
+      if (newval) {
         this.update();
       }
     },
+  },
+  mounted() {
+    if (this.rawPoints) {
+      this.update();
+    }
   },
   methods: {
     update() {
@@ -158,6 +169,7 @@ export default {
           .duration(duration)
           .call(yAxis);
       }
+
 
       // Draw the data.
       //
