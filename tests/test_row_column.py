@@ -1,7 +1,7 @@
 from flask import url_for
 import pytest
 
-from metabulo.models import CSVFile, CSVFileSchema, db
+from metabulo.models import CSVFileSchema, db
 
 csv_file_schema = CSVFileSchema()
 
@@ -125,29 +125,44 @@ def test_modify_column(client, table):
         json={'changes': [{'context': 'column', 'index': 1, 'label': 'metadata'}]}
     )
     assert resp.status_code == 200
-    assert resp.json == {
-        'column_header': 'group',
-        'column_index': 1,
-        'column_type': 'metadata',
-        'data_column_index': None,
-        'data_variance': None,
-        'missing_percent': None
-    }
+    # Right now columns[1] is column_index=1, but it would be nice
+    # to know if that breaks.
+    assert resp.json['columns'][1]['column_type'] == 'metadata'
 
 
-# def test_modify_row(client, table):
-#     resp = client.put(
-#         url_for('csv.batch_modify_label', csv_id=table.id),
-#         json={'changes': [{'context': 'row', 'index': 1, 'label': 'masked'}]}
-#     )
-#     assert resp.status_code == 200
-#     assert resp.json == {
-#         'row_name': 'row1',
-#         'row_index': 1,
-#         'row_type': 'masked',
-#         'data_row_index': None
-#     }
+def test_modify_row(client, table):
+    resp = client.put(
+        url_for('csv.batch_modify_label', csv_id=table.id),
+        json={'changes': [{'context': 'row', 'index': 1, 'label': 'masked'}]}
+    )
+    assert resp.status_code == 200
+    assert resp.json['rows'][1]['row_type'] == 'masked'
 
+
+def test_batch_modify_in_order(client, table):
+    resp = client.put(
+        url_for('csv.batch_modify_label', csv_id=table.id),
+        json={
+            'changes': [
+                {'context': 'row', 'index': 1, 'label': 'masked'},
+                {'context': 'row', 'index': 1, 'label': 'sample'},
+            ]
+        }
+    )
+    assert resp.status_code == 200
+    assert resp.json['rows'][1]['row_type'] == 'sample'
+
+def test_batch_modify_invalid_state(client, table):
+    resp = client.put(
+        url_for('csv.batch_modify_label', csv_id=table.id),
+        json={
+            'changes': [
+                {'context': 'row', 'index': 1, 'label': 'header'},
+                {'context': 'row', 'index': 1, 'label': 'sample'},
+            ]
+        }
+    )
+    assert resp.status_code == 200
 
 # def test_delete_key_column(client, table):
 #     resp = client.put(
