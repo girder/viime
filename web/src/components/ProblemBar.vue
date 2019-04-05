@@ -34,7 +34,7 @@ v-navigation-drawer.primary.darken-3(v-if="dataset",
       v-toolbar-title
         .headline {{ problemData.title }}
 
-    v-card.mx-2.my-1(flat, v-for="item in problemData.data")
+    v-card.mx-2.my-1(flat, v-for="item in problemData.data", :key="base26Converter(item.index)")
       v-card-title.pa-2
         div
           .title(
