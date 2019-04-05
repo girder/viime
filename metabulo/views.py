@@ -11,8 +11,9 @@ from metabulo.models import CSVFile, CSVFileSchema, db, \
     TableColumn, TableColumnSchema, TableRow, \
     TableRowSchema
 from metabulo.normalization import NORMALIZATION_METHODS
+from metabulo.opencpu import OpenCPUException
 from metabulo.plot import pca
-from metabulo.table_validation import ValidationSchema
+from metabulo.table_validation import get_fatal_index_errors, ValidationSchema
 
 csv_file_schema = CSVFileSchema()
 modify_column_schema = ModifyColumnSchema()
@@ -195,7 +196,29 @@ def modify_row(csv_id, row_index):
 def get_pca_plot(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
     max_components = int(request.args.get('max_components', 5))
-    data = pca(csv_file.measurement_table, max_components)
+    fatal_errors = get_fatal_index_errors(csv_file)
+    if fatal_errors:
+        return jsonify({
+            'error': 'Fatal error in table validation',
+            'validation': validation_schema.dump(fatal_errors, many=True)
+        }), 400
+    try:
+        table = csv_file.apply_transforms()
+    except OpenCPUException as e:
+        if e.response is None:
+            return jsonify({
+                'error': 'OpenCPU call failed',
+                'method': e.method,
+                'response': 'Connection failed'
+            }), 504
+        else:
+            return jsonify({
+                'error': 'OpenCPU call failed',
+                'method': e.method,
+                'response': e.response.content
+            }), 502
+
+    data = pca(table, max_components)
 
     # insert per row label metadata information
     labels = csv_file.sample_metadata

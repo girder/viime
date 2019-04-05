@@ -6,8 +6,9 @@ import requests
 
 
 class OpenCPUException(Exception):
-    def __init__(self, msg, response):
+    def __init__(self, msg, method, response):
         super().__init__(self, msg)
+        self.method = method
         self.response = response
 
     @property
@@ -27,9 +28,13 @@ def opencpu_request(method, files=None, params=None, return_type='csv'):
     else:
         raise Exception('Unknown return type')
 
-    resp = requests.post(url, files=files, data=params)
+    try:
+        resp = requests.post(url, files=files, data=params)
+    except requests.exceptions.RequestException as e:
+        raise OpenCPUException(f'Error connecting to OpenCPU server', method, e.response)
+
     if not resp.ok:
-        raise OpenCPUException(f'OpenCPU error calling {method}', resp)
+        raise OpenCPUException(f'OpenCPU error calling {method}', method, resp)
 
     result = resp.content
     if return_type == 'csv':
