@@ -3,6 +3,10 @@ div
   svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
     g.master
       g.axes
+      g.label.x(style="opacity: 0")
+        text PC1 (0%)
+      g.label.y(style="opacity: 0")
+        text PC2 (0%)
       g.plot
       g.ellipses
   .tooltip(ref="tooltip")
@@ -61,6 +65,15 @@ function unit(matrix) {
   });
 }
 
+function axisLabel(which, pct, label, x, y, rot) {
+  const pctStr = format('.2%')(pct);
+  const text = label.select('text')
+    .html(`PC${which}&nbsp;(${pctStr})`);
+  const bbox = text.node().getBBox();
+  label.attr('transform', `translate(${x(bbox)},${y(bbox)}) rotate(${rot})`)
+    .style('opacity', 1.0);
+}
+
 export default {
   props: {
     width: {
@@ -115,7 +128,7 @@ export default {
       const margin = {
         top: 20,
         right: 0,
-        bottom: 20,
+        bottom: 50,
         left: 50,
       };
 
@@ -150,7 +163,7 @@ export default {
       if (axes.select('.x-axis').size() === 0) {
         axes.append('g')
           .classed('x-axis', true)
-          .attr('transform', `translate(0,${dheight})`)
+          .attr('transform', `translate(${margin.left},${dheight})`)
           .call(xAxis);
       } else {
         axes.select('.x-axis')
@@ -162,6 +175,7 @@ export default {
       if (axes.select('.y-axis').size() === 0) {
         axes.append('g')
           .classed('y-axis', true)
+          .attr('transform', `translate(${margin.left},0)`)
           .call(yAxis);
       } else {
         axes.select('.y-axis')
@@ -170,6 +184,24 @@ export default {
           .call(yAxis);
       }
 
+      // Place the axis labels.
+      //
+      // Compute the total variance in all the PCs.
+      const totVariance = rawPoints.sdev.reduce((acc, x) => acc + x, 0);
+
+      axisLabel(1,
+        rawPoints.sdev[0] / totVariance,
+        select(this.$refs.svg).select('.label.x'),
+        bbox => dwidth / 2 - bbox.width / 2,
+        bbox => dheight + margin.bottom / 2 + bbox.height / 2,
+        0);
+
+      axisLabel(2,
+        rawPoints.sdev[1] / totVariance,
+        select(this.$refs.svg).select('.label.y'),
+        bbox => margin.left / 2 - bbox.height / 2,
+        bbox => dheight / 2 + bbox.width / 2,
+        -90);
 
       // Draw the data.
       //
