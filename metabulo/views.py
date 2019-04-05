@@ -214,7 +214,7 @@ def get_pca_plot(csv_id):
             return jsonify({
                 'error': 'OpenCPU call failed',
                 'method': e.method,
-                'response': e.response.content
+                'response': e.response.content.decode()
             }), 502
 
     data = pca(table, max_components)
