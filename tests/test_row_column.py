@@ -152,125 +152,53 @@ def test_batch_modify_in_order(client, table):
     assert resp.status_code == 200
     assert resp.json['rows'][1]['row_type'] == 'sample'
 
+
 def test_batch_modify_invalid_state(client, table):
     resp = client.put(
         url_for('csv.batch_modify_label', csv_id=table.id),
         json={
             'changes': [
+                {'context': 'row', 'index': 0, 'label': 'masked'},
                 {'context': 'row', 'index': 1, 'label': 'header'},
                 {'context': 'row', 'index': 1, 'label': 'sample'},
             ]
         }
     )
     assert resp.status_code == 200
-
-# def test_delete_key_column(client, table):
-#     resp = client.put(
-#         url_for('csv.batch_modify_label', csv_id=table.id),
-#         json={'changes': [{'context': 'column', 'index': 0, 'label': 'metadata'}]}
-#     )
-#     assert resp.status_code == 200
-#     assert resp.json['column_type'] == 'metadata'
+    assert len(resp.json['table_validation']) > 0
 
 
-# def test_delete_header_row(client, table):
-#     resp = client.put(
-#         url_for('csv.batch_modify_label', csv_id=table.id),
-#         json={'changes': [{'context': 'row', 'index': 0, 'label': 'metadata'}]}
-#     )
-#     assert resp.status_code == 200
-#     assert resp.json['row_type'] == 'metadata'
+def test_batch_modify_row_and_column(client, table):
+    resp = client.put(
+        url_for('csv.batch_modify_label', csv_id=table.id),
+        json={
+            'changes': [
+                {'context': 'row', 'index': 1, 'label': 'masked'},
+                {'context': 'column', 'index': 4, 'label': 'masked'},
+            ]
+        }
+    )
+    assert resp.status_code == 200
+    assert resp.json['rows'][1]['row_type'] == 'masked'
+    assert resp.json['columns'][4]['column_type'] == 'masked'
+    assert len(resp.json['table_validation']) == 0
 
 
-# def test_modify_group_column(client, table):
-#     resp = client.put(
-#         url_for('csv.batch_modify_label', csv_id=table.id),
-#         json={'changes': [{'context': 'column', 'index': 2, 'label': 'group'}]}
-#     )
-#     assert resp.status_code == 200
-#     assert resp.json == {
-#         'column_header': 'meta',
-#         'column_index': 2,
-#         'column_type': 'group',
-#         'data_column_index': None,
-#         'data_variance': None,
-#         'missing_percent': None
-#     }
+def test_batch_modify_bogus_labels(client, table):
+    resp = client.put(
+        url_for('csv.batch_modify_label', csv_id=table.id),
+        json={
+            'changes': [
+                {'context': 'row', 'index': 1, 'label': 'bogus'},
+                {'context': 'row', 'index': 2, 'label': 'masked'}
+            ]
+        }
+    )
+    assert resp.status_code == 400
+    assert 'rows' not in resp.json
 
-#     resp = client.get(
-#         url_for('csv.get_column', csv_id=table.id, column_index=1)
-#     )
-#     assert resp.status_code == 200
-#     assert resp.json == {
-#         'column_header': 'group',
-#         'column_index': 1,
-#         'column_type': 'metadata',
-#         'data_column_index': None,
-#         'data_variance': None,
-#         'missing_percent': None
-#     }
-
-
-# def test_modify_csv_file_header_index(client):
-#     table = """
-# ,,,
-# row1,g,0.5,2.0
-# row2,g,1.5,0
-# id,g,header1,header2
-# """
-#     csv_file = csv_file_schema.load({
-#         'table': table,
-#         'name': 'test_csv_file.csv'
-#     })
-#     db.session.add(csv_file)
-#     db.session.commit()
-
-#     csv_id = csv_file.id
-#     resp = client.put(
-#         url_for('csv.batch_modify_label', csv_id=csv_id),
-#         json={'changes': [{'context': 'row', 'index': 0, 'label': 'masked'}]}
-#     )
-#     assert resp.status_code == 200
-
-#     resp = client.put(
-#         url_for('csv.batch_modify_label', csv_id=csv_id),
-#         json={'changes': [{'context': 'row', 'index': 3, 'label': 'header'}]}
-#     )
-#     assert resp.status_code == 200
-#     assert (CSVFile.query.get(csv_id).measurement_table.columns == ['header1', 'header2']).all()
-
-
-# def test_modify_csv_file_key_index(client):
-#     table = """
-# header1,group,id,header2,header3,extra
-# 0,a,row1,0.5,2.0,
-# 0,b,row2,1.5,0,
-# """
-#     csv_file = csv_file_schema.load({
-#         'table': table,
-#         'name': 'test_csv_file.csv'
-#     })
-#     db.session.add(csv_file)
-#     db.session.commit()
-
-#     csv_id = csv_file.id
-#     resp = client.put(
-#         url_for('csv.batch_modify_label', csv_id=csv_id),
-#         json={'changes': [{'context': 'column', 'index': 2, 'label': 'key'}]}
-#     )
-#     assert resp.status_code == 200
-
-#     resp = client.put(
-#         url_for('csv.batch_modify_label', csv_id=csv_id),
-#         json={'changes': [{'context': 'column', 'index': 5, 'label': 'masked'}]}
-#     )
-#     assert resp.status_code == 200
-#     assert (CSVFile.query.get(csv_id).measurement_table.columns == ['header2', 'header3']).all()
-
-#     resp = client.put(
-#         url_for('csv.batch_modify_label', csv_id=csv_id),
-#         json={'changes': [{'context': 'column', 'index': 0, 'label': 'measurement'}]}
-#     )
-#     assert resp.status_code == 200
-#     assert (CSVFile.query.get(csv_id).measurement_table.columns ==
-#             ['header1', 'header2', 'header3']).all()
+    # Verify that the second, well-formed change did not take effect
+    resp = client.get(
+        url_for('csv.get_row', csv_id=table.id, row_index=2))
+    assert resp.status_code == 200
+    assert resp.json['row_type'] != 'masked'

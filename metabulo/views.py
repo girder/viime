@@ -167,7 +167,6 @@ def batch_modify_label(csv_id):
             setattr(column, 'column_type', label)
             db.session.add(column)
     db.session.add(csv_file)
-
     try:
         db.session.commit()
         return jsonify(csv_file_schema.dump(csv_file))

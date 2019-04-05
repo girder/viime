@@ -417,7 +417,16 @@ class ModifyLabelChangesSchema(Schema):
 
     @validates_schema
     def validate_label(self, data):
-        pass  # TODO: add validation here
+        context = data['context']
+        label = data['label']
+        if context == AXIS_NAME_TYPES.COLUMN:
+            if label not in TABLE_COLUMN_TYPES:
+                raise ValidationError('label {} unrecognized'.format(label))
+        elif context == AXIS_NAME_TYPES.ROW:
+            if label not in TABLE_ROW_TYPES:
+                raise ValidationError('label {} unrecognized'.format(label))
+        else:
+            raise ValidationError('context {} unrecognized'.format(context))
 
 
 class ModifyLabelListSchema(Schema):
