@@ -1,19 +1,16 @@
 <script>
-import { CSVService } from '@/common/api.service';
-import { MUTEX_TRANSFORM_TABLE } from '@/store/actions.type';
+import { MUTEX_TRANSFORM_TABLE, LOAD_PLOT } from '@/store/actions.type';
 import {
   normalize_methods,
   scaling_methods,
   transform_methods,
 } from '@/utils/constants';
-import { loadDataset } from '@/utils/mixins';
 import VisPca from '@/components/vis/VisPca.vue';
 
 export default {
   components: {
     VisPca,
   },
-  mixins: [loadDataset],
   props: {
     id: {
       type: String,
@@ -25,9 +22,6 @@ export default {
       normalize_methods,
       transform_methods,
       scaling_methods,
-      pcaPoints: {
-        x: [],
-      },
     };
   },
   computed: {
@@ -37,14 +31,18 @@ export default {
     trans() { return this.$store.getters.txType(this.id, 'transformation'); },
     scaling() { return this.$store.getters.txType(this.id, 'scaling'); },
     transformed() { return this.dataset && this.dataset.transformed; },
+    pcaData() { return this.$store.getters.plotData(this.id, 'pca'); },
+    pcaValid() { return this.$store.getters.plotValid(this.id, 'pca'); },
   },
   watch: {
-    transformed() {
-      this.loadPCAData(this.id);
+    pcaValid: {
+      immediate: true,
+      handler(valid) {
+        if (valid === false) {
+          this.$store.dispatch(LOAD_PLOT, { dataset_id: this.id, name: 'pca' });
+        }
+      },
     },
-  },
-  mounted() {
-    this.loadPCAData(this.id);
   },
   methods: {
     async transformTable(value, category) {
@@ -68,10 +66,6 @@ export default {
         transform_type: txtype,
         category,
       });
-    },
-    async loadPCAData(csv) {
-      const pcaData = await CSVService.getPlot(csv, 'pca');
-      this.pcaPoints = pcaData.data;
     },
   },
 };
@@ -116,8 +110,11 @@ v-layout.transform-view(row, fill-height)
               @change="transformTable($event, 'scaling')")
             v-radio(v-for="m in scaling_methods", :label="m.label",
                 v-if="m.value", :value="m.value", :key="`scale${m.value}`")
-  v-layout(row, fill-height, ref="contentarea")
+  v-layout(v-if="!dataset", justify-center, align-center)
+    v-progress-circular(indeterminate, size="100", width="5")
+    h4.display-1.pa-3 Loading Data Set
+  v-layout(v-else, row, fill-height, ref="contentarea")
     .pa-4
       h3.headline.ml-5 Principal Component Analysis
-      vis-pca(:width="800", :height="600", :raw-points="pcaPoints")
+      vis-pca(:width="800", :height="600", :raw-points="pcaData")
 </template>
