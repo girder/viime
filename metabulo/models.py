@@ -17,7 +17,7 @@ from sqlalchemy_utils.types.json import JSONType
 from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
 
-from metabulo.cache import clear_cache, region
+from metabulo.cache import clear_cache, csv_file_cache, region
 from metabulo.imputation import impute_missing
 from metabulo.normalization import NORMALIZATION_METHODS, normalize
 from metabulo.table_validation import get_validation_list
@@ -86,34 +86,27 @@ class CSVFile(db.Model):
     @property
     def measurement_table(self):
         """Return the processed metabolite date table."""
-        if not self.table_validation:
-            try:
-                return self.apply_transforms()
-            except Exception as e:
-                # TODO: We should handle this better
-                current_app.logger.exception(e)
+        return _get_measurement_table(self)
 
     @property
     def measurement_metadata(self):
         """Return metadata rows."""
-        return self.filter_table_by_types(TABLE_ROW_TYPES.METADATA, TABLE_COLUMN_TYPES.DATA)
+        return _get_measurement_metadata(self)
 
     @property
     def sample_metadata(self):
         """Return metadata columns."""
-        return self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.METADATA)
+        return _get_sample_metadata(self)
 
     @property
     def raw_measurement_table(self):
         """Return the metabolite data table before transformation."""
-        return self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.DATA)
+        return _get_raw_measurement_table(self)
 
     @property
     def groups(self):
         """Return a table containing the primary grouping column."""
-        if self.group_column_index is None:
-            return None
-        return self.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.GROUP)
+        return _get_groups(self)
 
     @property
     def uri(self):
@@ -221,8 +214,7 @@ class CSVFile(db.Model):
 
     @property
     def _stats(self):
-        if self.raw_measurement_table is not None:
-            return _get_table_stats(self.raw_measurement_table)
+        return _get_csv_file_stats(self)
 
     @classmethod
     def create_csv_file(cls, id, name, table, **kwargs):
@@ -433,9 +425,11 @@ class ModifyLabelListSchema(Schema):
     changes = fields.List(fields.Nested(ModifyLabelChangesSchema), required=True)
 
 
-listen(CSVFile, 'after_update', lambda mapper, connection, target: clear_cache())
-listen(TableRow, 'after_update', lambda mapper, connection, target: clear_cache())
-listen(TableColumn, 'after_update', lambda mapper, connection, target: clear_cache())
+listen(CSVFile, 'after_update', lambda mapper, connection, target: clear_cache(csv_file=target))
+listen(TableRow, 'after_update',
+       lambda mapper, connection, target: clear_cache(csv_file=target.csv_file))
+listen(TableColumn, 'after_update',
+       lambda mapper, connection, target: clear_cache(csv_file=target.csv_file))
 
 
 # Cached class method implementations:
@@ -590,3 +584,44 @@ def _data_column_index(column):
     query = column.query.filter_by(
         csv_file_id=column.csv_file_id, column_type=TABLE_COLUMN_TYPES.DATA)
     return query.filter(TableColumn.column_index < column.column_index).count()
+
+
+# The following methods are stored in a persistent cache (memcached) if configured.
+# They are for more complicated functions that could take significant time to execute
+# and are commonly called between multiple rest endpoints with the same value.
+@csv_file_cache
+def _get_raw_measurement_table(csv_file):
+    return csv_file.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.DATA)
+
+
+@csv_file_cache
+def _get_measurement_table(csv_file):
+    if not csv_file.table_validation:
+        try:
+            return csv_file.apply_transforms()
+        except Exception as e:
+            # TODO: We should handle this better
+            current_app.logger.exception(e)
+
+
+@csv_file_cache
+def _get_measurement_metadata(csv_file):
+    return csv_file.filter_table_by_types(TABLE_ROW_TYPES.METADATA, TABLE_COLUMN_TYPES.DATA)
+
+
+@csv_file_cache
+def _get_sample_metadata(csv_file):
+    return csv_file.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.METADATA)
+
+
+@csv_file_cache
+def _get_groups(csv_file):
+    if csv_file.group_column_index is None:
+        return None
+    return csv_file.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.GROUP)
+
+
+@csv_file_cache
+def _get_csv_file_stats(csv_file):
+    if csv_file.raw_measurement_table is not None:
+        return _get_table_stats(csv_file.raw_measurement_table)

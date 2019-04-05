@@ -5,6 +5,7 @@ from marshmallow import ValidationError
 import pandas
 
 from metabulo import opencpu
+from metabulo.cache import csv_file_cache
 from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
     ModifyLabelListSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
@@ -22,6 +23,12 @@ table_row_schema = TableRowSchema(exclude=['csv_file'])
 validation_schema = ValidationSchema()
 
 csv_bp = Blueprint('csv', __name__)
+
+
+@csv_file_cache
+def _serialize_csv_file(csv_file):
+    csv_file_schema = CSVFileSchema()
+    return csv_file_schema.dump(csv_file)
 
 
 @csv_bp.route('/csv/upload', methods=['POST'])
@@ -43,7 +50,7 @@ def upload_csv_file():
         db.session.add(csv_file)
         db.session.commit()
 
-        return jsonify(csv_file_schema.dump(csv_file)), 201
+        return jsonify(_serialize_csv_file(csv_file)), 201
     except Exception:
         if csv_file and csv_file.uri.is_file():
             csv_file.uri.unlink()
@@ -59,7 +66,7 @@ def create_csv_file():
         db.session.add(csv_file)
         db.session.commit()
 
-        return jsonify(csv_file_schema.dump(csv_file)), 201
+        return jsonify(_serialize_csv_file(csv_file)), 201
     except Exception:
         if csv_file and csv_file.uri.is_file():
             csv_file.uri.unlink()
@@ -70,7 +77,7 @@ def create_csv_file():
 @csv_bp.route('/csv/<uuid:csv_id>', methods=['GET'])
 def get_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
-    return jsonify(csv_file_schema.dump(csv_file))
+    return jsonify(_serialize_csv_file(csv_file))
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/validation', methods=['GET'])
@@ -118,7 +125,7 @@ def set_normalization_method(csv_id):
         csv_file.normalization = method
         db.session.add(csv_file)
         db.session.commit()
-        return jsonify(csv_file_schema.dump(csv_file))
+        return jsonify(method)
     except Exception:
         db.session.rollback()
         raise

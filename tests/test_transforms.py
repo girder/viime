@@ -36,12 +36,10 @@ def test_normalize_api(client, csv_file):
         url_for('csv.set_normalization_method', csv_id=csv_file.id), json={'method': 'minmax'}
     )
     assert resp.status_code == 200
-    assert resp.json['normalization'] == 'minmax'
-    assert resp.json['measurement_table'] == 'id,col1,col2\nrow1,0.0,1.0\nrow2,1.0,0.0\n'
+    assert resp.json == 'minmax'
 
     resp = client.put(
         url_for('csv.set_normalization_method', csv_id=csv_file.id), json={'method': None}
     )
     assert resp.status_code == 200
-    assert resp.json['normalization'] is None
-    assert resp.json['measurement_table'] == 'id,col1,col2\nrow1,0.5,2.0\nrow2,1.5,0.0\n'
+    assert resp.json is None
