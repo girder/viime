@@ -10,7 +10,7 @@ const rowMenuOptions = [
     value: 'metadata',
     icon: 'metadata',
     title: 'Metadata',
-    color: 'accent3',
+    color: 'accent2',
     mutex: false,
   },
   {
@@ -72,6 +72,7 @@ const colMenuOptions = [
 const defaultColOption = 'measurement';
 const colFallbackType = 'metadata';
 const colPrimaryKey = 'key';
+const colGroupKey = 'group';
 
 const normalize_methods = [
   { label: 'Min Max', value: 'minmax', priority: 10 },
@@ -102,6 +103,7 @@ export {
   colMenuOptions,
   defaultColOption,
   colPrimaryKey,
+  colGroupKey,
   colFallbackType,
 
   normalize_methods,

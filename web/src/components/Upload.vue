@@ -72,12 +72,11 @@ export default {
 <template lang="pug">
 v-layout(column, fill-height)
   v-layout.overflow-auto(column, fill-height)
-    v-card-title.pa-4(primary-title)
-      div
-        h3.headline.font-weight-bold.primary--text.text--darken-3 Upload your data (csv or txt)
-        p.secondary--text.text--lighten-1 Choose a file from your computer
+    .ma-4
+      h3.headline.font-weight-bold.primary--text.text--darken-3 Upload your data (csv or txt)
+      p.secondary--text.text--lighten-1 Choose a file from your computer
 
-    .mb-0.mx-4(v-if="files.length")
+    .mx-4.mb-4(v-if="files.length")
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title Pending files
         v-spacer
@@ -102,7 +101,7 @@ v-layout(column, fill-height)
                   :items="dataTypes", label="Type of data",
                   item-text="name", item-value="value")
           v-divider(v-if="idx + 1 < files.length", :key="idx")
-    dropzone.filezone.mx-4.my-2(:multiple="true", :message="message", @change="onFileChange")
+    dropzone.filezone.mx-4.mb-4(:multiple="true", :message="message", @change="onFileChange")
 
   v-toolbar(flat, dense)
     v-spacer

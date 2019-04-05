@@ -6,7 +6,8 @@ from uuid import uuid4
 
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
-from marshmallow import fields, post_dump, post_load, pre_load, Schema, validate
+from marshmallow import fields, post_dump, post_load, \
+    Schema, validate, validates_schema
 from marshmallow.exceptions import ValidationError
 import pandas
 from sqlalchemy import MetaData
@@ -33,10 +34,12 @@ metadata = MetaData(naming_convention={
 })
 db = SQLAlchemy(metadata=metadata)
 
+AxisNameTypes = namedtuple('AxisNameTypes', ['ROW', 'COLUMN'])
 TableColumnTypes = namedtuple('TableTypes', ['INDEX', 'METADATA', 'DATA', 'MASK', 'GROUP'])
 TableRowTypes = namedtuple('TableTypes', ['INDEX', 'METADATA', 'DATA', 'MASK'])
 TABLE_COLUMN_TYPES = TableColumnTypes('key', 'metadata', 'measurement', 'masked', 'group')
 TABLE_ROW_TYPES = TableRowTypes('header', 'metadata', 'sample', 'masked')
+AXIS_NAME_TYPES = AxisNameTypes('row', 'column')
 
 
 def _guess_table_structure(table):
@@ -366,16 +369,6 @@ class TableColumnSchema(BaseSchema):
         return data
 
 
-class ModifyColumnSchema(Schema):
-    column_type = fields.Str(required=False, validate=validate.OneOf(TABLE_COLUMN_TYPES))
-
-    @pre_load
-    def validate_not_empty(self, data):
-        if data is None or data == {}:
-            raise ValidationError('JSON params required', data=data)
-        return data
-
-
 class TableRow(db.Model):
     csv_file_id = db.Column(
         UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
@@ -417,14 +410,27 @@ class TableRowSchema(BaseSchema):
         CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
 
 
-class ModifyRowSchema(Schema):
-    row_type = fields.Str(required=False, validate=validate.OneOf(TABLE_ROW_TYPES))
+class ModifyLabelChangesSchema(Schema):
+    context = fields.Str(required=True, validate=validate.OneOf(AXIS_NAME_TYPES))
+    index = fields.Int(required=True, validate=validate.Range(min=0))
+    label = fields.Str(required=True)
 
-    @pre_load
-    def validate_not_empty(self, data):
-        if data is None or data == {}:
-            raise ValidationError('JSON params required', data=data)
-        return data
+    @validates_schema
+    def validate_label(self, data):
+        context = data['context']
+        label = data['label']
+        if context == AXIS_NAME_TYPES.COLUMN:
+            if label not in TABLE_COLUMN_TYPES:
+                raise ValidationError('label {} unrecognized'.format(label))
+        elif context == AXIS_NAME_TYPES.ROW:
+            if label not in TABLE_ROW_TYPES:
+                raise ValidationError('label {} unrecognized'.format(label))
+        else:
+            raise ValidationError('context {} unrecognized'.format(context))
+
+
+class ModifyLabelListSchema(Schema):
+    changes = fields.List(fields.Nested(ModifyLabelChangesSchema), required=True)
 
 
 listen(CSVFile, 'after_update', lambda mapper, connection, target: clear_cache())

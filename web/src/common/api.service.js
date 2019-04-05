@@ -67,7 +67,7 @@ export const CSVService = {
     return ApiService.put(`csv/${slug}/${category}`, { method: transform_type });
   },
 
-  updateAxis(csvSlug, axis, index, args) {
-    return ApiService.put(`csv/${csvSlug}/${axis}/${index}`, args);
+  updateLabel(csvSlug, changes) {
+    return ApiService.put(`csv/${csvSlug}/batch/label`, { changes });
   },
 };

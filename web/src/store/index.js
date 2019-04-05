@@ -5,13 +5,6 @@ import { convertCsvToRows } from '../utils';
 import { CSVService } from '../common/api.service';
 
 import {
-  rowPrimaryKey,
-  colPrimaryKey,
-  rowFallbackType,
-  colFallbackType,
-} from '../utils/constants';
-
-import {
   CHANGE_AXIS_LABEL,
   MUTEX_TRANSFORM_TABLE,
   LOAD_DATASET,
@@ -22,7 +15,6 @@ import {
 import {
   ADD_SOURCE_DATA,
   REFRESH_PLOT,
-  SET_AXIS_LABEL,
   SET_TRANSFORMATION,
   SET_LAST_ERROR,
   SET_LOADING,
@@ -58,13 +50,9 @@ const mutations = {
 
   [ADD_SOURCE_DATA](state, { data, visible }) {
     const key = data.id;
-
     // Server doesn't guarantee order of indices.
     const rows = data.rows.sort((a, b) => a.row_index - b.row_index);
-    const row_key_index = rows.find(r => r.row_type === rowPrimaryKey);
     const cols = data.columns.sort((a, b) => a.column_index - b.column_index);
-    const col_key_index = cols.find(c => c.column_type === colPrimaryKey);
-
     // serialize CSV string as JSON
     const { data: sourcerows } = convertCsvToRows(data.table);
 
@@ -77,11 +65,9 @@ const mutations = {
       // user- and server-generated lables for rows and columns
       row: {
         labels: rows.map(r => r.row_type),
-        primary_key: row_key_index ? row_key_index.row_index : null,
       },
       column: {
         labels: cols.map(c => c.column_type),
-        primary_key: col_key_index ? col_key_index.column_index : null,
       },
       validation: [
         {
@@ -142,29 +128,6 @@ const mutations = {
     });
   },
 
-  [SET_AXIS_LABEL](state, {
-    key, axis_name, index, value, isPrimary,
-  }) {
-    _invalidatePlots(state, { key, plotList: ['pca'] });
-    Vue.set(state.datasets[key][axis_name].labels, index, value);
-    const oldprimary = state.datasets[key][axis_name].primary_key;
-
-    let default_axis_label = null;
-    if (axis_name === 'row') {
-      default_axis_label = rowFallbackType;
-    } else if (axis_name === 'column') {
-      default_axis_label = colFallbackType;
-    }
-
-    if (isPrimary) {
-      if (oldprimary !== null) {
-        Vue.set(state.datasets[key][axis_name].labels, oldprimary, default_axis_label);
-      }
-      Vue.set(state.datasets[key][axis_name], 'primary_key', index);
-    } else if (index === oldprimary) {
-      Vue.set(state.datasets[key][axis_name], 'primary_key', null);
-    }
-  },
 
   [REFRESH_PLOT](state, { key, name, data }) {
     Vue.set(state.datasets[key].plots[name], 'data', data);
@@ -233,29 +196,11 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [CHANGE_AXIS_LABEL]({ commit, dispatch }, {
-    dataset_id, axis_name, label, index,
-  }) {
-    const params = {};
+  async [CHANGE_AXIS_LABEL]({ commit }, { dataset_id, changes }) {
     commit(SET_LOADING, true);
-    params[`${axis_name}_type`] = label;
     try {
-      await CSVService.updateAxis(dataset_id, axis_name, index, params);
-      commit(SET_AXIS_LABEL, {
-        key: dataset_id,
-        axis_name,
-        index,
-        value: label,
-        isPrimary: [rowPrimaryKey, colPrimaryKey].indexOf(label) >= 0,
-      });
-    } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
-      throw err;
-    }
-    // TODO: get table validation again after updates.
-    try {
-      await dispatch(LOAD_DATASET, { dataset_id });
+      const { data } = await CSVService.updateLabel(dataset_id, changes);
+      commit(ADD_SOURCE_DATA, { data, visible: true });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
       commit(SET_LOADING, false);
