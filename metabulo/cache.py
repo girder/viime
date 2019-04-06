@@ -8,6 +8,23 @@ from flask import g
 from pandas.core.base import PandasObject
 from pandas.util import hash_pandas_object
 
+_cache_registry = []
+
+
+def csv_file_cache(func):
+    """Cache the results of a function acting on a csv file.
+
+    The purpose of this decorator is to wrap the dogpile decorator, `cache_on_argument`.
+    It keeps a registry of functions that have been decorated and adds the ability
+    to purge the cache for all function calls on a specific model.
+
+    ** This decorator only works with functions taking a single csv_file object as
+    ** an argument.
+    """
+    func = persistent_region.cache_on_arguments()(func)
+    _cache_registry.append(func)
+    return func
+
 
 def hash_argument(arg):
     from metabulo.models import CSVFile, TableColumn, TableRow
@@ -24,8 +41,17 @@ def hash_argument(arg):
     return str(arg)
 
 
-def clear_cache():
+def mangle_key(key):
+    if len(key) <= 256:
+        return key
+    return sha256(key.encode()).hexdigest()
+
+
+def clear_cache(csv_file=None):
     g.cache = {}
+    if csv_file:
+        for func in _cache_registry:
+            func.invalidate(csv_file)
 
 
 class FlaskRequestLocalBackend(MemoryBackend):
@@ -41,7 +67,15 @@ class FlaskRequestLocalBackend(MemoryBackend):
 
 
 region = make_region(
-    'metabulo.app',
+    'metabulo.app.local',
     function_key_generator=partial(kwarg_function_key_generator, to_str=hash_argument)
 )
 region.configure('flask_request_local')
+
+
+persistent_region = make_region(
+    'metabulo.app.persistent',
+    function_key_generator=partial(kwarg_function_key_generator, to_str=hash_argument),
+    key_mangler=mangle_key
+)
+persistent_region.configure('dogpile.cache.null')

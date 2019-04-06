@@ -5,7 +5,7 @@ from flask import current_app, Flask, jsonify
 from marshmallow import ValidationError
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from metabulo.cache import clear_cache
+from metabulo.cache import clear_cache, persistent_region
 from metabulo.models import db
 from metabulo.opencpu import OpenCPUException
 from metabulo.views import csv_bp
@@ -51,6 +51,16 @@ def create_app(config=None):
     app.register_error_handler(OpenCPUException, handle_opencpu_error)
     if app.config['ENV'] == 'production':
         app.register_error_handler(500, handle_general_error)
+
+    if 'MEMCACHED_URI' in os.environ and pylibmc:
+        persistent_region.configure(
+            'dogpile.cache.pylibmc',
+            arguments={
+                'url': os.environ['MEMCACHED_URI'],
+                'binary': True
+            },
+            replace_existing_backend=True
+        )
 
     @app.after_request
     def clear_cache_after_request(response):
