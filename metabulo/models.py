@@ -203,6 +203,7 @@ class CSVFile(db.Model):
 
     def apply_transforms(self):
         table = self.raw_measurement_table
+        table = _coerce_numeric(table)
         table = impute_missing(table, self.groups)
         return normalize(self.normalization, table)
 
@@ -584,6 +585,14 @@ def _data_column_index(column):
     query = column.query.filter_by(
         csv_file_id=column.csv_file_id, column_type=TABLE_COLUMN_TYPES.DATA)
     return query.filter(TableColumn.column_index < column.column_index).count()
+
+
+@region.cache_on_arguments()
+def _coerce_numeric(table):
+    """Coerce a table into numeric values."""
+    for i in range(table.shape[1]):
+        table.iloc[:, i] = pandas.to_numeric(table.iloc[:, i], errors='coerce')
+    return table
 
 
 # The following methods are stored in a persistent cache (memcached) if configured.

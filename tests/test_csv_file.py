@@ -120,3 +120,17 @@ m7,b,r2,17,18
 
         assert csv.keys == ['m2', '--', 'r1', 'r2']
         assert list(csv.measurement_table.index) == ['r1', 'r2']
+
+
+def test_non_numeric_table(app):
+    with app.test_request_context():
+        csv = generate_csv_file("""
+h1,h2,h3,h4
+ a,g1, 2, 3
+ b,g2, a, 6
+ c,g3, 8, 9
+""")
+        db.session.commit()
+
+        table = csv.measurement_table
+        assert table.applymap(lambda s: isinstance(s, (float, int))).all().all()
