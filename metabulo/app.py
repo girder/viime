@@ -1,6 +1,6 @@
 import os
 
-from dotenv import load_dotenv
+import dotenv
 from flask import current_app, Flask, jsonify
 from marshmallow import ValidationError
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -30,7 +30,7 @@ def handle_general_error(e):
 
 
 def create_app(config=None):
-    load_dotenv(os.getenv('DOTENV_PATH'))
+    dotenv.load_dotenv(os.getenv('DOTENV_PATH'))
 
     config = config or {}
     app = Flask(__name__)
