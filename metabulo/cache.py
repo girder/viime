@@ -42,8 +42,6 @@ def hash_argument(arg):
 
 
 def mangle_key(key):
-    if len(key) <= 256:
-        return key
     return sha256(key.encode()).hexdigest()
 
 

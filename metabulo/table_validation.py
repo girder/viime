@@ -7,7 +7,7 @@ from collections import namedtuple
 from marshmallow import fields, post_dump, Schema, validate
 from pandas import Index
 
-from metabulo.cache import csv_file_cache
+from metabulo.cache import region
 
 SEVERITY_VALUES = ['error', 'warning']
 CONTEXT_VALUES = ['table', 'column', 'row']
@@ -129,7 +129,6 @@ class ValidationSchema(Schema):
         return {k: v for k, v in data.items() if v is not None}
 
 
-@csv_file_cache
 def get_validation_list(csv_file):
     errors = get_fatal_index_errors(csv_file)
 
@@ -139,7 +138,6 @@ def get_validation_list(csv_file):
     return errors
 
 
-@csv_file_cache
 def get_missing_index_errors(csv_file):
     errors = []
     if csv_file.key_column_index is None:
@@ -151,7 +149,7 @@ def get_missing_index_errors(csv_file):
     return errors
 
 
-@csv_file_cache
+@region.cache_on_arguments()
 def get_fatal_index_errors(csv_file):
     errors = get_missing_index_errors(csv_file)
     if not errors:
@@ -190,5 +188,6 @@ def get_invalid_index_errors(csv_file):
     return errors
 
 
+@region.cache_on_arguments()
 def get_warnings(csv_file):
     return []
