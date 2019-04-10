@@ -2,6 +2,8 @@
 [Unit]
 Description=gunicorn daemon
 After=network.target
+StartLimitIntervalSec=600
+StartLimitBurst=5
 
 [Service]
 Environment=DOTENV_PATH=/home/gunicorn/.env
@@ -17,6 +19,8 @@ ExecStart={{ venv }}/bin/gunicorn --name metabulo \
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID
 PrivateTmp=true
+Restart=always
+RestartSec=15
 
 [Install]
 WantedBy=multi-user.target
