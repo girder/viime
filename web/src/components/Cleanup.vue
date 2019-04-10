@@ -1,12 +1,14 @@
 <script>
+import { mapMutations } from 'vuex';
 import { CHANGE_AXIS_LABEL } from '@/store/actions.type';
+import { SET_SELECTION } from '@/store/mutations.type';
 import {
   rowMenuOptions,
   defaultRowOption,
   colMenuOptions,
   defaultColOption,
 } from '@/utils/constants';
-import { base26Converter, RangeList } from '@/utils';
+import { base26Converter } from '@/utils';
 import SaveStatus from '@/components/SaveStatus.vue';
 
 export default {
@@ -27,16 +29,12 @@ export default {
       },
       defaultColOption,
       defaultRowOption,
-      selected: {
-        type: 'column',
-        last: 1,
-        ranges: new RangeList([1]),
-      },
       settingsDialog: false,
     };
   },
   computed: {
     dataset() { return this.$store.getters.dataset(this.id); },
+    selected() { return this.dataset.selected; },
     radioValue() {
       const { type, ranges } = this.selected;
       const { members } = ranges;
@@ -61,6 +59,7 @@ export default {
     },
   },
   methods: {
+    ...mapMutations({ setSelection: SET_SELECTION }),
     base26Converter,
     async selectOption(label) {
       const { ranges, type: context } = this.selected;
@@ -77,18 +76,6 @@ export default {
         };
       }
       return {};
-    },
-    setSelection(event, axis, idx) {
-      const { last, ranges, type } = this.selected;
-      this.selected.last = idx;
-      if (event.shiftKey && axis === type) {
-        ranges.add(last, idx);
-      } else if (event.ctrlKey && axis === type) {
-        ranges.add(idx);
-      } else if (!event.ctrlKey && !event.shiftKey) {
-        this.selected.ranges = new RangeList([idx]);
-        this.selected.type = axis;
-      }
     },
   },
 };
@@ -147,7 +134,7 @@ v-layout.cleanup-wrapper(row)
             th.control.px-2(
                 v-for="(col, index) in dataset.column.labels",
                 :class="activeClasses(index, 'column')",
-                @click="setSelection($event, 'column', index)")
+                @click="setSelection({ key: id, event: $event, axis: 'column', idx: index })")
               span(v-if="col === defaultColOption") {{ base26Converter(index + 1) }}
               v-icon(v-else, small) {{ $vuetify.icons[col] }}
 
@@ -155,7 +142,8 @@ v-layout.cleanup-wrapper(row)
           tr.datarow(v-for="(row, index) in dataset.sourcerows",
               :key="`${index}${row[0]}`",
               :class="{[dataset.row.labels[index]]: true, ...activeClasses(index, 'row')}")
-            td.control.px-2(@click="setSelection($event, 'row', index)")
+            td.control.px-2(
+                @click="setSelection({ key: id, event: $event, axis: 'row', idx: index })")
               span(v-if="dataset.row.labels[index] === defaultRowOption") {{ index + 1 }}
               v-icon(v-else, small) {{ $vuetify.icons[dataset.row.labels[index]] }}
             td.px-2.row(
@@ -286,11 +274,11 @@ v-layout.cleanup-wrapper(row)
 
       &.metadata {
         td:nth-child(odd) {
-          background: var(--v-accent2-lighten5)8C;
+          background: var(--v-accent2-lighten2);
         }
 
         td {
-          background-color: var(--v-accent2-lighten5);
+          background-color: var(--v-accent2-lighten3);
         }
       }
 

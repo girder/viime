@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 
-import { convertCsvToRows } from '../utils';
+import { convertCsvToRows, RangeList, mapValidationErrors } from '../utils';
 import { CSVService } from '../common/api.service';
 
 import {
@@ -18,6 +18,7 @@ import {
   SET_TRANSFORMATION,
   SET_LAST_ERROR,
   SET_LOADING,
+  SET_SELECTION,
 } from './mutations.type';
 
 Vue.use(Vuex);
@@ -69,44 +70,12 @@ const mutations = {
       column: {
         labels: cols.map(c => c.column_type),
       },
-      validation: [
-        {
-          severity: 'error', type: 'primary-key', title: 'Primary key missing', description: 'Please ensure the column has a primary key',
-        },
-        {
-          severity: 'error', type: 'group-tag', title: 'Group tag missing', description: 'Please ensure the column has a group',
-        },
-        {
-          severity: 'error',
-          type: 'missing-data',
-          title: 'Missing data',
-          data: [
-            { index: 3, info: '43% missing' },
-            { index: 6, info: '23% missing' },
-            { index: 8, info: '53% missing' },
-            { index: 11, info: '12% missing' },
-            { index: 13, info: '43% missing' },
-            { index: 18, info: '42% missing' },
-            { index: 22, info: '51% missing' },
-            { index: 25, info: '14% missing' },
-            { index: 26, info: '10% missing' },
-            { index: 27, info: '13% missing' },
-          ],
-        },
-        {
-          severity: 'warning',
-          type: 'low-variance',
-          title: 'Low variance',
-          data: [
-            { index: 30, info: 'r² .08' },
-            { index: 33, info: 'r² .15' },
-            { index: 34, info: 'r² 1.5' },
-            { index: 35, info: 'r² 1.1' },
-            { index: 36, info: 'r² .05' },
-            { index: 38, info: 'r² .06' },
-          ],
-        },
-      ],
+      validation: mapValidationErrors(data.table_validation),
+      selected: {
+        type: 'column',
+        last: 1,
+        ranges: new RangeList([1]),
+      },
       // JSON serialized copy of data.table
       sourcerows,
       // most recent copy of data with all transforms applied.
@@ -148,6 +117,22 @@ const mutations = {
 
   [SET_LOADING](state, loading) {
     Vue.set(state, 'loading', loading);
+  },
+
+  [SET_SELECTION](state, {
+    key, event, axis, idx,
+  }) {
+    const { last, ranges, type } = state.datasets[key].selected;
+    state.datasets[key].selected.last = idx;
+    // this.selected.last = idx;
+    if (event.shiftKey && axis === type) {
+      ranges.add(last, idx);
+    } else if (event.ctrlKey && axis === type) {
+      ranges.add(idx);
+    } else if (!event.ctrlKey && !event.shiftKey) {
+      state.datasets[key].selected.ranges = new RangeList([idx]);
+      state.datasets[key].selected.type = axis;
+    }
   },
 };
 

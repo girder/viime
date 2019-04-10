@@ -1,4 +1,5 @@
 <script>
+import { SET_SELECTION } from '@/store/mutations.type';
 import { loadDataset } from '@/utils/mixins';
 
 export default {
@@ -29,6 +30,13 @@ export default {
       if (problem.data) {
         this.$router.push({
           path: `/pretreatment/${this.id}/cleanup/${problem.type}`,
+        });
+      } else {
+        this.$store.commit(SET_SELECTION, {
+          key: this.id,
+          event: {},
+          axis: problem.context,
+          idx: problem[`${problem.context}_index`],
         });
       }
     },
@@ -64,7 +72,7 @@ v-layout.pretreatment(row, fill-height)
             v-list-tile.ml-4.my-1.small-tile(v-for="problemData in dataset.validation",
                 @click="problemNav(problemData)",
                 :class="{ active: problemData.type === problem }",
-                :inactive="!problemData.data",
+                :inactive="!problemData.clickable",
                 :key="problemData.title")
               v-list-tile-title.small-tile.pl-2
                 v-icon.pr-1.middle(
