@@ -20,6 +20,9 @@ TYPE_VALUES = [
 _ValidationTuple = namedtuple(
     '_ValidationTuple', 'type_ title, severity context row_index column_index data')
 
+GROUP_MISSING_THRESHOLD = 0.25
+LOW_VARIANCE_THRESHOLD = 1e-8
+
 
 class ValidationTuple(_ValidationTuple):
     def __new__(cls, **kwargs):
@@ -188,6 +191,68 @@ def get_invalid_index_errors(csv_file):
     return errors
 
 
+def _count_non_numeric(value):
+    try:
+        float(value)
+        return 0
+    except ValueError:
+        return 1
+
+
 @region.cache_on_arguments()
 def get_warnings(csv_file):
-    return []
+    warnings = []
+    non_numeric_count = int(csv_file.raw_measurement_table.applymap(_count_non_numeric).sum().sum())
+    if non_numeric_count > 0:
+        # maybe return actual indices if useful to the client
+        warnings.append(
+            NonNumericData(data=f'{non_numeric_count} elements contain non-numeric data')
+        )
+
+    warnings.extend(get_missing_percent_warnings(csv_file))
+    warnings.extend(get_low_variance_warnings(csv_file))
+    return warnings
+
+
+def get_missing_percent_warnings(csv_file):
+    table = csv_file.raw_measurement_table
+    groups = csv_file.groups
+
+    q = (table != table).join(groups).groupby(groups.columns[0])
+    total = q.count()
+    missing = q.agg('sum')
+    percent_missing = missing / total
+    over_threshold = (percent_missing > GROUP_MISSING_THRESHOLD).all()
+
+    warnings = []
+    for column_name, warn in over_threshold.items():
+        if not warn:
+            continue
+        column = csv_file.get_column_by_name(column_name)
+        warnings.append(
+            MissingData(
+                context='column',
+                column_index=column.column_index,
+                data=f'All groups exceed {int(GROUP_MISSING_THRESHOLD * 100)}% missing data'
+            )
+        )
+    return warnings
+
+
+def get_low_variance_warnings(csv_file):
+    table = csv_file.raw_measurement_table
+    warnings = []
+
+    for column_name, value in table.var().items():
+        if value > LOW_VARIANCE_THRESHOLD:
+            continue
+
+        column = csv_file.get_column_by_name(column_name)
+        warnings.append(
+            LowVariance(
+                context='column',
+                column_index=column.column_index,
+                data=f'Low column data variance ({value:.2e})'
+            )
+        )
+    return warnings
