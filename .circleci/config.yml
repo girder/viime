@@ -44,7 +44,7 @@ jobs:
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
-            - yarn-packages-{{ checksum "yarn.lock" }}
+            - yarn-packages-{{ checksum "web/yarn.lock" }}
       - run:
           working_directory: ./web
           name: Install node dependencies
