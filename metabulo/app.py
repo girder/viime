@@ -29,11 +29,21 @@ def handle_general_error(e):
     return jsonify({'error': 'Something went wrong.'}), 500
 
 
+def load_sentry(dsn):
+    import sentry_sdk
+    from sentry_sdk.integrations.flask import FlaskIntegration
+
+    sentry_sdk.init(dsn=dsn, integrations=[FlaskIntegration(transaction_style='url')])
+
+
 def create_app(config=None):
     dotenv.load_dotenv(os.getenv('DOTENV_PATH'))
+    if 'SENTRY_DSN' in os.environ:
+        load_sentry(os.environ['SENTRY_DSN'])
 
     config = config or {}
     app = Flask(__name__)
+
     app.wsgi_app = ProxyFix(app.wsgi_app)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
@@ -44,6 +54,14 @@ def create_app(config=None):
 
     app.config.update(config)
     db.init_app(app)
+
+    @app.route('/api/v1/status')
+    def status():
+        resp = jsonify('OK')
+        resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate',
+        resp.headers['Pragma'] = 'no-cache'
+        resp.headers['Expires'] = '0'
+        return resp
 
     app.register_blueprint(csv_bp, url_prefix='/api/v1')
 

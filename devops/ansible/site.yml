@@ -85,7 +85,7 @@
 
     - name: Install metabulo python package
       pip:
-        name: "/tmp/metabulo-sdist.tar.gz[memcached]"
+        name: "/tmp/metabulo-sdist.tar.gz[memcached,sentry]"
         state: "forcereinstall"
         extra_args: "--no-cache-dir"
         virtualenv: "{{ venv }}"
