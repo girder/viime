@@ -41,7 +41,8 @@ setup(
         'Werkzeug>=0.15'
     ],
     extras_require={
-        'memcached': ['pylibmc']
+        'memcached': ['pylibmc'],
+        'sentry': ['sentry-sdk[flask]']
     },
     license='Apache Software License 2.0',
     data_files=data_files,

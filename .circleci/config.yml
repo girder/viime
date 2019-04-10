@@ -130,7 +130,7 @@ jobs:
           working_directory: devops/ansible
       - run:
           name: Run ansible
-          command: ansible-playbook -e "flask_secret=$FLASK_SECRET" --inventory inventory site.yml
+          command: ansible-playbook -e "flask_secret=$FLASK_SECRET" -e "sentry_dsn=$SENTRY_DSN" --inventory inventory site.yml
           working_directory: devops/ansible
 
 workflows:
