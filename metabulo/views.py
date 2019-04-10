@@ -14,7 +14,9 @@ from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
 from metabulo.normalization import NORMALIZATION_METHODS
 from metabulo.opencpu import OpenCPUException
 from metabulo.plot import pca
+from metabulo.scaling import SCALING_METHODS
 from metabulo.table_validation import get_fatal_index_errors, ValidationSchema
+from metabulo.transformation import TRANSFORMATION_METHODS
 
 csv_file_schema = CSVFileSchema()
 modify_label_list_schema = ModifyLabelListSchema()
@@ -123,6 +125,40 @@ def set_normalization_method(csv_id):
         raise ValidationError('Invalid normalization method', data=method)
     try:
         csv_file.normalization = method
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify(method)
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/transformation', methods=['PUT'])
+def set_transformation_method(csv_id):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    args = request.json
+    method = args['method']
+    if method is not None and method not in TRANSFORMATION_METHODS:
+        raise ValidationError('Invalid transformation method', data=method)
+    try:
+        csv_file.transformation = method
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify(method)
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/scaling', methods=['PUT'])
+def set_scaling_method(csv_id):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    args = request.json
+    method = args['method']
+    if method is not None and method not in SCALING_METHODS:
+        raise ValidationError('Invalid scaling method', data=method)
+    try:
+        csv_file.scaling = method
         db.session.add(csv_file)
         db.session.commit()
         return jsonify(method)

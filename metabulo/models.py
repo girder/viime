@@ -20,7 +20,9 @@ from werkzeug.utils import secure_filename
 from metabulo.cache import clear_cache, csv_file_cache, region
 from metabulo.imputation import impute_missing
 from metabulo.normalization import NORMALIZATION_METHODS, normalize
+from metabulo.scaling import scale, SCALING_METHODS
 from metabulo.table_validation import get_validation_list
+from metabulo.transformation import transform, TRANSFORMATION_METHODS
 
 
 # This is to avoid having to manually name all constraints
@@ -68,6 +70,8 @@ class CSVFile(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     name = db.Column(db.String, nullable=False)
     normalization = db.Column(db.String, nullable=True)
+    transformation = db.Column(db.String, nullable=True)
+    scaling = db.Column(db.String, nullable=True)
     meta = db.Column(JSONType, nullable=False)
 
     @property
@@ -205,7 +209,10 @@ class CSVFile(db.Model):
         table = self.raw_measurement_table
         table = _coerce_numeric(table)
         table = impute_missing(table, self.groups)
-        return normalize(self.normalization, table)
+        table = normalize(self.normalization, table)
+        table = transform(self.transformation, table)
+        table = scale(self.scaling, table)
+        return table
 
     def save_table(self, table):
         # TODO: Delete cache entries if a file at self.uri exists already
@@ -273,6 +280,8 @@ class CSVFileSchema(BaseSchema):
     name = fields.Str(required=True, validate=_validate_name)
     table = fields.Raw(required=True, validate=_validate_table_data)
     normalization = fields.Str(missing=None, validate=validate.OneOf(NORMALIZATION_METHODS))
+    transformation = fields.Str(missing=None, validate=validate.OneOf(TRANSFORMATION_METHODS))
+    scaling = fields.Str(missing=None, validate=validate.OneOf(SCALING_METHODS))
     meta = fields.Dict(missing=dict)
 
     columns = fields.List(fields.Nested('TableColumnSchema', exclude=['csv_file']))
