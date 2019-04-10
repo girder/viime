@@ -1,5 +1,5 @@
 import papa from 'papaparse';
-
+import { validationMeta } from './constants';
 import RangeList from './rangelist';
 /**
  * Convert decimal to base26 in upper case
@@ -28,8 +28,31 @@ function convertCsvToRows(csvstring) {
   return { data: data.slice(0, data.length - 1) };
 }
 
+/**
+ * A function to clean up server validation messages into
+ * the schema this applicaiton expects.
+ * @param {Array<Object>} errors
+ */
+function mapValidationErrors(errors) {
+  return errors.map((e) => {
+    const data = typeof e.data === 'object'
+      ? e.data
+      : undefined;
+    const description = typeof e.data === 'string'
+      ? e.data
+      : validationMeta[e.type].description;
+    return {
+      ...e,
+      ...validationMeta[e.type],
+      data,
+      description,
+    };
+  });
+}
+
 export {
   base26Converter,
   convertCsvToRows,
+  mapValidationErrors,
   RangeList,
 };

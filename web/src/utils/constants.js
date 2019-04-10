@@ -94,6 +94,29 @@ const transform_methods = [
   { label: 'None', value: null },
 ];
 
+const validationMeta = {
+  'group-missing': {
+    description: 'Select a column to contain group data.',
+    clickable: false,
+  },
+  'primary-key-missing': {
+    description: 'Select a column to contain primary key data.',
+    clickable: false,
+  },
+  'header-missing': {
+    description: 'Select a row to contain header data.',
+    clickable: false,
+  },
+  'invalid-primary-key': {
+    description: 'Primary key is not valid',
+    clickable: true,
+  },
+  'invalid-group': {
+    description: 'Group is not valid',
+    clickable: true,
+  },
+};
+
 export {
   rowMenuOptions,
   defaultRowOption,
@@ -109,4 +132,6 @@ export {
   normalize_methods,
   scaling_methods,
   transform_methods,
+
+  validationMeta,
 };
