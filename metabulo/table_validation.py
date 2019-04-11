@@ -201,6 +201,13 @@ def _count_non_numeric(value):
 
 @region.cache_on_arguments()
 def get_warnings(csv_file):
+    warnings = get_non_numeric_warnings(csv_file)
+    warnings.extend(get_missing_percent_warnings(csv_file))
+    warnings.extend(get_low_variance_warnings(csv_file))
+    return warnings
+
+
+def get_non_numeric_warnings(csv_file):
     warnings = []
     non_numeric_count = int(csv_file.raw_measurement_table.applymap(_count_non_numeric).sum().sum())
     if non_numeric_count > 0:
@@ -208,9 +215,6 @@ def get_warnings(csv_file):
         warnings.append(
             NonNumericData(data=f'{non_numeric_count} elements contain non-numeric data')
         )
-
-    warnings.extend(get_missing_percent_warnings(csv_file))
-    warnings.extend(get_low_variance_warnings(csv_file))
     return warnings
 
 
