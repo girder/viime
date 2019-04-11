@@ -1,4 +1,5 @@
 from io import BytesIO
+import json
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import ValidationError
@@ -43,10 +44,18 @@ def upload_csv_file():
         return jsonify('No file selected'), 400
 
     csv_file = None
+    meta_string = request.form.get('meta', '{}')
+    try:
+        meta = json.loads(meta_string)
+    except Exception:
+        raise ValidationError(
+            'Expected a json encoded string for metadata', field_name='meta', data=meta_string)
+
     try:
         csv_file = csv_file_schema.load({
             'name': file.filename,
-            'table': file.read().decode()
+            'table': file.read().decode(),
+            'meta': meta
         })
 
         db.session.add(csv_file)
@@ -86,6 +95,19 @@ def get_csv_file(csv_id):
 def get_csv_file_validation(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
     return jsonify(validation_schema.dump(csv_file.table_validation, many=True))
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/metadata', methods=['PUT'])
+def set_csv_file_metadata(csv_id):
+    try:
+        csv_file = CSVFile.query.get_or_404(csv_id)
+        csv_file.meta = request.json
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/download', methods=['GET'])
