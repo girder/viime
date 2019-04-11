@@ -17,10 +17,14 @@ Vue.config.productionTip = false;
 
 ApiService.init();
 
-SentryInit({
-  dsn: 'https://9c7281f0dfc5402a953698256bd067e0@sentry.io/1437129',
-  integrations: [new SentryVue({ Vue })],
-});
+if (process.env.NODE_ENV === 'production') {
+  SentryInit({
+    dsn: 'https://9c7281f0dfc5402a953698256bd067e0@sentry.io/1437129',
+    release: COMMITHASH,
+    environment: process.env.NODE_ENV,
+    integrations: [new SentryVue({ Vue })],
+  });
+}
 
 new Vue({
   router,
