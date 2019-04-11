@@ -75,22 +75,22 @@ const colPrimaryKey = 'key';
 const colGroupKey = 'group';
 
 const normalize_methods = [
-  { label: 'Min Max', value: 'minmax', priority: 10 },
+  { label: 'Min Max', value: 'minmax' },
   { label: 'None', value: null },
 ];
 
 const scaling_methods = [
-  { label: 'Autoscaling', value: 'auto', priority: 200 },
-  { label: 'Pareto Scaling', value: 'pareto', priority: 201 },
-  { label: 'Range Scaling', value: 'range', priority: 202 },
-  { label: 'Vast Scaling', value: 'vast', priority: 203 },
-  { label: 'Level Scaling', value: 'level', priority: 204 },
+  { label: 'Autoscaling', value: 'auto' },
+  { label: 'Pareto Scaling', value: 'pareto' },
+  { label: 'Range Scaling', value: 'range' },
+  { label: 'Vast Scaling', value: 'vast' },
+  { label: 'Level Scaling', value: 'level' },
   { label: 'None', value: null },
 ];
 const transform_methods = [
-  { label: 'Log 10', value: 'log10', priority: 101 },
-  { label: 'Square Root', value: 'squareroot', priority: 102 },
-  { label: 'Cube Root', value: 'cuberoot', priority: 103 },
+  { label: 'Log 10', value: 'log10' },
+  { label: 'Square Root', value: 'squareroot' },
+  { label: 'Cube Root', value: 'cuberoot' },
   { label: 'None', value: null },
 ];
 
