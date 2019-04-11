@@ -154,6 +154,14 @@ def test_multiple_invalid_errors(pathological_table):
             'severity': 'error'
         },
         {
+            'context': 'row',
+            'row_index': 0,
+            'type': 'invalid-header',
+            'data': 'Contains NaN\'s',
+            'title': 'Invalid header',
+            'severity': 'error'
+        },
+        {
             'context': 'column',
             'column_index': 1,
             'type': 'invalid-group',
