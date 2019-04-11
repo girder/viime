@@ -44,7 +44,8 @@ function convertCsvToRows(csvstring) {
 /**
  * A function to clean up server validation messages into
  * the schema this applicaiton expects.
- * @param {Array<Object>} errors
+ * @param {Array<Object>} errors raw response from api
+ * @param {Array<Object} columns sorted response from api
  */
 function mapValidationErrors(errors, columns) {
   const grouped = groupBy(errors, 'type');
