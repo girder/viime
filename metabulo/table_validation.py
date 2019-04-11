@@ -103,7 +103,7 @@ class NonNumericData(ValidationTuple):
 
 class MissingData(ValidationTuple):
     defaults = {
-        'title': 'Missing data exceeds threshold',
+        'title': 'Missing data',
         'type_': 'missing-data',
         'severity': 'warning'
     }

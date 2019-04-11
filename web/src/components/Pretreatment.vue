@@ -27,11 +27,10 @@ export default {
       });
     },
     problemNav(problem) {
-      if (problem.data) {
-        this.$router.push({
-          path: `/pretreatment/${this.id}/cleanup/${problem.type}`,
-        });
+      if (problem.multi) {
+        this.$router.push({ path: `/pretreatment/${this.id}/cleanup/${problem.type}` });
       } else {
+        this.$router.push({ path: `/pretreatment/${this.id}/cleanup` });
         this.$store.commit(SET_SELECTION, {
           key: this.id,
           event: {},
@@ -47,7 +46,7 @@ export default {
 <template lang="pug">
 v-layout.pretreatment(row, fill-height)
 
-  v-navigation-drawer.navigation(floating, permanent, style="min-width: 260px; width: 260px;")
+  v-navigation-drawer.navigation(floating, permanent, style="min-width: 220px; width: 220px;")
     v-layout(column, fill-height)
       v-list.pt-0
         v-list-group(v-for="(dataset, index) in datasets",
@@ -58,7 +57,7 @@ v-layout.pretreatment(row, fill-height)
           template(v-slot:activator)
             v-list-tile.file-name
               v-list-tile-title.title {{ dataset.source.name }}
-              v-list-tile-action(v-if="dataset.validation")
+              v-list-tile-action(v-if="dataset.validation.length")
                 v-icon.pr-1(color="warning") {{ $vuetify.icons.warning }}
           v-list.view-list
 
@@ -69,12 +68,12 @@ v-layout.pretreatment(row, fill-height)
                 v-icon.pr-1.middle {{ $vuetify.icons.tableEdit }}
                 | Clean Up Table
 
-            v-list-tile.ml-4.my-1.small-tile(v-for="problemData in dataset.validation",
+            v-list-tile.ml-4.my-1.px-0.small-tile(v-for="problemData in dataset.validation",
                 @click="problemNav(problemData)",
                 :class="{ active: problemData.type === problem }",
                 :inactive="!problemData.clickable",
                 :key="problemData.title")
-              v-list-tile-title.small-tile.pl-2
+              v-list-tile-title.small-tile.px-0
                 v-icon.pr-1.middle(
                     :color="problemData.severity") {{ $vuetify.icons[problemData.severity] }}
                 | {{ problemData.title }}

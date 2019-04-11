@@ -70,8 +70,8 @@ const mutations = {
       column: {
         labels: cols.map(c => c.column_type),
       },
-      validation: mapValidationErrors(data.table_validation),
-      selected: {
+      validation: mapValidationErrors(data.table_validation, cols),
+      selected: data.selected || {
         type: 'column',
         last: 1,
         ranges: new RangeList([1]),
@@ -181,11 +181,12 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [CHANGE_AXIS_LABEL]({ commit }, { dataset_id, changes }) {
+  async [CHANGE_AXIS_LABEL]({ state, commit }, { dataset_id, changes }) {
     commit(SET_LOADING, true);
     try {
       const { data } = await CSVService.updateLabel(dataset_id, changes);
-      commit(ADD_SOURCE_DATA, { data, visible: true });
+      const { selected } = state.datasets[dataset_id];
+      commit(ADD_SOURCE_DATA, { data: { ...data, selected }, visible: true });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
       commit(SET_LOADING, false);

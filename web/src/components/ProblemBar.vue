@@ -1,4 +1,6 @@
 <script>
+import { CHANGE_AXIS_LABEL } from '@/store/actions.type';
+import { SET_SELECTION } from '@/store/mutations.type';
 import { base26Converter } from '@/utils/';
 
 export default {
@@ -20,13 +22,41 @@ export default {
       return this.dataset.validation.find(v => v.type === this.problem);
     },
   },
-  methods: { base26Converter },
+  methods: {
+    base26Converter,
+    select(event, item) {
+      const { index } = item;
+      this.$store.commit(SET_SELECTION, {
+        key: this.id,
+        idx: index,
+        axis: 'column',
+        event,
+      });
+    },
+    async mask(index) {
+      const changes = [{
+        context: this.problemData.context,
+        index,
+        label: 'masked',
+      }];
+      await this.$store.dispatch(CHANGE_AXIS_LABEL, { dataset_id: this.id, changes });
+    },
+    async maskAll() {
+      const { problemData } = this;
+      const changes = problemData.data.map(error => ({
+        context: problemData.context,
+        index: error.index,
+        label: 'masked',
+      }));
+      await this.$store.dispatch(CHANGE_AXIS_LABEL, { dataset_id: this.id, changes });
+    },
+  },
 };
 </script>
 
 <template lang="pug">
-v-navigation-drawer.primary.darken-3(v-if="dataset",
-    touchless, permanent, floating, style="width: 200px; min-width: 200px;")
+v-navigation-drawer.primary.darken-3(v-if="dataset && problemData",
+    touchless, permanent, floating, style="width: 230px; min-width: 220px;")
 
   v-layout(column, fill-height)
 
@@ -34,15 +64,20 @@ v-navigation-drawer.primary.darken-3(v-if="dataset",
       v-toolbar-title
         .headline {{ problemData.title }}
 
-    v-card.mx-2.my-1(flat, v-for="item in problemData.data", :key="base26Converter(item.index)")
+    v-card.mx-2.my-1(flat,
+        v-for="item in problemData.data",
+        :key="base26Converter(item.index + 1)")
       v-card-title.pa-2
         div
           .title(
               style="text-decoration:underline; cursor: pointer;",
-              @click="$emit('select', item.index)") Column {{ base26Converter(item.index) }}
+              @click="select($event, item)")
+            | {{ base26Converter(item.index + 1) }}:
+            | {{ item.name }}
           .body-1 {{ item.info }}
+      v-card-actions.pt-0.pb-1
         v-spacer
-        v-btn.ma-0(icon, small, flat, color="error")
+        v-btn.ma-0(icon, small, flat, color="error", @click="mask(item.index)")
           v-icon {{ $vuetify.icons.masked }}
-    v-btn(large, color="error") Mask all
+    v-btn(large, color="error", @click="maskAll") Mask all
 </template>

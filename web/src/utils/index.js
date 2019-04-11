@@ -1,6 +1,19 @@
 import papa from 'papaparse';
 import { validationMeta } from './constants';
 import RangeList from './rangelist';
+
+/**
+ * A function to group an array of objects
+ * by a given key
+ * https://stackoverflow.com/questions/14446511/most-efficient-method-to-groupby-on-a-array-of-objects
+ */
+function groupBy(xs, key) {
+  return xs.reduce((rv, x) => {
+    (rv[x[key]] = rv[x[key]] || []).push(x);
+    return rv;
+  }, {});
+}
+
 /**
  * Convert decimal to base26 in upper case
  * where A = 1, Z = 26, AA = 27, and 0 cannot be encoded.
@@ -33,20 +46,40 @@ function convertCsvToRows(csvstring) {
  * the schema this applicaiton expects.
  * @param {Array<Object>} errors
  */
-function mapValidationErrors(errors) {
-  return errors.map((e) => {
-    const data = typeof e.data === 'object'
-      ? e.data
-      : undefined;
-    const description = typeof e.data === 'string'
-      ? e.data
-      : validationMeta[e.type].description;
-    return {
-      ...e,
-      ...validationMeta[e.type],
-      data,
-      description,
+function mapValidationErrors(errors, columns) {
+  const grouped = groupBy(errors, 'type');
+  const keys = Object.keys(grouped);
+  return keys.map((errorType) => {
+    const errorsOfType = grouped[errorType];
+    const errorMeta = validationMeta[errorType];
+    const {
+      severity,
+      type,
+      context,
+      title,
+      column_index,
+    } = errorsOfType[0];
+    const error = {
+      severity,
+      type,
+      context,
+      title,
+      column_index,
+      ...errorMeta,
     };
+    if (errorMeta.multi === true) {
+      error.description = errorMeta.description;
+      error.data = errorsOfType.map(e => ({
+        index: e.column_index,
+        info: e.data,
+        name: columns[e.column_index].column_header,
+      }));
+    } else if (errorMeta.multi === false) {
+      error.title = `${title} in ${base26Converter(column_index + 1)}`;
+    } else {
+      throw new Error('property multi expected on error metadata');
+    }
+    return error;
   });
 }
 

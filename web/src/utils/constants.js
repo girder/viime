@@ -96,24 +96,42 @@ const transform_methods = [
 
 const validationMeta = {
   'group-missing': {
+    // A static description string
     description: 'Select a column to contain group data.',
+    // Should the error be clickable?
     clickable: false,
+    // Should the error be displayed as a list in another toolbar?
+    multi: false,
   },
   'primary-key-missing': {
     description: 'Select a column to contain primary key data.',
     clickable: false,
+    multi: false,
   },
   'header-missing': {
     description: 'Select a row to contain header data.',
     clickable: false,
+    multi: false,
   },
   'invalid-primary-key': {
     description: 'Primary key is not valid',
     clickable: true,
+    multi: false,
   },
   'invalid-group': {
     description: 'Group is not valid',
     clickable: true,
+    multi: false,
+  },
+  'low-variance': {
+    description: 'Low column data variance',
+    clickable: true,
+    multi: true,
+  },
+  'missing-data': {
+    description: 'All groups exceed 25% missing data',
+    clickable: true,
+    multi: true,
   },
 };
 
