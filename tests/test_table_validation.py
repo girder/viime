@@ -1,8 +1,11 @@
 from pytest import fixture
 
-from metabulo.models import db, TABLE_COLUMN_TYPES, TABLE_ROW_TYPES
-from metabulo.table_validation import get_validation_list, ValidationSchema
+from metabulo.models import CSVFileSchema, db, TABLE_COLUMN_TYPES, TABLE_ROW_TYPES
+from metabulo.table_validation import get_low_variance_warnings, \
+    get_missing_percent_warnings, get_non_numeric_warnings, \
+    get_validation_list, ValidationSchema
 
+csv_file_schema = CSVFileSchema()
 validation_schema = ValidationSchema()
 
 
@@ -159,3 +162,71 @@ def test_multiple_invalid_errors(pathological_table):
             'severity': 'error'
         }
     ]
+
+
+def test_non_numeric_warning(client):
+    table = """
+id,group,col1,col2
+w,a,-1,2
+x,a,0,0
+y,a,x,1
+z,b,5,2
+"""
+
+    csv_file = csv_file_schema.load({'table': table, 'name': 'table.csv'})
+    db.session.add(csv_file)
+    db.session.commit()
+
+    warnings = get_non_numeric_warnings(csv_file)
+    assert len(warnings) == 1
+
+    warning = warnings[0]
+    assert warning.context == 'table'
+    assert warning.type_ == 'non-numeric-data'
+    assert warning.severity == 'warning'
+
+
+def test_missing_percent_warning(client):
+    table = """
+id,group,col1,col2
+w,a,-1,2
+x,a,0,0
+y,a,,1
+z,b,,
+"""
+
+    csv_file = csv_file_schema.load({'table': table, 'name': 'table.csv'})
+    db.session.add(csv_file)
+    db.session.commit()
+
+    warnings = get_missing_percent_warnings(csv_file)
+    assert len(warnings) == 1
+
+    warning = warnings[0]
+    assert warning.context == 'column'
+    assert warning.type_ == 'missing-data'
+    assert warning.severity == 'warning'
+    assert warning.column_index == 2
+
+
+def test_low_variance_warning(client):
+    table = """
+id,group,col1,col2
+w,a,0,2
+x,a,0,0
+y,a,0,1
+z,b,0,10
+"""
+
+    csv_file = csv_file_schema.load({'table': table, 'name': 'table.csv'})
+    db.session.add(csv_file)
+    db.session.commit()
+
+    warnings = get_low_variance_warnings(csv_file)
+    assert len(warnings) == 1
+
+    warning = warnings[0]
+    assert warning.context == 'column'
+    assert warning.type_ == 'low-variance'
+    assert warning.severity == 'warning'
+    assert warning.column_index == 2

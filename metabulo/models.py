@@ -21,7 +21,7 @@ from metabulo.cache import clear_cache, csv_file_cache, region
 from metabulo.imputation import impute_missing
 from metabulo.normalization import NORMALIZATION_METHODS, normalize
 from metabulo.scaling import scale, SCALING_METHODS
-from metabulo.table_validation import get_validation_list
+from metabulo.table_validation import get_fatal_index_errors, get_validation_list
 from metabulo.transformation import transform, TRANSFORMATION_METHODS
 
 
@@ -253,6 +253,9 @@ class CSVFile(db.Model):
             f.write(table_data)
         clear_cache()
         return table_data
+
+    def get_column_by_name(self, column_name):
+        return self.find_first_entity(lambda c: c.column_header == column_name, self.columns)
 
     @classmethod
     def find_first_entity(cls, criterion, iterable):
@@ -614,7 +617,7 @@ def _get_raw_measurement_table(csv_file):
 
 @csv_file_cache
 def _get_measurement_table(csv_file):
-    if not csv_file.table_validation:
+    if not get_fatal_index_errors(csv_file):
         try:
             return csv_file.apply_transforms()
         except Exception as e:

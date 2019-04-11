@@ -174,13 +174,13 @@ def test_batch_modify_row_and_column(client, table):
         json={
             'changes': [
                 {'context': 'row', 'index': 1, 'label': 'masked'},
-                {'context': 'column', 'index': 4, 'label': 'masked'},
+                {'context': 'column', 'index': 2, 'label': 'masked'},
             ]
         }
     )
     assert resp.status_code == 200
     assert resp.json['rows'][1]['row_type'] == 'masked'
-    assert resp.json['columns'][4]['column_type'] == 'masked'
+    assert resp.json['columns'][2]['column_type'] == 'masked'
     assert len(resp.json['table_validation']) == 0
 
 
