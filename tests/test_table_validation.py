@@ -230,3 +230,20 @@ z,b,0,10
     assert warning.type_ == 'low-variance'
     assert warning.severity == 'warning'
     assert warning.column_index == 2
+
+
+def test_low_variance__with_nans(client):
+    table = """
+id,group,col1,col2
+w,a,,2
+x,a,,0
+y,a,,1
+z,b,,10
+"""
+
+    csv_file = csv_file_schema.load({'table': table, 'name': 'table.csv'})
+    db.session.add(csv_file)
+    db.session.commit()
+
+    warnings = get_low_variance_warnings(csv_file)
+    assert warnings == []
