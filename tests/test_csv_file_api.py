@@ -13,7 +13,8 @@ row2,1.5,0
 
 def test_upload_csv_file(client):
     data = {
-        'file': (BytesIO(csv_data.encode()), 'test_file1.csv')
+        'file': (BytesIO(csv_data.encode()), 'test_file1.csv'),
+        'meta': '{"foo": "bar"}'
     }
     resp = client.post(
         url_for('csv.upload_csv_file'), data=data, content_type='multipart/form-data')
@@ -22,6 +23,7 @@ def test_upload_csv_file(client):
     assert resp.json['name'] == 'test_file1.csv'
     assert csv_data.strip().startswith('id,col1,col2')
     assert len(resp.json['columns']) == 3
+    assert resp.json['meta'] == {'foo': 'bar'}
 
 
 def test_post_csv_data(client):
@@ -127,3 +129,10 @@ def test_get_csv_file_validation(client, csv_file):
         'title': 'No group column',
         'type': 'group-missing'
     }]
+
+
+def test_modify_csv_file_metadata(client, csv_file):
+    resp = client.put(
+        url_for('csv.set_csv_file_metadata', csv_id=csv_file.id), json={'foo': 'bar'})
+    assert resp.status_code == 200
+    assert resp.json['meta'] == {'foo': 'bar'}
