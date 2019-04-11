@@ -91,7 +91,7 @@ v-layout.transform-view(row, fill-height)
         v-toolbar-title Transform
         v-spacer
         v-switch.shrink(hide-details, :input-value="trans",
-            @change="transformTable($event, 'transformation')", :disabled="true")
+            @change="transformTable($event, 'transformation')", :disabled="loading")
       v-card.ma-3(flat)
         v-card-actions
           v-radio-group(:disabled="!trans || loading", :value="trans",
@@ -103,7 +103,7 @@ v-layout.transform-view(row, fill-height)
         v-toolbar-title Scale
         v-spacer
         v-switch.shrink(hide-details, :input-value="scaling",
-            @change="transformTable($event, 'scaling')", :disabled="true")
+            @change="transformTable($event, 'scaling')", :disabled="loading")
       v-card.ma-3(flat)
         v-card-actions
           v-radio-group(:disabled="!scaling || loading", :value="scaling",

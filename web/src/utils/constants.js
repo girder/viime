@@ -75,41 +75,41 @@ const colPrimaryKey = 'key';
 const colGroupKey = 'group';
 
 const normalize_methods = [
-  { label: 'Min Max', value: 'minmax', priority: 10 },
+  { label: 'Min Max', value: 'minmax' },
   { label: 'None', value: null },
 ];
 
 const scaling_methods = [
-  { label: 'Autoscaling', value: 'auto_scaling', priority: 200 },
-  { label: 'Pareto Scaling', value: 'pareto_scaling', priority: 201 },
-  { label: 'Range Scaling', value: 'range_scaling', priority: 202 },
-  { label: 'Vast Scaling', value: 'vast_scaling', priority: 203 },
+  { label: 'Autoscaling', value: 'auto' },
+  { label: 'Pareto Scaling', value: 'pareto' },
+  { label: 'Range Scaling', value: 'range' },
+  { label: 'Vast Scaling', value: 'vast' },
+  { label: 'Level Scaling', value: 'level' },
   { label: 'None', value: null },
 ];
-
 const transform_methods = [
-  { label: 'Log 2', value: 'log_2', priority: 100 },
-  { label: 'Log 10', value: 'log_10', priority: 101 },
-  { label: 'Cube Root', value: 'cube_root', priority: 102 },
+  { label: 'Log 10', value: 'log10' },
+  { label: 'Square Root', value: 'squareroot' },
+  { label: 'Cube Root', value: 'cuberoot' },
   { label: 'None', value: null },
 ];
 
 const validationMeta = {
   'group-missing': {
     // A static description string
-    description: 'Select a column to contain group data.',
+    description: 'Select a column to contain group data',
     // Should the error be clickable?
     clickable: false,
     // Should the error be displayed as a list in another toolbar?
     multi: false,
   },
   'primary-key-missing': {
-    description: 'Select a column to contain primary key data.',
+    description: 'Select a column to contain primary key data',
     clickable: false,
     multi: false,
   },
   'header-missing': {
-    description: 'Select a row to contain header data.',
+    description: 'Select a row to contain header data',
     clickable: false,
     multi: false,
   },
@@ -123,6 +123,11 @@ const validationMeta = {
     clickable: true,
     multi: false,
   },
+  'invalid-header': {
+    description: 'Header is not valid',
+    clickable: true,
+    multi: false,
+  },
   'low-variance': {
     description: 'Low column data variance',
     clickable: true,
@@ -132,6 +137,11 @@ const validationMeta = {
     description: 'All groups exceed 25% missing data',
     clickable: true,
     multi: true,
+  },
+  'non-numeric-data': {
+    description: 'Table contains non-numeric metabolite data',
+    clickable: false,
+    multi: false,
   },
 };
 

@@ -59,6 +59,8 @@ v-layout.pretreatment(row, fill-height)
               v-list-tile-title.title {{ dataset.source.name }}
               v-list-tile-action(v-if="dataset.validation.length")
                 v-icon.pr-1(color="warning") {{ $vuetify.icons.warning }}
+              v-list-tile-action(v-else)
+                v-icon.pr-1(color="success") {{ $vuetify.icons.check }}
           v-list.view-list
 
             v-list-tile.ml-2(
@@ -89,9 +91,6 @@ v-layout.pretreatment(row, fill-height)
               v-list-tile-title.pl-2
                 v-icon.pr-1.middle {{ $vuetify.icons.bubbles }}
                 | Transform Table
-      v-spacer
-      v-btn.accent Next
-
   router-view
 </template>
 

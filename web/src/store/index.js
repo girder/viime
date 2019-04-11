@@ -82,8 +82,8 @@ const mutations = {
       transformed: data,
       // mutually exclusive transformation categories
       normalization: data.normalization,
-      transformation: null, // TODO: add
-      scaling: null, // TODO: add
+      transformation: data.transformation,
+      scaling: data.scaling,
       // data for visualizations
       plots: {
         // logic for which mutations invalidate plot data cache is internal to vuex state
