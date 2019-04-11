@@ -12,6 +12,8 @@
   "dependencies": {
     "@girder/components": "v3.0.0-alpha.3",
     "@mdi/font": "^3.5.95",
+    "@sentry/browser": "^5.0.7",
+    "@sentry/integrations": "^5.0.7",
     "axios": "^0.18.0",
     "d3-axis": "^1.0.12",
     "d3-format": "^1.3.2",
