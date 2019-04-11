@@ -10,7 +10,7 @@
     "test:unit": "jest --clearCache && vue-cli-service test:unit"
   },
   "dependencies": {
-    "@girder/components": "https://github.com/girder/girder_web_components#master",
+    "@girder/components": "v3.0.0-alpha.3",
     "@mdi/font": "^3.5.95",
     "axios": "^0.18.0",
     "d3-axis": "^1.0.12",
