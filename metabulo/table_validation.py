@@ -94,7 +94,7 @@ class InvalidGroup(ValidationTuple):
 
 class NonNumericData(ValidationTuple):
     defaults = {
-        'title': 'Non-numeric metabolite data',
+        'title': 'Non-numeric data',
         'type_': 'non-numeric-data',
         'severity': 'warning',
         'context': 'table'

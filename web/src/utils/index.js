@@ -59,6 +59,7 @@ function mapValidationErrors(errors, columns) {
       context,
       title,
       column_index,
+      data,
     } = errorsOfType[0];
     const error = {
       severity,
@@ -75,10 +76,10 @@ function mapValidationErrors(errors, columns) {
         info: e.data,
         name: columns[e.column_index].column_header,
       }));
-    } else if (errorMeta.multi === false) {
+    } else if (errorMeta.clickable === true) {
       error.title = `${title} in ${base26Converter(column_index + 1)}`;
-    } else {
-      throw new Error('property multi expected on error metadata');
+    } else if (typeof data === 'string') {
+      error.description = data;
     }
     return error;
   });
