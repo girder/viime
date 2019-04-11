@@ -77,7 +77,11 @@ class CSVFile(db.Model):
     @property
     def table_validation(self):
         """Return a list of issues with the table or None if everything is okay."""
-        return get_validation_list(self)
+        try:
+            return get_validation_list(self)
+        except Exception:
+            current_app.logger.exception('Error performing table validation')
+            raise
 
     @property
     def table(self):
@@ -90,7 +94,11 @@ class CSVFile(db.Model):
     @property
     def measurement_table(self):
         """Return the processed metabolite date table."""
-        return _get_measurement_table(self)
+        try:
+            return _get_measurement_table(self)
+        except Exception:
+            current_app.logger.exception('Error getting measurement_table')
+            raise
 
     @property
     def measurement_metadata(self):
@@ -290,8 +298,7 @@ class CSVFileSchema(BaseSchema):
     columns = fields.List(fields.Nested('TableColumnSchema', exclude=['csv_file']))
     rows = fields.List(fields.Nested('TableRowSchema', exclude=['csv_file']))
 
-    table_validation = fields.List(
-        fields.Nested('ValidationSchema'), dump_only=True, allow_none=True)
+    table_validation = fields.Nested('ValidationSchema', many=True, dump_only=True)
     measurement_table = fields.Raw(dump_only=True, allow_none=True)
     measurement_metadata = fields.Raw(dump_only=True, allow_none=True)
     sample_metadata = fields.Raw(dump_only=True, allow_none=True)
