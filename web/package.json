@@ -76,6 +76,9 @@
     },
     "parserOptions": {
       "parser": "babel-eslint"
+    },
+    "globals": {
+      "COMMITHASH": true
     }
   },
   "jest": {
