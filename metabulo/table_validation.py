@@ -248,7 +248,7 @@ def get_low_variance_warnings(csv_file):
     warnings = []
 
     for column_name, value in table.var().items():
-        if value > LOW_VARIANCE_THRESHOLD:
+        if value != value or value > LOW_VARIANCE_THRESHOLD:
             continue
 
         column = csv_file.get_column_by_name(column_name)
