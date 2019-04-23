@@ -164,7 +164,7 @@ def check_valid_index(series):
     """Check if pandas series can be a valid index."""
     index = Index(series)
     if index.hasnans:
-        return 'Contains NaN\'s'
+        return "Contains NaN's"
     if not index.is_unique:
         return 'Values are not unique'
 
