@@ -1,4 +1,5 @@
 from io import BytesIO
+import json
 
 from flask import current_app, Response
 import pandas
@@ -23,6 +24,9 @@ class OpenCPUException(Exception):
 def opencpu_request(method, files=None, params=None, return_type='csv'):
     files = files or {}
     params = params or {}
+    params = {
+        k: json.dumps(v) for k, v in params.items()
+    }
     url = current_app.config['OPENCPU_API_ROOT'] + '/metabulo/R/' + method
     if return_type == 'csv':
         url += '/csv?row.names=true'

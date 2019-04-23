@@ -18,7 +18,7 @@ from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
 
 from metabulo.cache import clear_cache, csv_file_cache, region
-from metabulo.imputation import impute_missing
+from metabulo.imputation import IMPUTE_MCAR_METHODS, impute_missing, IMPUTE_MNAR_METHODS
 from metabulo.normalization import NORMALIZATION_METHODS, normalize
 from metabulo.scaling import scale, SCALING_METHODS
 from metabulo.table_validation import get_fatal_index_errors, get_validation_list
@@ -69,6 +69,8 @@ class CSVFile(db.Model):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     name = db.Column(db.String, nullable=False)
+    imputation_mnar = db.Column(db.String, nullable=False)
+    imputation_mcar = db.Column(db.String, nullable=False)
     normalization = db.Column(db.String, nullable=True)
     transformation = db.Column(db.String, nullable=True)
     scaling = db.Column(db.String, nullable=True)
@@ -216,7 +218,8 @@ class CSVFile(db.Model):
     def apply_transforms(self):
         table = self.raw_measurement_table
         table = _coerce_numeric(table)
-        table = impute_missing(table, self.groups)
+        table = impute_missing(
+            table, self.groups, mnar=self.imputation_mnar, mcar=self.imputation_mcar)
         table = normalize(self.normalization, table)
         table = transform(self.transformation, table)
         table = scale(self.scaling, table)
@@ -290,6 +293,9 @@ class CSVFileSchema(BaseSchema):
     created = fields.DateTime(dump_only=True)
     name = fields.Str(required=True, validate=_validate_name)
     table = fields.Raw(required=True, validate=_validate_table_data)
+    imputation_mnar = fields.Str(missing='zero', validate=validate.OneOf(IMPUTE_MNAR_METHODS))
+    imputation_mcar = fields.Str(
+        missing='random-forest', validate=validate.OneOf(IMPUTE_MCAR_METHODS))
     normalization = fields.Str(missing=None, validate=validate.OneOf(NORMALIZATION_METHODS))
     transformation = fields.Str(missing=None, validate=validate.OneOf(TRANSFORMATION_METHODS))
     scaling = fields.Str(missing=None, validate=validate.OneOf(SCALING_METHODS))
