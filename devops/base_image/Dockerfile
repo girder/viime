@@ -31,3 +31,4 @@ RUN R -e 'install.packages("XML");' && \
 RUN R -e 'install.packages("devtools"); library(devtools); devtools::install_github("xia-lab/MetaboAnalystR")'
 RUN R -e 'library(devtools); devtools::install_github("klutometis/roxygen")'
 RUN R -e 'BiocManager::install("impute", version = "3.8")'
+RUN R -e 'install.packages("missForest")'
