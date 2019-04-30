@@ -86,7 +86,7 @@ def test_invalid_index(valid_table):
         'title': 'Invalid identifier',
         'type': 'invalid-primary-key',
         'column_index': 0,
-        'data': 'Contains NaN\'s'
+        'data': "Contains NaN's"
     }]
 
 
@@ -149,7 +149,7 @@ def test_multiple_invalid_errors(pathological_table):
             'context': 'column',
             'column_index': 0,
             'type': 'invalid-primary-key',
-            'data': 'Contains NaN\'s',
+            'data': "Contains NaN's",
             'title': 'Invalid identifier',
             'severity': 'error'
         },
@@ -157,7 +157,7 @@ def test_multiple_invalid_errors(pathological_table):
             'context': 'row',
             'row_index': 0,
             'type': 'invalid-header',
-            'data': 'Contains NaN\'s',
+            'data': "Contains NaN's",
             'title': 'Invalid header',
             'severity': 'error'
         },

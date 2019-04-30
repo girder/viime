@@ -1,77 +1,180 @@
-
 #' imputation
 #'
 #' Return a new dataframe with NaN values imputed using magic.
-imputation <- function (table, groups) {
-    library(impute)
-    mean.na <- function(x){
-      mean(is.na(x))
-    }
+#'   Missing Not At Random (MNAR)
+#'   Missing Completely At Random (MCAR)
+#'   Missing At Random (MAR)
+#'
+#'   p_mnar:
+#'     Percent to define Missing Not At Random (MNAR), variables
+#'     with any one group with more or equal than x% of missing data
+#'   p_mcar:
+#'     Percent to define Missing Not At Random (MCAR), variables with all
+#'     group with less or equal than x% of missing data
+#'   mnar:
+#'     "zero" or "half-minimum"
+#'   mcar:
+#'     "random-forest", "knn", "mean", or "median"
+#' @export
+imputation <- function(table, groups,
+                       mnar="zero", mcar="random-forest",
+                       p_mnar=0.70, p_mcar=0.40) {
+  table <- read.csv(table, row.names = 1)
+  if (sum(colSums(is.na(table))) == 0) {
+    return(table)
+  }
 
-    table = read.csv(table, row.names=1)
+  groups <- read.csv(groups, row.names = 1)
 
-    if (sum(colSums(is.na(table))) == 0) {
-        return(table)
-    }
+  #-#-#-#-# Function for missing percentage #-#-#-#-#
 
-    groups = read.csv(groups, row.names=1)
-
-    #-#-#-# STEP 1 : variables with any one group with more or equal than 70% of missing data, impute zero #-#-#-#
-
-    # Use function to calculate percentage of missing values per metabolite per Group
-    missing.pct <- aggregate(table, by=groups, mean.na)
-
-    # Identify variables with at least one group with more than 70% of missing data
-    var.keep <- as.data.frame(colSums(missing.pct[,2:ncol(missing.pct)]>=0.70))
-    colnames(var.keep) <- c("na.higher.70")
-
-    # Keep variables with at least one group with more than 70% of missing data
-    var.keep.2 <- subset(var.keep, na.higher.70>=1)
-
-    #Metabolites for imputation 0
-    row.names(var.keep.2)
-
-    #Set of variables with at least one group with more than 70% of missing data
-    clean.dat.s2 <- table[row.names(var.keep.2)]
-
-    #Replace NA to zero for those variables
-    clean.dat.s2[is.na(clean.dat.s2) ] <- 0
+  # Create function to calculate percentage of missing data
+  mean_na <- function(x){
+    mean(is.na(x))
+  }
 
 
-    #-#-#-# STEP 2 : variables with all group with less or equal than 40% of missing data, impute KNN#-#-#-#
+  #-#-#-#-# Imputation algorithms #-#-#-#-#
 
-    # Set of variables without STEP 1 variables
-    clean.dat.s3 <- table[, -which(names(table) %in% row.names(var.keep.2))]
+  #-#-# Algorithms for Missing Not At Random (MNAR)
 
-    # Use function to calculate percentage of missing values per metabolite per Group
-    missing.pct <- aggregate(clean.dat.s3, by=groups, mean.na)
+  #-# Imputation Zero #-#
 
-    # Identify variables with all group with less or equal than 40% of missing data
-    var.keep <- as.data.frame(colSums(missing.pct[,2:ncol(missing.pct)]<=0.40))
-    colnames(var.keep) <- c("na.less.40")
+  #Create function for imputation
 
-    # JB: I don't think this is an issue since python does the filtering (masking).
-    ##### Problem, I am keeping also variables in STEP 0, I need to correct that
-    # Keep variables with all group with less or equal than 40% of missing data
-    var.keep.3 <- subset(var.keep, na.less.40>=nlevels(groups[,]))
-
-    # Data set with only metabolites for imputation kNN, no Group variable
-    clean.dat.s3 <- clean.dat.s3[row.names(var.keep.3)]
+  imputation_zero <- function(x){
+    x[is.na(x)] <- 0
+    return(x)
+  }
 
 
-    # Imputation kNN
-    # Rseed <- 12345 #Random seed for replication
-    clean.dat.s3 <- as.data.frame(t(impute.knn(t(clean.dat.s3))$data))
+  #-# Imputation HM (Half of the Minimum) #-#
 
-    #-#-#-# STEP 3 : variables with 40% to 70 % missing data, impute KNN (rest of variables)#-#-#-#
+  imputation_hm <- function(x){
+    imputation <- lapply(x, function(y) {
+      y[is.na(y)] <- min(y, na.rm = TRUE) / 2
+      y
+    })
+    hm_imp <- as.data.frame(imputation)
+    return(hm_imp)
+  }
 
-    # Set of variable imputed until now
-    clean.dat.s4 <- cbind(clean.dat.s2, clean.dat.s3)
 
-    # Create dataset with all variables (imputed in step 1 and 2, and the one that still have missing values)
-    clean.imp <- table
-    clean.imp[colnames(clean.dat.s4)] <- clean.dat.s4[colnames(clean.dat.s4)]
 
-    # Imputation kNN
-    return(as.data.frame(t(impute.knn(t(clean.imp))$data)))
+  #-#-# Algorithms for Missing Completely at Random (MCAR)
+  #          and Missing At Random (MAR)
+
+  #-# Imputation Random Forest #-#
+  #Create function for imputation
+
+  imputation_rf <- function(x){
+    imputation <- missForest::missForest(x)
+    rf_imp <- imputation$ximp
+    return(rf_imp)
+  }
+
+
+  #-# Imputation kNN #-#
+
+  imputation_knn <- function(x){
+    imputation <- impute::impute.knn(t(x))
+    knn_imp <- as.data.frame(t(imputation$data))
+    return(knn_imp)
+  }
+
+
+  #-# Imputation Mean #-#
+
+  imputation_mean <- function(x){
+    imputation <- lapply(x, function(y) {
+      y[is.na(y)] <- mean(y, na.rm = TRUE)
+      y
+    })
+    mean_imp <- as.data.frame(imputation)
+    return(mean_imp)
+  }
+
+
+  #-# Imputation Median #-#
+
+  imputation_median <- function(x){
+    imputation <- lapply(x, function(y) {
+      y[is.na(y)] <- median(y, na.rm = TRUE)
+      y
+    })
+    median_imp <- as.data.frame(imputation)
+    return(median_imp)
+  }
+
+  if (mnar == "zero") {
+    f_mnar <- imputation_zero
+  } else if (mnar == "half-minimum") {
+    f_mnar <- imputation_hm
+  } else {
+    stop("Invalid mnar parameter")
+  }
+
+  if (mcar == "random-forest") {
+    f_mcar <- imputation_rf
+  } else if (mcar == "knn") {
+    f_mcar <- imputation_knn
+  } else if (mcar == "mean") {
+    f_mcar <- imputation_mean
+  } else if (mcar == "median") {
+    f_mcar <- imputation_median
+  } else {
+    stop("Invalid mcar parameter")
+  }
+
+  #-#-#-#-# Identify variables in MNAR, MCAR and MAR group #-#-#-#-#
+
+  # Use function to calculate percentage of missing values per metabolite per
+  # Group
+  missing_pct <- aggregate(table, by = groups, mean_na)
+
+
+  #-# MNAR variables #-#
+
+  # Identify variables with at least one group with more than p.mnar of missing
+  # data
+  var_keep <- as.data.frame(
+    colSums(missing_pct[, 2:ncol(missing_pct)] >= p_mnar)
+  )
+  colnames(var_keep) <- c("var")
+
+  # Keep variables with at least one group with more than p.mnar of missing data
+  var_keep_mnar <- subset(var_keep, var >= 1)
+
+  # Set of variables with at least one group with more than p.mnar of missing
+  # data
+  new_metab_dat_mnar <- table[row.names(var_keep_mnar)]
+
+
+  #-# MCAR variables #-#
+
+  # Identify variables with all group with less or equal than mcar of missing
+  # data
+  var_keep <- as.data.frame(
+    colSums(missing_pct[, 2:ncol(missing_pct)] <= p_mcar)
+  )
+  colnames(var_keep) <- c("var")
+
+  # Keep variables with all group with less or equal than mcar of missing data
+  var_keep_mcar <- subset(var_keep, var == nlevels(groups[, ]))
+
+  # Set of variables with all group with less or equal than mcar of missing data
+  new_metab_dat_mcar <- table[row.names(var_keep_mcar)]
+
+  # imputation:
+  imp_mnar <- f_mnar(new_metab_dat_mnar)
+  imp_mcar <- f_mcar(new_metab_dat_mcar)
+
+  # merge
+  comp_imp <- cbind(imp_mnar, imp_mcar)
+
+  # replace in the input table
+  table[colnames(comp_imp)] < comp_imp[colnames(comp_imp)]
+
+  # impute MAR
+  return(f_mcar(table))
 }

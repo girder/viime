@@ -136,3 +136,23 @@ def test_modify_csv_file_metadata(client, csv_file):
         url_for('csv.set_csv_file_metadata', csv_id=csv_file.id), json={'foo': 'bar'})
     assert resp.status_code == 200
     assert resp.json['meta'] == {'foo': 'bar'}
+
+
+def test_get_imputation_options(client, csv_file):
+    resp = client.get(
+        url_for('csv.set_imputation_options', csv_id=csv_file.id)
+    )
+    assert resp.status_code == 200
+    assert resp.json == {
+        'imputation_mnar': csv_file.imputation_mnar,
+        'imputation_mcar': csv_file.imputation_mcar
+    }
+
+
+def test_set_imputation_options(client, csv_file):
+    resp = client.put(
+        url_for('csv.set_imputation_options', csv_id=csv_file.id),
+        json={'mnar': 'half-minimum', 'mcar': 'knn'}
+    )
+    assert resp.status_code == 200
+    assert resp.json == {'imputation_mnar': 'half-minimum', 'imputation_mcar': 'knn'}

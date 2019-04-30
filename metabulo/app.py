@@ -3,6 +3,7 @@ import os
 import dotenv
 from flask import current_app, Flask, jsonify
 from marshmallow import ValidationError
+from webargs.flaskparser import parser
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from metabulo.cache import clear_cache, persistent_region
@@ -27,6 +28,11 @@ def handle_opencpu_error(e):
 def handle_general_error(e):
     current_app.logger.exception(e)
     return jsonify({'error': 'Something went wrong.'}), 500
+
+
+@parser.error_handler
+def handle_webargs_error(error, req, schema, status_code, headers):
+    raise ValidationError(error.messages)
 
 
 def load_sentry(dsn):

@@ -38,6 +38,7 @@ setup(
         'requests',
         'sklearn',
         'sqlalchemy-utils',
+        'webargs',
         'Werkzeug>=0.15'
     ],
     extras_require={

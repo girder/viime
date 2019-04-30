@@ -1,12 +1,14 @@
 <script>
 import { mapMutations } from 'vuex';
-import { CHANGE_AXIS_LABEL } from '@/store/actions.type';
+import { CHANGE_AXIS_LABEL, CHANGE_IMPUTATION_OPTIONS } from '@/store/actions.type';
 import { SET_SELECTION } from '@/store/mutations.type';
 import {
   rowMenuOptions,
   defaultRowOption,
   colMenuOptions,
   defaultColOption,
+  mcar_imputation_methods,
+  mnar_imputation_methods,
 } from '@/utils/constants';
 import { base26Converter } from '@/utils';
 import SaveStatus from '@/components/SaveStatus.vue';
@@ -30,6 +32,9 @@ export default {
       defaultColOption,
       defaultRowOption,
       settingsDialog: false,
+      mnarImputationMethods: mnar_imputation_methods,
+      mcarImputationMethods: mcar_imputation_methods,
+      imputation: {},
     };
   },
   computed: {
@@ -58,6 +63,12 @@ export default {
       return `Column ${base26Converter(members[0] + 1)}`;
     },
   },
+  watch: {
+    dataset() {
+      this.imputation.mnar = this.dataset.imputationMNAR;
+      this.imputation.mcar = this.dataset.imputationMCAR;
+    },
+  },
   methods: {
     ...mapMutations({ setSelection: SET_SELECTION }),
     base26Converter,
@@ -65,6 +76,13 @@ export default {
       const { ranges, type: context } = this.selected;
       const changes = ranges.members.map(index => ({ context, index, label }));
       await this.$store.dispatch(CHANGE_AXIS_LABEL, { dataset_id: this.id, changes });
+    },
+    async saveImputationSettings() {
+      this.settingsDialog = false;
+      await this.$store.dispatch(CHANGE_IMPUTATION_OPTIONS, {
+        dataset_id: this.id,
+        options: this.imputation,
+      });
     },
     activeClasses(index, axisName) {
       if (axisName === this.selected.type) {
@@ -119,10 +137,23 @@ v-layout.cleanup-wrapper(row)
             v-icon {{ $vuetify.icons.settings }}
         v-card
           v-card-title.headline Imputation Settings
+          v-card-text
+            v-select(
+                item-value="value",
+                item-text="label",
+                :items="mnarImputationMethods",
+                label="MNAR imputation method",
+                v-model="imputation.mnar")
+            v-select(
+                item-value="value",
+                item-text="label",
+                :items="mcarImputationMethods",
+                label="MCAR imputation method",
+                v-model="imputation.mcar")
           v-card-actions
             v-spacer
             v-btn(flat, @click="settingsDialog = false") Close
-            v-btn(depressed) Save
+            v-btn(flat, @click="saveImputationSettings") Save
       v-icon {{ $vuetify.icons.download }}
 
     .overflow-auto
