@@ -74,6 +74,17 @@ const colFallbackType = 'metadata';
 const colPrimaryKey = 'key';
 const colGroupKey = 'group';
 
+const mcar_imputation_methods = [
+  { label: 'Random Forest', value: 'random-forest' },
+  { label: 'KNN', value: 'knn' },
+  { label: 'Mean', value: 'mean' },
+  { label: 'Median', value: 'median' },
+];
+const mnar_imputation_methods = [
+  { label: 'Zero', value: 'zero' },
+  { label: 'Half Minimum', value: 'half-minimum' },
+];
+
 const normalize_methods = [
   { label: 'Min Max', value: 'minmax' },
   { label: 'None', value: null },
@@ -157,6 +168,8 @@ export {
   colGroupKey,
   colFallbackType,
 
+  mcar_imputation_methods,
+  mnar_imputation_methods,
   normalize_methods,
   scaling_methods,
   transform_methods,

@@ -67,6 +67,10 @@ export const CSVService = {
     return ApiService.put(`csv/${slug}/${category}`, { method: transform_type });
   },
 
+  setImputation(slug, methods) {
+    return ApiService.put(`csv/${slug}/imputation`, methods);
+  },
+
   updateLabel(csvSlug, changes) {
     return ApiService.put(`csv/${csvSlug}/batch/label`, { changes });
   },

@@ -10,6 +10,7 @@ import {
   LOAD_DATASET,
   LOAD_PLOT,
   UPLOAD_CSV,
+  CHANGE_IMPUTATION_OPTIONS,
 } from './actions.type';
 
 import {
@@ -83,6 +84,8 @@ const mutations = {
       // mutually exclusive transformation categories
       normalization: data.normalization,
       transformation: data.transformation,
+      imputationMCAR: data.imputation_mcar,
+      imputationMNAR: data.imputation_mnar,
       scaling: data.scaling,
       // data for visualizations
       plots: {
@@ -203,6 +206,13 @@ const actions = {
       commit(SET_LAST_ERROR, err);
       throw err;
     }
+  },
+
+  async [CHANGE_IMPUTATION_OPTIONS]({ commit, dispatch }, { dataset_id, options }) {
+    commit(SET_LOADING, true);
+    await CSVService.setImputation(dataset_id, options);
+    await dispatch(LOAD_DATASET, { dataset_id });
+    commit(SET_LOADING, false);
   },
 };
 
