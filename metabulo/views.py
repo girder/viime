@@ -2,11 +2,13 @@ from io import BytesIO
 import json
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
-from marshmallow import ValidationError
+from marshmallow import fields, validate, ValidationError
 import pandas
+from webargs.flaskparser import use_kwargs
 
 from metabulo import opencpu
 from metabulo.cache import csv_file_cache
+from metabulo.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
     ModifyLabelListSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
@@ -136,6 +138,40 @@ def delete_csv_file(csv_id):
         current_app.logger.exception(e)
 
     return '', 204
+
+# Missing data imputation options
+@csv_bp.route('/csv/<uuid:csv_id>/imputation', methods=['GET'])
+def get_imputation_options(csv_id):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    return jsonify({
+        'imputation_mcar': csv_file.imputation_mcar,
+        'imputation_mnar': csv_file.imputation_mnar
+    })
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/imputation', methods=['PUT'])
+@use_kwargs({
+    'mcar': fields.Str(validate=validate.OneOf(IMPUTE_MCAR_METHODS)),
+    'mnar': fields.Str(validate=validate.OneOf(IMPUTE_MNAR_METHODS))
+})
+def set_imputation_options(csv_id, **kwargs):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+
+    try:
+        if 'mcar' in kwargs:
+            csv_file.imputation_mcar = kwargs['mcar']
+        if 'mnar' in kwargs:
+            csv_file.imputation_mnar = kwargs['mnar']
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify({
+            'imputation_mcar': csv_file.imputation_mcar,
+            'imputation_mnar': csv_file.imputation_mnar
+        })
+    except Exception:
+        db.session.rollback()
+        raise
+
 
 # Ingest transforms
 @csv_bp.route('/csv/<uuid:csv_id>/normalization', methods=['PUT'])
