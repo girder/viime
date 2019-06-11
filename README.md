@@ -45,6 +45,18 @@ and start the instance
 docker run -it -p 8004:8004 metabulo
 ```
 
+You may find that changes to the position or size of the window in which the
+Docker image runs will cause the service to terminate with `SIGWINCH`; this is
+actually intended behavior and can be avoided by running the image *without*
+allocating a pseudo-terminal and keeping `stdin` open:
+
+```sh
+docker run --name metabulo -p 8004:8004 metabulo
+```
+
+To stop this container, use a command like `docker stop metabulo` from another
+terminal.
+
 This installation includes a custom R package called
 [metabulo](devops/metabulo), which contains all functions that are exposed to
 the API server for CSV file processing.  Functions contained in this package
