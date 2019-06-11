@@ -4,6 +4,19 @@ Metabulo
 Getting started
 ---------------
 
+This project includes a `Pipfile` to help set up a virtual environment for
+Metabulo. To set up the virtual environment
+
+```sh
+pipenv install
+```
+
+and to enter it
+
+```sh
+pipenv shell
+```
+
 Metabulo is configured from a `.env` file present in the current directory
 where it is executed.  See the included [.env_example](./.env_example) for an
 example.  Once the environment is in place, you will need to initialize the
