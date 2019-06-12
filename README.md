@@ -4,6 +4,19 @@ Metabulo
 Getting started
 ---------------
 
+This project includes a `Pipfile` to help set up a virtual environment for
+Metabulo. To set up the virtual environment
+
+```sh
+pipenv install
+```
+
+and to enter it
+
+```sh
+pipenv shell
+```
+
 Metabulo is configured from a `.env` file present in the current directory where
 it is executed.  See the included [.env_example](./.env_example) for an example
 (or try [.env_pwd](./env_pwd), which saves DB and uploaded files in the checked
@@ -48,6 +61,18 @@ and start the instance
 ```sh
 docker run -it -p 8004:8004 metabulo
 ```
+
+You may find that changes to the position or size of the window in which the
+Docker image runs will cause the service to terminate with `SIGWINCH`; this is
+actually intended behavior and can be avoided by running the image *without*
+allocating a pseudo-terminal and keeping `stdin` open:
+
+```sh
+docker run --name metabulo -p 8004:8004 metabulo
+```
+
+To stop this container, use a command like `docker stop metabulo` from another
+terminal.
 
 This installation includes a custom R package called
 [metabulo](devops/metabulo), which contains all functions that are exposed to
