@@ -4,14 +4,18 @@ Metabulo
 Getting started
 ---------------
 
-Metabulo is configured from a `.env` file present in the current directory
-where it is executed.  See the included [.env_example](./.env_example) for an
-example.  Once the environment is in place, you will need to initialize the
-tables by running
+Metabulo is configured from a `.env` file present in the current directory where
+it is executed.  See the included [.env_example](./.env_example) for an example
+(or try [.env_pwd](./env_pwd), which saves DB and uploaded files in the checked
+out directory rather than your home directory).  Once the environment is in
+place, you will need to initialize the tables by running
 
 ```sh
 metabulo-create-tables
 ```
+
+This will create a data directory according to the `SQLALCHEMY_DATABASE_URI` and
+`UPLOAD_FOLDER` environment variables defined in the `.env` file.
 
 Start the development server by running:
 
