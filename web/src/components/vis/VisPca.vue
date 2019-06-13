@@ -94,6 +94,21 @@ export default {
       validator: prop => !prop
           || (typeof prop === 'object' && ['x', 'labels'].every(key => key in prop)),
     },
+    id: {
+      type: String,
+      required: true,
+    },
+  },
+  computed: {
+    dataset() {
+      return this.$store.getters.dataset(this.id);
+    },
+    group() {
+      const dataset = this.dataset;
+      const column = dataset.source.columns.find((elem) => elem.column_type === 'group');
+
+      return column.column_header;
+    },
   },
   watch: {
     rawPoints(newval) {
@@ -248,7 +263,7 @@ export default {
 
       // Set up a colormap and select an arbitrary label to color the nodes.
       const cmap = scaleOrdinal(schemeCategory10);
-      const label = Object.keys(rawPoints.labels)[0];
+      const label = this.group;
       if (label) {
         sel.transition()
           .duration(duration)
