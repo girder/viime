@@ -104,8 +104,8 @@ export default {
       return this.$store.getters.dataset(this.id);
     },
     group() {
-      const dataset = this.dataset;
-      const column = dataset.source.columns.find((elem) => elem.column_type === 'group');
+      const { dataset } = this;
+      const column = dataset.source.columns.find(elem => elem.column_type === 'group');
 
       return column.column_header;
     },
