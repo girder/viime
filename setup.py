@@ -31,7 +31,7 @@ setup(
         'dogpile.cache',
         'flask',
         'flask-sqlalchemy',
-        'marshmallow>=3.0.0rc4',
+        'marshmallow==3.0.0rc6',
         'matplotlib',
         'pandas',
         'python-dotenv',
