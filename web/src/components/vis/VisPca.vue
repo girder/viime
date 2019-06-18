@@ -207,14 +207,14 @@ export default {
 
       axisLabel(1,
         rawPoints.sdev[0] / totVariance,
-        select(this.$refs.svg).select('.label.x'),
+        svg.select('.label.x'),
         bbox => dwidth / 2 - bbox.width / 2,
         bbox => dheight + margin.bottom / 2 + bbox.height / 2,
         0);
 
       axisLabel(2,
         rawPoints.sdev[1] / totVariance,
-        select(this.$refs.svg).select('.label.y'),
+        svg.select('.label.y'),
         bbox => margin.left / 2 - bbox.height / 2,
         bbox => dheight / 2 + bbox.width / 2,
         -90);
@@ -224,8 +224,7 @@ export default {
       // Plot the points in the scatter plot.
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.1f');
-      const sel = select(this.$refs.svg)
-        .select('g.plot')
+      const sel = svg.select('g.plot')
         .selectAll('circle')
         .data(points)
         .join(enter => enter.append('circle')
@@ -329,7 +328,7 @@ export default {
       });
 
       // Draw the ellipses.
-      select('g.ellipses')
+      svg.select('g.ellipses')
         .selectAll('g.ellipse')
         .data(ellipses)
         .enter()
@@ -344,7 +343,7 @@ export default {
         .attr('vector-effect', 'non-scaling-stroke')
         .style('stroke', d => cmap(d.category));
 
-      select('g.ellipses')
+      svg.select('g.ellipses')
         .selectAll('g.ellipse')
         .data(ellipses)
         .transition()
