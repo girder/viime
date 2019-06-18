@@ -94,15 +94,20 @@ export default {
       validator: prop => !prop
           || (typeof prop === 'object' && ['x', 'labels'].every(key => key in prop)),
     },
+    dataset: {
+      required: true,
+      validator: prop => typeof prop === 'object'
+        && 'source' in prop
+        && typeof prop.source === 'object'
+        && 'columns' in prop.source
+        && Array.isArray(prop.source.columns),
+    },
     id: {
       type: String,
       required: true,
     },
   },
   computed: {
-    dataset() {
-      return this.$store.getters.dataset(this.id);
-    },
     group() {
       const { dataset } = this;
       const column = dataset.source.columns.find(elem => elem.column_type === 'group');

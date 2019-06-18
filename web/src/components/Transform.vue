@@ -116,5 +116,5 @@ v-layout.transform-view(row, fill-height)
   v-layout(v-else, row, fill-height, ref="contentarea")
     .pa-4
       h3.headline.ml-5 Principal Component Analysis
-      vis-pca(:width="800", :height="600", :raw-points="pcaData", :id="id")
+      vis-pca(:width="800", :height="600", :raw-points="pcaData", :dataset="dataset" :id="id")
 </template>
