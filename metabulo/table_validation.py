@@ -143,11 +143,11 @@ def get_validation_list(csv_file):
 
 def get_missing_index_errors(csv_file):
     errors = []
-    if csv_file.key_column_index is None:
+    if csv_file.key_column is None:
         errors.append(PrimaryKeyMissing())
-    if csv_file.header_row_index is None:
+    if csv_file.header_row is None:
         errors.append(HeaderMissing())
-    if csv_file.group_column_index is None:
+    if csv_file.group_column is None:
         errors.append(GroupMissing())
     return errors
 
@@ -183,17 +183,19 @@ def get_invalid_index_errors(csv_file):
         TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.INDEX).iloc[:, 0]
     error_data = check_valid_index(table)
     if error_data:
-        errors.append(InvalidPrimaryKey(column_index=csv_file.key_column_index, data=error_data))
+        errors.append(InvalidPrimaryKey(
+            column_index=csv_file.key_column.column_index, data=error_data))
 
     table = csv_file.filter_table_by_types(
         TABLE_ROW_TYPES.INDEX, TABLE_COLUMN_TYPES.DATA).iloc[0, :]
     error_data = check_valid_index(table)
     if error_data:
-        errors.append(InvalidHeader(row_index=csv_file.header_row_index, data=error_data))
+        errors.append(InvalidHeader(row_index=csv_file.header_row.row_index, data=error_data))
 
     error_data = check_valid_groups(csv_file.groups)
     if error_data:
-        errors.append(InvalidGroup(column_index=csv_file.group_column_index, data=error_data))
+        errors.append(InvalidGroup(
+            column_index=csv_file.group_column.column_index, data=error_data))
 
     return errors
 

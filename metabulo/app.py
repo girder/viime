@@ -9,6 +9,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from metabulo.cache import clear_cache, persistent_region
 from metabulo.models import db
 from metabulo.opencpu import OpenCPUException
+from metabulo import triggers  # noqa
 from metabulo.views import csv_bp
 
 try:

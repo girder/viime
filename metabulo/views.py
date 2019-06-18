@@ -255,17 +255,17 @@ def batch_modify_label(csv_id):
 
         if context == AXIS_NAME_TYPES.ROW:
             row = TableRow.query.get_or_404((csv_id, index))
-            if label == TABLE_ROW_TYPES.INDEX:
-                csv_file.header_row_index = index
+            if label == TABLE_ROW_TYPES.INDEX and csv_file.header_row:
+                csv_file.header_row.row_type = TABLE_ROW_TYPES.METADATA
             setattr(row, 'row_type', label)
             db.session.add(row)
 
         elif context == AXIS_NAME_TYPES.COLUMN:
             column = TableColumn.query.get_or_404((csv_id, index))
-            if label == TABLE_COLUMN_TYPES.INDEX:
-                csv_file.key_column_index = index
-            elif label == TABLE_COLUMN_TYPES.GROUP:
-                csv_file.group_column_index = index
+            if label == TABLE_COLUMN_TYPES.INDEX and csv_file.key_column:
+                csv_file.key_column.column_type = TABLE_COLUMN_TYPES.METADATA
+            elif label == TABLE_COLUMN_TYPES.GROUP and csv_file.group_column:
+                csv_file.group_column.column_type = TABLE_COLUMN_TYPES.METADATA
             setattr(column, 'column_type', label)
             db.session.add(column)
     db.session.add(csv_file)
