@@ -102,10 +102,6 @@ export default {
         && 'columns' in prop.source
         && Array.isArray(prop.source.columns),
     },
-    id: {
-      type: String,
-      required: true,
-    },
   },
   computed: {
     group() {
