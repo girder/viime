@@ -307,18 +307,14 @@ def _get_pca_data(csv_file):
         table = csv_file.apply_transforms()
         max_components = int(request.args.get('max_components', len(table.columns)))
     except OpenCPUException as e:
-        if e.response is None:
-            raise ServerError({
-                'error': 'OpenCPU call failed',
-                'method': e.method,
-                'response': 'Connection failed'
-            }, 504)
-        else:
-            raise ServerError({
-                'error': 'OpenCPU call failed',
-                'method': e.method,
-                'response': e.response.content.decode()
-            }, 502)
+        response = 'Connection failed' if e.response is None else e.response.content.decode()
+        code = 504 if e.response is None else 502
+
+        raise ServerError({
+            'error': 'OpenCPU call failed',
+            'method': e.method,
+            'response': response
+        }, code)
 
     data = pca(table, max_components)
 
@@ -372,18 +368,14 @@ def _get_loadings_data(csv_file):
     try:
         table = csv_file.apply_transforms()
     except OpenCPUException as e:
-        if e.response is None:
-            raise ServerError({
-                'error': 'OpenCPU call failed',
-                'method': e.method,
-                'response': 'Connection failed'
-            }, 504)
-        else:
-            raise ServerError({
-                'error': 'OpenCPU call failed',
-                'method': e.method,
-                'response': e.response.content.decode()
-            }, 502)
+        response = 'Connection failed' if e.response is None else e.response.content.decode()
+        code = 504 if e.response is None else 502
+
+        raise ServerError({
+            'error': 'OpenCPU call failed',
+            'method': e.method,
+            'response': response
+        }, code)
 
     pca_data = _get_pca_data(csv_file)
 
