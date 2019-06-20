@@ -14,7 +14,7 @@ div
 
 <style scoped lang="scss">
 div.tooltip {
-  position: absolute;
+  position: fixed;
   text-align: center;
   width: 120px;
   height: 30px;
@@ -200,8 +200,8 @@ export default {
               .duration(200)
               .style('opacity', 0.9);
             tooltip.html(`PC1: ${coordFormat(d.x)}<br>PC2: ${coordFormat(d.y)}`)
-              .style('left', `${event.pageX}px`)
-              .style('top', `${event.pageY - 30}px`);
+              .style('left', `${event.clientX}px`)
+              .style('top', `${event.clientY - 30}px`);
           })
           .on('mouseout', function mouseout() {
             select(this)

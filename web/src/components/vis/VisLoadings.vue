@@ -13,7 +13,7 @@ div
 
 <style scoped lang="scss">
 div.tooltip {
-  position: absolute;
+  position: fixed;
   text-align: center;
   width: 120px;
   height: 45px;
