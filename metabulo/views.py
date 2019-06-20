@@ -302,10 +302,9 @@ class ServerError(Exception):
         return jsonify(self.respose), self.code
 
 
-def _get_pca_data(csv_file):
+def _apply_transforms(csv_file):
     try:
         table = csv_file.apply_transforms()
-        max_components = int(request.args.get('max_components', len(table.columns)))
     except OpenCPUException as e:
         response = 'Connection failed' if e.response is None else e.response.content.decode()
         code = 504 if e.response is None else 502
@@ -316,6 +315,12 @@ def _get_pca_data(csv_file):
             'response': response
         }, code)
 
+    return table
+
+
+def _get_pca_data(csv_file):
+    table = _apply_transforms(csv_file)
+    max_components = int(request.args.get('max_components', len(table.columns)))
     data = pca(table, max_components)
 
     # insert per row label metadata information
@@ -365,18 +370,7 @@ def _get_loadings_data(csv_file):
 
         return prod_sum / (x_stddev * y_stddev)
 
-    try:
-        table = csv_file.apply_transforms()
-    except OpenCPUException as e:
-        response = 'Connection failed' if e.response is None else e.response.content.decode()
-        code = 504 if e.response is None else 502
-
-        raise ServerError({
-            'error': 'OpenCPU call failed',
-            'method': e.method,
-            'response': response
-        }, code)
-
+    table = _apply_transforms(csv_file)
     pca_data = _get_pca_data(csv_file)
 
     # Transpose the PCA values.
