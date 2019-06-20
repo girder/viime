@@ -23,8 +23,9 @@ export const axisPlot = {
       const svg = this.svg = select(this.$refs.svg);
 
       // Compute the size of the data rectangle.
-      const dwidth = width - margin.left - margin.right;
-      const dheight = height - margin.top - margin.bottom;
+      this.margin = margin;
+      const dwidth = this.dwidth = width - margin.left - margin.right;
+      const dheight = this.dheight = height - margin.top - margin.bottom;
 
       // Create X and Y scales.
       const scaleX = this.scaleX = scaleLinear()
@@ -72,19 +73,37 @@ export const axisPlot = {
       }
 
       // Label the axes.
+      this.setXLabel(xlabel);
+      this.setYLabel(ylabel);
+
+      // Conclude the initialization process.
+      this.axisPlotInitialized = true;
+    },
+
+    setXLabel(msg) {
+      const svg = this.svg;
+      const margin = this.margin;
+      const dwidth = this.dwidth;
+      const dheight = this.dheight;
+
       labelAxis(svg.select('.label.x'),
-        xlabel,
+        msg,
         bbox => dwidth / 2 - bbox.width / 2,
         bbox => dheight + margin.bottom / 2 + bbox.height / 2,
         0);
+    },
+
+    setYLabel(msg) {
+      const svg = this.svg;
+      const margin = this.margin;
+      const dwidth = this.dwidth;
+      const dheight = this.dheight;
 
       labelAxis(svg.select('.label.y'),
-        ylabel,
+        msg,
         bbox => -margin.left / 2 - bbox.height / 2,
         bbox => dheight / 2 + bbox.width / 2,
         -90);
-
-      this.axisPlotInitialized = true;
-    },
+    }
   },
 };

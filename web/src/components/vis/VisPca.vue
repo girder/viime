@@ -67,15 +67,6 @@ function unit(matrix) {
   });
 }
 
-function axisLabel(which, pct, label, x, y, rot) {
-  const pctStr = format('.2%')(pct);
-  const text = label.select('text')
-    .html(`PC${which}&nbsp;(${pctStr})`);
-  const bbox = text.node().getBBox();
-  label.attr('transform', `translate(${x(bbox)},${y(bbox)}) rotate(${rot})`)
-    .style('opacity', 1.0);
-}
-
 export default {
   mixins: [
     axisPlot,
@@ -178,6 +169,14 @@ export default {
       } = this.$props;
 
       const xyPoints = this.xyPoints;
+
+      // Set the axis labels.
+      //
+      // Compute the total variance in all the PCs.
+      const totVariance = rawPoints.sdev.reduce((acc, x) => acc + x, 0);
+      const pctFormat = format('.2%');
+      this.setXLabel(`PC1 (${pctFormat(rawPoints.sdev[0] / totVariance)})`);
+      this.setYLabel(`PC2 (${pctFormat(rawPoints.sdev[1] / totVariance)})`);
 
       // Draw the data.
       //
