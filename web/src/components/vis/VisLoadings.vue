@@ -35,6 +35,8 @@ import { schemeCategory10 } from 'd3-scale-chromatic';
 import { axisBottom, axisLeft } from 'd3-axis';
 import 'd3-transition';
 
+import { axisPlot } from './mixins/axisPlot';
+
 function minmax(data, padding = 0.0) {
   const min = Math.min(...data);
   const max = Math.max(...data);
@@ -55,6 +57,9 @@ function axisLabel(which, msg, label, x, y, rot) {
 }
 
 export default {
+  mixins: [
+    axisPlot,
+  ],
   props: {
     width: {
       type: Number,
@@ -87,6 +92,19 @@ export default {
     },
   },
   mounted() {
+    this.axisPlot({
+      margin: {
+        top: 20,
+        right: 0,
+        bottom: 50,
+        left: 50,
+      },
+      xrange: [-1.2, 1.2],
+      yrange: [-1.2, 1.2],
+      xlabel: 'x correlation',
+      ylabel: 'y correlation',
+      duration: 500,
+    });
     if (this.points) {
       this.update();
     }
@@ -95,103 +113,26 @@ export default {
     update() {
       // Grab the input props.
       const {
-        width,
-        height,
         points,
       } = this.$props;
-
-      // Grab the root SVG element.
-      const svg = select(this.$refs.svg);
-
-      // Set a margin.
-      const margin = {
-        top: 20,
-        right: 0,
-        bottom: 50,
-        left: 50,
-      };
-
-      const dwidth = width - margin.left - margin.right;
-      const dheight = height - margin.top - margin.bottom;
-
-      // Create X and Y axis objects.
-      const xrange = minmax([-1, 1], 0.1);
-      const yrange = minmax([-1, 1], 0.1);
-
-      const scalex = scaleLinear()
-        .domain(xrange)
-        .range([0, dwidth]);
-
-      const scaley = scaleLinear()
-        .domain(yrange)
-        .range([dheight, 0]);
-
-      const xAxis = axisBottom(scalex);
-      const yAxis = axisLeft(scaley);
-
-      // Draw axes.
-      const master = svg.select('g.master')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
-
-      const axes = master.select('g.axes');
-
-      const duration = 500;
-
-      if (axes.select('.x-axis').size() === 0) {
-        axes.append('g')
-          .classed('x-axis', true)
-          .attr('transform', `translate(0,${dheight})`)
-          .call(xAxis);
-      } else {
-        axes.select('.x-axis')
-          .transition()
-          .duration(duration)
-          .call(xAxis);
-      }
-
-      if (axes.select('.y-axis').size() === 0) {
-        axes.append('g')
-          .classed('y-axis', true)
-          .attr('transform', `translate(0,0)`)
-          .call(yAxis);
-      } else {
-        axes.select('.y-axis')
-          .transition()
-          .duration(duration)
-          .call(yAxis);
-      }
-
-      axisLabel(1,
-        'x correlation',
-        svg.select('.label.x'),
-        bbox => dwidth / 2 - bbox.width / 2,
-        bbox => dheight + margin.bottom / 2 + bbox.height / 2,
-        0);
-
-      axisLabel(2,
-        'y correlation',
-        svg.select('.label.y'),
-        bbox => -margin.left / 2 - bbox.height / 2,
-        bbox => dheight / 2 + bbox.width / 2,
-        -90);
 
       // Draw the data.
       //
       // Plot the vectors and points in the scatter plot.
-      const sel = svg.select('g.plot');
+      const sel = this.svg.select('g.plot');
       sel.selectAll('line')
         .data(points)
         .join(enter => enter.append('line')
-          .attr('x1', scalex(0))
-          .attr('y1', scaley(0))
-          .attr('x2', scalex(0))
-          .attr('y2', scaley(0))
+          .attr('x1', this.scaleX(0))
+          .attr('y1', this.scaleY(0))
+          .attr('x2', this.scaleX(0))
+          .attr('y2', this.scaleY(0))
           .style('stroke', 'black')
           .style('opacity', 0.0))
         .transition()
-        .duration(duration)
-        .attr('x2', d => scalex(d.x))
-        .attr('y2', d => scaley(d.y))
+        .duration(this.duration)
+        .attr('x2', d => this.scaleX(d.x))
+        .attr('y2', d => this.scaleY(d.y))
         .style('opacity', 1.0);
 
       const tooltip = select(this.$refs.tooltip);
@@ -199,8 +140,8 @@ export default {
       sel.selectAll('circle')
         .data(points)
         .join(enter => enter.append('circle')
-          .attr('cx', scalex(0))
-          .attr('cy', scaley(0))
+          .attr('cx', this.scaleX(0))
+          .attr('cy', this.scaleY(0))
           .attr('r', 0)
           .on('mouseover', function mouseover(d) {
             select(this)
@@ -226,11 +167,11 @@ export default {
               .style('opacity', 0.0);
           }))
         .transition()
-        .duration(duration)
+        .duration(this.duration)
         .delay((d, i) => i * 5)
         .attr('r', 2)
-        .attr('cx', d => scalex(d.x))
-        .attr('cy', d => scaley(d.y));
+        .attr('cx', d => this.scaleX(d.x))
+        .attr('cy', d => this.scaleY(d.y));
     },
   },
 };
