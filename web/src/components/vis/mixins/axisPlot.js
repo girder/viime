@@ -83,6 +83,8 @@ export const axisPlot = {
         bbox => -margin.left / 2 - bbox.height / 2,
         bbox => dheight / 2 + bbox.width / 2,
         -90);
+
+      this.axisPlotInitialized = true;
     },
   },
 };
