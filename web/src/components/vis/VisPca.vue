@@ -179,7 +179,7 @@ export default {
       if (axes.select('.x-axis').size() === 0) {
         axes.append('g')
           .classed('x-axis', true)
-          .attr('transform', `translate(${margin.left},${dheight})`)
+          .attr('transform', `translate(0,${dheight})`)
           .call(xAxis);
       } else {
         axes.select('.x-axis')
@@ -191,7 +191,7 @@ export default {
       if (axes.select('.y-axis').size() === 0) {
         axes.append('g')
           .classed('y-axis', true)
-          .attr('transform', `translate(${margin.left},0)`)
+          .attr('transform', `translate(0,0)`)
           .call(yAxis);
       } else {
         axes.select('.y-axis')
@@ -215,7 +215,7 @@ export default {
       axisLabel(2,
         rawPoints.sdev[1] / totVariance,
         svg.select('.label.y'),
-        bbox => margin.left / 2 - bbox.height / 2,
+        bbox => -margin.left / 2 - bbox.height / 2,
         bbox => dheight / 2 + bbox.width / 2,
         -90);
 
@@ -223,7 +223,7 @@ export default {
       //
       // Plot the points in the scatter plot.
       const tooltip = select(this.$refs.tooltip);
-      const coordFormat = format('.1f');
+      const coordFormat = format('.2f');
       const sel = svg.select('g.plot')
         .selectAll('circle')
         .data(points)
