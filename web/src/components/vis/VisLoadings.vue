@@ -30,31 +30,9 @@ div.tooltip {
 <script>
 import { select, event } from 'd3-selection';
 import { format } from 'd3-format';
-import { scaleLinear, scaleOrdinal } from 'd3-scale';
-import { schemeCategory10 } from 'd3-scale-chromatic';
-import { axisBottom, axisLeft } from 'd3-axis';
 import 'd3-transition';
 
 import { axisPlot } from './mixins/axisPlot';
-
-function minmax(data, padding = 0.0) {
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const pad = padding * (max - min);
-
-  return [
-    min - pad,
-    max + pad,
-  ];
-}
-
-function axisLabel(which, msg, label, x, y, rot) {
-  const text = label.select('text')
-    .html(`${msg}`);
-  const bbox = text.node().getBBox();
-  label.attr('transform', `translate(${x(bbox)},${y(bbox)}) rotate(${rot})`)
-    .style('opacity', 1.0);
-}
 
 export default {
   mixins: [

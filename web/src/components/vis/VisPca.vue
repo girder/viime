@@ -31,9 +31,8 @@ div.tooltip {
 <script>
 import { select, event } from 'd3-selection';
 import { format } from 'd3-format';
-import { scaleLinear, scaleOrdinal } from 'd3-scale';
+import { scaleOrdinal } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
-import { axisBottom, axisLeft } from 'd3-axis';
 import 'd3-transition';
 
 import { axisPlot } from './mixins/axisPlot';
@@ -106,9 +105,9 @@ export default {
           x: p[0],
           y: p[1],
         }));
-      } else {
-        return null;
       }
+
+      return null;
     },
     group() {
       const { dataset } = this;
@@ -121,7 +120,7 @@ export default {
     rawPoints(newval) {
       if (newval) {
         if (!this.axisPlotInitialized) {
-          const xyPoints = this.xyPoints;
+          const { xyPoints } = this;
           this.axisPlot({
             margin: {
               top: 20,
@@ -143,7 +142,7 @@ export default {
   },
   mounted() {
     if (this.xyPoints) {
-      const xyPoints = this.xyPoints;
+      const { xyPoints } = this;
       this.axisPlot({
         margin: {
           top: 20,
@@ -168,7 +167,7 @@ export default {
         rawPoints,
       } = this.$props;
 
-      const xyPoints = this.xyPoints;
+      const { xyPoints } = this;
 
       // Set the axis labels.
       //

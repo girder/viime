@@ -1,5 +1,5 @@
 import { select } from 'd3-selection';
-import { scaleLinear, scaleOrdinal } from 'd3-scale';
+import { scaleLinear } from 'd3-scale';
 import { axisBottom, axisLeft } from 'd3-axis';
 
 function labelAxis(label, msg, xFunc, yFunc, rot) {
@@ -12,7 +12,9 @@ function labelAxis(label, msg, xFunc, yFunc, rot) {
 
 export const axisPlot = {
   methods: {
-    axisPlot({margin, xrange, yrange, xlabel, ylabel, duration}) {
+    axisPlot({
+      margin, xrange, yrange, xlabel, ylabel, duration,
+    }) {
       // Collect necessary props.
       const {
         width,
@@ -20,24 +22,35 @@ export const axisPlot = {
       } = this.$props;
 
       // Grab the root SVG element.
-      const svg = this.svg = select(this.$refs.svg);
+      const svg = select(this.$refs.svg);
+      this.svg = svg;
 
       // Compute the size of the data rectangle.
       this.margin = margin;
-      const dwidth = this.dwidth = width - margin.left - margin.right;
-      const dheight = this.dheight = height - margin.top - margin.bottom;
+
+      const dwidth = width - margin.left - margin.right;
+      this.dwidth = dwidth;
+
+      const dheight = height - margin.top - margin.bottom;
+      this.dheight = dheight;
 
       // Create X and Y scales.
-      const scaleX = this.scaleX = scaleLinear()
+      const scaleX = scaleLinear()
         .domain(xrange)
         .range([0, dwidth]);
-      const scaleY = this.scaleY = scaleLinear()
+      this.scaleX = scaleX;
+
+      const scaleY = scaleLinear()
         .domain(yrange)
         .range([dheight, 0]);
+      this.scaleY = scaleY;
 
       // Create X and Y axis objects.
-      const axisX = this.axisX = axisBottom(scaleX);
-      const axisY = this.axisY = axisLeft(scaleY);
+      const axisX = axisBottom(scaleX);
+      this.axisX = axisX;
+
+      const axisY = axisLeft(scaleY);
+      this.axisY = axisY;
 
       // Set a "master" SVG group.
       const master = svg.select('g.master')
@@ -63,7 +76,7 @@ export const axisPlot = {
       if (axes.select('.y-axis').size() === 0) {
         axes.append('g')
           .classed('y-axis', true)
-          .attr('transform', `translate(0,0)`)
+          .attr('transform', 'translate(0,0)')
           .call(axisY);
       } else {
         axes.select('.y-axis')
@@ -81,10 +94,12 @@ export const axisPlot = {
     },
 
     setXLabel(msg) {
-      const svg = this.svg;
-      const margin = this.margin;
-      const dwidth = this.dwidth;
-      const dheight = this.dheight;
+      const {
+        svg,
+        margin,
+        dwidth,
+        dheight,
+      } = this;
 
       labelAxis(svg.select('.label.x'),
         msg,
@@ -94,16 +109,17 @@ export const axisPlot = {
     },
 
     setYLabel(msg) {
-      const svg = this.svg;
-      const margin = this.margin;
-      const dwidth = this.dwidth;
-      const dheight = this.dheight;
+      const {
+        svg,
+        margin,
+        dheight,
+      } = this;
 
       labelAxis(svg.select('.label.y'),
         msg,
         bbox => -margin.left / 2 - bbox.height / 2,
         bbox => dheight / 2 + bbox.width / 2,
         -90);
-    }
+    },
   },
 };
