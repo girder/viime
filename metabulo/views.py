@@ -293,23 +293,32 @@ def get_row(csv_id, row_index):
     ))
 
 
+class ServerError(Exception):
+    def __init__(self, response, code):
+        self.response = response
+        self.code = code
+
+    def return_value(self):
+        return jsonify(self.respose), self.code
+
+
 def _get_pca_data(csv_file):
     try:
         table = csv_file.apply_transforms()
         max_components = int(request.args.get('max_components', len(table.columns)))
     except OpenCPUException as e:
         if e.response is None:
-            return jsonify({
+            raise ServerError({
                 'error': 'OpenCPU call failed',
                 'method': e.method,
                 'response': 'Connection failed'
-            }), 504
+            }, 504)
         else:
-            return jsonify({
+            raise ServerError({
                 'error': 'OpenCPU call failed',
                 'method': e.method,
                 'response': e.response.content.decode()
-            }), 502
+            }, 502)
 
     data = pca(table, max_components)
 
@@ -321,62 +330,60 @@ def _get_pca_data(csv_file):
     return data
 
 
+def _get_csv_file(csv_id):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+
+    fatal_errors = get_fatal_index_errors(csv_file)
+    if fatal_errors:
+        raise ServerError({
+            'error': 'Fatal error in table validation',
+            'validation': validation_schema.dump(fatal_errors, many=True)
+        }, 400)
+
+    return csv_file
+
+
 @csv_bp.route('/csv/<uuid:csv_id>/plot/pca', methods=['GET'])
 def get_pca_plot(csv_id):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    fatal_errors = get_fatal_index_errors(csv_file)
-    if fatal_errors:
-        return jsonify({
-            'error': 'Fatal error in table validation',
-            'validation': validation_schema.dump(fatal_errors, many=True)
-        }), 400
-
-    return jsonify(_get_pca_data(csv_file)), 200
+    try:
+        csv_file = _get_csv_file(csv_id)
+        return jsonify(_get_pca_data(csv_file)), 200
+    except ServerError as e:
+        return e.return_value()
 
 
-def mean(x):
-    return sum(x) / len(x)
+def _get_loadings_data(csv_file):
+    def mean(x):
+        return sum(x) / len(x)
 
+    def sq(x):
+        return x * x
 
-def sq(x):
-    return x * x
+    def cor(xs, ys):
+        x_mean = mean(xs)
+        y_mean = mean(ys)
 
+        prod_sum = sum(map(lambda x, y: (x - x_mean) * (y - y_mean), xs, ys))
+        x_stddev = math.sqrt(sum(map(lambda x: sq(x - x_mean), xs)))
+        y_stddev = math.sqrt(sum(map(lambda y: sq(y - y_mean), ys)))
 
-def cor(xs, ys):
-    x_mean = mean(xs)
-    y_mean = mean(ys)
+        return prod_sum / (x_stddev * y_stddev)
 
-    prod_sum = sum(map(lambda x, y: (x - x_mean) * (y - y_mean), xs, ys))
-    x_stddev = math.sqrt(sum(map(lambda x: sq(x - x_mean), xs)))
-    y_stddev = math.sqrt(sum(map(lambda y: sq(y - y_mean), ys)))
-
-    return prod_sum / (x_stddev * y_stddev)
-
-
-@csv_bp.route('/csv/<uuid:csv_id>/plot/loadings', methods=['GET'])
-def get_loadings_plot(csv_id):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    fatal_errors = get_fatal_index_errors(csv_file)
-    if fatal_errors:
-        return jsonify({
-            'error': 'Fatal error in table validation',
-            'validation': validation_schema.dump(fatal_errors, many=True)
-        }), 400
     try:
         table = csv_file.apply_transforms()
     except OpenCPUException as e:
         if e.response is None:
-            return jsonify({
+            raise ServerError({
                 'error': 'OpenCPU call failed',
                 'method': e.method,
                 'response': 'Connection failed'
-            }), 504
+            }, 504)
         else:
-            return jsonify({
+            raise ServerError({
                 'error': 'OpenCPU call failed',
                 'method': e.method,
                 'response': e.response.content.decode()
-            }), 502
+            }, 502)
 
     pca_data = _get_pca_data(csv_file)
 
@@ -384,11 +391,18 @@ def get_loadings_plot(csv_id):
     pca_data = [list(x) for x in zip(*pca_data['x'])]
 
     # Compute correlations between each metabolite and both PC1 and PC2.
-    vecs = [{'col': k,
+    return [{'col': k,
              'x': cor(v, pca_data[0]),
              'y': cor(v, pca_data[1])} for (k, v) in table.items()]
 
-    return jsonify(vecs), 200
+
+@csv_bp.route('/csv/<uuid:csv_id>/plot/loadings', methods=['GET'])
+def get_loadings_plot(csv_id):
+    try:
+        csv_file = _get_csv_file(csv_id)
+        return jsonify(_get_loadings_data(csv_file)), 200
+    except ServerError as e:
+        return e.return_value()
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/pca-overview', methods=['GET'])
