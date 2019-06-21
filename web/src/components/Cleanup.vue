@@ -308,10 +308,10 @@ v-layout.cleanup-wrapper(row)
             color: white;
 
             &.first{
-              border-left: 2px solid var(--v-secondary-darken3) !important;
+              border-left: 2px solid var(--v-secondary-darken3);
             }
             &.last {
-              border-right: 2px solid var(--v-secondary-darken3) !important;
+              border-right: 2px solid var(--v-secondary-darken3);
             }
           }
           &.masked {
