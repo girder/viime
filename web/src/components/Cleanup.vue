@@ -196,7 +196,7 @@ v-layout.cleanup-wrapper(row)
 
   .radio-toolbar {
     .v-toolbar__content {
-      height: inherit;
+      height: inherit !important; // Vuetify override
       padding: 0px;
     }
 
