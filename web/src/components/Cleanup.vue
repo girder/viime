@@ -188,7 +188,7 @@ v-layout.cleanup-wrapper(row)
   background-color: var(--v-secondary-lighten3);
   box-shadow: inset 0 0 0 .5px var(--v-secondary-lighten2);
   font-weight: 300;
-  color: var(--v-secondary-base) !important;
+  color: var(--v-secondary-base);
 }
 
 .cleanup-wrapper {
@@ -196,7 +196,7 @@ v-layout.cleanup-wrapper(row)
 
   .radio-toolbar {
     .v-toolbar__content {
-      height: inherit !important;
+      height: inherit;
       padding: 0px;
     }
 
@@ -275,26 +275,11 @@ v-layout.cleanup-wrapper(row)
       &.active.last td{
         border-bottom: 2px solid var(--v-secondary-darken3);
       }
-
-      &.active {
-        &.metadata {
-          td {
-            box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.15) !important;
-          }
-        }
-      }
-
+  
       &.active td,
       td.active {
         background: linear-gradient(0deg,rgba(161, 213, 255, 0.2),rgba(161, 213, 255, 0.2));
         box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.3);
-
-        &.group,
-        &.key,
-        &.metadata,
-        &.masked {
-          box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.15) !important;
-        }
       }
     }
 
@@ -308,10 +293,10 @@ v-layout.cleanup-wrapper(row)
             color: white;
 
             &.first{
-              border-left: 2px solid var(--v-secondary-darken3) !important;
+              border-left: 2px solid var(--v-secondary-darken3);
             }
             &.last {
-              border-right: 2px solid var(--v-secondary-darken3) !important;
+              border-right: 2px solid var(--v-secondary-darken3);
             }
           }
         }
@@ -349,7 +334,8 @@ v-layout.cleanup-wrapper(row)
       }
     }
 
-    tr.datarow {
+    tr.datarow,
+    tr.datarow.header {
       &.masked td,
       td.masked,
       th.masked {
