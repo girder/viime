@@ -188,7 +188,7 @@ v-layout.cleanup-wrapper(row)
   background-color: var(--v-secondary-lighten3);
   box-shadow: inset 0 0 0 .5px var(--v-secondary-lighten2);
   font-weight: 300;
-  color: var(--v-secondary-base) !important;
+  color: var(--v-secondary-base);
 }
 
 .cleanup-wrapper {
@@ -313,6 +313,9 @@ v-layout.cleanup-wrapper(row)
             &.last {
               border-right: 2px solid var(--v-secondary-darken3) !important;
             }
+          }
+          &.masked {
+            color: var(--v-secondary-base);
           }
         }
       }
