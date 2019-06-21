@@ -276,6 +276,14 @@ v-layout.cleanup-wrapper(row)
         border-bottom: 2px solid var(--v-secondary-darken3);
       }
 
+      &.active {
+        &.metadata {
+          td {
+            box-shadow: inset 0 0 0 1px rgba(161, 213, 255, 0.15) !important;
+          }
+        }
+      }
+
       &.active td,
       td.active {
         background: linear-gradient(0deg,rgba(161, 213, 255, 0.2),rgba(161, 213, 255, 0.2));
@@ -283,6 +291,7 @@ v-layout.cleanup-wrapper(row)
 
         &.group,
         &.key,
+        &.metadata,
         &.masked {
           box-shadow: inset 0 0 0 1px rgba(161, 213, 255, 0.15) !important;
         }
@@ -310,8 +319,8 @@ v-layout.cleanup-wrapper(row)
 
       &.metadata {
         td {
-          background-color: var(--v-accent2-lighten3);
-          box-shadow: inset 0 0 0 1px var(--v-accent2-lighten2);
+          background-color: var(--v-accent2-lighten2);
+          box-shadow: inset 0 0 0 1px var(--v-accent2-lighten1);
         }
       }
 
