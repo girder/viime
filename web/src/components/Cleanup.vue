@@ -186,7 +186,7 @@ v-layout.cleanup-wrapper(row)
 <style lang="scss">
 @mixin masked() {
   background-color: var(--v-secondary-lighten3);
-  box-shadow: inset 0 0 0 1px var(--v-secondary-lighten2);
+  box-shadow: inset 0 0 0 .5px var(--v-secondary-lighten2);
   font-weight: 300;
   color: var(--v-secondary-base) !important;
 }
@@ -247,7 +247,7 @@ v-layout.cleanup-wrapper(row)
       background-color: #fdfdfd;
 
       th, td {
-        box-shadow: inset 0 0 0 1px var(--v-secondary-lighten3);
+        box-shadow: inset 0 0 0 .5px var(--v-secondary-lighten3);
         padding: 2px;
         text-align: center;
         white-space: nowrap;
@@ -279,7 +279,7 @@ v-layout.cleanup-wrapper(row)
       &.active {
         &.metadata {
           td {
-            box-shadow: inset 0 0 0 1px rgba(161, 213, 255, 0.15) !important;
+            box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.15) !important;
           }
         }
       }
@@ -287,13 +287,13 @@ v-layout.cleanup-wrapper(row)
       &.active td,
       td.active {
         background: linear-gradient(0deg,rgba(161, 213, 255, 0.2),rgba(161, 213, 255, 0.2));
-        box-shadow: inset 0 0 0 1px rgba(161, 213, 255, 0.3);
+        box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.3);
 
         &.group,
         &.key,
         &.metadata,
         &.masked {
-          box-shadow: inset 0 0 0 1px rgba(161, 213, 255, 0.15) !important;
+          box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.15) !important;
         }
       }
     }
@@ -302,7 +302,7 @@ v-layout.cleanup-wrapper(row)
       &.header {
         td {
           background-color: var(--v-accent-lighten1);
-          box-shadow: inset 0 0 0 1px var(--v-accent-base);
+          box-shadow: inset 0 0 0 .5px var(--v-accent-base);
 
           &.active {
             color: white;
@@ -320,7 +320,7 @@ v-layout.cleanup-wrapper(row)
       &.metadata {
         td {
           background-color: var(--v-accent2-lighten2);
-          box-shadow: inset 0 0 0 1px var(--v-accent2-lighten1);
+          box-shadow: inset 0 0 0 .5px var(--v-accent2-lighten1);
         }
       }
 
@@ -334,17 +334,17 @@ v-layout.cleanup-wrapper(row)
       td {
         &.key {
           background-color: var(--v-primary-base);
-          box-shadow: inset 0 0 0 1px var(--v-primary-darken1);
+          box-shadow: inset 0 0 0 .5px var(--v-primary-darken1);
         }
 
         &.metadata, {
           background-color: var(--v-accent2-lighten2);
-          box-shadow: inset 0 0 0 1px var(--v-accent2-lighten1);
+          box-shadow: inset 0 0 0 .5px var(--v-accent2-lighten1);
         }
 
         &.group {
           background-color: var(--v-accent3-lighten1);
-          box-shadow: inset 0 0 0 1px var(--v-accent3-base);
+          box-shadow: inset 0 0 0 .5px var(--v-accent3-base);
         }
       }
     }
