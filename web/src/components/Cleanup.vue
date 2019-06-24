@@ -185,9 +185,10 @@ v-layout.cleanup-wrapper(row)
 
 <style lang="scss">
 @mixin masked() {
-  background-color: var(--v-secondary-lighten1);
+  background-color: var(--v-secondary-lighten3);
+  box-shadow: inset 0 0 0 .5px var(--v-secondary-lighten2);
   font-weight: 300;
-  color: var(--v-secondary-darken1);
+  color: var(--v-secondary-base);
 }
 
 .cleanup-wrapper {
@@ -237,35 +238,24 @@ v-layout.cleanup-wrapper(row)
     user-select: none;
 
     .key, .metadata, .header, .group {
-      font-weight: 700;
       color: white;
+      font-weight: 700;
       text-align: left;
     }
 
     tr {
+      background-color: #fdfdfd;
+
       th, td {
-        white-space: nowrap;
+        box-shadow: inset 0 0 0 .5px var(--v-secondary-lighten3);
         padding: 2px;
         text-align: center;
+        white-space: nowrap;
 
         &.control {
           cursor: pointer;
           font-weight: 300;
         }
-      }
-
-      background-color: #fdfdfd;
-
-      &:nth-child(odd) {
-        background-color: var(--v-primary-lighten5);
-
-        td:nth-child(odd), th:nth-child(odd) {
-          background-color: #CFD8DC;
-        }
-      }
-
-      td:nth-child(odd) {
-        background-color: var(--v-primary-lighten5);
       }
 
       td.active, th.active {
@@ -286,75 +276,84 @@ v-layout.cleanup-wrapper(row)
         border-bottom: 2px solid var(--v-secondary-darken3);
       }
 
+      &.active {
+        &.metadata {
+          td {
+            box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.15) !important;
+          }
+        }
+      }
+
       &.active td,
       td.active {
         background: linear-gradient(0deg,rgba(161, 213, 255, 0.2),rgba(161, 213, 255, 0.2));
+        box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.3);
+
+        &.group,
+        &.key,
+        &.metadata,
+        &.masked {
+          box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.15) !important;
+        }
       }
     }
 
     tr.datarow {
       &.header {
-        td:nth-child(odd) {
-          background-color: var(--v-accent-base);
-        }
-
         td {
-          background-color:var(--v-accent-lighten1);
+          background-color: var(--v-accent-lighten1);
+          box-shadow: inset 0 0 0 .5px var(--v-accent-base);
+
+          &.active {
+            color: white;
+
+            &.first{
+              border-left: 2px solid var(--v-secondary-darken3);
+            }
+            &.last {
+              border-right: 2px solid var(--v-secondary-darken3);
+            }
+          }
+          &.masked {
+            color: var(--v-secondary-base);
+          }
         }
       }
 
       &.metadata {
-        td:nth-child(odd) {
-          background: var(--v-accent2-lighten2);
-        }
-
         td {
-          background-color: var(--v-accent2-lighten3);
+          background-color: var(--v-accent2-lighten2);
+          box-shadow: inset 0 0 0 .5px var(--v-accent2-lighten1);
         }
       }
 
       &.header,
-      &.header:nth-child(odd),
-      &.metadata,
-      &.metadata:nth-child(odd) {
+      &.metadata {
         td.key, td.metadata, td.group {
           @include masked();
-        }
-      }
-
-      &:nth-child(odd) {
-        td.key {
-          background-color: var(--v-primary-lighten1);
-        }
-
-        td.metadata {
-          background-color: var(--v-accent2-lighten3);
-        }
-
-        td.group {
-          background-color: var(--v-accent3-lighten2);
         }
       }
 
       td {
         &.key {
           background-color: var(--v-primary-base);
+          box-shadow: inset 0 0 0 .5px var(--v-primary-darken1);
         }
 
         &.metadata, {
           background-color: var(--v-accent2-lighten2);
+          box-shadow: inset 0 0 0 .5px var(--v-accent2-lighten1);
         }
 
         &.group {
           background-color: var(--v-accent3-lighten1);
+          box-shadow: inset 0 0 0 .5px var(--v-accent3-base);
         }
       }
     }
 
-    tr.datarow,
-    tr.datarow:nth-child(odd) {
+    tr.datarow {
       &.masked td,
-      td.masked:nth-child(odd),
       td.masked,
       th.masked {
         @include masked();
