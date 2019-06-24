@@ -32,6 +32,7 @@ export const axisPlot = {
       xrange: [-1.2, 1.2],
       yrange: [-1.2, 1.2],
       duration: 500,
+      svg: null,
     };
   },
   computed: {
@@ -73,6 +74,8 @@ export const axisPlot = {
         axisY,
       } = this;
 
+      this.svg = svg;
+
       // Set a "master" SVG group.
       const master = svg.select('g.master')
         .attr('transform', `translate(${margin.left},${margin.top})`);
@@ -108,11 +111,12 @@ export const axisPlot = {
       this.axisPlotInitialized = true;
     },
 
-    setXLabel(svg, msg) {
+    setXLabel(msg) {
       const {
         margin,
         dwidth,
         dheight,
+        svg,
       } = this;
 
       labelAxis(svg.select('.label.x'),
@@ -122,10 +126,11 @@ export const axisPlot = {
         0);
     },
 
-    setYLabel(svg, msg) {
+    setYLabel(msg) {
       const {
         margin,
         dheight,
+        svg,
       } = this;
 
       labelAxis(svg.select('.label.y'),

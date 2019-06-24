@@ -85,8 +85,8 @@ export default {
   mounted() {
     const svg = select(this.$refs.svg);
     this.axisPlot(svg);
-    this.setXLabel(svg, 'PC1 correlation');
-    this.setYLabel(svg, 'PC2 correlation');
+    this.setXLabel('PC1 correlation');
+    this.setYLabel('PC2 correlation');
     if (this.points) {
       this.update();
     }
