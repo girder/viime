@@ -1,4 +1,3 @@
-import { select } from 'd3-selection';
 import { scaleLinear } from 'd3-scale';
 import { axisBottom, axisLeft } from 'd3-axis';
 
@@ -11,46 +10,71 @@ function labelAxis(label, msg, xFunc, yFunc, rot) {
 }
 
 export const axisPlot = {
-  methods: {
-    axisPlot({
-      margin, xrange, yrange, xlabel, ylabel, duration,
-    }) {
-      // Collect necessary props.
-      const {
-        width,
-        height,
-      } = this.$props;
-
-      // Grab the root SVG element.
-      const svg = select(this.$refs.svg);
-      this.svg = svg;
-
-      // Compute the size of the data rectangle.
-      this.margin = margin;
-
-      const dwidth = width - margin.left - margin.right;
-      this.dwidth = dwidth;
-
-      const dheight = height - margin.top - margin.bottom;
-      this.dheight = dheight;
-
-      // Create X and Y scales.
-      const scaleX = scaleLinear()
+  props: {
+    width: {
+      type: Number,
+      required: true,
+    },
+    height: {
+      type: Number,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      axisPlotInitialized: false,
+      margin: {
+        top: null,
+        right: null,
+        bottom: null,
+        left: null,
+      },
+      xrange: [-1, 1],
+      yrange: [-1, 1],
+      duration: 500,
+      svg: null,
+    };
+  },
+  computed: {
+    dwidth() {
+      const { width, margin } = this;
+      return width - margin.left - margin.right;
+    },
+    dheight() {
+      const { height, margin } = this;
+      return height - margin.top - margin.bottom;
+    },
+    scaleX() {
+      const { xrange, dwidth } = this;
+      return scaleLinear()
         .domain(xrange)
         .range([0, dwidth]);
-      this.scaleX = scaleX;
-
-      const scaleY = scaleLinear()
+    },
+    scaleY() {
+      const { yrange, dheight } = this;
+      return scaleLinear()
         .domain(yrange)
         .range([dheight, 0]);
-      this.scaleY = scaleY;
+    },
+    axisX() {
+      return axisBottom(this.scaleX);
+    },
+    axisY() {
+      return axisLeft(this.scaleY);
+    },
 
-      // Create X and Y axis objects.
-      const axisX = axisBottom(scaleX);
-      this.axisX = axisX;
+  },
+  methods: {
+    axisPlot(svg) {
+      const {
+        margin,
+        dheight,
+        axisX,
+        duration,
+        axisY,
+      } = this;
 
-      const axisY = axisLeft(scaleY);
-      this.axisY = axisY;
+      this.svg = svg;
 
       // Set a "master" SVG group.
       const master = svg.select('g.master')
@@ -58,8 +82,6 @@ export const axisPlot = {
 
       // Draw axes.
       const axes = master.select('g.axes');
-
-      this.duration = duration;
 
       if (axes.select('.x-axis').size() === 0) {
         axes.append('g')
@@ -85,20 +107,16 @@ export const axisPlot = {
           .call(axisY);
       }
 
-      // Label the axes.
-      this.setXLabel(xlabel);
-      this.setYLabel(ylabel);
-
       // Conclude the initialization process.
       this.axisPlotInitialized = true;
     },
 
     setXLabel(msg) {
       const {
-        svg,
         margin,
         dwidth,
         dheight,
+        svg,
       } = this;
 
       labelAxis(svg.select('.label.x'),
@@ -110,9 +128,9 @@ export const axisPlot = {
 
     setYLabel(msg) {
       const {
-        svg,
         margin,
         dheight,
+        svg,
       } = this;
 
       labelAxis(svg.select('.label.y'),

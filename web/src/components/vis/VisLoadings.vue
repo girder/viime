@@ -54,6 +54,19 @@ export default {
           && prop.every(val => ['x', 'y', 'col'].every(key => key in val))),
     },
   },
+  data() {
+    return {
+      margin: {
+        top: 20,
+        right: 0,
+        bottom: 50,
+        left: 50,
+      },
+      xrange: [-1.2, 1.2],
+      yrange: [-1.2, 1.2],
+      duration: 500,
+    };
+  },
   computed: {
     group() {
       const { dataset } = this;
@@ -70,19 +83,10 @@ export default {
     },
   },
   mounted() {
-    this.axisPlot({
-      margin: {
-        top: 20,
-        right: 0,
-        bottom: 50,
-        left: 50,
-      },
-      xrange: [-1.2, 1.2],
-      yrange: [-1.2, 1.2],
-      xlabel: 'x correlation',
-      ylabel: 'y correlation',
-      duration: 500,
-    });
+    const svg = select(this.$refs.svg);
+    this.axisPlot(svg);
+    this.setXLabel('PC1 correlation');
+    this.setYLabel('PC2 correlation');
     if (this.points) {
       this.update();
     }
@@ -97,7 +101,8 @@ export default {
       // Draw the data.
       //
       // Plot the vectors and points in the scatter plot.
-      const sel = this.svg.select('g.plot');
+      const svg = select(this.$refs.svg);
+      const sel = svg.select('g.plot');
       sel.selectAll('line')
         .data(points)
         .join(enter => enter.append('line')

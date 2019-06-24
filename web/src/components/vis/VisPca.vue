@@ -98,6 +98,21 @@ export default {
         && Array.isArray(prop.source.columns),
     },
   },
+  data() {
+    return {
+      margin: {
+        top: 20,
+        right: 0,
+        bottom: 50,
+        left: 50,
+      },
+      xrange: [-1, 1],
+      yrange: [-1, 1],
+      xlabel: 'PC1',
+      ylabel: 'PC2',
+      duration: 500,
+    };
+  },
   computed: {
     xyPoints() {
       if (this.rawPoints) {
@@ -121,19 +136,9 @@ export default {
       if (newval) {
         if (!this.axisPlotInitialized) {
           const { xyPoints } = this;
-          this.axisPlot({
-            margin: {
-              top: 20,
-              right: 0,
-              bottom: 50,
-              left: 50,
-            },
-            xrange: minmax(xyPoints.map(p => p.x), 0.1),
-            yrange: minmax(xyPoints.map(p => p.y), 0.1),
-            xlabel: 'PC1',
-            ylabel: 'PC2',
-            duration: 500,
-          });
+          this.setRanges(xyPoints);
+          const svg = select(this.$refs.svg);
+          this.axisPlot(svg);
         }
 
         this.update();
@@ -141,54 +146,57 @@ export default {
     },
   },
   mounted() {
-    if (this.xyPoints) {
-      const { xyPoints } = this;
-      this.axisPlot({
-        margin: {
-          top: 20,
-          right: 0,
-          bottom: 50,
-          left: 50,
-        },
-        xrange: minmax(xyPoints.map(p => p.x), 0.1),
-        yrange: minmax(xyPoints.map(p => p.y), 0.1),
-        xlabel: 'PC1',
-        ylabel: 'PC2',
-        duration: 500,
-      });
-
+    const { xyPoints } = this;
+    if (xyPoints) {
+      this.setRanges(xyPoints);
+      const svg = select(this.$refs.svg);
+      this.axisPlot(svg);
       this.update();
     }
   },
   methods: {
+    setRanges(xyPoints) {
+      this.xrange = minmax(xyPoints.map(p => p.x), 0.1);
+      this.yrange = minmax(xyPoints.map(p => p.y), 0.1);
+    },
     update() {
       // Grab the input props.
       const {
         rawPoints,
       } = this.$props;
 
-      const { xyPoints } = this;
+      const {
+        xyPoints,
+        group,
+      } = this;
 
       // Set the axis labels.
       //
       // Compute the total variance in all the PCs.
       const totVariance = rawPoints.sdev.reduce((acc, x) => acc + x, 0);
       const pctFormat = format('.2%');
+      const svg = select(this.$refs.svg);
+      this.setRanges(xyPoints);
+      this.axisPlot(svg);
       this.setXLabel(`PC1 (${pctFormat(rawPoints.sdev[0] / totVariance)})`);
       this.setYLabel(`PC2 (${pctFormat(rawPoints.sdev[1] / totVariance)})`);
 
       // Draw the data.
       //
+      // Set up a colormap and select an arbitrary label to color the nodes.
+      const cmap = scaleOrdinal(schemeCategory10);
+
       // Plot the points in the scatter plot.
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
-      const sel = this.svg.select('g.plot')
+      svg.select('g.plot')
         .selectAll('circle')
         .data(xyPoints)
         .join(enter => enter.append('circle')
-          .attr('cx', (d, i, nodes) => 60000 * Math.cos(i * Math.PI / nodes.length))
-          .attr('cy', (d, i, nodes) => 60000 * Math.sin(i * Math.PI / nodes.length))
+          .attr('cx', this.scaleX(0))
+          .attr('cy', this.scaleY(0))
           .attr('r', 0)
+          .style('fill', (d, i) => (group ? cmap(rawPoints.labels[group][i]) : null))
           .on('mouseover', function mouseover(d) {
             select(this)
               .transition()
@@ -214,24 +222,14 @@ export default {
           }))
         .transition()
         .duration(this.duration)
-        .delay((d, i) => i * 5)
         .attr('r', 2)
         .attr('cx', d => this.scaleX(d.x))
         .attr('cy', d => this.scaleY(d.y));
 
-      // Set up a colormap and select an arbitrary label to color the nodes.
-      const cmap = scaleOrdinal(schemeCategory10);
-      const label = this.group;
-      if (label) {
-        sel.transition()
-          .duration(this.duration)
-          .attr('fill', (d, i) => cmap(rawPoints.labels[label][i]));
-      }
-
       // Decompose the data into its label categories.
       const streams = {};
       xyPoints.forEach((p, i) => {
-        const category = rawPoints.labels[label][i];
+        const category = rawPoints.labels[group][i];
         if (!streams[category]) {
           streams[category] = [];
         }
@@ -286,13 +284,13 @@ export default {
       });
 
       // Draw the ellipses.
-      this.svg.select('g.ellipses')
+      svg.select('g.ellipses')
         .selectAll('g.ellipse')
         .data(ellipses)
         .enter()
         .append('g')
         .classed('ellipse', true)
-        .attr('transform', 'translate(0, 0) rotate(0) scale(1, 1)')
+        .attr('transform', d => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`)
         .append('circle')
         .attr('cx', 0)
         .attr('cy', 0)
@@ -301,7 +299,7 @@ export default {
         .attr('vector-effect', 'non-scaling-stroke')
         .style('stroke', d => cmap(d.category));
 
-      this.svg.select('g.ellipses')
+      svg.select('g.ellipses')
         .selectAll('g.ellipse')
         .data(ellipses)
         .transition()
