@@ -31,8 +31,6 @@ export const axisPlot = {
       },
       xrange: [-1.2, 1.2],
       yrange: [-1.2, 1.2],
-      xlabel: 'x axis',
-      ylabel: 'y axis',
       duration: 500,
     };
   },
@@ -73,8 +71,6 @@ export const axisPlot = {
         axisX,
         duration,
         axisY,
-        xlabel,
-        ylabel,
       } = this;
 
       // Set a "master" SVG group.
@@ -107,10 +103,6 @@ export const axisPlot = {
           .duration(duration)
           .call(axisY);
       }
-
-      // Label the axes.
-      this.setXLabel(svg, xlabel);
-      this.setYLabel(svg, ylabel);
 
       // Conclude the initialization process.
       this.axisPlotInitialized = true;

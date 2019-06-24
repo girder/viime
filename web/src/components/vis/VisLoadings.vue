@@ -64,8 +64,6 @@ export default {
       },
       xrange: [-1.2, 1.2],
       yrange: [-1.2, 1.2],
-      xlabel: 'x correlation',
-      ylabel: 'y correlation',
       duration: 500,
     };
   },
@@ -87,6 +85,8 @@ export default {
   mounted() {
     const svg = select(this.$refs.svg);
     this.axisPlot(svg);
+    this.setXLabel(svg, 'PC1 correlation');
+    this.setYLabel(svg, 'PC2 correlation');
     if (this.points) {
       this.update();
     }
