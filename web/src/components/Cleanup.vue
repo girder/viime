@@ -124,7 +124,7 @@ v-layout.cleanup-wrapper(row)
             :label="option.title",
             :key="option.value")
           template(#label)
-            span {{ option.value }}
+            span {{ option.title }}
             v-icon.radio-icon.mdi-light(small, :class="option.color")
               | {{ $vuetify.icons[option.icon] }}
 
