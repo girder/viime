@@ -32,7 +32,6 @@ export default {
     norm() { return this.$store.getters.txType(this.id, 'normalization'); },
     trans() { return this.$store.getters.txType(this.id, 'transformation'); },
     scaling() { return this.$store.getters.txType(this.id, 'scaling'); },
-    transformed() { return this.dataset && this.dataset.transformed; },
     pcaData() { return this.$store.getters.plotData(this.id, 'pca'); },
     pcaValid() { return this.$store.getters.plotValid(this.id, 'pca'); },
     loadingsData() { return this.$store.getters.plotData(this.id, 'loadings'); },
@@ -125,7 +124,7 @@ v-layout.transform-view(row, fill-height)
   v-layout(v-if="!dataset", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
-  v-container(v-else)
+  v-container.overflow-auto(v-else)
     v-layout(row, fill-height, ref="contentarea")
       .pa-4
         h3.headline.ml-5 PCA Scores

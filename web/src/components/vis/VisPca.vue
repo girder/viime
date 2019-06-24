@@ -98,6 +98,21 @@ export default {
         && Array.isArray(prop.source.columns),
     },
   },
+  data() {
+    return {
+      margin: {
+        top: 20,
+        right: 0,
+        bottom: 50,
+        left: 50,
+      },
+      xrange: [-1, 1],
+      yrange: [-1, 1],
+      xlabel: 'PC1',
+      ylabel: 'PC2',
+      duration: 500,
+    };
+  },
   computed: {
     xyPoints() {
       if (this.rawPoints) {
@@ -121,19 +136,9 @@ export default {
       if (newval) {
         if (!this.axisPlotInitialized) {
           const { xyPoints } = this;
-          this.axisPlot({
-            margin: {
-              top: 20,
-              right: 0,
-              bottom: 50,
-              left: 50,
-            },
-            xrange: minmax(xyPoints.map(p => p.x), 0.1),
-            yrange: minmax(xyPoints.map(p => p.y), 0.1),
-            xlabel: 'PC1',
-            ylabel: 'PC2',
-            duration: 500,
-          });
+          this.setRanges(xyPoints);
+          const svg = select(this.$refs.svg);
+          this.axisPlot(svg);
         }
 
         this.update();
@@ -141,26 +146,19 @@ export default {
     },
   },
   mounted() {
-    if (this.xyPoints) {
-      const { xyPoints } = this;
-      this.axisPlot({
-        margin: {
-          top: 20,
-          right: 0,
-          bottom: 50,
-          left: 50,
-        },
-        xrange: minmax(xyPoints.map(p => p.x), 0.1),
-        yrange: minmax(xyPoints.map(p => p.y), 0.1),
-        xlabel: 'PC1',
-        ylabel: 'PC2',
-        duration: 500,
-      });
-
+    const { xyPoints } = this;
+    if (xyPoints) {
+      this.setRanges(xyPoints);
+      const svg = select(this.$refs.svg);
+      this.axisPlot(svg);
       this.update();
     }
   },
   methods: {
+    setRanges(xyPoints) {
+      this.xrange = minmax(xyPoints.map(p => p.x), 0.1);
+      this.yrange = minmax(xyPoints.map(p => p.y), 0.1);
+    },
     update() {
       // Grab the input props.
       const {
@@ -174,15 +172,16 @@ export default {
       // Compute the total variance in all the PCs.
       const totVariance = rawPoints.sdev.reduce((acc, x) => acc + x, 0);
       const pctFormat = format('.2%');
-      this.setXLabel(`PC1 (${pctFormat(rawPoints.sdev[0] / totVariance)})`);
-      this.setYLabel(`PC2 (${pctFormat(rawPoints.sdev[1] / totVariance)})`);
+      const svg = select(this.$refs.svg);
+      this.setRanges(xyPoints);
+      this.axisPlot(svg);
 
       // Draw the data.
       //
       // Plot the points in the scatter plot.
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
-      const sel = this.svg.select('g.plot')
+      const sel = svg.select('g.plot')
         .selectAll('circle')
         .data(xyPoints)
         .join(enter => enter.append('circle')
@@ -286,7 +285,7 @@ export default {
       });
 
       // Draw the ellipses.
-      this.svg.select('g.ellipses')
+      svg.select('g.ellipses')
         .selectAll('g.ellipse')
         .data(ellipses)
         .enter()
@@ -301,7 +300,7 @@ export default {
         .attr('vector-effect', 'non-scaling-stroke')
         .style('stroke', d => cmap(d.category));
 
-      this.svg.select('g.ellipses')
+      svg.select('g.ellipses')
         .selectAll('g.ellipse')
         .data(ellipses)
         .transition()
