@@ -86,23 +86,23 @@ const mnar_imputation_methods = [
 ];
 
 const normalize_methods = [
-  { label: 'Min Max', value: 'minmax' },
   { label: 'None', value: null },
+  { label: 'Min Max', value: 'minmax' },
 ];
 
 const scaling_methods = [
+  { label: 'None', value: null },
   { label: 'Autoscaling', value: 'auto' },
   { label: 'Pareto Scaling', value: 'pareto' },
   { label: 'Range Scaling', value: 'range' },
   { label: 'Vast Scaling', value: 'vast' },
   { label: 'Level Scaling', value: 'level' },
-  { label: 'None', value: null },
 ];
 const transform_methods = [
+  { label: 'None', value: null },
   { label: 'Log 10', value: 'log10' },
   { label: 'Square Root', value: 'squareroot' },
   { label: 'Cube Root', value: 'cuberoot' },
-  { label: 'None', value: null },
 ];
 
 const validationMeta = {
