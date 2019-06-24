@@ -16,7 +16,6 @@ import {
 import {
   ADD_SOURCE_DATA,
   REFRESH_PLOT,
-  REMOVE_DATASET,
   SET_TRANSFORMATION,
   SET_LAST_ERROR,
   SET_LOADING,
@@ -105,10 +104,6 @@ const mutations = {
   [REFRESH_PLOT](state, { key, name, data }) {
     Vue.set(state.datasets[key].plots[name], 'data', data);
     Vue.set(state.datasets[key].plots[name], 'valid', true);
-  },
-
-  [REMOVE_DATASET](state, { key }) {
-    Vue.delete(state.datasets, key);
   },
 
   [SET_LAST_ERROR](state, { err }) {
