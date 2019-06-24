@@ -24,13 +24,13 @@ export const axisPlot = {
     return {
       axisPlotInitialized: false,
       margin: {
-        top: 20,
-        right: 0,
-        bottom: 50,
-        left: 50,
+        top: null,
+        right: null,
+        bottom: null,
+        left: null,
       },
-      xrange: [-1.2, 1.2],
-      yrange: [-1.2, 1.2],
+      xrange: [-1, 1],
+      yrange: [-1, 1],
       duration: 500,
       svg: null,
     };
