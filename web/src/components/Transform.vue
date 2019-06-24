@@ -57,24 +57,9 @@ export default {
   },
   methods: {
     async transformTable(value, category) {
-      let txtype = value;
-      if (value === false) {
-        txtype = null;
-      } else if (value === true) {
-        switch (category) {
-          case 'normalization':
-            txtype = normalize_methods[0].value; break;
-          case 'transformation':
-            txtype = transform_methods[0].value; break;
-          case 'scaling':
-            txtype = scaling_methods[0].value; break;
-          default:
-            throw new Error(`${category} is not valid.`);
-        }
-      }
       this.$store.dispatch(MUTEX_TRANSFORM_TABLE, {
         dataset_id: this.id,
-        transform_type: txtype,
+        transform_type: value,
         category,
       });
     },
@@ -88,39 +73,28 @@ v-layout.transform-view(row, fill-height)
     v-layout(column, fill-height, v-if="dataset")
       v-toolbar.primary.darken-3(dark, flat, dense, :card="false")
         v-toolbar-title Normalize
-        v-spacer
-        v-switch.shrink(hide-details, :input-value="norm",
-            @change="transformTable($event, 'normalization')", :disabled="loading")
       v-card.ma-3(flat)
         v-card-actions
-          v-radio-group(:disabled="!norm || loading", :value="norm",
-              @change="transformTable($event, 'normalization')")
+          v-radio-group(:value="norm", @change="transformTable($event, 'normalization')")
             v-radio(v-for="m in normalize_methods", :label="m.label",
-                v-if="m.value", :value="m.value", :key="`norm${m.value}`")
+                :value="m.value", :key="`norm${m.value}`")
 
       v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
         v-toolbar-title Transform
-        v-spacer
-        v-switch.shrink(hide-details, :input-value="trans",
-            @change="transformTable($event, 'transformation')", :disabled="loading")
       v-card.ma-3(flat)
         v-card-actions
-          v-radio-group(:disabled="!trans || loading", :value="trans",
-              @change="transformTable($event, 'transformation')")
+          v-radio-group(:value="trans", @change="transformTable($event, 'transformation')")
             v-radio(v-for="m in transform_methods", :label="m.label",
-                v-if="m.value", :value="m.value", :key="`trans${m.value}`")
+                :value="m.value", :key="`trans${m.value}`")
 
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title Scale
-        v-spacer
-        v-switch.shrink(hide-details, :input-value="scaling",
-            @change="transformTable($event, 'scaling')", :disabled="loading")
       v-card.ma-3(flat)
         v-card-actions
-          v-radio-group(:disabled="!scaling || loading", :value="scaling",
-              @change="transformTable($event, 'scaling')")
+          v-radio-group(:value="scaling", @change="transformTable($event, 'scaling')")
             v-radio(v-for="m in scaling_methods", :label="m.label",
-                v-if="m.value", :value="m.value", :key="`scale${m.value}`")
+                :value="m.value", :key="`scale${m.value}`")
+
   v-layout(v-if="!dataset", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
