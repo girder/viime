@@ -47,7 +47,7 @@ export default {
       return 'Drag file here or click to select one';
     },
     readyFiles() {
-      const datasets = this.$store.state.datasets;
+      const { datasets } = this;
       return Object.keys(datasets).map((id) => {
         const d = datasets[id];
         return {
@@ -55,7 +55,7 @@ export default {
           status: 'done',
           progress: {},
           meta: d,
-        }; 
+        };
       });
     },
     files() {
@@ -63,7 +63,7 @@ export default {
     },
     deleteDialog() {
       return this.deleteCount > 0;
-    }
+    },
   },
   methods: {
     async onFileChange(targetFiles) {
