@@ -165,7 +165,10 @@ export default {
         rawPoints,
       } = this.$props;
 
-      const { xyPoints } = this;
+      const {
+        xyPoints,
+        group,
+      } = this;
 
       // Set the axis labels.
       //
@@ -182,19 +185,18 @@ export default {
       //
       // Set up a colormap and select an arbitrary label to color the nodes.
       const cmap = scaleOrdinal(schemeCategory10);
-      const group = this.group;
 
       // Plot the points in the scatter plot.
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
-      const sel = svg.select('g.plot')
+      svg.select('g.plot')
         .selectAll('circle')
         .data(xyPoints)
         .join(enter => enter.append('circle')
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
-          .style('fill', (d, i) => group ? cmap(rawPoints.labels[group][i]) : null)
+          .style('fill', (d, i) => (group ? cmap(rawPoints.labels[group][i]) : null))
           .on('mouseover', function mouseover(d) {
             select(this)
               .transition()
@@ -288,7 +290,7 @@ export default {
         .enter()
         .append('g')
         .classed('ellipse', true)
-        .attr('transform', (d) => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`)
+        .attr('transform', d => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`)
         .append('circle')
         .attr('cx', 0)
         .attr('cy', 0)
