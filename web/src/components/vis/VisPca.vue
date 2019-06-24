@@ -180,6 +180,10 @@ export default {
 
       // Draw the data.
       //
+      // Set up a colormap and select an arbitrary label to color the nodes.
+      const cmap = scaleOrdinal(schemeCategory10);
+      const group = this.group;
+
       // Plot the points in the scatter plot.
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
@@ -187,9 +191,10 @@ export default {
         .selectAll('circle')
         .data(xyPoints)
         .join(enter => enter.append('circle')
-          .attr('cx', (d, i, nodes) => 60000 * Math.cos(i * Math.PI / nodes.length))
-          .attr('cy', (d, i, nodes) => 60000 * Math.sin(i * Math.PI / nodes.length))
+          .attr('cx', this.scaleX(0))
+          .attr('cy', this.scaleY(0))
           .attr('r', 0)
+          .style('fill', (d, i) => group ? cmap(rawPoints.labels[group][i]) : null)
           .on('mouseover', function mouseover(d) {
             select(this)
               .transition()
@@ -215,24 +220,14 @@ export default {
           }))
         .transition()
         .duration(this.duration)
-        .delay((d, i) => i * 5)
         .attr('r', 2)
         .attr('cx', d => this.scaleX(d.x))
         .attr('cy', d => this.scaleY(d.y));
 
-      // Set up a colormap and select an arbitrary label to color the nodes.
-      const cmap = scaleOrdinal(schemeCategory10);
-      const label = this.group;
-      if (label) {
-        sel.transition()
-          .duration(this.duration)
-          .attr('fill', (d, i) => cmap(rawPoints.labels[label][i]));
-      }
-
       // Decompose the data into its label categories.
       const streams = {};
       xyPoints.forEach((p, i) => {
-        const category = rawPoints.labels[label][i];
+        const category = rawPoints.labels[group][i];
         if (!streams[category]) {
           streams[category] = [];
         }
@@ -293,7 +288,7 @@ export default {
         .enter()
         .append('g')
         .classed('ellipse', true)
-        .attr('transform', 'translate(0, 0) rotate(0) scale(1, 1)')
+        .attr('transform', (d) => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`)
         .append('circle')
         .attr('cx', 0)
         .attr('cy', 0)
