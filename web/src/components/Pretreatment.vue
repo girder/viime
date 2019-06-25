@@ -44,7 +44,7 @@ export default {
 </script>
 
 <template lang="pug">
-v-layout.pretreatment(row, fill-height)
+v-layout.pretreatment-component(row, fill-height)
 
   v-navigation-drawer.navigation(floating, permanent, style="min-width: 220px; width: 220px;")
     v-layout(column, fill-height)
@@ -95,7 +95,7 @@ v-layout.pretreatment(row, fill-height)
 </template>
 
 <style lang="scss">
-.pretreatment .navigation {
+.pretreatment-component .navigation {
   i.middle {
     vertical-align: top;
   }
