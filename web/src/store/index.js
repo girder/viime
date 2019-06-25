@@ -96,6 +96,10 @@ const mutations = {
           data: null,
           valid: false,
         },
+        loadings: {
+          data: null,
+          valid: false,
+        },
       },
     });
   },
@@ -113,7 +117,7 @@ const mutations = {
   [SET_TRANSFORMATION](state, {
     key, data, transform_type, category,
   }) {
-    _invalidatePlots(state, { key, plotList: ['pca'] });
+    _invalidatePlots(state, { key, plotList: ['pca', 'loadings'] });
     Vue.set(state.datasets[key], category, transform_type);
     Vue.set(state.datasets[key], 'transformed', data);
   },

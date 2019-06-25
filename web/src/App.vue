@@ -43,6 +43,7 @@ body {
 
   .overflow-auto {
     overflow: auto;
+    max-height: 100%;
   }
 }
 </style>
