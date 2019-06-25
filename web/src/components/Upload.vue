@@ -151,7 +151,7 @@ v-layout.upload-component(column, fill-height)
             v-list-tile-content.px-2(v-else-if="file.status === 'uploading'")
               v-progress-circular(color="primary", indeterminate)
             v-list-tile-content.px-2(v-else-if="file.status === 'done'")
-              v-layout(row)
+              v-layout(rowm, align-center)
                 v-chip(small, color="success", text-color="white")
                   v-avatar
                     v-icon {{ $vuetify.icons.checkCircle }}
