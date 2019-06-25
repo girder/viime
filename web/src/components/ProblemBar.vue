@@ -55,7 +55,7 @@ export default {
 </script>
 
 <template lang="pug">
-v-navigation-drawer.primary.darken-3(v-if="dataset && problemData",
+v-navigation-drawer.primary.darken-3.problem-bar-component(v-if="dataset && problemData",
     touchless, permanent, floating, style="width: 230px; min-width: 220px;")
 
   v-layout(column, fill-height)

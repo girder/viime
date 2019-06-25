@@ -68,7 +68,7 @@ export default {
 </script>
 
 <template lang="pug">
-v-layout.transform-view(row, fill-height)
+v-layout.transform-component(row, fill-height)
   v-navigation-drawer.primary.darken-3(permanent, style="width: 200px; min-width: 200px;")
     v-layout(column, fill-height, v-if="dataset")
       v-toolbar.primary.darken-3(dark, flat, dense, :card="false")

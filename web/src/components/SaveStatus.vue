@@ -7,7 +7,7 @@ export default {
 </script>
 
 <template lang="pug">
-.save-status
+.save-status-component
   v-tooltip(top)
     template(v-slot:activator="{ on }")
       div(v-if="loading")

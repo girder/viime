@@ -109,7 +109,7 @@ export default {
 </script>
 
 <template lang="pug">
-v-layout(column, fill-height)
+v-layout.upload-component(column, fill-height)
 
   v-dialog(v-model="deleteDialog", width="600")
     v-card
@@ -135,22 +135,31 @@ v-layout(column, fill-height)
         template(v-for="(file, idx) in files")
           v-list-tile.pa-2(:key="file.file.name + file.status")
             v-list-tile-action
-              v-btn(icon, @click="doDelete = () => { remove(file); }; deleteCount = 1;")
+              v-btn(:disabled="file.status === 'uploading'",
+                  icon, @click="doDelete = () => { remove(file); }; deleteCount = 1;")
                 v-icon {{ $vuetify.icons.close }}
             v-list-tile-content.shrink
               v-list-tile-title(v-text="`${file.file.name} `")
               v-list-tile-sub-title(v-text="formatSize(file.file.size)")
             v-list-tile-content.px-2(v-if="file.status === 'error'")
-              v-chip(color="error", text-color="white")
-                v-icon.pr-1 {{ $vuetify.icons.warning }}
+              v-chip(small, color="error", text-color="white")
+                v-avatar
+                  v-icon {{ $vuetify.icons.warningCircle }}
                 span(v-if="file.meta.name") {{ file.meta.name[0] }}
+                span(v-else-if="file.meta.table") {{ file.meta.table[0] }}
                 span(v-else) Fatal Error
             v-list-tile-content.px-2(v-else-if="file.status === 'uploading'")
               v-progress-circular(color="primary", indeterminate)
             v-list-tile-content.px-2(v-else-if="file.status === 'done'")
-              v-chip(color="success", text-color="white")
-                v-icon.pr-1 {{ $vuetify.icons.check }}
-                span File processed successfully
+              v-layout(row)
+                v-chip(small, color="success", text-color="white")
+                  v-avatar
+                    v-icon {{ $vuetify.icons.checkCircle }}
+                  span File processed successfully
+                v-btn(small, outline, color="primary", round,
+                    :to="`/pretreatment/${file.meta.source.id}/cleanup`")
+                  v-icon.pr-1 {{ $vuetify.icons.eye }}
+                  |  View Data
             v-spacer
             v-layout(row, shrink)
               v-select.pa-2.tag-selection(hide-details,
@@ -171,7 +180,7 @@ v-layout(column, fill-height)
       v-icon.pl-1 {{ $vuetify.icons.arrowRight }}
 </template>
 
-<style scoped>
+<style lang="scss", scoped>
 .tag-selection {
   width: 200px;
 }
@@ -179,5 +188,13 @@ v-layout(column, fill-height)
 .filezone {
   min-width: 300px;
   min-height: 250px;
+}
+</style>
+
+<style lang="scss">
+.upload-component {
+  .v-btn--small {
+    height: 24px;
+  }
 }
 </style>

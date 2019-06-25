@@ -17,6 +17,7 @@ export default {
     error: colors.red,
     info: colors.lightBlue.lighten1,
     warning: colors.yellow.darken2,
+    success: colors.lightGreen,
   },
   options: {
     customProperties: true,
@@ -28,11 +29,13 @@ export default {
     arrowRight: 'mdi-arrow-right-box',
     bubbles: 'mdi-chart-bubble',
     check: 'mdi-check',
+    checkCircle: 'mdi-check-circle',
     checkedFlag: 'mdi-flag-checkered',
     chevronDown: 'mdi-chevron-down',
     chevronUp: 'mdi-chevron-up',
     clearAll: 'mdi-notification-clear-all',
     error: 'mdi-close',
+    eye: 'mdi-eye',
     fileUpload: 'mdi-file-upload',
     eyedropper: 'mdi-eyedropper',
     group: 'mdi-group',
@@ -49,5 +52,6 @@ export default {
     transform: 'mdi-set-right',
     upload: 'mdi-upload',
     warning: 'mdi-alert',
+    warningCircle: 'mdi-alert-circle',
   },
 };
