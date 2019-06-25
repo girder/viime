@@ -127,6 +127,10 @@ class CSVFile(db.Model):
         id = str(self.id)
         return Path(current_app.config['UPLOAD_FOLDER']) / id[:3] / id
 
+    @property
+    def size(self):
+        return Path(self.uri).stat().st_size
+
     @hybrid_property
     def header_row_index(self):
         return _header_row_index(self)
@@ -309,6 +313,7 @@ class CSVFileSchema(BaseSchema):
     measurement_metadata = fields.Raw(dump_only=True, allow_none=True)
     sample_metadata = fields.Raw(dump_only=True, allow_none=True)
     groups = fields.Raw(dump_only=True, allow_none=True)
+    size = fields.Int(dump_only=True)
 
     @post_load
     def fix_file_name(self, data):
