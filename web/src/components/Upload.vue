@@ -40,8 +40,7 @@ export default {
   computed: {
     ...mapState(['datasets']),
     message() {
-      const allFiles = this.pendingFiles.concat(this.readyFiles);
-      if (allFiles.length > 0) {
+      if (this.files.length > 0) {
         return 'Add more files';
       }
       return 'Drag file here or click to select one';
@@ -51,7 +50,10 @@ export default {
       return Object.keys(datasets).map((id) => {
         const d = datasets[id];
         return {
-          file: { name: d.source.name, size: 0 },
+          file: {
+            name: d.source.name,
+            size: d.source.size, // TODO: fix when server implements this.
+          },
           status: 'done',
           progress: {},
           meta: d,
@@ -111,7 +113,7 @@ export default {
 <template lang="pug">
 v-layout.upload-component(column, fill-height)
 
-  v-dialog(v-model="deleteDialog", width="600")
+  v-dialog(v-model="deleteDialog", persistent, width="600")
     v-card
       v-card-title.headline Really delete {{ deleteCount }} dataset(s)?
       v-card-actions
@@ -126,7 +128,7 @@ v-layout.upload-component(column, fill-height)
 
     .mx-4.mb-4(v-if="files.length")
       v-toolbar.darken-3(color="primary", dark, flat, dense)
-        v-toolbar-title Pending files
+        v-toolbar-title All Data Sources
         v-spacer
         v-btn(flat, small, @click="deleteCount = files.length; doDelete = removeAll")
           v-icon.pr-1 {{ $vuetify.icons.clearAll }}
@@ -142,20 +144,25 @@ v-layout.upload-component(column, fill-height)
               v-list-tile-title(v-text="`${file.file.name} `")
               v-list-tile-sub-title(v-text="formatSize(file.file.size)")
             v-list-tile-content.px-2(v-if="file.status === 'error'")
-              v-chip(small, color="error", text-color="white")
+              v-chip.largetext(small, color="error", text-color="white")
                 v-avatar
                   v-icon {{ $vuetify.icons.warningCircle }}
                 span(v-if="file.meta.name") {{ file.meta.name[0] }}
                 span(v-else-if="file.meta.table") {{ file.meta.table[0] }}
                 span(v-else) Fatal Error
             v-list-tile-content.px-2(v-else-if="file.status === 'uploading'")
-              v-progress-circular(color="primary", indeterminate)
+              v-progress-circular(size="24", color="primary", indeterminate)
             v-list-tile-content.px-2(v-else-if="file.status === 'done'")
-              v-layout(rowm, align-center)
-                v-chip(small, color="success", text-color="white")
+              v-layout(row, align-center)
+                v-chip.largetext(v-if="file.meta.validation.length === 0",
+                    small, color="success", text-color="white")
                   v-avatar
                     v-icon {{ $vuetify.icons.checkCircle }}
-                  span File processed successfully
+                  span Dataset ready for analysis.
+                v-chip.largetext(v-else, small, color="warning", text-color="")
+                  v-avatar
+                    v-icon {{ $vuetify.icons.warningCircle }}
+                  span Dataset processed with {{ file.meta.validation.length }} validation failures
                 v-btn(small, outline, color="primary", round,
                     :to="`/pretreatment/${file.meta.source.id}/cleanup`")
                   v-icon.pr-1 {{ $vuetify.icons.eye }}
@@ -188,6 +195,10 @@ v-layout.upload-component(column, fill-height)
 .filezone {
   min-width: 300px;
   min-height: 250px;
+}
+
+.largetext {
+  font-size: 15px;
 }
 </style>
 
