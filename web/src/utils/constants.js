@@ -36,7 +36,7 @@ const colMenuOptions = [
   {
     value: 'key',
     icon: 'key',
-    title: 'Primary Key',
+    title: 'Primary Sample ID',
     color: 'primary',
     mutex: true,
   },
@@ -64,7 +64,7 @@ const colMenuOptions = [
   {
     value: 'measurement',
     icon: null,
-    title: 'Measurement',
+    title: 'Metabolite',
     color: null,
     mutex: false,
   },
