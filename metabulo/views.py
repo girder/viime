@@ -299,7 +299,7 @@ class ServerError(Exception):
         self.code = code
 
     def return_value(self):
-        return jsonify(self.respose), self.code
+        return jsonify(self.response), self.code
 
 
 def _apply_transforms(csv_file):
