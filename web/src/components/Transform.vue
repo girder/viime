@@ -7,6 +7,7 @@ import {
 } from '@/utils/constants';
 import VisPca from '@/components/vis/VisPca.vue';
 import VisLoadings from '@/components/vis/VisLoadings.vue';
+import { mapState } from 'vuex';
 
 export default {
   components: {
@@ -27,7 +28,10 @@ export default {
     };
   },
   computed: {
+    ...mapState(['lastError']),
     dataset() { return this.$store.getters.dataset(this.id); },
+    ready() { return this.$store.getters.ready(this.id); },
+    valid() { return this.$store.getters.valid(this.id); },
     loading() { return this.$store.state.loading; },
     norm() { return this.$store.getters.txType(this.id, 'normalization'); },
     trans() { return this.$store.getters.txType(this.id, 'transformation'); },
@@ -70,35 +74,38 @@ export default {
 <template lang="pug">
 v-layout.transform-component(row, fill-height)
   v-navigation-drawer.primary.darken-3(permanent, style="width: 200px; min-width: 200px;")
-    v-layout(column, fill-height, v-if="dataset")
+    v-layout(column, fill-height, v-if="dataset && ready")
       v-toolbar.primary.darken-3(dark, flat, dense, :card="false")
         v-toolbar-title Normalize
-      v-card.ma-3(flat)
+      v-card.mx-3(flat)
         v-card-actions
-          v-radio-group(:value="norm", @change="transformTable($event, 'normalization')")
+          v-radio-group.my-0(:value="norm", @change="transformTable($event, 'normalization')",
+              hide-details)
             v-radio(v-for="m in normalize_methods", :label="m.label",
                 :value="m.value", :key="`norm${m.value}`")
 
       v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
         v-toolbar-title Transform
-      v-card.ma-3(flat)
+      v-card.mx-3(flat)
         v-card-actions
-          v-radio-group(:value="trans", @change="transformTable($event, 'transformation')")
+          v-radio-group.my-0(:value="trans", @change="transformTable($event, 'transformation')",
+              hide-details)
             v-radio(v-for="m in transform_methods", :label="m.label",
                 :value="m.value", :key="`trans${m.value}`")
 
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title Scale
-      v-card.ma-3(flat)
+      v-card.mx-3(flat)
         v-card-actions
-          v-radio-group(:value="scaling", @change="transformTable($event, 'scaling')")
+          v-radio-group.my-0(:value="scaling", @change="transformTable($event, 'scaling')",
+              hide-details)
             v-radio(v-for="m in scaling_methods", :label="m.label",
                 :value="m.value", :key="`scale${m.value}`")
 
-  v-layout(v-if="!dataset", justify-center, align-center)
+  v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
-  v-container.overflow-auto(v-else)
+  v-container.overflow-auto(v-else-if="ready && valid")
     v-layout(row, fill-height, ref="contentarea")
       .pa-4
         h3.headline.ml-5 PCA Scores
@@ -107,4 +114,8 @@ v-layout.transform-component(row, fill-height)
       .pa-4
         h3.headline.ml-5 PCA Loadings
         vis-loadings(:width="800", :height="600", :points="loadingsData")
+  v-container.overflow-auto(v-else-if="ready", fill-height)
+    v-layout(column)
+      .display-2 Error: Cannot show transform table
+      a.headline(:href="`#/pretreatment/${dataset.id}/cleanup`") Correct validation error(s)
 </template>

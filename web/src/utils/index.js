@@ -1,6 +1,7 @@
 import papa from 'papaparse';
 import { validationMeta } from './constants';
 import RangeList from './rangelist';
+import SessionStore from './sessionStore';
 
 /**
  * A function to group an array of objects
@@ -90,4 +91,5 @@ export {
   convertCsvToRows,
   mapValidationErrors,
   RangeList,
+  SessionStore,
 };

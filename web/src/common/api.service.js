@@ -55,8 +55,10 @@ export const CSVService = {
     return ApiService.post('csv', data);
   },
 
-  upload(data) {
-    return ApiService.upload('csv', data);
+  upload(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return ApiService.upload('csv', formData);
   },
 
   download(slug) {

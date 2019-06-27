@@ -9,13 +9,16 @@ import ApiService from './common/api.service';
 import App from './App.vue';
 import router from './router';
 import store from './store';
+import { LOAD_SESSION } from './store/actions.type';
 import './stylus/main.styl';
 import vuetifyConfig from './utils/vuetifyConfig';
+import { SessionStore } from './utils';
 
 Vue.use(Vuetify, vuetifyConfig);
 Vue.config.productionTip = false;
 
 ApiService.init();
+store.dispatch(LOAD_SESSION, new SessionStore(window));
 
 if (process.env.NODE_ENV === 'production') {
   SentryInit({
