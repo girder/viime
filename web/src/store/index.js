@@ -166,7 +166,6 @@ const mutations = {
   }) {
     const { last, ranges, type } = state.datasets[key].selected;
     state.datasets[key].selected.last = idx;
-    // this.selected.last = idx;fplo
     if (event.shiftKey && axis === type) {
       ranges.add(last, idx);
     } else if (event.ctrlKey && axis === type) {
