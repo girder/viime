@@ -70,7 +70,7 @@ export default {
   computed: {
     group() {
       const { dataset } = this;
-      const column = dataset.source.columns.find(elem => elem.column_type === 'group');
+      const column = dataset._source.columns.find(elem => elem.column_type === 'group');
 
       return column.column_header;
     },

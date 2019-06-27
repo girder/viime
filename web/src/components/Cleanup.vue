@@ -104,7 +104,7 @@ v-layout.cleanup-wrapper(row)
 
   router-view
 
-  v-layout(v-if="!dataset", justify-center, align-center)
+  v-layout(v-if="!dataset || !dataset.ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Table
 

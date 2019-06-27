@@ -5,10 +5,6 @@ import { loadDataset } from '@/utils/mixins';
 export default {
   mixins: [loadDataset],
   props: {
-    id: {
-      type: String,
-      required: true,
-    },
     problem: {
       type: String,
       default: null,
@@ -20,9 +16,16 @@ export default {
     };
   },
   methods: {
-    navigate(id) {
+    valid(dataset) {
+      return this.$store.getters.valid(dataset.id);
+    },
+    navigate(dataset) {
+      const { id } = dataset;
+      const name = this.valid(dataset)
+        ? this.$router.currentRoute.name
+        : 'Cleanup Data';
       this.$router.push({
-        name: this.$router.currentRoute.name,
+        name,
         params: { id },
       });
     },
@@ -50,13 +53,13 @@ v-layout.pretreatment-component(row, fill-height)
     v-layout(column, fill-height)
       v-list.pt-0
         v-list-group(v-for="(dataset, index) in datasets",
-            :key="dataset.source.id",
-            :value="dataset.visible",
+            :key="dataset.id",
+            :value="dataset.id === id",
             :append-icon="null",
-            @click="navigate(dataset.source.id)")
+            @click="navigate(dataset)")
           template(v-slot:activator)
             v-list-tile.file-name
-              v-list-tile-title.title {{ dataset.source.name }}
+              v-list-tile-title.title {{ dataset.name }}
               v-list-tile-action(v-if="dataset.validation.length")
                 v-icon.pr-1(color="warning") {{ $vuetify.icons.warning }}
               v-list-tile-action(v-else)
@@ -65,7 +68,7 @@ v-layout.pretreatment-component(row, fill-height)
 
             v-list-tile.ml-2(
                 :class="{ active: $router.currentRoute.name === 'Cleanup Data' }",
-                @click="$router.push({ path: `/pretreatment/${dataset.source.id}/cleanup` })")
+                @click="$router.push({ path: `/pretreatment/${dataset.id}/cleanup` })")
               v-list-tile-title.pl-2
                 v-icon.pr-1.middle {{ $vuetify.icons.tableEdit }}
                 | Clean Up Table
@@ -87,7 +90,8 @@ v-layout.pretreatment-component(row, fill-height)
 
             v-list-tile.ml-2(
                 :class="{ active: $router.currentRoute.name === 'Transform Data' }",
-                @click="$router.push({ path: `/pretreatment/${dataset.source.id}/transform` })")
+                :disabled="!valid(dataset)",
+                @click="$router.push({ path: `/pretreatment/${dataset.id}/transform` })")
               v-list-tile-title.pl-2
                 v-icon.pr-1.middle {{ $vuetify.icons.bubbles }}
                 | Transform Table

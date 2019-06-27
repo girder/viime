@@ -92,10 +92,10 @@ export default {
     dataset: {
       required: true,
       validator: prop => typeof prop === 'object'
-        && 'source' in prop
-        && typeof prop.source === 'object'
-        && 'columns' in prop.source
-        && Array.isArray(prop.source.columns),
+        && '_source' in prop
+        && typeof prop._source === 'object'
+        && 'columns' in prop._source
+        && Array.isArray(prop._source.columns),
     },
   },
   data() {
@@ -126,7 +126,7 @@ export default {
     },
     group() {
       const { dataset } = this;
-      const column = dataset.source.columns.find(elem => elem.column_type === 'group');
+      const column = dataset._source.columns.find(elem => elem.column_type === 'group');
 
       return column.column_header;
     },
@@ -140,7 +140,6 @@ export default {
           const svg = select(this.$refs.svg);
           this.axisPlot(svg);
         }
-
         this.update();
       }
     },
