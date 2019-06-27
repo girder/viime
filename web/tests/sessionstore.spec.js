@@ -17,7 +17,9 @@ describe('SessionStore', () => {
     const mockProvider = {
       localStorage: {
         getItem: () => '{ invalid json',
-        setItem: (key, newval) => storageVal = newval,
+        setItem: (key, newval) => {
+          storageVal = newval;
+        },
       },
     };
     const ss = new SessionStore(mockProvider);
