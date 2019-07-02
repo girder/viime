@@ -320,7 +320,7 @@ def _apply_transforms(csv_file):
 
 def _get_pca_data(csv_file):
     table = _apply_transforms(csv_file)
-    max_components = int(request.args.get('max_components', len(table.columns)))
+    max_components = int(request.args.get('max_components', 2))
     data = pca(table, max_components)
 
     # insert per row label metadata information
