@@ -17,6 +17,7 @@ if not os.path.exists(os.path.join('static', 'index.html')):
     )
 
 data_files = []
+data_files.extend(list_files_recursive('migrations'))
 data_files.extend(list_files_recursive('static'))
 
 
@@ -28,8 +29,10 @@ setup(
     packages=find_packages(include=['metabulo']),
     include_package_data=True,
     install_requires=[
+        'alembic',
         'dogpile.cache',
         'flask',
+        'flask-migrate',
         'flask-sqlalchemy',
         'marshmallow==3.0.0rc6',
         'matplotlib',
