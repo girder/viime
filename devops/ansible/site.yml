@@ -166,5 +166,7 @@
         {{ venv }}/bin/flask db upgrade --directory {{ venv }}/share/metabulo/migrations
       environment:
         FLASK_APP: "metabulo.wsgi"
-        SQLALCHEMY_DATABASE_URI: sqlite://{{ sqlalchemy_database_path }}
+        SQLALCHEMY_DATABASE_URI: sqlite:///{{ sqlalchemy_database_path }}
+        DOTENV_PATH: "/home/gunicorn"
       become: true
+      become_user: gunicorn
