@@ -91,6 +91,7 @@
         virtualenv: "{{ venv }}"
         virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
       notify:
+        - Migrate database
         - Restart gunicorn
         - Flush cache
       become: true
@@ -141,25 +142,6 @@
       notify: Restart nginx
       become: true
 
-    - name: Delete old database
-      file:
-        path: "{{ sqlalchemy_database_path }}"
-        state: "absent"
-      become: true
-      become_user: gunicorn
-
-    - name: Delete old files
-      file:
-        path: "{{ upload_folder }}"
-        state: "absent"
-      become: true
-      become_user: gunicorn
-
-    - name: Create tables
-      command: "{{ venv }}/bin/metabulo-create-tables"
-      become: true
-      become_user: gunicorn
-
   handlers:
     - name: Restart gunicorn
       systemd:
@@ -177,4 +159,12 @@
 
     - name: Flush cache
       shell: "echo flush_all | nc -N 127.0.0.1 11211"
+      become: true
+
+    - name: Migrate database
+      command: |
+        {{ venv }}/bin/flask db upgrade --directory {{ venv }}/share/metabulo/migrations
+      environment:
+        FLASK_APP: "metabulo.wsgi"
+        SQLALCHEMY_DATABASE_URI: sqlite://{{ sqlalchemy_database_path }}
       become: true

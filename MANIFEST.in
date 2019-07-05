@@ -1,0 +1,5 @@
+recursive-include migrations *
+recursive-include static *
+
+global-exclude *.pyc
+global-exclude __pycache__

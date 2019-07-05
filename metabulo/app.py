@@ -2,6 +2,7 @@ import os
 
 import dotenv
 from flask import current_app, Flask, jsonify
+from flask_migrate import Migrate
 from marshmallow import ValidationError
 from webargs.flaskparser import parser
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -60,6 +61,7 @@ def create_app(config=None):
 
     app.config.update(config)
     db.init_app(app)
+    Migrate(app, db)
 
     @app.route('/api/v1/status')
     def status():

@@ -1,4 +1,5 @@
 import click
+import flask_migrate
 
 from metabulo.app import create_app
 from metabulo.models import db
@@ -10,3 +11,4 @@ def create_tables():
 
     with app.app_context():
         db.create_all()
+        flask_migrate.stamp()
