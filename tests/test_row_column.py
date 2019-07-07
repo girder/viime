@@ -32,37 +32,27 @@ def test_list_columns(client, table):
         'column_header': 'id',
         'column_index': 0,
         'column_type': 'key',
-        'data_column_index': None,
-        'data_variance': None,
-        'missing_percent': None
+        'data_column_index': None
     }, {
         'column_header': 'group',
         'column_index': 1,
         'column_type': 'group',
-        'data_column_index': None,
-        'data_variance': None,
-        'missing_percent': None
+        'data_column_index': None
     }, {
         'column_header': 'meta',
         'column_index': 2,
         'column_type': 'measurement',
-        'data_column_index': 0,
-        'data_variance': None,
-        'missing_percent': 1.0
+        'data_column_index': 0
     }, {
         'column_header': 'col1',
         'column_index': 3,
         'column_type': 'measurement',
-        'data_column_index': 1,
-        'data_variance': 3.25,
-        'missing_percent': 0.0
+        'data_column_index': 1
     }, {
         'column_header': 'col2',
         'column_index': 4,
         'column_type': 'measurement',
-        'data_column_index': 2,
-        'data_variance': 4.0,
-        'missing_percent': 0.0
+        'data_column_index': 2
     }]
 
 
@@ -101,9 +91,7 @@ def test_get_column(client, table):
         'column_header': 'col1',
         'column_index': 3,
         'column_type': 'measurement',
-        'data_column_index': 1,
-        'data_variance': 3.25,
-        'missing_percent': 0.0
+        'data_column_index': 1
     }
 
 

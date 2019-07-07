@@ -379,13 +379,13 @@ class TableColumnSchema(BaseSchema):
     column_type = fields.Str(required=True, validate=validate.OneOf(TABLE_COLUMN_TYPES))
     data_column_index = fields.Int(dump_only=True, allow_none=True)
 
-    missing_percent = fields.Float(dump_only=True, allow_none=True)
-    data_variance = fields.Float(dump_only=True, allow_none=True, allow_nan=True)
+    # missing_percent = fields.Float(dump_only=True, allow_none=True)
+    # data_variance = fields.Float(dump_only=True, allow_none=True, allow_nan=True)
 
     csv_file = fields.Nested(
         CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
 
-    @post_dump
+    # @post_dump
     def coerce_nan(self, data):
         if data['data_variance'] != data['data_variance']:
             data['data_variance'] = None
