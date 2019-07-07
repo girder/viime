@@ -31,28 +31,23 @@ def test_list_columns(client, table):
     assert resp.json == [{
         'column_header': 'id',
         'column_index': 0,
-        'column_type': 'key',
-        'data_column_index': None
+        'column_type': 'key'
     }, {
         'column_header': 'group',
         'column_index': 1,
-        'column_type': 'group',
-        'data_column_index': None
+        'column_type': 'group'
     }, {
         'column_header': 'meta',
         'column_index': 2,
-        'column_type': 'measurement',
-        'data_column_index': 0
+        'column_type': 'measurement'
     }, {
         'column_header': 'col1',
         'column_index': 3,
-        'column_type': 'measurement',
-        'data_column_index': 1
+        'column_type': 'measurement'
     }, {
         'column_header': 'col2',
         'column_index': 4,
-        'column_type': 'measurement',
-        'data_column_index': 2
+        'column_type': 'measurement'
     }]
 
 
@@ -63,23 +58,19 @@ def test_list_rows(client, table):
     assert resp.json == [{
         'row_name': 'id',
         'row_index': 0,
-        'row_type': 'header',
-        'data_row_index': None
+        'row_type': 'header'
     }, {
         'row_name': 'row1',
         'row_index': 1,
-        'row_type': 'sample',
-        'data_row_index': 0
+        'row_type': 'sample'
     }, {
         'row_name': 'row2',
         'row_index': 2,
-        'row_type': 'sample',
-        'data_row_index': 1
+        'row_type': 'sample'
     }, {
         'row_name': 'row3',
         'row_index': 3,
-        'row_type': 'sample',
-        'data_row_index': 2
+        'row_type': 'sample'
     }]
 
 
@@ -90,8 +81,7 @@ def test_get_column(client, table):
     assert resp.json == {
         'column_header': 'col1',
         'column_index': 3,
-        'column_type': 'measurement',
-        'data_column_index': 1
+        'column_type': 'measurement'
     }
 
 
@@ -102,8 +92,7 @@ def test_get_row(client, table):
     assert resp.json == {
         'row_name': 'row1',
         'row_index': 1,
-        'row_type': 'sample',
-        'data_row_index': 0
+        'row_type': 'sample'
     }
 
 
