@@ -102,6 +102,7 @@ export default {
       const svg = select(this.$refs.svg);
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
+      const radius = 5;
       svg.select('g.plot')
         .selectAll('circle')
         .data(points)
@@ -113,7 +114,7 @@ export default {
             select(this)
               .transition()
               .duration(200)
-              .attr('r', 4);
+              .attr('r', 2 * radius);
 
             tooltip.transition()
               .duration(200)
@@ -126,7 +127,7 @@ export default {
             select(this)
               .transition()
               .duration(500)
-              .attr('r', 2);
+              .attr('r', radius);
 
             tooltip.transition()
               .duration(500)
@@ -135,7 +136,7 @@ export default {
         .transition()
         .duration(this.duration)
         .delay((d, i) => i * 5)
-        .attr('r', 2)
+        .attr('r', radius)
         .attr('cx', d => this.scaleX(d.x))
         .attr('cy', d => this.scaleY(d.y));
     },
