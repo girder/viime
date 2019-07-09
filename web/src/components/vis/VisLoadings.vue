@@ -115,7 +115,7 @@ export default {
           .on('mouseover', function mouseover(d) {
             select(this)
               .transition()
-              .duration(200)
+              .duration(500)
               .attr('r', 2 * radius);
 
             tooltip.transition()
@@ -128,7 +128,7 @@ export default {
           .on('mouseout', function mouseout() {
             select(this)
               .transition()
-              .duration(500)
+              .duration(200)
               .attr('r', radius);
 
             tooltip.transition()
