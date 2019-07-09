@@ -110,6 +110,8 @@ export default {
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
+          .style('fill-opacity', 0.001)
+          .style('stroke', 'black')
           .on('mouseover', function mouseover(d) {
             select(this)
               .transition()
