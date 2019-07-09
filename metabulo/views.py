@@ -327,6 +327,7 @@ def _get_pca_data(csv_file):
     labels = csv_file.sample_metadata
     groups = csv_file.groups
     data['labels'] = pandas.concat([groups, labels], axis=1).to_dict('list')
+    data['rows'] = table.index.tolist()
 
     return data
 

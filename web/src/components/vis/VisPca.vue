@@ -122,6 +122,9 @@ export default {
 
       return null;
     },
+    rowLabels() {
+      return this.rawPoints.rows;
+    },
     group() {
       const { dataset } = this;
       const column = dataset._source.columns.find(elem => elem.column_type === 'group');
@@ -186,6 +189,7 @@ export default {
       // Plot the points in the scatter plot.
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
+      const rowLabels = this.rowLabels;
       svg.select('g.plot')
         .selectAll('circle')
         .data(xyPoints)
@@ -194,7 +198,7 @@ export default {
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
           .style('fill', (d, i) => (group ? cmap(rawPoints.labels[group][i]) : null))
-          .on('mouseover', function mouseover(d) {
+          .on('mouseover', function mouseover(d, i) {
             select(this)
               .transition()
               .duration(200)
@@ -203,7 +207,7 @@ export default {
             tooltip.transition()
               .duration(200)
               .style('opacity', 0.9);
-            tooltip.html(`PC1: ${coordFormat(d.x)}<br>PC2: ${coordFormat(d.y)}`)
+            tooltip.html(`<b>${rowLabels[i]}</b><br>(${coordFormat(d.x)}, ${coordFormat(d.y)})`)
               .style('left', `${event.clientX}px`)
               .style('top', `${event.clientY - 30}px`);
           })
