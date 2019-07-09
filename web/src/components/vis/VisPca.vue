@@ -189,6 +189,7 @@ export default {
       // Plot the points in the scatter plot.
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
+      const radius = 4;
       const rowLabels = this.rowLabels;
       svg.select('g.plot')
         .selectAll('circle')
@@ -202,7 +203,7 @@ export default {
             select(this)
               .transition()
               .duration(200)
-              .attr('r', 4);
+              .attr('r', 2 * radius);
 
             tooltip.transition()
               .duration(200)
@@ -215,7 +216,7 @@ export default {
             select(this)
               .transition()
               .duration(500)
-              .attr('r', 2);
+              .attr('r', radius);
 
             tooltip.transition()
               .duration(500)
@@ -223,7 +224,7 @@ export default {
           }))
         .transition()
         .duration(this.duration)
-        .attr('r', 2)
+        .attr('r', radius)
         .attr('cx', d => this.scaleX(d.x))
         .attr('cy', d => this.scaleY(d.y));
 
