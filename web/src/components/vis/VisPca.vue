@@ -190,7 +190,7 @@ export default {
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
       const radius = 4;
-      const rowLabels = this.rowLabels;
+      const { rowLabels } = this;
       svg.select('g.plot')
         .selectAll('circle')
         .data(xyPoints)
