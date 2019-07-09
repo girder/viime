@@ -198,6 +198,7 @@ export default {
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
+          .style('stroke', 'black')
           .style('fill', (d, i) => (group ? cmap(rawPoints.labels[group][i]) : null))
           .on('mouseover', function mouseover(d, i) {
             select(this)
