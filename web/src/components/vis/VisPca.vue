@@ -16,8 +16,6 @@ div
 div.tooltip {
   position: fixed;
   text-align: center;
-  width: 120px;
-  height: 30px;
   padding: 2px;
   font: 12px sans-serif;
   background: lightsteelblue;
