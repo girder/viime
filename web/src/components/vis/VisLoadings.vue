@@ -98,29 +98,12 @@ export default {
         points,
       } = this.$props;
 
-      // Draw the data.
-      //
-      // Plot the vectors and points in the scatter plot.
+      // Plot the vectors as a scatter plot.
       const svg = select(this.$refs.svg);
-      const sel = svg.select('g.plot');
-      sel.selectAll('line')
-        .data(points)
-        .join(enter => enter.append('line')
-          .attr('x1', this.scaleX(0))
-          .attr('y1', this.scaleY(0))
-          .attr('x2', this.scaleX(0))
-          .attr('y2', this.scaleY(0))
-          .style('stroke', 'black')
-          .style('opacity', 0.0))
-        .transition()
-        .duration(this.duration)
-        .attr('x2', d => this.scaleX(d.x))
-        .attr('y2', d => this.scaleY(d.y))
-        .style('opacity', 1.0);
-
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
-      sel.selectAll('circle')
+      svg.select('g.plot')
+        .selectAll('circle')
         .data(points)
         .join(enter => enter.append('circle')
           .attr('cx', this.scaleX(0))
