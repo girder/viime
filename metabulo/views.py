@@ -361,7 +361,7 @@ def _get_loadings_data(csv_file):
         return x * x
 
     def cor(xs, ys):
-        if xs == ys:
+        if xs.equals(ys):
             return 1.0
 
         x_mean = mean(xs)
