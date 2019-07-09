@@ -361,13 +361,19 @@ def _get_loadings_data(csv_file):
         return x * x
 
     def cor(xs, ys):
+        if xs == ys:
+            return 1.0
+
         x_mean = mean(xs)
         y_mean = mean(ys)
 
-        prod_sum = sum(map(lambda x, y: (x - x_mean) * (y - y_mean), xs, ys))
         x_stddev = math.sqrt(sum(map(lambda x: sq(x - x_mean), xs)))
         y_stddev = math.sqrt(sum(map(lambda y: sq(y - y_mean), ys)))
 
+        if x_stddev == 0 or y_stddev == 0:
+            return 0.0
+
+        prod_sum = sum(map(lambda x, y: (x - x_mean) * (y - y_mean), xs, ys))
         return prod_sum / (x_stddev * y_stddev)
 
     table = _apply_transforms(csv_file)
