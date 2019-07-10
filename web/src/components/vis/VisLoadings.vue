@@ -15,8 +15,6 @@ div
 div.tooltip {
   position: fixed;
   text-align: center;
-  width: 120px;
-  height: 45px;
   padding: 2px;
   font: 12px sans-serif;
   background: lightsteelblue;
@@ -64,7 +62,8 @@ export default {
       },
       xrange: [-1.2, 1.2],
       yrange: [-1.2, 1.2],
-      duration: 500,
+      fadeInDuration: 500,
+      duration: 200,
     };
   },
   computed: {
@@ -98,61 +97,47 @@ export default {
         points,
       } = this.$props;
 
-      // Draw the data.
-      //
-      // Plot the vectors and points in the scatter plot.
+      // Plot the vectors as a scatter plot.
       const svg = select(this.$refs.svg);
-      const sel = svg.select('g.plot');
-      sel.selectAll('line')
-        .data(points)
-        .join(enter => enter.append('line')
-          .attr('x1', this.scaleX(0))
-          .attr('y1', this.scaleY(0))
-          .attr('x2', this.scaleX(0))
-          .attr('y2', this.scaleY(0))
-          .style('stroke', 'black')
-          .style('opacity', 0.0))
-        .transition()
-        .duration(this.duration)
-        .attr('x2', d => this.scaleX(d.x))
-        .attr('y2', d => this.scaleY(d.y))
-        .style('opacity', 1.0);
-
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
-      sel.selectAll('circle')
+      const radius = 5;
+      const { duration } = this;
+      svg.select('g.plot')
+        .selectAll('circle')
         .data(points)
         .join(enter => enter.append('circle')
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
+          .style('fill-opacity', 0.001)
+          .style('stroke', 'black')
           .on('mouseover', function mouseover(d) {
             select(this)
               .transition()
-              .duration(200)
-              .attr('r', 4);
+              .duration(duration)
+              .attr('r', 2 * radius);
 
             tooltip.transition()
-              .duration(200)
+              .duration(duration)
               .style('opacity', 0.9);
-            tooltip.html(`col: ${d.col}<br>x corr: ${coordFormat(d.x)}<br>y corr: ${coordFormat(d.y)}`)
+            tooltip.html(`<b>${d.col}</b><br>(${coordFormat(d.x)}, ${coordFormat(d.y)})`)
               .style('left', `${event.clientX}px`)
               .style('top', `${event.pageY - 30}px`);
           })
           .on('mouseout', function mouseout() {
             select(this)
               .transition()
-              .duration(500)
-              .attr('r', 2);
+              .duration(duration)
+              .attr('r', radius);
 
             tooltip.transition()
-              .duration(500)
+              .duration(duration)
               .style('opacity', 0.0);
           }))
         .transition()
-        .duration(this.duration)
-        .delay((d, i) => i * 5)
-        .attr('r', 2)
+        .duration(this.fadeInDuration)
+        .attr('r', radius)
         .attr('cx', d => this.scaleX(d.x))
         .attr('cy', d => this.scaleY(d.y));
     },
