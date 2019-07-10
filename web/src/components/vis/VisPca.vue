@@ -7,8 +7,8 @@ div
         text PC1 (0%)
       g.label.y(style="opacity: 0")
         text PC2 (0%)
-      g.plot
       g.ellipses
+      g.plot
   .tooltip(ref="tooltip")
 </template>
 
@@ -16,8 +16,6 @@ div
 div.tooltip {
   position: fixed;
   text-align: center;
-  width: 120px;
-  height: 30px;
   padding: 2px;
   font: 12px sans-serif;
   background: lightsteelblue;
@@ -110,7 +108,8 @@ export default {
       yrange: [-1, 1],
       xlabel: 'PC1',
       ylabel: 'PC2',
-      duration: 500,
+      fadeInDuration: 500,
+      duration: 200,
     };
   },
   computed: {
@@ -123,6 +122,9 @@ export default {
       }
 
       return null;
+    },
+    rowLabels() {
+      return this.rawPoints.rows;
     },
     group() {
       const { dataset } = this;
@@ -188,6 +190,11 @@ export default {
       // Plot the points in the scatter plot.
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
+      const radius = 4;
+      const {
+        rowLabels,
+        duration,
+      } = this;
       svg.select('g.plot')
         .selectAll('circle')
         .data(xyPoints)
@@ -195,33 +202,34 @@ export default {
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
+          .style('stroke', 'black')
           .style('fill', (d, i) => (group ? cmap(rawPoints.labels[group][i]) : null))
-          .on('mouseover', function mouseover(d) {
+          .on('mouseover', function mouseover(d, i) {
             select(this)
               .transition()
-              .duration(200)
-              .attr('r', 4);
+              .duration(duration)
+              .attr('r', 2 * radius);
 
             tooltip.transition()
-              .duration(200)
+              .duration(duration)
               .style('opacity', 0.9);
-            tooltip.html(`PC1: ${coordFormat(d.x)}<br>PC2: ${coordFormat(d.y)}`)
+            tooltip.html(`<b>${rowLabels[i]}</b><br>(${coordFormat(d.x)}, ${coordFormat(d.y)})`)
               .style('left', `${event.clientX}px`)
               .style('top', `${event.clientY - 30}px`);
           })
           .on('mouseout', function mouseout() {
             select(this)
               .transition()
-              .duration(500)
-              .attr('r', 2);
+              .duration(duration)
+              .attr('r', radius);
 
             tooltip.transition()
-              .duration(500)
+              .duration(this.duration)
               .style('opacity', 0.0);
           }))
         .transition()
-        .duration(this.duration)
-        .attr('r', 2)
+        .duration(this.fadeInDuration)
+        .attr('r', radius)
         .attr('cx', d => this.scaleX(d.x))
         .attr('cy', d => this.scaleY(d.y));
 
