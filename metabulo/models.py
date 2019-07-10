@@ -377,19 +377,9 @@ class TableColumnSchema(BaseSchema):
     column_header = fields.Str(dump_only=True)
     column_index = fields.Int(required=True, validate=validate.Range(min=0))
     column_type = fields.Str(required=True, validate=validate.OneOf(TABLE_COLUMN_TYPES))
-    data_column_index = fields.Int(dump_only=True, allow_none=True)
-
-    missing_percent = fields.Float(dump_only=True, allow_none=True)
-    data_variance = fields.Float(dump_only=True, allow_none=True, allow_nan=True)
 
     csv_file = fields.Nested(
         CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
-
-    @post_dump
-    def coerce_nan(self, data):
-        if data['data_variance'] != data['data_variance']:
-            data['data_variance'] = None
-        return data
 
 
 class TableRow(db.Model):
@@ -427,7 +417,6 @@ class TableRowSchema(BaseSchema):
     row_name = fields.Str(dump_only=True)
     row_index = fields.Int(required=True, validate=validate.Range(min=0))
     row_type = fields.Str(required=True, validate=validate.OneOf(TABLE_ROW_TYPES))
-    data_row_index = fields.Int(dump_only=True, allow_none=True)
 
     csv_file = fields.Nested(
         CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
