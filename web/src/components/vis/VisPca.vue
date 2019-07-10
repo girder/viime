@@ -7,8 +7,8 @@ div
         text PC1 (0%)
       g.label.y(style="opacity: 0")
         text PC2 (0%)
-      g.plot
       g.ellipses
+      g.plot
   .tooltip(ref="tooltip")
 </template>
 
