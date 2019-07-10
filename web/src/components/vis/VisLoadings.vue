@@ -62,7 +62,8 @@ export default {
       },
       xrange: [-1.2, 1.2],
       yrange: [-1.2, 1.2],
-      duration: 500,
+      fadeInDuration: 500,
+      duration: 200,
     };
   },
   computed: {
@@ -101,6 +102,7 @@ export default {
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
       const radius = 5;
+      const { duration } = this;
       svg.select('g.plot')
         .selectAll('circle')
         .data(points)
@@ -113,11 +115,11 @@ export default {
           .on('mouseover', function mouseover(d) {
             select(this)
               .transition()
-              .duration(500)
+              .duration(duration)
               .attr('r', 2 * radius);
 
             tooltip.transition()
-              .duration(200)
+              .duration(duration)
               .style('opacity', 0.9);
             tooltip.html(`<b>${d.col}</b><br>(${coordFormat(d.x)}, ${coordFormat(d.y)})`)
               .style('left', `${event.clientX}px`)
@@ -126,16 +128,15 @@ export default {
           .on('mouseout', function mouseout() {
             select(this)
               .transition()
-              .duration(200)
+              .duration(duration)
               .attr('r', radius);
 
             tooltip.transition()
-              .duration(500)
+              .duration(duration)
               .style('opacity', 0.0);
           }))
         .transition()
-        .duration(this.duration)
-        .delay((d, i) => i * 5)
+        .duration(this.fadeInDuration)
         .attr('r', radius)
         .attr('cx', d => this.scaleX(d.x))
         .attr('cy', d => this.scaleY(d.y));
