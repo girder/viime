@@ -95,7 +95,8 @@ v-layout.pretreatment-component(row, fill-height)
               v-list-tile-title.pl-2
                 v-icon.pr-1.middle {{ $vuetify.icons.bubbles }}
                 | Transform Table
-  router-view
+  keep-alive
+    router-view
 </template>
 
 <style lang="scss">

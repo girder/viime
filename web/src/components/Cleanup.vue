@@ -13,6 +13,45 @@ import {
 import { base26Converter } from '@/utils';
 import SaveStatus from '@/components/SaveStatus.vue';
 
+function renderTable(el, binding) {
+  while(el.firstChild) {
+    el.removeChild(el.firstChild);
+  }
+  const { dataset, id, activeClasses } = binding.value;
+  const thead = document.createElement('thead');
+  const tr0 = document.createElement('tr');
+  const th0 = document.createElement('th');
+  tr0.appendChild(th0);
+  dataset.column.labels.forEach((col, index) => {
+    const thn = document.createElement('th');
+    const span = document.createElement('span');
+    span.innerText = base26Converter(index + 1);
+    thn.onclick = (event) => {
+      binding.value.setSelection({ key: id, event, axis: 'column', idx: index });
+    }
+    thn.classList.add(...['control', 'px-2'].concat(activeClasses(index, 'column')));
+    thn.appendChild(span);
+    tr0.appendChild(thn);
+  });
+  thead.appendChild(tr0);
+  const tbody = document.createElement('tbody');
+  dataset.sourcerows.forEach((row, index) => {
+    const trn = document.createElement('tr');
+    tbody.appendChild(trn);
+    const td = document.createElement('td');
+    td.innerText = index + 1;
+    trn.appendChild(td);
+    row.forEach((col, idx2) => {
+      const tdn = document.createElement('td');
+      tdn.innerText = col;
+      trn.appendChild(tdn);
+      
+    });
+  });
+  el.appendChild(thead);
+  el.appendChild(tbody);
+}
+
 export default {
   components: {
     SaveStatus,
@@ -69,6 +108,34 @@ export default {
       this.imputation.mcar = this.dataset.imputationMCAR;
     },
   },
+  directives: {
+    dataTable: {
+      inserted: renderTable,
+      update: renderTable,
+    }
+  },
+          //- thead
+        //-   tr
+        //-     th
+        //-     th.control.px-2(
+        //-         v-for="(col, index) in dataset.column.labels",
+        //-         :class="activeClasses(index, 'column')",
+        //-         @click="setSelection({ key: id, event: $event, axis: 'column', idx: index })")
+        //-       span(v-if="col === defaultColOption") {{ base26Converter(index + 1) }}
+        //-       v-icon(v-else, small) {{ $vuetify.icons[col] }}
+
+                //- tbody
+        //-   tr.datarow(v-for="(row, index) in dataset.sourcerows",
+        //-       :key="`${index}${row[0]}`",
+        //-       :class="{[dataset.row.labels[index]]: true, ...activeClasses(index, 'row')}")
+        //-     td.control.px-2(
+        //-         @click="setSelection({ key: id, event: $event, axis: 'row', idx: index })")
+        //-       span(v-if="dataset.row.labels[index] === defaultRowOption") {{ index + 1 }}
+        //-       v-icon(v-else, small) {{ $vuetify.icons[dataset.row.labels[index]] }}
+        //-     td.px-2.row(
+        //-         v-for="(col, idx2) in row",
+        //-         :class="{[dataset.column.labels[idx2]]: true, ...activeClasses(idx2, 'column')}",
+        //-         :key="`${index}.${idx2}`") {{ col }}
   methods: {
     ...mapMutations({ setSelection: SET_SELECTION }),
     base26Converter,
@@ -87,13 +154,19 @@ export default {
     activeClasses(index, axisName) {
       if (axisName === this.selected.type) {
         const includes = this.selected.ranges.includes(index);
-        return {
-          active: includes.member,
-          first: includes.first,
-          last: includes.last,
-        };
+        const classList = [];
+        if (includes.member) {
+          classList.push('active');
+        }
+        if (includes.first) {
+          classList.push('first');
+        }
+        if (includes.last) {
+          classList.push('last');
+        }
+        return classList;
       }
-      return {};
+      return [];
     },
   },
 };
@@ -157,30 +230,30 @@ v-layout.cleanup-wrapper(row)
       v-icon {{ $vuetify.icons.download }}
 
     .overflow-auto
-      table.cleanup-table
+      table.cleanup-table(v-data-table="this")
 
-        thead
-          tr
-            th
-            th.control.px-2(
-                v-for="(col, index) in dataset.column.labels",
-                :class="activeClasses(index, 'column')",
-                @click="setSelection({ key: id, event: $event, axis: 'column', idx: index })")
-              span(v-if="col === defaultColOption") {{ base26Converter(index + 1) }}
-              v-icon(v-else, small) {{ $vuetify.icons[col] }}
+        //- thead
+        //-   tr
+        //-     th
+        //-     th.control.px-2(
+        //-         v-for="(col, index) in dataset.column.labels",
+        //-         :class="activeClasses(index, 'column')",
+        //-         @click="setSelection({ key: id, event: $event, axis: 'column', idx: index })")
+        //-       span(v-if="col === defaultColOption") {{ base26Converter(index + 1) }}
+        //-       v-icon(v-else, small) {{ $vuetify.icons[col] }}
 
-        tbody
-          tr.datarow(v-for="(row, index) in dataset.sourcerows",
-              :key="`${index}${row[0]}`",
-              :class="{[dataset.row.labels[index]]: true, ...activeClasses(index, 'row')}")
-            td.control.px-2(
-                @click="setSelection({ key: id, event: $event, axis: 'row', idx: index })")
-              span(v-if="dataset.row.labels[index] === defaultRowOption") {{ index + 1 }}
-              v-icon(v-else, small) {{ $vuetify.icons[dataset.row.labels[index]] }}
-            td.px-2.row(
-                v-for="(col, idx2) in row",
-                :class="{[dataset.column.labels[idx2]]: true, ...activeClasses(idx2, 'column')}",
-                :key="`${index}.${idx2}`") {{ col }}
+        //- tbody
+        //-   tr.datarow(v-for="(row, index) in dataset.sourcerows",
+        //-       :key="`${index}${row[0]}`",
+        //-       :class="{[dataset.row.labels[index]]: true, ...activeClasses(index, 'row')}")
+        //-     td.control.px-2(
+        //-         @click="setSelection({ key: id, event: $event, axis: 'row', idx: index })")
+        //-       span(v-if="dataset.row.labels[index] === defaultRowOption") {{ index + 1 }}
+        //-       v-icon(v-else, small) {{ $vuetify.icons[dataset.row.labels[index]] }}
+        //-     td.px-2.row(
+        //-         v-for="(col, idx2) in row",
+        //-         :class="{[dataset.column.labels[idx2]]: true, ...activeClasses(idx2, 'column')}",
+        //-         :key="`${index}.${idx2}`") {{ col }}
 </template>
 
 <style lang="scss">
@@ -236,6 +309,7 @@ v-layout.cleanup-wrapper(row)
   .cleanup-table {
     border-spacing: 0px;
     user-select: none;
+    table-layout: fixed;
 
     .key, .metadata, .header, .group {
       color: white;
