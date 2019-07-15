@@ -13,41 +13,80 @@ import {
 import { base26Converter } from '@/utils';
 import SaveStatus from '@/components/SaveStatus.vue';
 
+function updateTable(el, binding) {
+  const { dataset, id, activeClasses, setSelection } = binding.value;
+  const colgroup = el.getElementsByTagName('colgroup')[0];
+  const body = el.getElementsByTagName('tbody')[0];
+  const columns = colgroup.children;
+  const rows = body.children;
+  for(let index = 0; index < (columns.length - 1); index += 1) {
+    const col = columns[index + 1]; // Account for 0th being empty
+    col.classList.remove('first', 'last', 'active', 'key', 'group', 'metadata', 'masked', 'measurement');
+    col.classList.add(...activeClasses(index, 'column'));
+    col.classList.add(dataset.column.labels[index]);
+  }
+
+  for(let index = 0; index < (rows.length); index += 1) {
+    const row = rows[index];
+    row.classList.remove('first', 'last', 'active', 'header', 'metadata', 'masked', 'sample');
+    row.classList.add(...activeClasses(index, 'row'));
+    row.classList.add(dataset.row.labels[index]);
+  }
+}
+
 function renderTable(el, binding) {
   while(el.firstChild) {
     el.removeChild(el.firstChild);
   }
-  const { dataset, id, activeClasses } = binding.value;
+
+  const { dataset, id, activeClasses, setSelection } = binding.value;
   const thead = document.createElement('thead');
+  const colgroup = document.createElement('colgroup');
   const tr0 = document.createElement('tr');
   const th0 = document.createElement('th');
+  const col0 = document.createElement('col');
   tr0.appendChild(th0);
+  colgroup.appendChild(col0);
+
   dataset.column.labels.forEach((col, index) => {
+    const coln = document.createElement('col');
     const thn = document.createElement('th');
     const span = document.createElement('span');
     span.innerText = base26Converter(index + 1);
     thn.onclick = (event) => {
-      binding.value.setSelection({ key: id, event, axis: 'column', idx: index });
+      setSelection({ key: id, event, axis: 'column', idx: index });
     }
-    thn.classList.add(...['control', 'px-2'].concat(activeClasses(index, 'column')));
+    thn.classList.add('control', 'px-2')
+    coln.classList.add(...activeClasses(index, 'column'));
+    coln.classList.add(dataset.column.labels[index]);
     thn.appendChild(span);
     tr0.appendChild(thn);
+    colgroup.appendChild(coln);
   });
   thead.appendChild(tr0);
+  
   const tbody = document.createElement('tbody');
   dataset.sourcerows.forEach((row, index) => {
     const trn = document.createElement('tr');
+    trn.classList.add(...['datarow'].concat(activeClasses(index, 'row')));
+    trn.classList.add(dataset.row.labels[index]);
     tbody.appendChild(trn);
     const td = document.createElement('td');
     td.innerText = index + 1;
+    td.classList.add('control');
+    td.onclick = (event) => {
+      setSelection({ key: id, event, axis: 'row', idx: index });
+    }
     trn.appendChild(td);
     row.forEach((col, idx2) => {
       const tdn = document.createElement('td');
       tdn.innerText = col;
       trn.appendChild(tdn);
-      
+      tdn.classList.add('row');
     });
   });
+
+  el.appendChild(colgroup);
   el.appendChild(thead);
   el.appendChild(tbody);
 }
@@ -111,31 +150,9 @@ export default {
   directives: {
     dataTable: {
       inserted: renderTable,
-      update: renderTable,
+      update: updateTable,
     }
   },
-          //- thead
-        //-   tr
-        //-     th
-        //-     th.control.px-2(
-        //-         v-for="(col, index) in dataset.column.labels",
-        //-         :class="activeClasses(index, 'column')",
-        //-         @click="setSelection({ key: id, event: $event, axis: 'column', idx: index })")
-        //-       span(v-if="col === defaultColOption") {{ base26Converter(index + 1) }}
-        //-       v-icon(v-else, small) {{ $vuetify.icons[col] }}
-
-                //- tbody
-        //-   tr.datarow(v-for="(row, index) in dataset.sourcerows",
-        //-       :key="`${index}${row[0]}`",
-        //-       :class="{[dataset.row.labels[index]]: true, ...activeClasses(index, 'row')}")
-        //-     td.control.px-2(
-        //-         @click="setSelection({ key: id, event: $event, axis: 'row', idx: index })")
-        //-       span(v-if="dataset.row.labels[index] === defaultRowOption") {{ index + 1 }}
-        //-       v-icon(v-else, small) {{ $vuetify.icons[dataset.row.labels[index]] }}
-        //-     td.px-2.row(
-        //-         v-for="(col, idx2) in row",
-        //-         :class="{[dataset.column.labels[idx2]]: true, ...activeClasses(idx2, 'column')}",
-        //-         :key="`${index}.${idx2}`") {{ col }}
   methods: {
     ...mapMutations({ setSelection: SET_SELECTION }),
     base26Converter,
@@ -231,29 +248,6 @@ v-layout.cleanup-wrapper(row)
 
     .overflow-auto
       table.cleanup-table(v-data-table="this")
-
-        //- thead
-        //-   tr
-        //-     th
-        //-     th.control.px-2(
-        //-         v-for="(col, index) in dataset.column.labels",
-        //-         :class="activeClasses(index, 'column')",
-        //-         @click="setSelection({ key: id, event: $event, axis: 'column', idx: index })")
-        //-       span(v-if="col === defaultColOption") {{ base26Converter(index + 1) }}
-        //-       v-icon(v-else, small) {{ $vuetify.icons[col] }}
-
-        //- tbody
-        //-   tr.datarow(v-for="(row, index) in dataset.sourcerows",
-        //-       :key="`${index}${row[0]}`",
-        //-       :class="{[dataset.row.labels[index]]: true, ...activeClasses(index, 'row')}")
-        //-     td.control.px-2(
-        //-         @click="setSelection({ key: id, event: $event, axis: 'row', idx: index })")
-        //-       span(v-if="dataset.row.labels[index] === defaultRowOption") {{ index + 1 }}
-        //-       v-icon(v-else, small) {{ $vuetify.icons[dataset.row.labels[index]] }}
-        //-     td.px-2.row(
-        //-         v-for="(col, idx2) in row",
-        //-         :class="{[dataset.column.labels[idx2]]: true, ...activeClasses(idx2, 'column')}",
-        //-         :key="`${index}.${idx2}`") {{ col }}
 </template>
 
 <style lang="scss">
@@ -310,19 +304,40 @@ v-layout.cleanup-wrapper(row)
     border-spacing: 0px;
     user-select: none;
     table-layout: fixed;
+    border-collapse: collapse;
 
     .key, .metadata, .header, .group {
       color: white;
       font-weight: 700;
       text-align: left;
     }
+    
+    colgroup {
+      col {
+        &.active {
+          background: linear-gradient(0deg,rgba(161, 213, 255, 0.3),rgba(161, 213, 255, 0.3));
+          border-left-color: red !important;
+        }
+
+        &.active.key, &.key {
+          background-color:  var(--v-primary-lighten4);
+        }
+
+        &.active.metadata, &.metadata {
+          background-color:  var(--v-accent2-lighten3);
+        }
+
+        &.active.group, &.group {
+          background-color:   var(--v-accent3-lighten3);
+        }
+      }
+    }
 
     tr {
-      background-color: #fdfdfd;
 
       th, td {
-        box-shadow: inset 0 0 0 .5px var(--v-secondary-lighten3);
-        padding: 2px;
+        border: 1px solid var(--v-secondary-lighten1);
+        padding: 2px 5px;
         text-align: center;
         white-space: nowrap;
 
@@ -332,72 +347,30 @@ v-layout.cleanup-wrapper(row)
         }
       }
 
-      td.active, th.active {
-        &.first {
-          border-left: 2px solid var(--v-secondary-darken3);
-        }
-
-        &.last {
-          border-right: 2px solid var(--v-secondary-darken3);
-        }
-      }
-
-      &.active.first td {
-        border-top: 2px solid var(--v-secondary-darken3);
-      }
-
-      &.active.last td{
-        border-bottom: 2px solid var(--v-secondary-darken3);
-      }
-
-      &.active {
-        &.metadata {
-          td {
-            box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.15) !important;
-          }
-        }
-      }
-
-      &.active td,
-      td.active {
-        background: linear-gradient(0deg,rgba(161, 213, 255, 0.2),rgba(161, 213, 255, 0.2));
-        box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.3);
+      &.active td {
+        background: linear-gradient(0deg,rgba(161, 213, 255, 0.3),rgba(161, 213, 255, 0.3));
 
         &.group,
         &.key,
         &.metadata,
         &.masked {
-          box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.15) !important;
+          // box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.15) !important;
         }
       }
     }
 
     tr.datarow {
+      
       &.header {
         td {
           background-color: var(--v-accent-lighten1);
-          box-shadow: inset 0 0 0 .5px var(--v-accent-base);
-
-          &.active {
-            color: white;
-
-            &.first{
-              border-left: 2px solid var(--v-secondary-darken3);
-            }
-            &.last {
-              border-right: 2px solid var(--v-secondary-darken3);
-            }
-          }
-          &.masked {
-            color: var(--v-secondary-base);
-          }
         }
       }
 
       &.metadata {
         td {
           background-color: var(--v-accent2-lighten2);
-          box-shadow: inset 0 0 0 .5px var(--v-accent2-lighten1);
+          // box-shadow: inset 0 0 0 .5px var(--v-accent2-lighten1);
         }
       }
 
@@ -405,23 +378,6 @@ v-layout.cleanup-wrapper(row)
       &.metadata {
         td.key, td.metadata, td.group {
           @include masked();
-        }
-      }
-
-      td {
-        &.key {
-          background-color: var(--v-primary-base);
-          box-shadow: inset 0 0 0 .5px var(--v-primary-darken1);
-        }
-
-        &.metadata, {
-          background-color: var(--v-accent2-lighten2);
-          box-shadow: inset 0 0 0 .5px var(--v-accent2-lighten1);
-        }
-
-        &.group {
-          background-color: var(--v-accent3-lighten1);
-          box-shadow: inset 0 0 0 .5px var(--v-accent3-base);
         }
       }
     }
