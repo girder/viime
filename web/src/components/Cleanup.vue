@@ -336,7 +336,7 @@ v-layout.cleanup-wrapper(row)
     tr {
 
       th, td {
-        border: 1px solid var(--v-secondary-lighten1);
+        // border: 1px solid var(--v-secondary-lighten1);
         padding: 2px 5px;
         text-align: center;
         white-space: nowrap;
