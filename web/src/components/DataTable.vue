@@ -20,6 +20,7 @@ function updateTable(el, binding) {
   const { dataset, id, activeClasses, setSelection, icons } = binding.value;
   const colgroup = el.getElementsByTagName('colgroup')[0];
   const body = el.getElementsByTagName('tbody')[0];
+  const headrow = el.getElementsByTagName('thead')[0].children[0];
   const columns = colgroup.children;
   const rows = body.children;
   for (let index = 0; index < columns.length - 1; index += 1) {
@@ -37,6 +38,14 @@ function updateTable(el, binding) {
     col.classList.add(...activeClasses(index, 'column'));
     const colType = dataset.column.labels[index];
     col.classList.add(colType);
+
+    const colHeader = headrow.children[index + 1];
+    colHeader.removeChild(colHeader.firstChild);
+    if (colType !== defaultColOption) {
+      colHeader.appendChild(getIcon(colType, icons));
+    } else {
+      colHeader.innerText = base26Converter(index + 1);
+    }
   }
 
   for (let index = 0; index < rows.length; index += 1) {
@@ -51,7 +60,16 @@ function updateTable(el, binding) {
       'sample'
     );
     row.classList.add(...activeClasses(index, 'row'));
-    row.classList.add(dataset.row.labels[index]);
+    const rowType = dataset.row.labels[index];
+    row.classList.add(rowType);
+
+    const rowHeader = row.children[0];
+    rowHeader.removeChild(rowHeader.firstChild);
+    if (rowType !== defaultRowOption) {
+      rowHeader.appendChild(getIcon(rowType, icons));
+    } else {
+      rowHeader.innerText = index + 1;
+    }
   }
 }
 
@@ -101,7 +119,7 @@ function renderTable(el, binding) {
     if (rowType !== defaultRowOption) {
       td.appendChild(getIcon(rowType, icons));
     } else {
-      td.innerText = base26Converter(index + 1);
+      td.innerText = index + 1;
     }
     td.classList.add('control');
     td.onclick = event => {
