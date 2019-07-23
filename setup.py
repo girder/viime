@@ -36,7 +36,7 @@ setup(
         'flask-sqlalchemy',
         'marshmallow==3.0.0rc6',
         'matplotlib',
-        'pandas',
+        'pandas<0.25.0',
         'python-dotenv',
         'requests',
         'sklearn',
