@@ -11,23 +11,40 @@ function updateTable(el, binding) {
   const body = el.getElementsByTagName('tbody')[0];
   const columns = colgroup.children;
   const rows = body.children;
-  for(let index = 0; index < (columns.length - 1); index += 1) {
+  for (let index = 0; index < columns.length - 1; index += 1) {
     const col = columns[index + 1]; // Account for 0th being empty
-    col.classList.remove('first', 'last', 'active', 'key', 'group', 'metadata', 'masked', 'measurement');
+    col.classList.remove(
+      'first',
+      'last',
+      'active',
+      'key',
+      'group',
+      'metadata',
+      'masked',
+      'measurement'
+    );
     col.classList.add(...activeClasses(index, 'column'));
     col.classList.add(dataset.column.labels[index]);
   }
 
-  for(let index = 0; index < (rows.length); index += 1) {
+  for (let index = 0; index < rows.length; index += 1) {
     const row = rows[index];
-    row.classList.remove('first', 'last', 'active', 'header', 'metadata', 'masked', 'sample');
+    row.classList.remove(
+      'first',
+      'last',
+      'active',
+      'header',
+      'metadata',
+      'masked',
+      'sample'
+    );
     row.classList.add(...activeClasses(index, 'row'));
     row.classList.add(dataset.row.labels[index]);
   }
 }
 
 function renderTable(el, binding) {
-  while(el.firstChild) {
+  while (el.firstChild) {
     el.removeChild(el.firstChild);
   }
   const { dataset, id, activeClasses, setSelection } = binding.value;
@@ -44,10 +61,10 @@ function renderTable(el, binding) {
     const thn = document.createElement('th');
     const span = document.createElement('span');
     span.innerText = base26Converter(index + 1);
-    thn.onclick = (event) => {
+    thn.onclick = event => {
       setSelection({ key: id, event, axis: 'column', idx: index });
-    }
-    thn.classList.add('control', 'px-2')
+    };
+    thn.classList.add('control', 'px-2');
     coln.classList.add(...activeClasses(index, 'column'));
     coln.classList.add(dataset.column.labels[index]);
     thn.appendChild(span);
@@ -55,7 +72,7 @@ function renderTable(el, binding) {
     colgroup.appendChild(coln);
   });
   thead.appendChild(tr0);
-  
+
   const tbody = document.createElement('tbody');
   dataset.sourcerows.forEach((row, index) => {
     const trn = document.createElement('tr');
@@ -65,9 +82,9 @@ function renderTable(el, binding) {
     const td = document.createElement('td');
     td.innerText = index + 1;
     td.classList.add('control');
-    td.onclick = (event) => {
+    td.onclick = event => {
       setSelection({ key: id, event, axis: 'row', idx: index });
-    }
+    };
     trn.appendChild(td);
     row.forEach((col, idx2) => {
       const tdn = document.createElement('td');
@@ -86,26 +103,30 @@ export default {
   props: {
     dataset: {
       type: Object,
-      required: true,
+      required: true
     },
     id: {
       type: String,
-      required: true,
+      required: true
     },
     selected: {
       type: Object,
-      required: true,
-    },
+      required: true
+    }
   },
   directives: {
     dataTable: {
       inserted: renderTable,
-      update: updateTable,
+      update: updateTable
     }
   },
   computed: {
-    selectedRanges() { return this.selected.ranges; },
-    selectedType() { return this.selected.type; },
+    selectedRanges() {
+      return this.selected.ranges;
+    },
+    selectedType() {
+      return this.selected.type;
+    }
   },
   methods: {
     activeClasses(index, axisName) {
@@ -127,16 +148,15 @@ export default {
       return [];
     },
     setSelection(selection) {
-      this.$emit('setSelection', selection);
-    },
-  },
-}
+      this.$emit('setselection', selection);
+    }
+  }
+};
 </script>
 
 <style lang="scss">
 @mixin masked() {
-  background-color: var(--v-secondary-lighten3);
-  box-shadow: inset 0 0 0 .5px var(--v-secondary-lighten2);
+  background-color: var(--v-secondary-lighten2);
   font-weight: 300;
   color: var(--v-secondary-base);
 }
@@ -147,7 +167,10 @@ export default {
   table-layout: fixed;
   border-collapse: collapse;
 
-  .key, .metadata, .header, .group {
+  .key,
+  .metadata,
+  .header,
+  .group {
     color: white;
     font-weight: 700;
     text-align: left;
@@ -156,30 +179,74 @@ export default {
   colgroup {
     col {
       &.active {
-        background: linear-gradient(0deg,rgba(161, 213, 255, 0.3),rgba(161, 213, 255, 0.3));
+        background: linear-gradient(
+          0deg,
+          rgba(161, 213, 255, 0.4),
+          rgba(161, 213, 255, 0.4)
+        );
+
+        &.first {
+          background: linear-gradient(
+            90deg,
+            rgb(23, 147, 248) 0px,
+            rgba(161, 213, 255, 0.4) 2px
+          );
+        }
+
+        &.last {
+          background: linear-gradient(
+            90deg,
+            rgba(161, 213, 255, 0.4) 0px,
+            rgba(161, 213, 255, 0.4) calc(100% - 2px),
+            rgb(23, 147, 248) 100%
+          );
+        }
+
+        &.first.last {
+          background: linear-gradient(
+            90deg,
+            rgb(23, 147, 248) 0px,
+            rgba(161, 213, 255, 0.4) 2px,
+            rgba(161, 213, 255, 0.4) calc(100% - 2px),
+            rgb(23, 147, 248) 100%
+          );
+        }
       }
 
-      &.active.key, &.key {
-        background-color:  var(--v-primary-lighten4);
+      &.active.key,
+      &.key,
+      &.active.first.key,
+      &.active.last.key {
+        background-color: var(--v-primary-lighten3);
       }
 
-      &.active.metadata, &.metadata {
-        background-color:  var(--v-accent2-lighten3);
+      &.active.metadata,
+      &.metadata,
+      &.active.first.metadata,
+      &.active.last.metadata {
+        background-color: var(--v-accent2-lighten3);
       }
 
-      &.active.group, &.group {
-        background-color:   var(--v-accent3-lighten3);
+      &.active.group,
+      &.group,
+      &.active.first.group,
+      &.active.last.group {
+        background-color: var(--v-accent3-lighten3);
+      }
+
+      &.masked,
+      &.masked.active,
+      &.masked.active.first,
+      &.masked.active.last {
+        @include masked();
       }
     }
   }
 
   tr {
-    // background-color: #fdfdfd;
-
-    th, td {
-      box-shadow: inset 0 0 0 .5px var(--v-secondary-lighten3);
-      padding: 2px 6px;
-      text-align: center;
+    th,
+    td {
+      padding: 2px 7px;
       white-space: nowrap;
 
       &.control {
@@ -188,87 +255,67 @@ export default {
       }
     }
 
-    &.active.first td {
-      border-top: 2px solid var(--v-secondary-darken3);
-    }
-
-    &.active.last td{
-      border-bottom: 2px solid var(--v-secondary-darken3);
-    }
-
     &.active {
       &.metadata {
         td {
-          box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.15) !important;
+          box-shadow: inset 0 0 0 0.5px rgba(161, 213, 255, 0.15) !important;
         }
       }
     }
 
-    &.active td,
-    td.active {
-      background: linear-gradient(0deg,rgba(161, 213, 255, 0.2),rgba(161, 213, 255, 0.2));
-      box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.3);
+    &.active {
+      background: linear-gradient(
+        0deg,
+        rgba(161, 213, 255, 0.4),
+        rgba(161, 213, 255, 0.4)
+      );
 
-      &.group,
-      &.key,
-      &.metadata,
-      &.masked {
-        box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.15) !important;
+      &.first {
+        background: linear-gradient(
+          180deg,
+          rgb(23, 147, 248) 0px,
+          rgba(161, 213, 255, 0.4) 2px
+        );
+      }
+
+      &.last {
+        background: linear-gradient(
+          180deg,
+          rgba(161, 213, 255, 0.4) 0px,
+          rgba(161, 213, 255, 0.4) calc(100% - 2px),
+          rgb(23, 147, 248) 100%
+        );
+      }
+
+      &.first.last {
+        background: linear-gradient(
+          180deg,
+          rgb(23, 147, 248) 0px,
+          rgba(161, 213, 255, 0.4) 2px,
+          rgba(161, 213, 255, 0.4) calc(100% - 2px),
+          rgb(23, 147, 248) 100%
+        );
       }
     }
   }
 
   tr.datarow {
-    &.header {
-      td {
-        background-color: var(--v-accent-lighten1);
-        box-shadow: inset 0 0 0 .5px var(--v-accent-base);
-
-        &.active {
-          color: white;
-        }
-        &.masked {
-          color: var(--v-secondary-base);
-        }
-      }
-    }
-
-    &.metadata {
-      td {
-        background-color: var(--v-accent2-lighten2);
-        box-shadow: inset 0 0 0 .5px var(--v-accent2-lighten1);
-      }
-    }
+    text-align: left;
 
     &.header,
-    &.metadata {
-      td.key, td.metadata, td.group {
-        @include masked();
-      }
+    &.header.active {
+      background-color: var(--v-accent-lighten1);
     }
 
-    td {
-      &.key {
-        background-color: var(--v-primary-base);
-        box-shadow: inset 0 0 0 .5px var(--v-primary-darken1);
-      }
-
-      &.metadata, {
-        background-color: var(--v-accent2-lighten2);
-        box-shadow: inset 0 0 0 .5px var(--v-accent2-lighten1);
-      }
-
-      &.group {
-        background-color: var(--v-accent3-lighten1);
-        box-shadow: inset 0 0 0 .5px var(--v-accent3-base);
-      }
+    &.metadata,
+    &.metadata.active {
+      background-color: var(--v-accent2-lighten2);
     }
   }
 
   tr.datarow {
-    &.masked td,
-    td.masked,
-    th.masked {
+    &.masked,
+    &.masked.active {
       @include masked();
     }
   }

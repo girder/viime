@@ -149,7 +149,7 @@ v-layout.cleanup-wrapper(row)
       v-icon {{ $vuetify.icons.download }}
 
     .overflow-auto
-      data-table(v-bind="{ id, dataset, selected }", @setSelection="setSelection")
+      data-table(v-bind="{ id, dataset, selected }", @setselection="setSelection")
 </template>
 
 <style lang="scss">
