@@ -1,12 +1,23 @@
 <template lang="pug">
-table.cleanup-table(v-data-table="{ dataset, id, activeClasses, setSelection, selectedRanges }")
+table.cleanup-table(v-data-table="{ dataset, id, activeClasses, setSelection, selectedRanges, icons: $vuetify.icons }")
 </template>
 
 <script>
 import { base26Converter } from '@/utils';
+import {
+  defaultRowOption,
+  defaultColOption,
+} from '@/utils/constants';
+
+function getIcon(iconType, icons) {
+  const el = document.createElement('i');
+  el.classList.add(...['v-icon', 'small', 'mdi', 'theme--light', icons[iconType]]);
+  el.style.fontSize = '16px';
+  return el;
+}
 
 function updateTable(el, binding) {
-  const { dataset, id, activeClasses, setSelection } = binding.value;
+  const { dataset, id, activeClasses, setSelection, icons } = binding.value;
   const colgroup = el.getElementsByTagName('colgroup')[0];
   const body = el.getElementsByTagName('tbody')[0];
   const columns = colgroup.children;
@@ -24,7 +35,8 @@ function updateTable(el, binding) {
       'measurement'
     );
     col.classList.add(...activeClasses(index, 'column'));
-    col.classList.add(dataset.column.labels[index]);
+    const colType = dataset.column.labels[index];
+    col.classList.add(colType);
   }
 
   for (let index = 0; index < rows.length; index += 1) {
@@ -47,7 +59,7 @@ function renderTable(el, binding) {
   while (el.firstChild) {
     el.removeChild(el.firstChild);
   }
-  const { dataset, id, activeClasses, setSelection } = binding.value;
+  const { dataset, id, activeClasses, setSelection, icons } = binding.value;
   const thead = document.createElement('thead');
   const colgroup = document.createElement('colgroup');
   const tr0 = document.createElement('tr');
@@ -60,13 +72,18 @@ function renderTable(el, binding) {
     const coln = document.createElement('col');
     const thn = document.createElement('th');
     const span = document.createElement('span');
-    span.innerText = base26Converter(index + 1);
+    const colType = dataset.column.labels[index];
     thn.onclick = event => {
       setSelection({ key: id, event, axis: 'column', idx: index });
     };
+    if (colType !== defaultColOption) {
+      span.appendChild(getIcon(colType, icons));
+    } else {
+      span.innerText = base26Converter(index + 1);
+    }
     thn.classList.add('control', 'px-2');
     coln.classList.add(...activeClasses(index, 'column'));
-    coln.classList.add(dataset.column.labels[index]);
+    coln.classList.add(colType);
     thn.appendChild(span);
     tr0.appendChild(thn);
     colgroup.appendChild(coln);
@@ -76,11 +93,16 @@ function renderTable(el, binding) {
   const tbody = document.createElement('tbody');
   dataset.sourcerows.forEach((row, index) => {
     const trn = document.createElement('tr');
+    const rowType = dataset.row.labels[index]
     trn.classList.add(...['datarow'].concat(activeClasses(index, 'row')));
-    trn.classList.add(dataset.row.labels[index]);
+    trn.classList.add(rowType);
     tbody.appendChild(trn);
     const td = document.createElement('td');
-    td.innerText = index + 1;
+    if (rowType !== defaultRowOption) {
+      td.appendChild(getIcon(rowType, icons));
+    } else {
+      td.innerText = base26Converter(index + 1);
+    }
     td.classList.add('control');
     td.onclick = event => {
       setSelection({ key: id, event, axis: 'row', idx: index });
