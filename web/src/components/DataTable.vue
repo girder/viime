@@ -1,5 +1,5 @@
 <template lang="pug">
-table.cleanup-table(v-data-table="{ dataset, id, activeClasses, setSelection, selectedRanges, icons: $vuetify.icons }")
+table.cleanup-table(v-data-table="bind")
 </template>
 
 <script>
@@ -17,7 +17,9 @@ function getIcon(iconType, icons) {
 }
 
 function updateTable(el, binding) {
-  const { dataset, id, activeClasses, setSelection, icons } = binding.value;
+  const {
+    dataset, activeClasses, icons,
+  } = binding.value;
   const colgroup = el.getElementsByTagName('colgroup')[0];
   const body = el.getElementsByTagName('tbody')[0];
   const headrow = el.getElementsByTagName('thead')[0].children[0];
@@ -33,7 +35,7 @@ function updateTable(el, binding) {
       'group',
       'metadata',
       'masked',
-      'measurement'
+      'measurement',
     );
     col.classList.add(...activeClasses(index, 'column'));
     const colType = dataset.column.labels[index];
@@ -57,7 +59,7 @@ function updateTable(el, binding) {
       'header',
       'metadata',
       'masked',
-      'sample'
+      'sample',
     );
     row.classList.add(...activeClasses(index, 'row'));
     const rowType = dataset.row.labels[index];
@@ -77,7 +79,9 @@ function renderTable(el, binding) {
   while (el.firstChild) {
     el.removeChild(el.firstChild);
   }
-  const { dataset, id, activeClasses, setSelection, icons } = binding.value;
+  const {
+    dataset, id, activeClasses, setSelection, icons,
+  } = binding.value;
   const thead = document.createElement('thead');
   const colgroup = document.createElement('colgroup');
   const tr0 = document.createElement('tr');
@@ -91,8 +95,10 @@ function renderTable(el, binding) {
     const thn = document.createElement('th');
     const span = document.createElement('span');
     const colType = dataset.column.labels[index];
-    thn.onclick = event => {
-      setSelection({ key: id, event, axis: 'column', idx: index });
+    thn.onclick = (event) => {
+      setSelection({
+        key: id, event, axis: 'column', idx: index,
+      });
     };
     if (colType !== defaultColOption) {
       span.appendChild(getIcon(colType, icons));
@@ -111,7 +117,7 @@ function renderTable(el, binding) {
   const tbody = document.createElement('tbody');
   dataset.sourcerows.forEach((row, index) => {
     const trn = document.createElement('tr');
-    const rowType = dataset.row.labels[index]
+    const rowType = dataset.row.labels[index];
     trn.classList.add(...['datarow'].concat(activeClasses(index, 'row')));
     trn.classList.add(rowType);
     tbody.appendChild(trn);
@@ -122,11 +128,13 @@ function renderTable(el, binding) {
       td.innerText = index + 1;
     }
     td.classList.add('control');
-    td.onclick = event => {
-      setSelection({ key: id, event, axis: 'row', idx: index });
+    td.onclick = (event) => {
+      setSelection({
+        key: id, event, axis: 'row', idx: index,
+      });
     };
     trn.appendChild(td);
-    row.forEach((col, idx2) => {
+    row.forEach((col) => {
       const tdn = document.createElement('td');
       tdn.innerText = col;
       trn.appendChild(tdn);
@@ -140,25 +148,25 @@ function renderTable(el, binding) {
 }
 
 export default {
-  props: {
-    dataset: {
-      type: Object,
-      required: true
-    },
-    id: {
-      type: String,
-      required: true
-    },
-    selected: {
-      type: Object,
-      required: true
-    }
-  },
   directives: {
     dataTable: {
       inserted: renderTable,
-      update: updateTable
-    }
+      update: updateTable,
+    },
+  },
+  props: {
+    dataset: {
+      type: Object,
+      required: true,
+    },
+    id: {
+      type: String,
+      required: true,
+    },
+    selected: {
+      type: Object,
+      required: true,
+    },
   },
   computed: {
     selectedRanges() {
@@ -166,7 +174,16 @@ export default {
     },
     selectedType() {
       return this.selected.type;
-    }
+    },
+    bind() {
+      const {
+        dataset, id, activeClasses, setSelection, selectedRanges,
+      } = this;
+      const { icons } = this.$vuetify;
+      return {
+        dataset, id, activeClasses, setSelection, selectedRanges, icons,
+      };
+    },
   },
   methods: {
     activeClasses(index, axisName) {
@@ -189,8 +206,8 @@ export default {
     },
     setSelection(selection) {
       this.$emit('setselection', selection);
-    }
-  }
+    },
+  },
 };
 </script>
 
