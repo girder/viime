@@ -12,9 +12,12 @@ import {
 } from '@/utils/constants';
 import { base26Converter } from '@/utils';
 import SaveStatus from '@/components/SaveStatus.vue';
+import DataTable from '@/components/DataTable.vue';
+
 
 export default {
   components: {
+    DataTable,
     SaveStatus,
   },
   props: {
@@ -84,17 +87,6 @@ export default {
         options: this.imputation,
       });
     },
-    activeClasses(index, axisName) {
-      if (axisName === this.selected.type) {
-        const includes = this.selected.ranges.includes(index);
-        return {
-          active: includes.member,
-          first: includes.first,
-          last: includes.last,
-        };
-      }
-      return {};
-    },
   },
 };
 </script>
@@ -157,40 +149,10 @@ v-layout.cleanup-wrapper(row)
       v-icon {{ $vuetify.icons.download }}
 
     .overflow-auto
-      table.cleanup-table
-
-        thead
-          tr
-            th
-            th.control.px-2(
-                v-for="(col, index) in dataset.column.labels",
-                :class="activeClasses(index, 'column')",
-                @click="setSelection({ key: id, event: $event, axis: 'column', idx: index })")
-              span(v-if="col === defaultColOption") {{ base26Converter(index + 1) }}
-              v-icon(v-else, small) {{ $vuetify.icons[col] }}
-
-        tbody
-          tr.datarow(v-for="(row, index) in dataset.sourcerows",
-              :key="`${index}${row[0]}`",
-              :class="{[dataset.row.labels[index]]: true, ...activeClasses(index, 'row')}")
-            td.control.px-2(
-                @click="setSelection({ key: id, event: $event, axis: 'row', idx: index })")
-              span(v-if="dataset.row.labels[index] === defaultRowOption") {{ index + 1 }}
-              v-icon(v-else, small) {{ $vuetify.icons[dataset.row.labels[index]] }}
-            td.px-2.row(
-                v-for="(col, idx2) in row",
-                :class="{[dataset.column.labels[idx2]]: true, ...activeClasses(idx2, 'column')}",
-                :key="`${index}.${idx2}`") {{ col }}
+      data-table(v-bind="{ id, dataset, selected }", @setselection="setSelection")
 </template>
 
 <style lang="scss">
-@mixin masked() {
-  background-color: var(--v-secondary-lighten3);
-  box-shadow: inset 0 0 0 .5px var(--v-secondary-lighten2);
-  font-weight: 300;
-  color: var(--v-secondary-base);
-}
-
 .cleanup-wrapper {
   width: 100%;
 
@@ -232,134 +194,5 @@ v-layout.cleanup-wrapper(row)
       margin: 4px;
     }
   }
-
-  .cleanup-table {
-    border-spacing: 0px;
-    user-select: none;
-
-    .key, .metadata, .header, .group {
-      color: white;
-      font-weight: 700;
-      text-align: left;
-    }
-
-    tr {
-      background-color: #fdfdfd;
-
-      th, td {
-        box-shadow: inset 0 0 0 .5px var(--v-secondary-lighten3);
-        padding: 2px;
-        text-align: center;
-        white-space: nowrap;
-
-        &.control {
-          cursor: pointer;
-          font-weight: 300;
-        }
-      }
-
-      td.active, th.active {
-        &.first {
-          border-left: 2px solid var(--v-secondary-darken3);
-        }
-
-        &.last {
-          border-right: 2px solid var(--v-secondary-darken3);
-        }
-      }
-
-      &.active.first td {
-        border-top: 2px solid var(--v-secondary-darken3);
-      }
-
-      &.active.last td{
-        border-bottom: 2px solid var(--v-secondary-darken3);
-      }
-
-      &.active {
-        &.metadata {
-          td {
-            box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.15) !important;
-          }
-        }
-      }
-
-      &.active td,
-      td.active {
-        background: linear-gradient(0deg,rgba(161, 213, 255, 0.2),rgba(161, 213, 255, 0.2));
-        box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.3);
-
-        &.group,
-        &.key,
-        &.metadata,
-        &.masked {
-          box-shadow: inset 0 0 0 .5px rgba(161, 213, 255, 0.15) !important;
-        }
-      }
-    }
-
-    tr.datarow {
-      &.header {
-        td {
-          background-color: var(--v-accent-lighten1);
-          box-shadow: inset 0 0 0 .5px var(--v-accent-base);
-
-          &.active {
-            color: white;
-
-            &.first{
-              border-left: 2px solid var(--v-secondary-darken3);
-            }
-            &.last {
-              border-right: 2px solid var(--v-secondary-darken3);
-            }
-          }
-          &.masked {
-            color: var(--v-secondary-base);
-          }
-        }
-      }
-
-      &.metadata {
-        td {
-          background-color: var(--v-accent2-lighten2);
-          box-shadow: inset 0 0 0 .5px var(--v-accent2-lighten1);
-        }
-      }
-
-      &.header,
-      &.metadata {
-        td.key, td.metadata, td.group {
-          @include masked();
-        }
-      }
-
-      td {
-        &.key {
-          background-color: var(--v-primary-base);
-          box-shadow: inset 0 0 0 .5px var(--v-primary-darken1);
-        }
-
-        &.metadata, {
-          background-color: var(--v-accent2-lighten2);
-          box-shadow: inset 0 0 0 .5px var(--v-accent2-lighten1);
-        }
-
-        &.group {
-          background-color: var(--v-accent3-lighten1);
-          box-shadow: inset 0 0 0 .5px var(--v-accent3-base);
-        }
-      }
-    }
-
-    tr.datarow {
-      &.masked td,
-      td.masked,
-      th.masked {
-        @include masked();
-      }
-    }
-  }
 }
-
 </style>
