@@ -1,5 +1,5 @@
 <template lang="pug">
-table.cleanup-table(v-data-table="bind")
+table.cleanup-table(v-data-table="bind", :key="id")
 </template>
 
 <script>
