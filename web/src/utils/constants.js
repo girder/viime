@@ -88,6 +88,9 @@ const mnar_imputation_methods = [
 const normalize_methods = [
   { label: 'None', value: null },
   { label: 'Min Max', value: 'minmax' },
+  { label: 'Sum', value: 'sum' },
+  { label: 'Reference Sample', value: 'reference-sample' },
+  { label: 'Weight/Volume', value: 'weight-volume' },
 ];
 
 const scaling_methods = [
