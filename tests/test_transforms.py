@@ -35,6 +35,27 @@ def test_normalize_none(table):
     assert_frame_equal(t, correct)
 
 
+def test_normalize_sum(table):
+    correct = table.copy()
+    correct[:] = [[200.0, 800.0], [1000.0, 0.0]]
+    t = normalization.normalize('sum', table)
+    assert_frame_equal(t, correct)
+
+
+def test_normalize_reference_sample(table):
+    correct = table.copy()
+    correct[:] = [[0.5, 2.0], [2.5, 0.0]]
+    t = normalization.normalize('reference-sample', table)
+    assert_frame_equal(t, correct)
+
+
+def test_normalize_reference_sample(table):
+    correct = table.copy()
+    correct[:] = [[100.0, 400.0], [100.0, 0.0]]
+    t = normalization.normalize('weight-volume', table)
+    assert_frame_equal(t, correct)
+
+
 def test_normalize_api(client, csv_file):
     resp = client.put(
         url_for('csv.set_normalization_method', csv_id=csv_file.id), json={'method': 'minmax'}
