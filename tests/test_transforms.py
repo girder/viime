@@ -49,7 +49,7 @@ def test_normalize_reference_sample(table):
     assert_frame_equal(t, correct)
 
 
-def test_normalize_reference_sample(table):
+def test_normalize_weight_volume(table):
     correct = table.copy()
     correct[:] = [[100.0, 400.0], [100.0, 0.0]]
     t = normalization.normalize('weight-volume', table)
