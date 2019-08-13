@@ -7,6 +7,9 @@ div
         text x
       g.label.y(style="opacity: 0")
         text y
+      g.crosshairs
+        line.horz
+        line.vert
       g.plot
   .tooltip(ref="tooltip")
 </template>
@@ -103,6 +106,29 @@ export default {
       const coordFormat = format('.2f');
       const radius = 5;
       const { duration } = this;
+
+      const crosshair = {
+        color: 'gray',
+        width: '2px',
+      };
+      svg.select('g.crosshairs')
+        .select('line.horz')
+        .attr('x1', this.scaleX(0) - 10)
+        .attr('x2', this.scaleX(0) + 10)
+        .attr('y1', this.scaleY(0))
+        .attr('y2', this.scaleY(0))
+        .attr('stroke', crosshair.color)
+        .attr('stroke-width', crosshair.width);
+
+      svg.select('g.crosshairs')
+        .select('line.vert')
+        .attr('x1', this.scaleX(0))
+        .attr('x2', this.scaleX(0))
+        .attr('y1', this.scaleY(0) - 10)
+        .attr('y2', this.scaleY(0) + 10)
+        .attr('stroke', crosshair.color)
+        .attr('stroke-width', crosshair.width);
+
       svg.select('g.plot')
         .selectAll('circle')
         .data(points)
