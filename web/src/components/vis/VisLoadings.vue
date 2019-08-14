@@ -104,7 +104,7 @@ export default {
       const svg = select(this.$refs.svg);
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
-      const radius = 5;
+      const radius = 4;
       const { duration } = this;
 
       const crosshair = {
