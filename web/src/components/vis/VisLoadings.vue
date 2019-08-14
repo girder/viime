@@ -19,11 +19,11 @@ div.tooltip {
   position: fixed;
   text-align: center;
   padding: 2px;
-  font: 12px sans-serif;
-  background: lightsteelblue;
+  background: #eee;
   border: 0px;
   border-radius: 3px;
   pointer-events: none;
+  z-index: 20;
   opacity: 0;
 }
 </style>
@@ -138,6 +138,7 @@ export default {
           .attr('r', 0)
           .style('fill-opacity', 0.001)
           .style('stroke', 'black')
+          .style('stroke-width', 0.5)
           .on('mouseover', function mouseover(d) {
             select(this)
               .transition()

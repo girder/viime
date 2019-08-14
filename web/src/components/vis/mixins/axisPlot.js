@@ -107,6 +107,10 @@ export const axisPlot = {
           .call(axisY);
       }
 
+      // d3-axis wants to helpfully add font-family:sans-serif, here we remove it
+      axes.select('.x-axis').attr('font-family', null);
+      axes.select('.y-axis').attr('font-family', null);
+
       // Conclude the initialization process.
       this.axisPlotInitialized = true;
     },

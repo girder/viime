@@ -17,11 +17,11 @@ div.tooltip {
   position: fixed;
   text-align: center;
   padding: 2px;
-  font: 12px sans-serif;
-  background: lightsteelblue;
+  background: #eee;
   border: 0px;
   border-radius: 3px;
   pointer-events: none;
+  z-index: 20;
   opacity: 0;
 }
 </style>
@@ -203,6 +203,7 @@ export default {
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
           .style('stroke', 'black')
+          .style('stroke-width', 0.5)
           .style('fill', (d, i) => (group ? cmap(rawPoints.labels[group][i]) : null))
           .on('mouseover', function mouseover(d, i) {
             select(this)
