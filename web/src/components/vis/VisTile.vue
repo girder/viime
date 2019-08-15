@@ -14,7 +14,7 @@ v-flex(shrink=1)
   .white.rounded
     v-toolbar.primary.darken-3.top-rounded(dark, flat, dense)
       v-toolbar-title {{ title }}
-    v-card(flat).rounded
+    v-card.rounded(flat)
       slot
 </template>
 
