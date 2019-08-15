@@ -138,7 +138,6 @@ export default {
           .attr('r', 0)
           .style('fill-opacity', 0.001)
           .style('stroke', 'black')
-          .style('stroke-width', 0.5)
           .on('mouseover', function mouseover(d) {
             select(this)
               .transition()

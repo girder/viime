@@ -202,9 +202,8 @@ export default {
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
-          .style('stroke', 'black')
-          .style('stroke-width', 0.5)
-          .style('fill', (d, i) => (group ? cmap(rawPoints.labels[group][i]) : null))
+          .style('stroke', (d, i) => (group ? cmap(rawPoints.labels[group][i]) : null))
+          .style('fill-opacity', 0.001)
           .on('mouseover', function mouseover(d, i) {
             select(this)
               .transition()
