@@ -215,7 +215,7 @@ export default {
               .duration(duration)
               .style('opacity', 0.9);
             tooltip.html(`<b>${rowLabels[i]}</b><br>(${coordFormat(d.x)}, ${coordFormat(d.y)})`)
-              .style('left', `${event.clientX}px`)
+              .style('left', `${event.clientX + 15}px`)
               .style('top', `${event.clientY - 30}px`);
           })
           .on('mouseout', function mouseout() {
