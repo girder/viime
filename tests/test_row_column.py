@@ -102,8 +102,13 @@ def test_modify_column(client, table):
         json={'changes': [{'context': 'column', 'index': 1, 'label': 'metadata'}]}
     )
     assert resp.status_code == 200
+
     # Right now columns[1] is column_index=1, but it would be nice
     # to know if that breaks.
+    resp = client.get(
+        url_for('csv.get_csv_file', csv_id=table.id)
+    )
+    assert resp.status_code == 200
     assert resp.json['columns'][1]['column_type'] == 'metadata'
 
 
@@ -111,6 +116,11 @@ def test_modify_row(client, table):
     resp = client.put(
         url_for('csv.batch_modify_label', csv_id=table.id),
         json={'changes': [{'context': 'row', 'index': 1, 'label': 'masked'}]}
+    )
+    assert resp.status_code == 200
+
+    resp = client.get(
+        url_for('csv.get_csv_file', csv_id=table.id)
     )
     assert resp.status_code == 200
     assert resp.json['rows'][1]['row_type'] == 'masked'
@@ -125,6 +135,11 @@ def test_batch_modify_in_order(client, table):
                 {'context': 'row', 'index': 1, 'label': 'sample'},
             ]
         }
+    )
+    assert resp.status_code == 200
+
+    resp = client.get(
+        url_for('csv.get_csv_file', csv_id=table.id)
     )
     assert resp.status_code == 200
     assert resp.json['rows'][1]['row_type'] == 'sample'
@@ -142,7 +157,12 @@ def test_batch_modify_invalid_state(client, table):
         }
     )
     assert resp.status_code == 200
-    assert len(resp.json['table_validation']) > 0
+
+    resp = client.get(
+        url_for('csv.get_csv_file_validation', csv_id=table.id)
+    )
+    assert resp.status_code == 200
+    assert len(resp.json) > 0
 
 
 def test_batch_modify_row_and_column(client, table):
@@ -154,6 +174,11 @@ def test_batch_modify_row_and_column(client, table):
                 {'context': 'column', 'index': 2, 'label': 'masked'},
             ]
         }
+    )
+    assert resp.status_code == 200
+
+    resp = client.get(
+        url_for('csv.get_csv_file', csv_id=table.id)
     )
     assert resp.status_code == 200
     assert resp.json['rows'][1]['row_type'] == 'masked'

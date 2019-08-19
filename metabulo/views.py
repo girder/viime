@@ -268,10 +268,12 @@ def batch_modify_label(csv_id):
                 csv_file.group_column_index = index
             setattr(column, 'column_type', label)
             db.session.add(column)
+
     db.session.add(csv_file)
+
     try:
         db.session.commit()
-        return jsonify(csv_file_schema.dump(csv_file))
+        return jsonify(modify_label_list_schema.dump(args))
     except Exception:
         db.session.rollback()
         raise
