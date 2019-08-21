@@ -180,7 +180,7 @@ def set_normalization_method(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
     args = request.json
     method = args['method']
-    argument = args['argument']
+    argument = args.get('argument', None)
     try:
         validate_normalization_method(method, argument)
         csv_file.normalization = method
