@@ -87,7 +87,7 @@ const mnar_imputation_methods = [
 
 const normalize_methods = [
   { label: 'None', value: null, arg: null },
-  { label: 'Min Max', value: 'minmax', arg: null} ,
+  { label: 'Min Max', value: 'minmax', arg: null },
   { label: 'Sum', value: 'sum', arg: null },
   { label: 'Reference Sample', value: 'reference-sample', arg: 'row.sample.name' },
   { label: 'Weight/Volume', value: 'weight-volume', arg: 'column.metadata.header' },

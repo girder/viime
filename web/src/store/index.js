@@ -199,7 +199,7 @@ const mutations = {
   },
 
   [SET_TRANSFORMATION](state, {
-    key, data, transform_type, category, argument
+    key, data, transform_type, category, argument,
   }) {
     _invalidatePlots(state, { key, plotList: ['pca', 'loadings'] });
     Vue.set(state.datasets[key], category, transform_type);
