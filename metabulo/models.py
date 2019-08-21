@@ -72,6 +72,7 @@ class CSVFile(db.Model):
     imputation_mnar = db.Column(db.String, nullable=False)
     imputation_mcar = db.Column(db.String, nullable=False)
     normalization = db.Column(db.String, nullable=True)
+    normalization_argument = db.Column(db.String, nullable=True)
     transformation = db.Column(db.String, nullable=True)
     scaling = db.Column(db.String, nullable=True)
     meta = db.Column(JSONType, nullable=False)
@@ -224,7 +225,7 @@ class CSVFile(db.Model):
         table = _coerce_numeric(table)
         table = impute_missing(
             table, self.groups, mnar=self.imputation_mnar, mcar=self.imputation_mcar)
-        table = normalize(self.normalization, table)
+        table = normalize(self.normalization, table, self.normalization_argument)
         table = transform(self.transformation, table)
         table = scale(self.scaling, table)
         return table
@@ -301,6 +302,7 @@ class CSVFileSchema(BaseSchema):
     imputation_mcar = fields.Str(
         missing='random-forest', validate=validate.OneOf(IMPUTE_MCAR_METHODS))
     normalization = fields.Str(missing=None, validate=validate.OneOf(NORMALIZATION_METHODS))
+    normalization_argument = fields.Str(missing=None)
     transformation = fields.Str(missing=None, validate=validate.OneOf(TRANSFORMATION_METHODS))
     scaling = fields.Str(missing=None, validate=validate.OneOf(SCALING_METHODS))
     meta = fields.Dict(missing=dict)
