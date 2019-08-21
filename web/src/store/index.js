@@ -76,7 +76,7 @@ function _invalidatePlots(state, { key, plotList }) {
   });
 }
 function _setLables(state, { key, rows, columns }) {
-  _invalidatePlots(state, { key, plotList: ['pca', 'loadings'] })
+  _invalidatePlots(state, { key, plotList: ['pca', 'loadings'] });
   const rowsSorted = rows.sort((a, b) => a.row_index - b.row_index);
   const colsSorted = columns.sort((a, b) => a.column_index - b.column_index);
   Vue.set(state.datasets[key], 'row', {
@@ -103,10 +103,11 @@ export async function load_dataset({ commit }, { dataset_id, selected }) {
 const mutations = {
 
   [SET_SOURCE_DATA](state, { data }) {
+    const { id, name, size } = data;
     if (!state.plots[id]) {
       Vue.set(state.plots, id, cloneDeep(plotDefaults));
     }
-    const { id, name, size } = data;
+    const cols = data.columns.sort((a, b) => a.column_index - b.column_index);
     // serialize CSV string as JSON
     const { data: sourcerows } = convertCsvToRows(data.table);
     Vue.set(state.datasets, id, {
