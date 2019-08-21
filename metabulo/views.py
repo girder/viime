@@ -15,7 +15,7 @@ from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     TableColumn, TableColumnSchema, TableRow, \
     TableRowSchema
-from metabulo.normalization import NORMALIZATION_METHODS
+from metabulo.normalization import validate_normalization_method
 from metabulo.opencpu import OpenCPUException
 from metabulo.plot import pca
 from metabulo.scaling import SCALING_METHODS
@@ -180,10 +180,11 @@ def set_normalization_method(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
     args = request.json
     method = args['method']
-    if method is not None and method not in NORMALIZATION_METHODS:
-        raise ValidationError('Invalid normalization method', data=method)
+    argument = args['argument']
     try:
+        validate_normalization_method(method, argument)
         csv_file.normalization = method
+        csv_file.normalization_argument = argument
         db.session.add(csv_file)
         db.session.commit()
         return jsonify(method)

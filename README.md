@@ -24,6 +24,7 @@ out directory rather than your home directory).  Once the environment is in
 place, you will need to initialize the tables by running
 
 ```sh
+mkdir metabulo_sqlite
 metabulo-create-tables
 ```
 
