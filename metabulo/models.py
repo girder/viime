@@ -221,11 +221,16 @@ class CSVFile(db.Model):
         return _filter_table_by_types(self, row_type, column_type)
 
     def apply_transforms(self):
+        measurement_metadata = self.measurement_metadata
+        sample_metadata = self.sample_metadata
         table = self.raw_measurement_table
         table = _coerce_numeric(table)
         table = impute_missing(
             table, self.groups, mnar=self.imputation_mnar, mcar=self.imputation_mcar)
-        table = normalize(self.normalization, table, self.normalization_argument)
+        table = normalize(self.normalization, table,
+                          self.normalization_argument,
+                          measurement_metadata,
+                          sample_metadata)
         table = transform(self.transformation, table)
         table = scale(self.scaling, table)
         return table

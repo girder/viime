@@ -14,7 +14,7 @@ def validate_normalization_method(method, argument):
 
 
 @persistent_region.cache_on_arguments()
-def normalize(method, table, argument):
+def normalize(method, table, argument, measurement_metadata, sample_metadata):
     if method is None:
         pass
     elif method == 'minmax':
@@ -27,7 +27,7 @@ def normalize(method, table, argument):
     elif method == 'reference-sample':
         table = reference_sample(table, argument)
     elif method == 'weight-volume':
-        table = weight_volume(table, argument)
+        table = weight_volume(table, argument, sample_metadata)
     else:
         raise Exception('Unknown normalization method')
 
@@ -39,9 +39,8 @@ def sum(table):
 
 
 def reference_sample(table, argument):
-    print(table)
     return table.loc[argument].sum() * table.div(table.sum(axis=1), axis=0)
 
 
-def weight_volume(table, argument):
-    return 100 * table.div(table.loc[:, argument], axis=0)
+def weight_volume(table, argument, sample_metadata):
+    return 100 * table.div(sample_metadata.loc[:, argument], axis=0)
