@@ -34,7 +34,7 @@ export default {
     valid() { return this.$store.getters.valid(this.id); },
     loading() { return this.$store.state.loading; },
     norm() { return this.$store.getters.txType(this.id, 'normalization'); },
-    norm_arg() { return this.$store.getters.txType(this.id, 'normalization_argument') },
+    norm_arg() { return this.$store.getters.txType(this.id, 'normalization_argument'); },
     trans() { return this.$store.getters.txType(this.id, 'transformation'); },
     scaling() { return this.$store.getters.txType(this.id, 'scaling'); },
     pcaData() { return this.$store.getters.plotData(this.id, 'pca'); },
@@ -62,12 +62,14 @@ export default {
   },
   methods: {
     async transformTable(value, category, argument, methods) {
-      const method = methods.find(v => v.value == value);
+      /* If there's no argument and there should be, pick the firt from the list */
+      const method = methods.find(v => v.value === value);
       if (!method) {
         throw new Error('invalid method');
       }
-      if (!argument && method.arg) {
-        argument = this.getSelectItems(method.arg)[0];
+      let arg = argument;
+      if (!arg && method.arg) {
+        [arg] = this.getSelectItems(method.arg);
       }
       this.$store.dispatch(MUTEX_TRANSFORM_TABLE, {
         dataset_id: this.id,
@@ -78,13 +80,13 @@ export default {
     },
     getSelectItems(arg) {
       const opts = arg.split('.');
-      const order = opts[0] // row or column
-      const _type = opts[1]  // sample, metadata, group, metabolite, etc.
-      const value = opts[2] // name, header, index, etc.
+      const order = opts[0]; // row or column
+      const _type = opts[1]; // sample, metadata, group, metabolite, etc.
+      const value = opts[2]; // name, header, index, etc.
       return this.dataset[order]
         .data.filter(v => v[`${order}_type`] === _type)
         .map(v => v[`${order}_${value}`]);
-    }
+    },
   },
 };
 </script>
@@ -97,9 +99,11 @@ v-layout.transform-component(row, fill-height)
         v-toolbar-title Normalize
       v-card.mx-3(flat)
         v-card-actions
-          v-radio-group.my-0(:value="norm", @change="transformTable($event, 'normalization', null, normalize_methods)",
+          v-radio-group.my-0(:value="norm",
+              @change="transformTable($event, 'normalization', null, normalize_methods)",
               hide-details)
-            .radio-container.my-1(v-for="m in normalize_methods", :key="m.value")
+            .radio-container.my-1(v-for="m in normalize_methods", :key="m.value",
+                v-if="!m.arg || getSelectItems(m.arg).length > 0")
               v-radio(:label="m.label", :value="m.value")
               v-select.mb-3(solo, dense, hide-details, v-if="m.arg && m.value === norm",
                   :items="getSelectItems(m.arg)",
@@ -110,7 +114,8 @@ v-layout.transform-component(row, fill-height)
         v-toolbar-title Transform
       v-card.mx-3(flat)
         v-card-actions
-          v-radio-group.my-0(:value="trans", @change="transformTable($event, 'transformation', null, transform_methods)",
+          v-radio-group.my-0(:value="trans",
+              @change="transformTable($event, 'transformation', null, transform_methods)",
               hide-details)
             v-radio(v-for="m in transform_methods", :label="m.label",
                 :value="m.value", :key="`trans${m.value}`")
@@ -119,7 +124,8 @@ v-layout.transform-component(row, fill-height)
         v-toolbar-title Scale
       v-card.mx-3(flat)
         v-card-actions
-          v-radio-group.my-0(:value="scaling", @change="transformTable($event, 'scaling', null, scaling_methods)",
+          v-radio-group.my-0(:value="scaling",
+              @change="transformTable($event, 'scaling', null, scaling_methods)",
               hide-details)
             v-radio(v-for="m in scaling_methods", :label="m.label",
                 :value="m.value", :key="`scale${m.value}`")
