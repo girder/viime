@@ -247,6 +247,7 @@ def get_column(csv_id, column_index):
 def batch_modify_label(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
     args = modify_label_list_schema.load(request.json or {})
+    row_column_dump_schema = CSVFileSchema(only=['rows', 'columns'])
 
     for change in args['changes']:
         index = change['index']
@@ -273,7 +274,7 @@ def batch_modify_label(csv_id):
 
     try:
         db.session.commit()
-        return jsonify(modify_label_list_schema.dump(args))
+        return jsonify(row_column_dump_schema.dump(csv_file))
     except Exception:
         db.session.rollback()
         raise
