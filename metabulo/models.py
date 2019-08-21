@@ -2,6 +2,7 @@ from collections import namedtuple
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path, PurePath
+import pickle
 from uuid import uuid4
 
 from flask import current_app
@@ -19,10 +20,10 @@ from werkzeug.utils import secure_filename
 
 from metabulo.cache import clear_cache, csv_file_cache, region
 from metabulo.imputation import IMPUTE_MCAR_METHODS, impute_missing, IMPUTE_MNAR_METHODS
-from metabulo.normalization import NORMALIZATION_METHODS, normalize
-from metabulo.scaling import scale, SCALING_METHODS
+from metabulo.normalization import normalize
+from metabulo.scaling import scale
 from metabulo.table_validation import get_fatal_index_errors, get_validation_list
-from metabulo.transformation import transform, TRANSFORMATION_METHODS
+from metabulo.transformation import transform
 
 
 # This is to avoid having to manually name all constraints
@@ -71,10 +72,6 @@ class CSVFile(db.Model):
     name = db.Column(db.String, nullable=False)
     imputation_mnar = db.Column(db.String, nullable=False)
     imputation_mcar = db.Column(db.String, nullable=False)
-    normalization = db.Column(db.String, nullable=True)
-    normalization_argument = db.Column(db.String, nullable=True)
-    transformation = db.Column(db.String, nullable=True)
-    scaling = db.Column(db.String, nullable=True)
     meta = db.Column(JSONType, nullable=False)
 
     @property
@@ -221,18 +218,10 @@ class CSVFile(db.Model):
         return _filter_table_by_types(self, row_type, column_type)
 
     def apply_transforms(self):
-        measurement_metadata = self.measurement_metadata
-        sample_metadata = self.sample_metadata
         table = self.raw_measurement_table
         table = _coerce_numeric(table)
         table = impute_missing(
             table, self.groups, mnar=self.imputation_mnar, mcar=self.imputation_mcar)
-        table = normalize(self.normalization, table,
-                          self.normalization_argument,
-                          measurement_metadata,
-                          sample_metadata)
-        table = transform(self.transformation, table)
-        table = scale(self.scaling, table)
         return table
 
     def save_table(self, table):
@@ -306,10 +295,6 @@ class CSVFileSchema(BaseSchema):
     imputation_mnar = fields.Str(missing='zero', validate=validate.OneOf(IMPUTE_MNAR_METHODS))
     imputation_mcar = fields.Str(
         missing='random-forest', validate=validate.OneOf(IMPUTE_MCAR_METHODS))
-    normalization = fields.Str(missing=None, validate=validate.OneOf(NORMALIZATION_METHODS))
-    normalization_argument = fields.Str(missing=None)
-    transformation = fields.Str(missing=None, validate=validate.OneOf(TRANSFORMATION_METHODS))
-    scaling = fields.Str(missing=None, validate=validate.OneOf(SCALING_METHODS))
     meta = fields.Dict(missing=dict)
 
     columns = fields.List(fields.Nested('TableColumnSchema', exclude=['csv_file']))
@@ -663,3 +648,58 @@ def _get_groups(csv_file):
 def _get_csv_file_stats(csv_file):
     if csv_file.raw_measurement_table is not None:
         return _get_table_stats(csv_file.raw_measurement_table)
+
+
+class RawMetaboliteTable(db.Model):
+    id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), nullable=False)
+    name = db.Column(db.String, nullable=False)
+    normalization = db.Column(db.String, nullable=True)
+    normalization_argument = db.Column(db.String, nullable=True)
+    transformation = db.Column(db.String, nullable=True)
+    scaling = db.Column(db.String, nullable=True)
+    meta = db.Column(JSONType, nullable=False)
+
+    measurements = db.Column(db.LargeBinary, nullable=False)
+    measurement_metadata = db.Column(db.LargeBinary, nullable=False)
+    sample_metadata = db.Column(db.LargeBinary, nullable=False)
+    groups = db.Column(db.JSON, nullable=False)
+
+    @classmethod
+    def serialize_table(cls, table):
+        return pickle.dumps(table)
+
+    @classmethod
+    def deserialize_table(cls, blob):
+        return pickle.loads(blob)
+
+    @classmethod
+    def create_from_csv_file(cls, csv_file, **kwargs):
+        table = csv_file.raw_measurement_table
+        assert table is not None, 'Invalid csv_file provided'
+
+        attributes = {
+            'id': uuid4(),
+            'csv_file_id': csv_file.id,
+            'name': csv_file.name,
+            'meta': csv_file.meta.copy(),
+            'measurements': cls.serialize_table(table),
+            'measurement_metadata': cls.serialize_table(csv_file.measurement_metadata),
+            'sample_metadata': cls.serialize_table(csv_file.sample_metadata),
+            'groups': csv_file.groups.tolist()
+        }
+        attributes.update(kwargs)
+        return cls(**attributes)
+
+    def transformed_measurements(self):
+        measurement_metadata = self.measurement_metadata
+        sample_metadata = self.sample_metadata
+        table = self.deserialize_table(self.measurements)
+        table = normalize(self.normalization, table,
+                          self.normalization_argument,
+                          measurement_metadata,
+                          sample_metadata)
+        table = transform(self.transformation, table)
+        table = scale(self.scaling, table)
+        return table
