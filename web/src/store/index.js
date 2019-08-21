@@ -110,9 +110,11 @@ const mutations = {
       // user- and server-generated lables for rows and columns
       row: {
         labels: rows.map(r => r.row_type),
+        data: rows,
       },
       column: {
         labels: cols.map(c => c.column_type),
+        data: cols,
       },
       validation: mapValidationErrors(data.table_validation, cols),
       selected: data.selected || {
@@ -126,10 +128,13 @@ const mutations = {
       transformed: data,
       // mutually exclusive transformation categories
       normalization: data.normalization,
+      normalization_argument: data.normalization_argument,
       transformation: data.transformation,
+      transformation_argument: null,
+      scaling: data.scaling,
+      scaling_argument: null,
       imputationMCAR: data.imputation_mcar,
       imputationMNAR: data.imputation_mnar,
-      scaling: data.scaling,
     });
     if (!state.plots[id]) {
       Vue.set(state.plots, id, cloneDeep(plotDefaults));
@@ -182,10 +187,11 @@ const mutations = {
   },
 
   [SET_TRANSFORMATION](state, {
-    key, data, transform_type, category,
+    key, data, transform_type, category, argument
   }) {
     _invalidatePlots(state, { key, plotList: ['pca', 'loadings'] });
     Vue.set(state.datasets[key], category, transform_type);
+    Vue.set(state.datasets[key], `${category}_argument`, argument);
     Vue.set(state.datasets[key], 'transformed', data);
   },
 };
@@ -241,14 +247,14 @@ const actions = {
 
   // set mutually exclusive transformation within category.
   async [MUTEX_TRANSFORM_TABLE]({ commit }, {
-    category, dataset_id, transform_type,
+    category, dataset_id, transform_type, argument,
   }) {
     const key = dataset_id;
     commit(SET_LOADING, true);
     try {
-      const { data } = await CSVService.setTransform(key, category, transform_type);
+      const { data } = await CSVService.setTransform(key, category, transform_type, argument);
       commit(SET_TRANSFORMATION, {
-        key, data, transform_type, category,
+        key, data, transform_type, category, argument,
       });
     } catch (err) {
       commit(SET_LAST_ERROR, err);

@@ -27,7 +27,7 @@ def normalize(method, table, argument):
     elif method == 'reference-sample':
         table = reference_sample(table, argument)
     elif method == 'weight-volume':
-        table = weight_volume(table)
+        table = weight_volume(table, argument)
     else:
         raise Exception('Unknown normalization method')
 
@@ -39,8 +39,9 @@ def sum(table):
 
 
 def reference_sample(table, argument):
-    return table[[argument]].sum() * table.div(table.sum(axis=1), axis=0)
+    print(table)
+    return table.loc[argument].sum() * table.div(table.sum(axis=1), axis=0)
 
 
-def weight_volume(table):
-    return 100 * table.div(table.iloc[:, 0], axis=0)
+def weight_volume(table, argument):
+    return 100 * table.div(table.loc[:, argument], axis=0)
