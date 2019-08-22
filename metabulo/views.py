@@ -176,13 +176,16 @@ def set_imputation_options(csv_id, **kwargs):
 
 # Ingest transforms
 @csv_bp.route('/csv/<uuid:csv_id>/normalization', methods=['PUT'])
-def set_normalization_method(csv_id):
+@use_kwargs({
+    'method': fields.Str(allow_none=True),
+    'argument': fields.Str(allow_none=True)
+}, validate=validate_normalization_method)
+def set_normalization_method(csv_id, **kwargs):
     csv_file = CSVFile.query.get_or_404(csv_id)
-    args = request.json
-    method = args['method']
-    argument = args.get('argument', None)
+    method = kwargs['method']
+    argument = kwargs.get('argument', None)
+
     try:
-        validate_normalization_method(method, argument)
         csv_file.normalization = method
         csv_file.normalization_argument = argument
         db.session.add(csv_file)

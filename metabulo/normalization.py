@@ -6,7 +6,9 @@ from metabulo.cache import persistent_region
 NORMALIZATION_METHODS = {'minmax', 'sum', 'reference-sample', 'weight-volume'}
 
 
-def validate_normalization_method(method, argument):
+def validate_normalization_method(args):
+    method = args.get('method', None)
+    argument = args.get('argument', None)
     if method is not None and method not in NORMALIZATION_METHODS:
         raise ValidationError('Invalid normalization method', data=method)
     if method == 'reference-sample' and argument is None:

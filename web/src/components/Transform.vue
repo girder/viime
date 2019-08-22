@@ -55,6 +55,10 @@ export default {
       this.pcaLoader(this.pcaValid);
       this.loadingsLoader(this.loadingsValid);
     },
+    loading() {
+      this.pcaLoader(this.pcaValid);
+      this.loadingsLoader(this.loadingsValid);
+    },
   },
   methods: {
     pcaLoader(valid) {
