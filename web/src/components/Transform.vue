@@ -57,7 +57,7 @@ export default {
     },
   },
   methods: {
-    pcaLoader(valid) { 
+    pcaLoader(valid) {
       if (valid === false) {
         this.$store.dispatch(LOAD_PLOT, { dataset_id: this.id, name: 'pca' });
       }
