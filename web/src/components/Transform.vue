@@ -45,22 +45,28 @@ export default {
   watch: {
     pcaValid: {
       immediate: true,
-      handler(valid) {
-        if (valid === false) {
-          this.$store.dispatch(LOAD_PLOT, { dataset_id: this.id, name: 'pca' });
-        }
-      },
+      handler(valid) { this.pcaLoader(valid); },
     },
     loadingsValid: {
       immediate: true,
-      handler(valid) {
-        if (valid === false) {
-          this.$store.dispatch(LOAD_PLOT, { dataset_id: this.id, name: 'loadings' });
-        }
-      },
+      handler(valid) { this.loadingsLoader(valid); },
+    },
+    id() {
+      this.pcaLoader(this.pcaValid);
+      this.loadingsLoader(this.loadingsValid);
     },
   },
   methods: {
+    pcaLoader(valid) { 
+      if (valid === false) {
+        this.$store.dispatch(LOAD_PLOT, { dataset_id: this.id, name: 'pca' });
+      }
+    },
+    loadingsLoader(valid) {
+      if (valid === false) {
+        this.$store.dispatch(LOAD_PLOT, { dataset_id: this.id, name: 'loadings' });
+      }
+    },
     async transformTable(value, category, argument, methods) {
       /* If there's no argument and there should be, pick the firt from the list */
       const method = methods.find(v => v.value === value);
@@ -75,7 +81,7 @@ export default {
         dataset_id: this.id,
         transform_type: value,
         category,
-        argument,
+        argument: arg,
       });
     },
     getSelectItems(arg) {
