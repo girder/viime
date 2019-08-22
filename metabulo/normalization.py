@@ -14,7 +14,7 @@ def validate_normalization_method(method, argument):
 
 
 @persistent_region.cache_on_arguments()
-def normalize(method, table, argument, measurement_metadata, sample_metadata):
+def normalize(method, table, argument=None, measurement_metadata=None, sample_metadata=None):
     if method is None:
         pass
     elif method == 'minmax':
