@@ -22,6 +22,7 @@ import {
   SET_DATASET,
   SET_LAST_ERROR,
   SET_LOADING,
+  SET_LABELS,
   SET_SELECTION,
   SET_SESSION_STORE,
   SET_SOURCE_DATA,
@@ -74,14 +75,25 @@ function _invalidatePlots(state, { key, plotList }) {
     Vue.set(state.plots[key][name], 'valid', false);
   });
 }
+function _setLables(state, { key, rows, columns }) {
+  _invalidatePlots(state, { key, plotList: ['pca', 'loadings'] });
+  const rowsSorted = rows.sort((a, b) => a.row_index - b.row_index);
+  const colsSorted = columns.sort((a, b) => a.column_index - b.column_index);
+  Vue.set(state.datasets[key], 'row', {
+    labels: rowsSorted.map(r => r.row_type),
+  });
+  Vue.set(state.datasets[key], 'column', {
+    labels: colsSorted.map(c => c.column_type),
+  });
+}
 
 /*
  * Private action helpers
  */
-export async function load_dataset({ commit }, { dataset_id }) {
+export async function load_dataset({ commit }, { dataset_id, selected }) {
   try {
     const { data } = await CSVService.get(dataset_id);
-    commit(SET_SOURCE_DATA, { data });
+    commit(SET_SOURCE_DATA, { data: { ...data, selected } });
   } catch (err) {
     commit(SET_LAST_ERROR, err);
     throw err;
@@ -92,12 +104,12 @@ const mutations = {
 
   [SET_SOURCE_DATA](state, { data }) {
     const { id, name, size } = data;
-    // Server doesn't guarantee order of indices.
-    const rows = data.rows.sort((a, b) => a.row_index - b.row_index);
+    if (!state.plots[id]) {
+      Vue.set(state.plots, id, cloneDeep(plotDefaults));
+    }
     const cols = data.columns.sort((a, b) => a.column_index - b.column_index);
     // serialize CSV string as JSON
     const { data: sourcerows } = convertCsvToRows(data.table);
-
     Vue.set(state.datasets, id, {
       // API response from server
       _source: data,
@@ -108,12 +120,6 @@ const mutations = {
       width: sourcerows[0].length, // TODO: get from server
       height: sourcerows.length, // TODO: get from server
       // user- and server-generated lables for rows and columns
-      row: {
-        labels: rows.map(r => r.row_type),
-      },
-      column: {
-        labels: cols.map(c => c.column_type),
-      },
       validation: mapValidationErrors(data.table_validation, cols),
       selected: data.selected || {
         type: 'column',
@@ -131,9 +137,15 @@ const mutations = {
       imputationMNAR: data.imputation_mnar,
       scaling: data.scaling,
     });
-    if (!state.plots[id]) {
-      Vue.set(state.plots, id, cloneDeep(plotDefaults));
-    }
+    _setLables(state, {
+      key: id,
+      rows: data.rows,
+      columns: data.columns,
+    });
+  },
+
+  [SET_LABELS](state, { key, rows, columns }) {
+    _setLables(state, { key, rows, columns });
   },
 
   [SET_DATASET](state, { dataset }) {
@@ -262,8 +274,10 @@ const actions = {
     commit(SET_LOADING, true);
     try {
       const { data } = await CSVService.updateLabel(dataset_id, changes);
+      const { rows, columns } = data;
+      commit(SET_LABELS, { key: dataset_id, rows, columns });
       const { selected } = state.datasets[dataset_id];
-      commit(SET_SOURCE_DATA, { data: { ...data, selected } });
+      load_dataset({ commit }, { dataset_id, selected });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
       commit(SET_LOADING, false);

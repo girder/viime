@@ -326,6 +326,9 @@ class CSVFileSchema(BaseSchema):
             if data.get(key) is not None:
                 return data[key].to_csv()
 
+        if 'table' not in data:
+            return data
+
         data['table'] = data['table'].to_csv(header=False, index=False)
         data['measurement_table'] = get_csv('measurement_table')
         data['measurement_metadata'] = get_csv('measurement_metadata')
