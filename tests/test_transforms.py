@@ -22,6 +22,16 @@ row2,1.5,0.0
 """), index_col=0)
 
 
+@pytest.fixture
+def column_meta(app):
+    with app.app_context():
+        yield pandas.read_csv(BytesIO(b"""
+id,weight,volume
+row1,0.2,24
+row2,0.4,40
+"""), index_col=0)
+
+
 def test_normalize_minmax(table):
     correct = table.copy()
     correct[:] = [[0.0, 1.0], [1.0, 0.0]]
@@ -32,6 +42,28 @@ def test_normalize_minmax(table):
 def test_normalize_none(table):
     correct = table.copy()
     t = normalization.normalize(None, table)
+    assert_frame_equal(t, correct)
+
+
+def test_normalize_sum(table):
+    correct = table.copy()
+    correct[:] = [[200.0, 800.0], [1000.0, 0.0]]
+    t = normalization.normalize('sum', table)
+    assert_frame_equal(t, correct)
+
+
+def test_normalize_reference_sample(table):
+    correct = table.copy()
+    correct[:] = [[0.5, 2.0], [2.5, 0.0]]
+    t = normalization.normalize('reference-sample', table, 'row1')
+    assert_frame_equal(t, correct)
+
+
+def test_normalize_weight_volume(table, column_meta):
+    meta = column_meta.copy()
+    correct = table.copy()
+    correct[:] = [[250.0, 1000.0], [375.0, 0.0]]
+    t = normalization.normalize('weight-volume', table, 'weight', None, meta)
     assert_frame_equal(t, correct)
 
 

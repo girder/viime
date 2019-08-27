@@ -65,8 +65,8 @@ export const CSVService = {
     return ApiService.download('csv', slug);
   },
 
-  setTransform(slug, category, transform_type) {
-    return ApiService.put(`csv/${slug}/${category}`, { method: transform_type });
+  setTransform(slug, category, transform_type, argument) {
+    return ApiService.put(`csv/${slug}/${category}`, { method: transform_type, argument });
   },
 
   setImputation(slug, methods) {
