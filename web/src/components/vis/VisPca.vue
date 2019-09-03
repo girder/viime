@@ -17,11 +17,11 @@ div.tooltip {
   position: fixed;
   text-align: center;
   padding: 2px;
-  font: 12px sans-serif;
-  background: lightsteelblue;
+  background: #eee;
   border: 0px;
   border-radius: 3px;
   pointer-events: none;
+  z-index: 20;
   opacity: 0;
 }
 </style>
@@ -202,8 +202,8 @@ export default {
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
-          .style('stroke', 'black')
-          .style('fill', (d, i) => (group ? cmap(rawPoints.labels[group][i]) : null))
+          .style('stroke', (d, i) => (group ? cmap(rawPoints.labels[group][i]) : null))
+          .style('fill-opacity', 0.001)
           .on('mouseover', function mouseover(d, i) {
             select(this)
               .transition()
@@ -214,7 +214,7 @@ export default {
               .duration(duration)
               .style('opacity', 0.9);
             tooltip.html(`<b>${rowLabels[i]}</b><br>(${coordFormat(d.x)}, ${coordFormat(d.y)})`)
-              .style('left', `${event.clientX}px`)
+              .style('left', `${event.clientX + 15}px`)
               .style('top', `${event.clientY - 30}px`);
           })
           .on('mouseout', function mouseout() {

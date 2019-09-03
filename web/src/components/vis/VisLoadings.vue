@@ -19,11 +19,11 @@ div.tooltip {
   position: fixed;
   text-align: center;
   padding: 2px;
-  font: 12px sans-serif;
-  background: lightsteelblue;
+  background: #eee;
   border: 0px;
   border-radius: 3px;
   pointer-events: none;
+  z-index: 20;
   opacity: 0;
 }
 </style>
@@ -104,7 +104,7 @@ export default {
       const svg = select(this.$refs.svg);
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
-      const radius = 5;
+      const radius = 4;
       const { duration } = this;
 
       const crosshair = {
@@ -148,7 +148,7 @@ export default {
               .duration(duration)
               .style('opacity', 0.9);
             tooltip.html(`<b>${d.col}</b><br>(${coordFormat(d.x)}, ${coordFormat(d.y)})`)
-              .style('left', `${event.clientX}px`)
+              .style('left', `${event.clientX + 15}px`)
               .style('top', `${event.pageY - 30}px`);
           })
           .on('mouseout', function mouseout() {

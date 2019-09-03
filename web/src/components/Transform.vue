@@ -1,4 +1,5 @@
 <script>
+import { mapState } from 'vuex';
 import { MUTEX_TRANSFORM_TABLE, LOAD_PLOT } from '@/store/actions.type';
 import {
   normalize_methods,
@@ -7,12 +8,13 @@ import {
 } from '@/utils/constants';
 import VisPca from '@/components/vis/VisPca.vue';
 import VisLoadings from '@/components/vis/VisLoadings.vue';
-import { mapState } from 'vuex';
+import VisTile from '@/components/vis/VisTile.vue';
 
 export default {
   components: {
     VisPca,
     VisLoadings,
+    VisTile,
   },
   props: {
     id: {
@@ -143,17 +145,20 @@ v-layout.transform-component(row, fill-height)
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
-  v-container.overflow-auto(v-else-if="ready && valid")
-    v-layout(row, fill-height, ref="contentarea")
-      .pa-4
-        h3.headline.ml-5 PCA Scores
-        vis-pca(:width="800", :height="600", :raw-points="pcaData", :dataset="dataset")
-    v-layout(row, fill-height, ref="contentarea")
-      .pa-4
-        h3.headline.ml-5 PCA Loadings
-        vis-loadings(:width="800", :height="600", :points="loadingsData")
+  v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-else-if="ready && valid")
+    v-layout(row, wrap)
+      vis-tile(title="PCA Scores")
+        vis-pca(:width="600", :height="600", :raw-points="pcaData", :dataset="dataset")
+      vis-tile(title="PCA Loadings")
+        vis-loadings(:width="600", :height="600", :points="loadingsData")
   v-container.overflow-auto(v-else-if="ready", fill-height)
     v-layout(column)
       .display-2 Error: Cannot show transform table
       a.headline(:href="`#/pretreatment/${dataset.id}/cleanup`") Correct validation error(s)
 </template>
+
+<style scoped lang="scss">
+.transform-component {
+  background: #eee;
+}
+</style>
