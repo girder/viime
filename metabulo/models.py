@@ -20,8 +20,8 @@ from werkzeug.utils import secure_filename
 
 from metabulo.cache import clear_cache, csv_file_cache, region
 from metabulo.imputation import IMPUTE_MCAR_METHODS, impute_missing, IMPUTE_MNAR_METHODS
-from metabulo.normalization import normalize
-from metabulo.scaling import scale
+from metabulo.normalization import NORMALIZATION_METHODS, normalize
+from metabulo.scaling import scale, SCALING_METHODS
 from metabulo.table_validation import get_fatal_index_errors, get_validation_list
 from metabulo.transformation import transform
 
@@ -650,10 +650,11 @@ def _get_csv_file_stats(csv_file):
         return _get_table_stats(csv_file.raw_measurement_table)
 
 
-class RawMetaboliteTable(db.Model):
+class ValidatedMetaboliteTable(db.Model):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), nullable=False)
+    csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), nullable=False,
+                            index=True, unique=True)
     name = db.Column(db.String, nullable=False)
     normalization = db.Column(db.String, nullable=True)
     normalization_argument = db.Column(db.String, nullable=True)
@@ -661,10 +662,10 @@ class RawMetaboliteTable(db.Model):
     scaling = db.Column(db.String, nullable=True)
     meta = db.Column(JSONType, nullable=False)
 
-    measurements = db.Column(db.LargeBinary, nullable=False)
-    measurement_metadata = db.Column(db.LargeBinary, nullable=False)
-    sample_metadata = db.Column(db.LargeBinary, nullable=False)
-    groups = db.Column(db.JSON, nullable=False)
+    raw_measurements_bytes = db.Column(db.LargeBinary, nullable=False)
+    measurement_metadata_bytes = db.Column(db.LargeBinary, nullable=False)
+    sample_metadata_bytes = db.Column(db.LargeBinary, nullable=False)
+    groups_bytes = db.Column(db.LargeBinary, nullable=False)
 
     @classmethod
     def serialize_table(cls, table):
@@ -676,7 +677,7 @@ class RawMetaboliteTable(db.Model):
 
     @classmethod
     def create_from_csv_file(cls, csv_file, **kwargs):
-        table = csv_file.raw_measurement_table
+        table = csv_file.measurement_table
         assert table is not None, 'Invalid csv_file provided'
 
         attributes = {
@@ -684,18 +685,35 @@ class RawMetaboliteTable(db.Model):
             'csv_file_id': csv_file.id,
             'name': csv_file.name,
             'meta': csv_file.meta.copy(),
-            'measurements': cls.serialize_table(table),
-            'measurement_metadata': cls.serialize_table(csv_file.measurement_metadata),
-            'sample_metadata': cls.serialize_table(csv_file.sample_metadata),
-            'groups': csv_file.groups.tolist()
+            'raw_measurements_bytes': cls.serialize_table(table),
+            'measurement_metadata_bytes': cls.serialize_table(csv_file.measurement_metadata),
+            'sample_metadata_bytes': cls.serialize_table(csv_file.sample_metadata),
+            'groups_bytes': cls.serialize_table(csv_file.groups)
         }
         attributes.update(kwargs)
         return cls(**attributes)
 
-    def transformed_measurements(self):
+    @property
+    def raw_measurements(self):
+        return self.deserialize_table(self.raw_measurements_bytes)
+
+    @property
+    def measurement_metadata(self):
+        return self.deserialize_table(self.measurement_metadata_bytes)
+
+    @property
+    def sample_metadata(self):
+        return self.deserialize_table(self.sample_metadata_bytes)
+
+    @property
+    def groups(self):
+        return self.deserialize_table(self.groups_bytes)
+
+    @property
+    def measurements(self):
         measurement_metadata = self.measurement_metadata
         sample_metadata = self.sample_metadata
-        table = self.deserialize_table(self.measurements)
+        table = self.raw_measurements
         table = normalize(self.normalization, table,
                           self.normalization_argument,
                           measurement_metadata,
@@ -703,3 +721,34 @@ class RawMetaboliteTable(db.Model):
         table = transform(self.transformation, table)
         table = scale(self.scaling, table)
         return table
+
+
+class ValidatedMetaboliteTableSchema(BaseSchema):
+    id = fields.UUID(missing=uuid4)
+    created = fields.DateTime(dump_only=True)
+    csv_file_id = fields.UUID(required=True)
+    name = fields.Str(required=True, validate=_validate_name)
+    normalization = fields.Str(missing=None, validate=validate.OneOf(NORMALIZATION_METHODS))
+    normalization_argument = fields.Str(missing=None)
+    scaling = fields.Str(missing=None, validate=validate.OneOf(SCALING_METHODS))
+    meta = fields.Dict(missing=dict)
+
+    # not included in the serialized output
+    raw_measurements_bytes = fields.Raw(required=True, load_only=True)
+    measurement_metadata_bytes = fields.Raw(required=True, load_only=True)
+    sample_metadata_bytes = fields.Raw(required=True, load_only=True)
+    groups_bytes = fields.Raw(required=True, load_only=True)
+
+    # tables stored in the database
+    measurements = fields.Raw(required=True, dump_only=True)
+    measurement_metadata = fields.Raw(required=True)
+    sample_metadata = fields.Raw(required=True)
+    groups = fields.Raw(required=True)
+
+    # raw_measurements = fields.Raw(required=True, load_only=True) if needed in the future
+
+    @post_dump
+    def serialize_tables(self, data):
+        for attr in ['measurements', 'measurement_metadata', 'sample_metadata', 'groups']:
+            data[attr] = data[attr].to_csv()
+        return data
