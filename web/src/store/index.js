@@ -226,7 +226,9 @@ const actions = {
 
   async [LOAD_PLOT]({ commit }, { dataset_id, name }) {
     try {
-      const { data } = await CSVService.getPlot(dataset_id, name);
+      const { data } = await CSVService.getPlot(dataset_id, name, {
+        max_components: 6,
+      });
       commit(REFRESH_PLOT, { key: dataset_id, name, data });
     } catch (err) {
       commit(SET_LAST_ERROR, err);

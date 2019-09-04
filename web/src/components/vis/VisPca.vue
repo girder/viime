@@ -82,6 +82,16 @@ export default {
      *   labels: Object<string, Array<string>>
      * }}
      */
+    pcX: {
+      required: true,
+      type: Number,
+      validator: Number.isInteger,
+    },
+    pcY: {
+      required: true,
+      type: Number,
+      validator: Number.isInteger,
+    },
     rawPoints: {
       required: true,
       validator: prop => !prop
@@ -106,18 +116,30 @@ export default {
       },
       xrange: [-1, 1],
       yrange: [-1, 1],
-      xlabel: 'PC1',
-      ylabel: 'PC2',
       fadeInDuration: 500,
       duration: 200,
     };
   },
   computed: {
+    xlabel() {
+      return `PC${this.pcX}`;
+    },
+
+    ylabel() {
+      return `PC${this.pcY}`;
+    },
+
     xyPoints() {
-      if (this.rawPoints) {
-        return this.rawPoints.x.map(p => ({
-          x: p[0],
-          y: p[1],
+      const {
+        rawPoints,
+        pcX,
+        pcY,
+      } = this;
+
+      if (rawPoints) {
+        return rawPoints.x.map(p => ({
+          x: p[pcX - 1],
+          y: p[pcY - 1],
         }));
       }
 
@@ -147,7 +169,12 @@ export default {
     },
   },
   mounted() {
-    const { xyPoints } = this;
+    const {
+      pcX,
+      pcY,
+      xyPoints
+    } = this;
+
     if (xyPoints) {
       this.setRanges(xyPoints);
       const svg = select(this.$refs.svg);
@@ -164,11 +191,12 @@ export default {
       // Grab the input props.
       const {
         rawPoints,
-      } = this.$props;
-
-      const {
         xyPoints,
         group,
+        xlabel,
+        ylabel,
+        pcX,
+        pcY,
       } = this;
 
       // Set the axis labels.
@@ -179,8 +207,8 @@ export default {
       const svg = select(this.$refs.svg);
       this.setRanges(xyPoints);
       this.axisPlot(svg);
-      this.setXLabel(`PC1 (${pctFormat(rawPoints.sdev[0] / totVariance)})`);
-      this.setYLabel(`PC2 (${pctFormat(rawPoints.sdev[1] / totVariance)})`);
+      this.setXLabel(`${xlabel} (${pctFormat(rawPoints.sdev[pcX] / totVariance)})`);
+      this.setYLabel(`${ylabel} (${pctFormat(rawPoints.sdev[pcY] / totVariance)})`);
 
       // Draw the data.
       //
