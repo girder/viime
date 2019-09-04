@@ -17,10 +17,9 @@ from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
     TableColumn, TableColumnSchema, TableRow, \
     TableRowSchema, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
 from metabulo.normalization import validate_normalization_method
-from metabulo.opencpu import OpenCPUException
 from metabulo.plot import pca
 from metabulo.scaling import SCALING_METHODS
-from metabulo.table_validation import ValidationSchema
+from metabulo.table_validation import get_fatal_index_errors, ValidationSchema
 from metabulo.transformation import TRANSFORMATION_METHODS
 
 csv_file_schema = CSVFileSchema()
@@ -258,27 +257,31 @@ def get_row(csv_id, row_index):
     ))
 
 
-class ServerError(Exception):
-    def __init__(self, response, code):
-        self.response = response
-        self.code = code
+@csv_bp.route('/csv/<uuid:csv_id>/validate', methods=['POST'])
+def save_validated_csv_file(csv_id):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    fatal_errors = get_fatal_index_errors(csv_file)
+    if fatal_errors:
+        return jsonify(validation_schema.dump(fatal_errors, many=True)), 400
 
-    def return_value(self):
-        return jsonify(self.response), self.code
+    old_table = ValidatedMetaboliteTable.query.filter_by(csv_file_id=csv_id)
+    try:
+        if old_table is not None:
+            old_table.delete()
+            db.session.commit()  # we actually want to persist to invalidate the old table
+
+        validated_table = ValidatedMetaboliteTable.create_from_csv_file(csv_file)
+        db.session.add(validated_table)
+        db.session.commit()
+        return jsonify(validated_metabolite_table_schema.dump(validated_table)), 201
+    except Exception:
+        db.session.rollback()
+        raise
 
 
 def serialize_validated_table(validated_table):
     try:
         return validated_metabolite_table_schema.dump(validated_table)
-    except OpenCPUException as e:
-        response = 'Connection failed' if e.response is None else e.response.content.decode()
-        code = 504 if e.response is None else 502
-
-        raise ServerError({
-            'error': 'OpenCPU call failed',
-            'method': e.method,
-            'response': response
-        }, code)
     except Exception as e:
         current_app.logger.exception(e)
         raise ValidationError('Error applying data transformation')
@@ -360,10 +363,7 @@ def _get_pca_data(validated_table):
 @csv_bp.route('/csv/<uuid:csv_id>/plot/pca', methods=['GET'])
 @load_validated_csv_file
 def get_pca_plot(validated_table):
-    try:
-        return jsonify(_get_pca_data(validated_table)), 200
-    except ServerError as e:
-        return e.return_value()
+    return jsonify(_get_pca_data(validated_table)), 200
 
 
 def _get_loadings_data(validated_table):
@@ -404,10 +404,7 @@ def _get_loadings_data(validated_table):
 @csv_bp.route('/csv/<uuid:csv_id>/plot/loadings', methods=['GET'])
 @load_validated_csv_file
 def get_loadings_plot(validated_table):
-    try:
-        return jsonify(_get_loadings_data(validated_table)), 200
-    except ServerError as e:
-        return e.return_value()
+    return jsonify(_get_loadings_data(validated_table)), 200
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/pca-overview', methods=['GET'])
