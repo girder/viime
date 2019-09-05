@@ -156,6 +156,14 @@ export default {
     },
   },
   watch: {
+    pcX() {
+      this.update();
+    },
+
+    pcY() {
+      this.update();
+    },
+
     rawPoints(newval) {
       if (newval) {
         if (!this.axisPlotInitialized) {

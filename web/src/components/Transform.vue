@@ -7,6 +7,7 @@ import {
   transform_methods,
 } from '@/utils/constants';
 import VisPca from '@/components/vis/VisPca.vue';
+import ScorePlotTile from '@/components/vis/ScorePlotTile.vue';
 import VisLoadings from '@/components/vis/VisLoadings.vue';
 import VisTile from '@/components/vis/VisTile.vue';
 
@@ -15,6 +16,7 @@ export default {
     VisPca,
     VisLoadings,
     VisTile,
+    ScorePlotTile,
   },
   props: {
     id: {
@@ -147,6 +149,7 @@ v-layout.transform-component(row, fill-height)
     h4.display-1.pa-3 Loading Data Set
   v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-else-if="ready && valid")
     v-layout(row, wrap)
+      score-plot-tile(:width="600", :height="600", :raw-points="pcaData", :dataset="dataset")
       vis-tile(title="PCA Scores")
         vis-pca(:width="600", :height="600", :raw-points="pcaData", :dataset="dataset", :pc-x="1", :pc-y="2")
       vis-tile(title="PCA Loadings")
