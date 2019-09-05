@@ -31,6 +31,7 @@ export default {
     return {
       pcXval: "1",
       pcYval: "2",
+      showEllipses: true,
     };
   },
 
@@ -49,7 +50,7 @@ export default {
 
 <template lang="pug">
 vis-tile(title="PCA Score Plot")
-  score-plot(:width="width", :height="height", :raw-points="rawPoints", :dataset="dataset", :pc-x="pcX", :pc-y="pcY")
+  score-plot(:width="width", :height="height", :raw-points="rawPoints", :dataset="dataset", :pc-x="pcX", :pc-y="pcY", :show-ellipses="showEllipses")
   template(v-slot:controls)
     v-card
       v-layout(column wrap)
@@ -57,4 +58,6 @@ vis-tile(title="PCA Score Plot")
           v-text-field(type="number" label="PC (X Axis)" min="1" max="6" outline v-model="pcXval")
         v-flex(px-2)
           v-text-field(type="number" label="PC (Y Axis)" min="1" max="6" outline v-model="pcYval")
+        v-flex
+          v-switch(v-model="showEllipses", label="Data ellipses")
 </template>
