@@ -1,10 +1,10 @@
 <script>
-import VisPca from '@/components/vis/VisPca.vue';
+import ScorePlot from '@/components/vis/ScorePlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
 
 export default {
   components: {
-    VisPca,
+    ScorePlot,
     VisTile,
   },
 
@@ -49,7 +49,7 @@ export default {
 
 <template lang="pug">
 vis-tile(title="PCA Score Plot")
-  vis-pca(:width="width", :height="height", :raw-points="rawPoints", :dataset="dataset", :pc-x="pcX", :pc-y="pcY")
+  score-plot(:width="width", :height="height", :raw-points="rawPoints", :dataset="dataset", :pc-x="pcX", :pc-y="pcY")
   template(v-slot:controls)
     v-card
       v-layout(column wrap)

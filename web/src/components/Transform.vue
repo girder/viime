@@ -6,15 +6,15 @@ import {
   scaling_methods,
   transform_methods,
 } from '@/utils/constants';
-import VisPca from '@/components/vis/VisPca.vue';
+import ScorePlot from '@/components/vis/ScorePlot.vue';
 import ScorePlotTile from '@/components/vis/ScorePlotTile.vue';
-import VisLoadings from '@/components/vis/VisLoadings.vue';
+import LoadingsPlot from '@/components/vis/LoadingsPlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
 
 export default {
   components: {
-    VisPca,
-    VisLoadings,
+    ScorePlot,
+    LoadingsPlot,
     VisTile,
     ScorePlotTile,
   },
@@ -151,9 +151,9 @@ v-layout.transform-component(row, fill-height)
     v-layout(row, wrap)
       score-plot-tile(:width="600", :height="600", :raw-points="pcaData", :dataset="dataset")
       vis-tile(title="PCA Scores")
-        vis-pca(:width="600", :height="600", :raw-points="pcaData", :dataset="dataset", :pc-x="1", :pc-y="2")
+        score-plot(:width="600", :height="600", :raw-points="pcaData", :dataset="dataset", :pc-x="1", :pc-y="2")
       vis-tile(title="PCA Loadings")
-        vis-loadings(:width="600", :height="600", :points="loadingsData")
+        loadings-plot(:width="600", :height="600", :points="loadingsData")
   v-container.overflow-auto(v-else-if="ready", fill-height)
     v-layout(column)
       .display-2 Error: Cannot show transform table
