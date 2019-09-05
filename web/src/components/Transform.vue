@@ -6,14 +6,12 @@ import {
   scaling_methods,
   transform_methods,
 } from '@/utils/constants';
-import ScorePlot from '@/components/vis/ScorePlot.vue';
 import ScorePlotTile from '@/components/vis/ScorePlotTile.vue';
 import LoadingsPlot from '@/components/vis/LoadingsPlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
 
 export default {
   components: {
-    ScorePlot,
     LoadingsPlot,
     VisTile,
     ScorePlotTile,
@@ -150,8 +148,6 @@ v-layout.transform-component(row, fill-height)
   v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-else-if="ready && valid")
     v-layout(row, wrap)
       score-plot-tile(:width="600", :height="600", :raw-points="pcaData", :dataset="dataset")
-      vis-tile(title="PCA Scores")
-        score-plot(:width="600", :height="600", :raw-points="pcaData", :dataset="dataset", :pc-x="1", :pc-y="2")
       vis-tile(title="PCA Loadings")
         loadings-plot(:width="600", :height="600", :points="loadingsData")
   v-container.overflow-auto(v-else-if="ready", fill-height)
