@@ -23,7 +23,7 @@ from metabulo.imputation import IMPUTE_MCAR_METHODS, impute_missing, IMPUTE_MNAR
 from metabulo.normalization import NORMALIZATION_METHODS, normalize
 from metabulo.scaling import scale, SCALING_METHODS
 from metabulo.table_validation import get_fatal_index_errors, get_validation_list
-from metabulo.transformation import transform
+from metabulo.transformation import transform, TRANSFORMATION_METHODS
 
 
 # This is to avoid having to manually name all constraints
@@ -731,6 +731,7 @@ class ValidatedMetaboliteTableSchema(BaseSchema):
     normalization = fields.Str(missing=None, validate=validate.OneOf(NORMALIZATION_METHODS))
     normalization_argument = fields.Str(missing=None)
     scaling = fields.Str(missing=None, validate=validate.OneOf(SCALING_METHODS))
+    transformation = fields.Str(missing=None, validate=validate.OneOf(TRANSFORMATION_METHODS))
     meta = fields.Dict(missing=dict)
 
     # not included in the serialized output
