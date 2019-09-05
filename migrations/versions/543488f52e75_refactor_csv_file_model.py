@@ -44,15 +44,6 @@ def upgrade():
         op.f('ix_validated_metabolite_table_csv_file_id'),
         'validated_metabolite_table', ['csv_file_id'], unique=True)
 
-    for csv_file in CSVFile.query:
-        try:
-            validated_table = ValidatedMetaboliteTable.create_from_csv_file(csv_file)
-        except Exception:
-            continue
-
-        db.session.add(validated_table)
-    db.session.commit()
-
     # sqlite doesn't support this operation:
     # op.drop_column('csv_file', 'scaling')
     # op.drop_column('csv_file', 'normalization_argument')
@@ -60,18 +51,35 @@ def upgrade():
     # op.drop_column('csv_file', 'normalization')
 
     op.execute('ALTER TABLE csv_file RENAME TO csv_file_old;')
+    op.create_table(
+        'csv_file',
+        sa.Column('id', sqlalchemy_utils.types.uuid.UUIDType(), nullable=False),
+        sa.Column('created', sa.DateTime(), nullable=False),
+        sa.Column('name', sa.String(), nullable=False),
+        sa.Column('imputation_mnar', sa.String(), nullable=False),
+        sa.Column('imputation_mcar', sa.String(), nullable=False),
+        sa.Column('meta', sqlalchemy_utils.types.json.JSONType(), nullable=False),
+        sa.PrimaryKeyConstraint('id', name=op.f('pk_csv_file'))
+    )
+
     op.execute("""
-        CREATE TABLE csv_file AS
-            SELECT
-                id,
-                created,
-                name,
-                imputation_mnar,
-                imputation_mcar,
-                meta
-            FROM csv_file_old;
+        INSERT INTO csv_file
+        SELECT
+            id, created, name, imputation_mnar, imputation_mcar, meta
+        FROM
+            csv_file_old;
     """)
     op.execute('DROP TABLE csv_file_old;')
+
+    for csv_file in CSVFile.query:
+        try:
+            validated_table = ValidatedMetaboliteTable.create_from_csv_file(csv_file)
+        except Exception:
+            continue
+
+        db.session.add(validated_table)
+
+    db.session.commit()
 
 
 def downgrade():
