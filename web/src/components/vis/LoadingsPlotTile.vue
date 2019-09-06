@@ -28,6 +28,7 @@ export default {
     return {
       pcXval: "1",
       pcYval: "2",
+      showCrosshairs: true,
     };
   },
 
@@ -46,7 +47,7 @@ export default {
 
 <template lang="pug">
 vis-tile(title="PCA Loadings Plot")
-  loadings-plot(:width="width", :height="height", :points="points", :pc-x="pcX", :pc-y="pcY")
+  loadings-plot(:width="width", :height="height", :points="points", :pc-x="pcX", :pc-y="pcY", :show-crosshairs="showCrosshairs")
   template(v-slot:controls)
     v-card
       v-layout(column wrap)
@@ -54,4 +55,6 @@ vis-tile(title="PCA Loadings Plot")
           v-text-field(type="number" label="PC (X Axis)" min="1" max="6" outline v-model="pcXval")
         v-flex(px-2)
           v-text-field(type="number" label="PC (Y Axis)" min="1" max="6" outline v-model="pcYval")
+        v-flex
+          v-switch(v-model="showCrosshairs" label="Show crosshairs")
 </template>

@@ -62,6 +62,9 @@ export default {
       default: 2,
       validator: Number.isInteger,
     },
+    showCrosshairs: {
+      default: true,
+    },
   },
   data() {
     return {
@@ -99,6 +102,11 @@ export default {
     pcY() {
       this.update();
     },
+
+    showCrosshairs() {
+      console.log(this.showCrosshairs);
+      this.update();
+    },
   },
   mounted() {
     const svg = select(this.$refs.svg);
@@ -116,6 +124,7 @@ export default {
         points,
         pcX,
         pcY,
+        showCrosshairs,
       } = this;
 
       // Plot the vectors as a scatter plot.
@@ -129,23 +138,34 @@ export default {
         color: 'gray',
         width: '2px',
       };
-      svg.select('g.crosshairs')
-        .select('line.horz')
-        .attr('x1', this.scaleX(0) - 10)
-        .attr('x2', this.scaleX(0) + 10)
-        .attr('y1', this.scaleY(0))
-        .attr('y2', this.scaleY(0))
-        .attr('stroke', crosshair.color)
-        .attr('stroke-width', crosshair.width);
+      if (showCrosshairs) {
+        svg.select('g.crosshairs')
+          .select('line.horz')
+          .style('display', null)
+          .attr('x1', this.scaleX(0) - 10)
+          .attr('x2', this.scaleX(0) + 10)
+          .attr('y1', this.scaleY(0))
+          .attr('y2', this.scaleY(0))
+          .attr('stroke', crosshair.color)
+          .attr('stroke-width', crosshair.width);
 
-      svg.select('g.crosshairs')
-        .select('line.vert')
-        .attr('x1', this.scaleX(0))
-        .attr('x2', this.scaleX(0))
-        .attr('y1', this.scaleY(0) - 10)
-        .attr('y2', this.scaleY(0) + 10)
-        .attr('stroke', crosshair.color)
-        .attr('stroke-width', crosshair.width);
+        svg.select('g.crosshairs')
+          .select('line.vert')
+          .style('display', null)
+          .attr('x1', this.scaleX(0))
+          .attr('x2', this.scaleX(0))
+          .attr('y1', this.scaleY(0) - 10)
+          .attr('y2', this.scaleY(0) + 10)
+          .attr('stroke', crosshair.color)
+          .attr('stroke-width', crosshair.width);
+      } else {
+        svg.select('g.crosshairs')
+          .select('line.horz')
+          .style('display', 'none');
+        svg.select('g.crosshairs')
+          .select('line.vert')
+          .style('display', 'none');
+      }
 
       svg.select('g.plot')
         .selectAll('circle')
