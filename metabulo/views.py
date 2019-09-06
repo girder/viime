@@ -325,7 +325,7 @@ def _apply_transforms(csv_file):
     return table
 
 
-def _get_pca_data(csv_file, max_components = 2):
+def _get_pca_data(csv_file, max_components=2):
     table = _apply_transforms(csv_file)
 
     max_components_arg = request.args.get('max_components')
