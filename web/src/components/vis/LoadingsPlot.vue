@@ -52,7 +52,15 @@ export default {
       required: true,
       validator: prop => !prop
           || (typeof prop === 'object'
-          && prop.every(val => ['x', 'y', 'col'].every(key => key in val))),
+          && prop.every(val => ['col', 'cor'].every(key => key in val))),
+    },
+    pcX: {
+      default: 1,
+      validator: Number.isInteger,
+    },
+    pcY: {
+      default: 2,
+      validator: Number.isInteger,
     },
   },
   data() {
@@ -83,6 +91,14 @@ export default {
         this.update();
       }
     },
+
+    pcX() {
+      this.update();
+    },
+
+    pcY() {
+      this.update();
+    },
   },
   mounted() {
     const svg = select(this.$refs.svg);
@@ -98,7 +114,9 @@ export default {
       // Grab the input props.
       const {
         points,
-      } = this.$props;
+        pcX,
+        pcY,
+      } = this;
 
       // Plot the vectors as a scatter plot.
       const svg = select(this.$refs.svg);
@@ -164,8 +182,8 @@ export default {
         .transition()
         .duration(this.fadeInDuration)
         .attr('r', radius)
-        .attr('cx', d => this.scaleX(d.x))
-        .attr('cy', d => this.scaleY(d.y));
+        .attr('cx', d => this.scaleX(d.cor[pcX - 1]))
+        .attr('cy', d => this.scaleY(d.cor[pcY - 1]));
     },
   },
 };

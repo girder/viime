@@ -30,13 +30,23 @@ export default {
       pcYval: "2",
     };
   },
+
+  computed: {
+    pcX() {
+      return Number.parseInt(this.pcXval);
+    },
+
+    pcY() {
+      return Number.parseInt(this.pcYval);
+    },
+  },
 }
 
 </script>
 
 <template lang="pug">
 vis-tile(title="PCA Loadings Plot")
-  loadings-plot(:width="width", :height="height", :points="points")
+  loadings-plot(:width="width", :height="height", :points="points", :pc-x="pcX", :pc-y="pcY")
   template(v-slot:controls)
     v-card
       v-layout(column wrap)

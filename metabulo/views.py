@@ -325,9 +325,12 @@ def _apply_transforms(csv_file):
     return table
 
 
-def _get_pca_data(csv_file):
+def _get_pca_data(csv_file, max_components = 2):
     table = _apply_transforms(csv_file)
-    max_components = int(request.args.get('max_components', 2))
+
+    max_components_arg = request.args.get('max_components')
+    if max_components_arg is not None:
+        max_components = int(max_components_arg)
     data = pca(table, max_components)
 
     # insert per row label metadata information
@@ -392,8 +395,8 @@ def _get_loadings_data(csv_file):
 
     # Compute correlations between each metabolite and both PC1 and PC2.
     return [{'col': k,
-             'x': cor(v, pca_data[0]),
-             'y': cor(v, pca_data[1])} for (k, v) in table.items()]
+             'cor': [cor(v, pc) for pc in pca_data]}
+            for (k, v) in table.items()]
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/plot/loadings', methods=['GET'])
