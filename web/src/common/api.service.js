@@ -76,4 +76,8 @@ export const CSVService = {
   updateLabel(csvSlug, changes) {
     return ApiService.put(`csv/${csvSlug}/batch/label`, { changes });
   },
+
+  validateTable(slug) {
+    return ApiService.post(`csv/${slug}/validate`);
+  },
 };
