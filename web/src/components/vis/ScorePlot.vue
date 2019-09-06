@@ -93,6 +93,7 @@ export default {
       validator: Number.isInteger,
     },
     showEllipses: {
+      type: Boolean,
       default: true,
     },
     rawPoints: {
@@ -185,9 +186,7 @@ export default {
   },
   mounted() {
     const {
-      pcX,
-      pcY,
-      xyPoints
+      xyPoints,
     } = this;
 
     if (xyPoints) {

@@ -20,34 +20,41 @@ export default {
       validator: Number.isInteger,
     },
     points: {
+      validator: d => d === null || Array.isArray(d),
       required: true,
     },
   },
 
   data() {
     return {
-      pcXval: "1",
-      pcYval: "2",
+      pcXval: '1',
+      pcYval: '2',
       showCrosshairs: true,
     };
   },
 
   computed: {
     pcX() {
-      return Number.parseInt(this.pcXval);
+      return Number.parseInt(this.pcXval, 10);
     },
 
     pcY() {
-      return Number.parseInt(this.pcYval);
+      return Number.parseInt(this.pcYval, 10);
     },
   },
-}
+};
 
 </script>
 
 <template lang="pug">
 vis-tile(title="PCA Loadings Plot")
-  loadings-plot(:width="width", :height="height", :points="points", :pc-x="pcX", :pc-y="pcY", :show-crosshairs="showCrosshairs")
+  loadings-plot(
+    :width="width",
+    :height="height",
+    :points="points",
+    :pc-x="pcX",
+    :pc-y="pcY",
+    :show-crosshairs="showCrosshairs")
   template(v-slot:controls)
     v-card
       v-layout(column wrap)

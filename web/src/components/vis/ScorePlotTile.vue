@@ -21,36 +21,45 @@ export default {
     },
     rawPoints: {
       required: true,
+      validator: d => d === null || d instanceof Object,
     },
     dataset: {
       required: true,
+      type: Object,
     },
   },
 
   data() {
     return {
-      pcXval: "1",
-      pcYval: "2",
+      pcXval: '1',
+      pcYval: '2',
       showEllipses: true,
     };
   },
 
   computed: {
     pcX() {
-      return Number.parseInt(this.pcXval);
+      return Number.parseInt(this.pcXval, 10);
     },
 
     pcY() {
-      return Number.parseInt(this.pcYval);
+      return Number.parseInt(this.pcYval, 10);
     },
   },
-}
+};
 
 </script>
 
 <template lang="pug">
 vis-tile(title="PCA Score Plot")
-  score-plot(:width="width", :height="height", :raw-points="rawPoints", :dataset="dataset", :pc-x="pcX", :pc-y="pcY", :show-ellipses="showEllipses")
+  score-plot(
+    :width="width",
+    :height="height",
+    :raw-points="rawPoints",
+    :dataset="dataset",
+    :pc-x="pcX",
+    :pc-y="pcY",
+    :show-ellipses="showEllipses")
   template(v-slot:controls)
     v-card
       v-layout(column wrap)

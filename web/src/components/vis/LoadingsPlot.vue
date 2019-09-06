@@ -63,6 +63,7 @@ export default {
       validator: Number.isInteger,
     },
     showCrosshairs: {
+      type: Boolean,
       default: true,
     },
   },
