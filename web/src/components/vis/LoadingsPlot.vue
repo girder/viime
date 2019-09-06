@@ -104,7 +104,6 @@ export default {
     },
 
     showCrosshairs() {
-      console.log(this.showCrosshairs);
       this.update();
     },
   },

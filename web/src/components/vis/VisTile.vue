@@ -6,6 +6,12 @@ export default {
       default: '',
     },
   },
+
+  computed: {
+    hasMenu() {
+      return !!this.$slots.controls;
+    },
+  },
 };
 </script>
 
@@ -16,7 +22,7 @@ v-flex(shrink=1)
       v-toolbar-title {{ title }}
       v-spacer
       v-toolbar-items
-        v-menu(bottom offset-y left :min-width="150" :close-on-content-click="false")
+        v-menu(v-if="hasMenu" bottom offset-y left :min-width="150" :close-on-content-click="false")
           template(v-slot:activator="{ on }")
             v-btn(v-on="on", icon)
               v-icon.mdi.mdi-dots-vertical
