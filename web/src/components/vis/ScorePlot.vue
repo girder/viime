@@ -77,11 +77,6 @@ export default {
       type: Number,
       default: 300,
     },
-    /* {{
-     *   x: Array<Array<Number>>,
-     *   labels: Object<string, Array<string>>
-     * }}
-     */
     pcX: {
       required: true,
       type: Number,
@@ -96,6 +91,11 @@ export default {
       type: Boolean,
       default: true,
     },
+    /* {{
+     *   x: Array<Array<Number>>,
+     *   labels: Object<string, Array<string>>
+     * }}
+     */
     rawPoints: {
       required: true,
       validator: prop => !prop
