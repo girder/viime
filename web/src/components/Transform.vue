@@ -25,7 +25,7 @@ export default {
       normalize_methods,
       transform_methods,
       scaling_methods,
-      maxComponentsText: "6",
+      maxComponentsText: '6',
     };
   },
   computed: {
@@ -61,7 +61,7 @@ export default {
       this.pcaLoader(this.pcaValid);
       this.loadingsLoader(this.loadingsValid);
     },
-    maxComponents(val) {
+    maxComponents() {
       // Reload PCA and loadings data when this changes.
       this.pcaLoader(false);
       this.loadingsLoader(false);
@@ -166,8 +166,15 @@ v-layout.transform-component(row, fill-height)
     h4.display-1.pa-3 Loading Data Set
   v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-else-if="ready && valid")
     v-layout(row, wrap)
-      score-plot-tile(:width="600", :height="600", :raw-points="pcaData", :dataset="dataset", :max-components="maxComponents")
-      loadings-plot-tile(:width="600", :height="600", :points="loadingsData", :max-components="maxComponents")
+      score-plot-tile(:width="600"
+                      :height="600"
+                      :raw-points="pcaData"
+                      :dataset="dataset"
+                      :max-components="maxComponents")
+      loadings-plot-tile(:width="600"
+                         :height="600"
+                         :points="loadingsData"
+                         :max-components="maxComponents")
   v-container.overflow-auto(v-else-if="ready", fill-height)
     v-layout(column)
       .display-2 Error: Cannot show transform table
