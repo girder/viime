@@ -27,6 +27,11 @@ export default {
       required: true,
       type: Object,
     },
+    maxComponents: {
+      required: true,
+      type: Number,
+      validator: Number.isInteger,
+    },
   },
 
   data() {
@@ -44,6 +49,22 @@ export default {
 
     pcY() {
       return Number.parseInt(this.pcYval, 10);
+    },
+  },
+
+  watch: {
+    maxComponents(val) {
+      const clamp = (text) => {
+        let curVal = Number.parseInt(text, 10);
+        if (curVal > val) {
+          curVal = val;
+        }
+
+        return String(curVal);
+      };
+
+      this.pcXval = clamp(this.pcXval);
+      this.pcYval = clamp(this.pcYval);
     },
   },
 };
@@ -69,9 +90,9 @@ vis-tile(title="PCA Score Plot")
       v-card
         v-layout(column wrap)
           v-flex(px-2 pt-3)
-            v-text-field(type="number" label="PC (X Axis)" min="1" max="6" outline v-model="pcXval")
+            v-text-field(type="number" label="PC (X Axis)" min="1" :max="maxComponents" outline v-model="pcXval")
           v-flex(px-2)
-            v-text-field(type="number" label="PC (Y Axis)" min="1" max="6" outline v-model="pcYval")
+            v-text-field(type="number" label="PC (Y Axis)" min="1" :max="maxComponents" outline v-model="pcYval")
           v-flex
             v-switch(v-model="showEllipses", label="Data ellipses")
 </template>

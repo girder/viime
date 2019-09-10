@@ -25,7 +25,7 @@ export default {
       normalize_methods,
       transform_methods,
       scaling_methods,
-      max_components: 6,
+      maxComponentsText: "6",
     };
   },
   computed: {
@@ -42,6 +42,7 @@ export default {
     pcaValid() { return this.$store.getters.plotValid(this.id, 'pca'); },
     loadingsData() { return this.$store.getters.plotData(this.id, 'loadings'); },
     loadingsValid() { return this.$store.getters.plotValid(this.id, 'loadings'); },
+    maxComponents() { return Number.parseInt(this.maxComponentsText, 10); },
   },
   watch: {
     pcaValid: {
@@ -60,6 +61,11 @@ export default {
       this.pcaLoader(this.pcaValid);
       this.loadingsLoader(this.loadingsValid);
     },
+    maxComponents(val) {
+      // Reload PCA and loadings data when this changes.
+      this.pcaLoader(false);
+      this.loadingsLoader(false);
+    },
   },
   methods: {
     pcaLoader(valid) {
@@ -67,7 +73,7 @@ export default {
         this.$store.dispatch(LOAD_PLOT, {
           dataset_id: this.id,
           name: 'pca',
-          max_components: this.max_components,
+          max_components: this.maxComponents,
         });
       }
     },
@@ -76,7 +82,7 @@ export default {
         this.$store.dispatch(LOAD_PLOT, {
           dataset_id: this.id,
           name: 'loadings',
-          max_components: this.max_components,
+          max_components: this.maxComponents,
         });
       }
     },
@@ -149,13 +155,19 @@ v-layout.transform-component(row, fill-height)
             v-radio(v-for="m in scaling_methods", :label="m.label",
                 :value="m.value", :key="`scale${m.value}`")
 
+      v-toolbar.darken-3(color="primary", dark, flat, dense)
+        v-toolbar-title PCA Components
+      v-card.mx-3(flat)
+        v-card-actions
+          v-text-field(type="number" min="2" max="10" outline v-model="maxComponentsText")
+
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
   v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-else-if="ready && valid")
     v-layout(row, wrap)
-      score-plot-tile(:width="600", :height="600", :raw-points="pcaData", :dataset="dataset")
-      loadings-plot-tile(:width="600", :height="600", :points="loadingsData")
+      score-plot-tile(:width="600", :height="600", :raw-points="pcaData", :dataset="dataset", :max-components="maxComponents")
+      loadings-plot-tile(:width="600", :height="600", :points="loadingsData", :max-components="maxComponents")
   v-container.overflow-auto(v-else-if="ready", fill-height)
     v-layout(column)
       .display-2 Error: Cannot show transform table

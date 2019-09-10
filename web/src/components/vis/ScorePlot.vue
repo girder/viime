@@ -222,8 +222,8 @@ export default {
       const svg = select(this.$refs.svg);
       this.setRanges(xyPoints);
       this.axisPlot(svg);
-      this.setXLabel(`${xlabel} (${pctFormat(rawPoints.sdev[pcX] / totVariance)})`);
-      this.setYLabel(`${ylabel} (${pctFormat(rawPoints.sdev[pcY] / totVariance)})`);
+      this.setXLabel(`${xlabel} (${pctFormat(rawPoints.sdev[pcX - 1] / totVariance)})`);
+      this.setYLabel(`${ylabel} (${pctFormat(rawPoints.sdev[pcY - 1] / totVariance)})`);
 
       // Draw the data.
       //
