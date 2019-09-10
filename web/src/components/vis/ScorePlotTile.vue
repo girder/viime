@@ -87,24 +87,23 @@ vis-tile(title="PCA Score Plot")
         v-btn(v-on="on", icon)
           v-icon.mdi.mdi-dots-vertical
 
-      v-card
-        v-layout(column, wrap)
-          v-flex(px-2, pt-3)
-            v-text-field(
-                type="number",
-                label="PC (X Axis)",
-                min="1",
-                :max="maxComponents",
-                outline,
-                v-model="pcXval")
-          v-flex(px-2)
-            v-text-field(
-                type="number",
-                label="PC (Y Axis)",
-                min="1",
-                :max="maxComponents",
-                outline,
-                v-model="pcYval")
-          v-flex
-            v-switch(v-model="showEllipses", label="Data ellipses")
+      v-card.pa-1(flat)
+        v-layout.px-2(column)
+          v-text-field.py-2(
+              hide-details,
+              type="number",
+              label="PC (X Axis)",
+              min="1",
+              :max="maxComponents",
+              outline,
+              v-model="pcXval")
+          v-text-field.py-2(
+              hide-details,
+              type="number",
+              label="PC (Y Axis)",
+              min="1",
+              :max="maxComponents",
+              outline,
+              v-model="pcYval")
+          v-switch.py-2(v-model="showEllipses", label="Data ellipses", hide-details)
 </template>

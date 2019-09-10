@@ -82,24 +82,23 @@ vis-tile(title="PCA Loadings Plot")
         v-btn(v-on="on", icon)
           v-icon.mdi.mdi-dots-vertical
 
-      v-card
-        v-layout(column, wrap)
-          v-flex(px-2, pt-3)
-            v-text-field(
-                type="number",
-                label="PC (X Axis)",
-                min="1",
-                :max="maxComponents",
-                outline,
-                v-model="pcXval")
-          v-flex(px-2)
-            v-text-field(
-                type="number",
-                label="PC (Y Axis)",
-                min="1",
-                :max="maxComponents",
-                outline,
-                v-model="pcYval")
-          v-flex
-            v-switch(v-model="showCrosshairs", label="Show crosshairs")
+      v-card.pa-1(flat)
+        v-layout(column)
+          v-text-field.pa-2(
+              hide-details,
+              type="number",
+              label="PC (X Axis)",
+              min="1",
+              :max="maxComponents",
+              outline,
+              v-model="pcXval")
+          v-text-field.pa-2(
+              hide-details,
+              type="number",
+              label="PC (Y Axis)",
+              min="1",
+              :max="maxComponents",
+              outline,
+              v-model="pcYval")
+          v-switch.ma-2(hide-details, v-model="showCrosshairs", label="Show crosshairs")
 </template>
