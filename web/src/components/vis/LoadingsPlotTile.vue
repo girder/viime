@@ -70,34 +70,36 @@ export default {
 <template lang="pug">
 vis-tile(title="PCA Loadings Plot")
   loadings-plot(
-    :width="width",
-    :height="height",
-    :points="points",
-    :pc-x="pcX",
-    :pc-y="pcY",
-    :show-crosshairs="showCrosshairs")
+      :width="width",
+      :height="height",
+      :points="points",
+      :pc-x="pcX",
+      :pc-y="pcY",
+      :show-crosshairs="showCrosshairs")
   template(v-slot:controls)
-    v-menu(bottom offset-y left :min-width="150" :close-on-content-click="false")
+    v-menu(bottom, offset-y, left, :min-width="150", :close-on-content-click="false")
       template(v-slot:activator="{ on }")
         v-btn(v-on="on", icon)
           v-icon.mdi.mdi-dots-vertical
 
       v-card
-        v-layout(column wrap)
-          v-flex(px-2 pt-3)
-            v-text-field(type="number"
-                         label="PC (X Axis)"
-                         min="1"
-                         :max="maxComponents"
-                         outline
-                         v-model="pcXval")
+        v-layout(column, wrap)
+          v-flex(px-2, pt-3)
+            v-text-field(
+                type="number",
+                label="PC (X Axis)",
+                min="1",
+                :max="maxComponents",
+                outline,
+                v-model="pcXval")
           v-flex(px-2)
-            v-text-field(type="number"
-                         label="PC (Y Axis)"
-                         min="1"
-                         :max="maxComponents"
-                         outline
-                         v-model="pcYval")
+            v-text-field(
+                type="number",
+                label="PC (Y Axis)",
+                min="1",
+                :max="maxComponents",
+                outline,
+                v-model="pcYval")
           v-flex
-            v-switch(v-model="showCrosshairs" label="Show crosshairs")
+            v-switch(v-model="showCrosshairs", label="Show crosshairs")
 </template>
