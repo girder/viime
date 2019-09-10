@@ -96,6 +96,7 @@ export async function load_dataset({ commit }, { dataset_id, selected }) {
   try {
     const { data } = await CSVService.get(dataset_id);
     commit(SET_SOURCE_DATA, { data: { ...data, selected } });
+    await CSVService.validateTable(dataset_id);
   } catch (err) {
     commit(SET_LAST_ERROR, err);
     throw err;

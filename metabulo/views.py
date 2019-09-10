@@ -1,3 +1,4 @@
+from functools import wraps
 from io import BytesIO
 import json
 import math
@@ -14,9 +15,8 @@ from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
     ModifyLabelListSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     TableColumn, TableColumnSchema, TableRow, \
-    TableRowSchema
+    TableRowSchema, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
 from metabulo.normalization import validate_normalization_method
-from metabulo.opencpu import OpenCPUException
 from metabulo.plot import pca
 from metabulo.scaling import SCALING_METHODS
 from metabulo.table_validation import get_fatal_index_errors, ValidationSchema
@@ -27,8 +27,21 @@ modify_label_list_schema = ModifyLabelListSchema()
 table_column_schema = TableColumnSchema(exclude=['csv_file'])
 table_row_schema = TableRowSchema(exclude=['csv_file'])
 validation_schema = ValidationSchema()
+validated_metabolite_table_schema = ValidatedMetaboliteTableSchema()
 
 csv_bp = Blueprint('csv', __name__)
+
+
+def load_validated_csv_file(func):
+
+    @wraps(func)
+    def wrapped(csv_id, *arg, **kwargs):
+        csv_file = ValidatedMetaboliteTable.query \
+            .filter_by(csv_file_id=csv_id) \
+            .first_or_404()
+        return func(csv_file, *arg, **kwargs)
+
+    return wrapped
 
 
 @csv_file_cache
@@ -174,62 +187,6 @@ def set_imputation_options(csv_id, **kwargs):
         raise
 
 
-# Ingest transforms
-@csv_bp.route('/csv/<uuid:csv_id>/normalization', methods=['PUT'])
-@use_kwargs({
-    'method': fields.Str(allow_none=True),
-    'argument': fields.Str(allow_none=True)
-}, validate=validate_normalization_method)
-def set_normalization_method(csv_id, **kwargs):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    method = kwargs['method']
-    argument = kwargs.get('argument', None)
-
-    try:
-        csv_file.normalization = method
-        csv_file.normalization_argument = argument
-        db.session.add(csv_file)
-        db.session.commit()
-        return jsonify(method)
-    except Exception:
-        db.session.rollback()
-        raise
-
-
-@csv_bp.route('/csv/<uuid:csv_id>/transformation', methods=['PUT'])
-def set_transformation_method(csv_id):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    args = request.json
-    method = args['method']
-    if method is not None and method not in TRANSFORMATION_METHODS:
-        raise ValidationError('Invalid transformation method', data=method)
-    try:
-        csv_file.transformation = method
-        db.session.add(csv_file)
-        db.session.commit()
-        return jsonify(method)
-    except Exception:
-        db.session.rollback()
-        raise
-
-
-@csv_bp.route('/csv/<uuid:csv_id>/scaling', methods=['PUT'])
-def set_scaling_method(csv_id):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    args = request.json
-    method = args['method']
-    if method is not None and method not in SCALING_METHODS:
-        raise ValidationError('Invalid scaling method', data=method)
-    try:
-        csv_file.scaling = method
-        db.session.add(csv_file)
-        db.session.commit()
-        return jsonify(method)
-    except Exception:
-        db.session.rollback()
-        raise
-
-
 # Row/Column API
 @csv_bp.route('/csv/<uuid:csv_id>/column', methods=['GET'])
 def list_columns(csv_id):
@@ -300,69 +257,116 @@ def get_row(csv_id, row_index):
     ))
 
 
-class ServerError(Exception):
-    def __init__(self, response, code):
-        self.response = response
-        self.code = code
+@csv_bp.route('/csv/<uuid:csv_id>/validate', methods=['POST'])
+def save_validated_csv_file(csv_id):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    fatal_errors = get_fatal_index_errors(csv_file)
+    if fatal_errors:
+        return jsonify(validation_schema.dump(fatal_errors, many=True)), 400
 
-    def return_value(self):
-        return jsonify(self.response), self.code
-
-
-def _apply_transforms(csv_file):
+    old_table = ValidatedMetaboliteTable.query.filter_by(csv_file_id=csv_id)
     try:
-        table = csv_file.apply_transforms()
-    except OpenCPUException as e:
-        response = 'Connection failed' if e.response is None else e.response.content.decode()
-        code = 504 if e.response is None else 502
+        if old_table is not None:
+            old_table.delete()
+            db.session.commit()  # we actually want to persist to invalidate the old table
 
-        raise ServerError({
-            'error': 'OpenCPU call failed',
-            'method': e.method,
-            'response': response
-        }, code)
+        validated_table = ValidatedMetaboliteTable.create_from_csv_file(csv_file)
+        db.session.add(validated_table)
+        db.session.commit()
+        return jsonify(validated_metabolite_table_schema.dump(validated_table)), 201
+    except Exception:
+        db.session.rollback()
+        raise
 
-    return table
+
+def serialize_validated_table(validated_table):
+    try:
+        return validated_metabolite_table_schema.dump(validated_table)
+    except Exception as e:
+        current_app.logger.exception(e)
+        raise ValidationError('Error applying data transformation')
 
 
-def _get_pca_data(csv_file):
-    table = _apply_transforms(csv_file)
+# Endpoints below here act on "ValidatedMetaboliteTable" rather "CSVFile"
+@csv_bp.route('/csv/<uuid:csv_id>/normalization', methods=['PUT'])
+@use_kwargs({
+    'method': fields.Str(allow_none=True),
+    'argument': fields.Str(allow_none=True)
+}, validate=validate_normalization_method)
+@load_validated_csv_file
+def set_normalization_method(validated_table, **kwargs):
+    method = kwargs['method']
+    argument = kwargs.get('argument', None)
 
+    try:
+        validated_table.normalization = method
+        validated_table.normalization_argument = argument
+        serialized = serialize_validated_table(validated_table)
+        db.session.add(validated_table)
+        db.session.commit()
+        return jsonify(serialized)
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/transformation', methods=['PUT'])
+@load_validated_csv_file
+def set_transformation_method(validated_table):
+    args = request.json
+    method = args['method']
+    if method is not None and method not in TRANSFORMATION_METHODS:
+        raise ValidationError('Invalid transformation method', data=method)
+    try:
+        validated_table.transformation = method
+        serialized = serialize_validated_table(validated_table)
+        db.session.add(validated_table)
+        db.session.commit()
+        return jsonify(serialized)
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/scaling', methods=['PUT'])
+@load_validated_csv_file
+def set_scaling_method(validated_table):
+    args = request.json
+    method = args['method']
+    if method is not None and method not in SCALING_METHODS:
+        raise ValidationError('Invalid scaling method', data=method)
+    try:
+        validated_table.scaling = method
+        serialized = serialize_validated_table(validated_table)
+        db.session.add(validated_table)
+        db.session.commit()
+        return jsonify(serialized)
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+def _get_pca_data(validated_table):
+    table = validated_table.measurements
     max_components = int(request.args.get('max_components', 2))
     data = pca(table, max_components)
 
     # insert per row label metadata information
-    labels = csv_file.sample_metadata
-    groups = csv_file.groups
+    labels = validated_table.sample_metadata
+    groups = validated_table.groups
     data['labels'] = pandas.concat([groups, labels], axis=1).to_dict('list')
     data['rows'] = table.index.tolist()
 
     return data
 
 
-def _get_csv_file(csv_id):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-
-    fatal_errors = get_fatal_index_errors(csv_file)
-    if fatal_errors:
-        raise ServerError({
-            'error': 'Fatal error in table validation',
-            'validation': validation_schema.dump(fatal_errors, many=True)
-        }, 400)
-
-    return csv_file
-
-
 @csv_bp.route('/csv/<uuid:csv_id>/plot/pca', methods=['GET'])
-def get_pca_plot(csv_id):
-    try:
-        csv_file = _get_csv_file(csv_id)
-        return jsonify(_get_pca_data(csv_file)), 200
-    except ServerError as e:
-        return e.return_value()
+@load_validated_csv_file
+def get_pca_plot(validated_table):
+    return jsonify(_get_pca_data(validated_table)), 200
 
 
-def _get_loadings_data(csv_file):
+def _get_loadings_data(validated_table):
     def mean(x):
         return sum(x) / len(x)
 
@@ -385,8 +389,8 @@ def _get_loadings_data(csv_file):
         prod_sum = sum(map(lambda x, y: (x - x_mean) * (y - y_mean), xs, ys))
         return prod_sum / (x_stddev * y_stddev)
 
-    table = _apply_transforms(csv_file)
-    pca_data = _get_pca_data(csv_file)
+    table = validated_table.measurements
+    pca_data = _get_pca_data(validated_table)
 
     # Transpose the PCA values.
     pca_data = [list(x) for x in zip(*pca_data['x'])]
@@ -398,16 +402,14 @@ def _get_loadings_data(csv_file):
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/plot/loadings', methods=['GET'])
-def get_loadings_plot(csv_id):
-    try:
-        csv_file = _get_csv_file(csv_id)
-        return jsonify(_get_loadings_data(csv_file)), 200
-    except ServerError as e:
-        return e.return_value()
+@load_validated_csv_file
+def get_loadings_plot(validated_table):
+    return jsonify(_get_loadings_data(validated_table)), 200
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/pca-overview', methods=['GET'])
-def get_pca_overview(csv_id):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    png_content = opencpu.generate_image('/metabulo/R/pca_overview_plot', csv_file.table)
+@load_validated_csv_file
+def get_pca_overview(validated_table):
+    png_content = opencpu.generate_image('/metabulo/R/pca_overview_plot',
+                                         validated_table.measurements)
     return Response(png_content, mimetype='image/png')
