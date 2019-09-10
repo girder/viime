@@ -25,6 +25,7 @@ export default {
       normalize_methods,
       transform_methods,
       scaling_methods,
+      max_components: 6,
     };
   },
   computed: {
@@ -63,12 +64,20 @@ export default {
   methods: {
     pcaLoader(valid) {
       if (valid === false) {
-        this.$store.dispatch(LOAD_PLOT, { dataset_id: this.id, name: 'pca' });
+        this.$store.dispatch(LOAD_PLOT, {
+          dataset_id: this.id,
+          name: 'pca',
+          max_components: this.max_components,
+        });
       }
     },
     loadingsLoader(valid) {
       if (valid === false) {
-        this.$store.dispatch(LOAD_PLOT, { dataset_id: this.id, name: 'loadings' });
+        this.$store.dispatch(LOAD_PLOT, {
+          dataset_id: this.id,
+          name: 'loadings',
+          max_components: this.max_components,
+        });
       }
     },
     async transformTable(value, category, argument, methods) {
