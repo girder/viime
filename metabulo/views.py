@@ -2,6 +2,7 @@ from functools import wraps
 from io import BytesIO
 import json
 import math
+from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
@@ -81,6 +82,57 @@ def upload_csv_file():
     except Exception:
         if csv_file and csv_file.uri.is_file():
             csv_file.uri.unlink()
+        db.session.rollback()
+        raise
+
+
+@csv_bp.route('/csv/merge', methods=['POST'])
+@use_kwargs({
+    'csv_file_ids': fields.List(
+        fields.UUID(), validate=validate.Length(min=2))
+})
+def merge_csv_files(csv_file_ids):
+    """
+    Generate a new validated csv file by concatonating a list of 2 or more
+    validated tables.
+
+    NOTE: This current uses the groups from the first table, removes
+    all of the metadata, and does and "inner join" with the row indices"
+    """
+    tables = []
+    for index, csv_file_id in enumerate(csv_file_ids):
+        table = ValidatedMetaboliteTable.query.filter_by(
+            csv_file_id=csv_file_id
+        ).first()
+        if index == 0:
+            groups = table.groups
+
+        if table is None:
+            raise ValidationError(
+                'One or more csv_files does not exist or is not validated')
+
+        tables.append(table.measurements)
+
+    merged = pandas.concat([groups] + tables, axis=1, join='inner')
+
+    try:
+        csv_file = csv_file_schema.load(dict(
+            id=uuid4(),
+            name='merged.csv',
+            table=merged.to_csv(),
+            meta={'merged': [str(id) for id in csv_file_ids]}
+        ))
+        db.session.add(csv_file)
+        db.session.flush()
+
+        validated_table = ValidatedMetaboliteTable.create_from_csv_file(csv_file)
+        db.session.add(validated_table)
+
+        response = _serialize_csv_file(csv_file)
+
+        db.session.commit()
+        return jsonify(response), 201
+    except Exception:
         db.session.rollback()
         raise
 
