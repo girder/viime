@@ -27,6 +27,7 @@ export default {
       normalize_methods,
       transform_methods,
       scaling_methods,
+      active: false,
     };
   },
   computed: {
@@ -104,9 +105,9 @@ export default {
 </script>
 
 <template lang="pug">
-v-layout.transform-component(row, fill-height)
+v-layout.transform-component(row)
   v-navigation-drawer.primary.darken-3(permanent, style="width: 200px; min-width: 200px;")
-    v-layout(column, fill-height, v-if="dataset && ready")
+    v-layout(column, v-if="dataset && ready")
       v-toolbar.primary.darken-3(dark, flat, dense, :card="false")
         v-toolbar-title Normalize
       v-card.mx-3(flat)
@@ -151,9 +152,9 @@ v-layout.transform-component(row, fill-height)
         vis-pca(:width="600", :height="600", :raw-points="pcaData", :dataset="dataset")
       vis-tile(title="PCA Loadings")
         vis-loadings(:width="600", :height="600", :points="loadingsData")
-  v-container.overflow-auto(v-else-if="ready", fill-height)
+  v-container.overflow-auto(v-else-if="ready")
     v-layout(column)
-      .display-2 Error: Cannot show transform table
+      .display-2 Error: Cannot show transform plots
       a.headline(:href="`#/pretreatment/${dataset.id}/cleanup`") Correct validation error(s)
 </template>
 

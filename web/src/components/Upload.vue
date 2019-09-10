@@ -111,7 +111,7 @@ export default {
 </script>
 
 <template lang="pug">
-v-layout.upload-component(column, fill-height)
+v-layout.upload-component(column)
 
   v-dialog(v-model="deleteDialog", persistent, width="600")
     v-card
@@ -121,7 +121,7 @@ v-layout.upload-component(column, fill-height)
         v-btn(@click="doDelete = () => {}; deleteCount = 0;", flat) Cancel
         v-btn(@click="doDelete(); deleteCount = 0", color="error") Delete
 
-  v-layout.overflow-auto(column, fill-height)
+  v-layout.overflow-auto(column)
     .ma-4
       h3.headline.font-weight-bold.primary--text.text--darken-3 Upload your data (csv or txt)
       p.secondary--text.text--lighten-1 Choose a file from your computer

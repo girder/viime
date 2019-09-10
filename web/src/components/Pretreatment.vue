@@ -47,10 +47,10 @@ export default {
 </script>
 
 <template lang="pug">
-v-layout.pretreatment-component(row, fill-height)
+v-layout.pretreatment-component(row)
 
   v-navigation-drawer.navigation(floating, permanent, style="min-width: 220px; width: 220px;")
-    v-layout(column, fill-height)
+    v-layout(column)
       v-list.pt-0
         v-list-group(v-for="(dataset, index) in datasets",
             :key="dataset.id",

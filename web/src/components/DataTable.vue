@@ -105,7 +105,7 @@ function renderTable(el, binding) {
     } else {
       span.innerText = base26Converter(index + 1);
     }
-    thn.classList.add('control', 'px-2');
+    thn.classList.add('control', 'px-2', `column-key-${index}`);
     coln.classList.add(...activeClasses(index, 'column'));
     coln.classList.add(colType);
     thn.appendChild(span);
@@ -127,7 +127,7 @@ function renderTable(el, binding) {
     } else {
       td.innerText = index + 1;
     }
-    td.classList.add('control');
+    td.classList.add('control', `row-key-${index}`);
     td.onclick = (event) => {
       setSelection({
         key: id, event, axis: 'row', idx: index,
@@ -141,7 +141,7 @@ function renderTable(el, binding) {
       tdn.classList.add('row');
     });
   });
-
+  el.classList.add(dataset.id);
   el.appendChild(colgroup);
   el.appendChild(thead);
   el.appendChild(tbody);
@@ -185,7 +185,20 @@ export default {
       };
     },
   },
+  watch: {
+    selectedRanges(val) {
+      this.scrollIntoView(this.selectedType, val.members[0]);
+    },
+    selectedType(val) {
+      this.scrollIntoView(val, this.selectedRanges.members[0]);
+    },
+  },
   methods: {
+    scrollIntoView(type, index) {
+      const table = document.getElementsByClassName(this.id)[0];
+      const cell = table.getElementsByClassName(`${type}-key-${index}`)[0];
+      cell.scrollIntoView({block: 'nearest', inline: 'nearest', behavior: 'auto' });
+    },
     activeClasses(index, axisName) {
       if (axisName === this.selected.type) {
         const ranges = this.selectedRanges;

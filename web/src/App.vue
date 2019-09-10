@@ -9,7 +9,7 @@ v-app
       span.font-weight-bold.secondary--text.text--lighten-3 Biomarker Analysis »
       span.font-weight-bold.white--text  {{ $router.currentRoute.name }}
     v-spacer
-  v-container.pa-0.d-flex(fluid)
+  v-container.pa-0.d-flex(fluid, fill-height)
     router-view.grow
 </template>
 

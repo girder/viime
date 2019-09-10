@@ -58,7 +58,7 @@ export default {
 v-navigation-drawer.primary.darken-3.problem-bar-component(v-if="dataset && problemData",
     touchless, permanent, floating, style="width: 230px; min-width: 220px;")
 
-  v-layout(column, fill-height)
+  v-layout(column)
 
     v-toolbar.primary.darken-3(dark, flat, dense, :card="false")
       v-toolbar-title
