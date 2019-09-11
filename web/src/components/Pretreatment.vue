@@ -96,13 +96,21 @@ v-layout.pretreatment-component(row, fill-height)
                 v-icon.pr-1.middle {{ $vuetify.icons.bubbles }}
                 | Transform Table
 
-            v-list-tile.ml-2(
-                :class="{ active: $router.currentRoute.name === 'Analyze Data' }",
-                :disabled="!valid(dataset)",
-                @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze` })")
-              v-list-tile-title.pl-2
-                v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
-                | Analyze Table
+            v-list-group(
+              no-action,
+              :append-icon="null",
+              :disabled="!valid(dataset)",)
+              template(v-slot:activator)
+                v-list-tile
+                  v-list-tile-title.pl-2
+                    v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
+                    | Analyze Table
+              v-list-tile.ml-2(
+                :class="{ active: $router.currentRoute.name === 'Wilcox Test' }",
+                @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/wilcox` })")
+                v-list-tile-title.pl-2
+                  | Wilcox Test
+
   keep-alive
     router-view
 </template>

@@ -6,6 +6,7 @@ import Cleanup from '../components/Cleanup.vue';
 import Upload from '../components/Upload.vue';
 import Transform from '../components/Transform.vue';
 import Analyze from '../components/Analyze.vue';
+import Wilcox from '../components/analyze/Wilcox.vue';
 import ProblemBar from '../components/ProblemBar.vue';
 
 Vue.use(Router);
@@ -46,6 +47,14 @@ export const routes = [
         name: 'Analyze Data',
         component: Analyze,
         props: true,
+        children: [
+          {
+            path: 'wilcox',
+            name: 'Wilcox Test',
+            component: Wilcox,
+            props: true,
+          },
+        ],
       },
     ],
   },
