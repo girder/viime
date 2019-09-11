@@ -7,12 +7,14 @@ import {
   transform_methods,
 } from '@/utils/constants';
 import ScorePlotTile from '@/components/vis/ScorePlotTile.vue';
+import ScreePlotTile from '@/components/vis/ScreePlotTile.vue';
 import LoadingsPlotTile from '@/components/vis/LoadingsPlotTile.vue';
 
 export default {
   components: {
     LoadingsPlotTile,
     ScorePlotTile,
+    ScreePlotTile,
   },
   props: {
     id: {
@@ -160,6 +162,7 @@ v-layout.transform-component(row, fill-height)
           :width="600",
           :height="600",
           :points="loadingsData")
+      scree-plot-tile
   v-container.overflow-auto(v-else-if="ready", fill-height)
     v-layout(column)
       .display-2 Error: Cannot show transform table
