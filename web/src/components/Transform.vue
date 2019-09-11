@@ -6,15 +6,13 @@ import {
   scaling_methods,
   transform_methods,
 } from '@/utils/constants';
-import VisPca from '@/components/vis/VisPca.vue';
-import VisLoadings from '@/components/vis/VisLoadings.vue';
-import VisTile from '@/components/vis/VisTile.vue';
+import ScorePlotTile from '@/components/vis/ScorePlotTile.vue';
+import LoadingsPlotTile from '@/components/vis/LoadingsPlotTile.vue';
 
 export default {
   components: {
-    VisPca,
-    VisLoadings,
-    VisTile,
+    LoadingsPlotTile,
+    ScorePlotTile,
   },
   props: {
     id: {
@@ -65,12 +63,18 @@ export default {
   methods: {
     pcaLoader(valid) {
       if (valid === false) {
-        this.$store.dispatch(LOAD_PLOT, { dataset_id: this.id, name: 'pca' });
+        this.$store.dispatch(LOAD_PLOT, {
+          dataset_id: this.id,
+          name: 'pca',
+        });
       }
     },
     loadingsLoader(valid) {
       if (valid === false) {
-        this.$store.dispatch(LOAD_PLOT, { dataset_id: this.id, name: 'loadings' });
+        this.$store.dispatch(LOAD_PLOT, {
+          dataset_id: this.id,
+          name: 'loadings',
+        });
       }
     },
     async transformTable(value, category, argument, methods) {
@@ -147,10 +151,15 @@ v-layout.transform-component(row, fill-height)
     h4.display-1.pa-3 Loading Data Set
   v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-else-if="ready && valid")
     v-layout(row, wrap)
-      vis-tile(title="PCA Scores")
-        vis-pca(:width="600", :height="600", :raw-points="pcaData", :dataset="dataset")
-      vis-tile(title="PCA Loadings")
-        vis-loadings(:width="600", :height="600", :points="loadingsData")
+      score-plot-tile(
+          :width="600",
+          :height="600",
+          :raw-points="pcaData",
+          :dataset="dataset")
+      loadings-plot-tile(
+          :width="600",
+          :height="600",
+          :points="loadingsData")
   v-container.overflow-auto(v-else-if="ready", fill-height)
     v-layout(column)
       .display-2 Error: Cannot show transform table

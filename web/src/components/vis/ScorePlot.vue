@@ -77,6 +77,20 @@ export default {
       type: Number,
       default: 300,
     },
+    pcX: {
+      required: true,
+      type: Number,
+      validator: Number.isInteger,
+    },
+    pcY: {
+      required: true,
+      type: Number,
+      validator: Number.isInteger,
+    },
+    showEllipses: {
+      type: Boolean,
+      default: true,
+    },
     /* {{
      *   x: Array<Array<Number>>,
      *   labels: Object<string, Array<string>>
@@ -106,18 +120,30 @@ export default {
       },
       xrange: [-1, 1],
       yrange: [-1, 1],
-      xlabel: 'PC1',
-      ylabel: 'PC2',
       fadeInDuration: 500,
       duration: 200,
     };
   },
   computed: {
+    xlabel() {
+      return `PC${this.pcX}`;
+    },
+
+    ylabel() {
+      return `PC${this.pcY}`;
+    },
+
     xyPoints() {
-      if (this.rawPoints) {
-        return this.rawPoints.x.map(p => ({
-          x: p[0],
-          y: p[1],
+      const {
+        rawPoints,
+        pcX,
+        pcY,
+      } = this;
+
+      if (rawPoints) {
+        return rawPoints.x.map(p => ({
+          x: p[pcX - 1],
+          y: p[pcY - 1],
         }));
       }
 
@@ -134,6 +160,18 @@ export default {
     },
   },
   watch: {
+    pcX() {
+      this.update();
+    },
+
+    pcY() {
+      this.update();
+    },
+
+    showEllipses() {
+      this.update();
+    },
+
     rawPoints(newval) {
       if (newval) {
         if (!this.axisPlotInitialized) {
@@ -147,7 +185,10 @@ export default {
     },
   },
   mounted() {
-    const { xyPoints } = this;
+    const {
+      xyPoints,
+    } = this;
+
     if (xyPoints) {
       this.setRanges(xyPoints);
       const svg = select(this.$refs.svg);
@@ -164,11 +205,13 @@ export default {
       // Grab the input props.
       const {
         rawPoints,
-      } = this.$props;
-
-      const {
         xyPoints,
         group,
+        xlabel,
+        ylabel,
+        pcX,
+        pcY,
+        showEllipses,
       } = this;
 
       // Set the axis labels.
@@ -179,8 +222,8 @@ export default {
       const svg = select(this.$refs.svg);
       this.setRanges(xyPoints);
       this.axisPlot(svg);
-      this.setXLabel(`PC1 (${pctFormat(rawPoints.sdev[0] / totVariance)})`);
-      this.setYLabel(`PC2 (${pctFormat(rawPoints.sdev[1] / totVariance)})`);
+      this.setXLabel(`${xlabel} (${pctFormat(rawPoints.sdev[pcX - 1] / totVariance)})`);
+      this.setYLabel(`${ylabel} (${pctFormat(rawPoints.sdev[pcY - 1] / totVariance)})`);
 
       // Draw the data.
       //
@@ -244,82 +287,91 @@ export default {
       });
 
       // Compute the ellipse data for each subset.
-      const ellipses = [];
-      Object.keys(streams).forEach((category) => {
-        const data = streams[category];
+      if (showEllipses) {
+        const ellipses = [];
+        Object.keys(streams).forEach((category) => {
+          const data = streams[category];
 
-        const xs = data.map(d => d.x);
-        const ys = data.map(d => d.y);
+          const xs = data.map(d => d.x);
+          const ys = data.map(d => d.y);
 
-        // Compute the means.
-        const xMean = xs.reduce((acc, x) => acc + x, 0) / xs.length;
-        const yMean = ys.reduce((acc, y) => acc + y, 0) / ys.length;
+          // Compute the means.
+          const xMean = xs.reduce((acc, x) => acc + x, 0) / xs.length;
+          const yMean = ys.reduce((acc, y) => acc + y, 0) / ys.length;
 
-        // Compute the covariance matrix. Note that "xy" = "yx" in this case so
-        // we just compute xy.
-        const xx = covar(xs, xs);
-        const yy = covar(ys, ys);
-        const xy = covar(xs, ys);
+          // Compute the covariance matrix. Note that "xy" = "yx" in this case so
+          // we just compute xy.
+          const xx = covar(xs, xs);
+          const yy = covar(ys, ys);
+          const xy = covar(xs, ys);
 
-        // Compute the trace and determinant.
-        const trace = xx + yy;
-        const det = xx * yy - xy * xy;
+          // Compute the trace and determinant.
+          const trace = xx + yy;
+          const det = xx * yy - xy * xy;
 
-        // Compute the eigenvalues and eigenvectors of the covariance matrix
-        // according to
-        // http://www.math.harvard.edu/archive/21b_fall_04/exhibits/2dmatrices/
-        const eigval = [
-          trace / 2 + Math.sqrt(trace * trace / 4 - det),
-          trace / 2 - Math.sqrt(trace * trace / 4 - det),
-        ];
+          // Compute the eigenvalues and eigenvectors of the covariance matrix
+          // according to
+          // http://www.math.harvard.edu/archive/21b_fall_04/exhibits/2dmatrices/
+          const eigval = [
+            trace / 2 + Math.sqrt(trace * trace / 4 - det),
+            trace / 2 - Math.sqrt(trace * trace / 4 - det),
+          ];
 
-        const eigvec = Math.abs(xy) < 1e-10 ? [[1, 0], [0, 1]]
-          : unit([[eigval[0] - yy, xy],
-            [eigval[1] - yy, xy]]);
+          const eigvec = Math.abs(xy) < 1e-10 ? [[1, 0], [0, 1]]
+            : unit([[eigval[0] - yy, xy],
+              [eigval[1] - yy, xy]]);
 
-        // Compute the rotation of the ellipse, taking into account the quadrant
-        // the eigenvectors are pointing into.
-        const rotation = Math.sign(eigvec[0][1]) * Math.acos(eigvec[0][0]);
+          // Compute the rotation of the ellipse, taking into account the quadrant
+          // the eigenvectors are pointing into.
+          const rotation = Math.sign(eigvec[0][1]) * Math.acos(eigvec[0][0]);
 
-        ellipses.push({
-          xMean,
-          yMean,
-          rotation,
-          eigval,
-          category,
+          ellipses.push({
+            xMean,
+            yMean,
+            rotation,
+            eigval,
+            category,
+          });
         });
-      });
 
-      // Draw the ellipses.
-      svg.select('g.ellipses')
-        .selectAll('g.ellipse')
-        .data(ellipses)
-        .enter()
-        .append('g')
-        .classed('ellipse', true)
-        .attr('transform', d => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`)
-        .append('circle')
-        .attr('cx', 0)
-        .attr('cy', 0)
-        .attr('r', 1)
-        .attr('style', 'fill: none; stroke: black;')
-        .attr('vector-effect', 'non-scaling-stroke')
-        .style('stroke', d => cmap(d.category));
+        // Draw the ellipses.
+        svg.select('g.ellipses')
+          .selectAll('g.ellipse')
+          .data(ellipses)
+          .enter()
+          .append('g')
+          .classed('ellipse', true)
+          .attr('transform', d => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`)
+          .append('circle')
+          .attr('cx', 0)
+          .attr('cy', 0)
+          .attr('r', 1)
+          .attr('style', 'fill: none; stroke: black;')
+          .attr('vector-effect', 'non-scaling-stroke')
+          .style('stroke', d => cmap(d.category));
 
-      svg.select('g.ellipses')
-        .selectAll('g.ellipse')
-        .data(ellipses)
-        .transition()
-        .duration(this.duration)
-        .attr('transform', (d) => {
-          const xMean = this.scaleX(d.xMean);
-          const yMean = this.scaleY(d.yMean);
-          const rotation = -180 * d.rotation / Math.PI;
-          const xScale = this.scaleX(Math.sqrt(d.eigval[0])) - this.scaleX(0);
-          const yScale = this.scaleY(Math.sqrt(d.eigval[1])) - this.scaleY(0);
+        svg.select('g.ellipses')
+          .selectAll('g.ellipse')
+          .data(ellipses)
+          .transition()
+          .duration(this.duration)
+          .attr('transform', (d) => {
+            const xMean = this.scaleX(d.xMean);
+            const yMean = this.scaleY(d.yMean);
+            const rotation = -180 * d.rotation / Math.PI;
+            const xScale = this.scaleX(Math.sqrt(d.eigval[0])) - this.scaleX(0);
+            const yScale = this.scaleY(Math.sqrt(d.eigval[1])) - this.scaleY(0);
 
-          return `translate(${xMean}, ${yMean}) rotate(${rotation}) scale(${xScale}, ${yScale})`;
-        });
+            return `translate(${xMean}, ${yMean}) rotate(${rotation}) scale(${xScale}, ${yScale})`;
+          });
+      } else {
+        svg.select('g.ellipses')
+          .selectAll('*')
+          .transition()
+          .duration(this.duration)
+          .style('opacity', 0.0)
+          .remove();
+      }
     },
   },
 };

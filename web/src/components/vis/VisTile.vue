@@ -6,6 +6,12 @@ export default {
       default: '',
     },
   },
+
+  computed: {
+    hasControls() {
+      return !!this.$slots.controls;
+    },
+  },
 };
 </script>
 
@@ -14,6 +20,10 @@ v-flex(shrink=1)
   .white.rounded
     v-toolbar.primary.darken-3.top-rounded(dark, flat, dense)
       v-toolbar-title {{ title }}
+      v-spacer
+      v-toolbar-items(v-if="hasControls")
+        slot(name="controls")
+
     v-card.rounded(flat)
       slot
 </template>
