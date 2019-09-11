@@ -2,7 +2,7 @@ from io import BytesIO
 
 from flask import url_for
 
-from metabulo.models import CSVFile
+from metabulo.models import CSVFile, CSVFileSchema, db, ValidatedMetaboliteTable
 
 csv_data = """
 id,col1,col2
@@ -156,3 +156,65 @@ def test_set_imputation_options(client, csv_file):
     )
     assert resp.status_code == 200
     assert resp.json == {'imputation_mnar': 'half-minimum', 'imputation_mcar': 'knn'}
+
+
+def test_merge_files(client):
+    csv_file_schema = CSVFileSchema()
+    csv_file1 = csv_file_schema.load({
+        'table': 'id,g,col1,col2\nrow1,g,0.5,2.0\nrow2,g,1.5,0\nrow3,h,3,-1.0\n',
+        'name': 'test_csv_file1.csv'
+    })
+    csv_file2 = csv_file_schema.load({
+        'table': 'id,g,col3,col4\nrow1,g,0.5,2.0\nrow2,g,1.5,0\nrow4,h,3,-1.0\n',
+        'name': 'test_csv_file2.csv'
+    })
+
+    db.session.add_all([csv_file1, csv_file2])
+    db.session.flush()
+
+    validated1 = ValidatedMetaboliteTable.create_from_csv_file(csv_file1)
+    validated2 = ValidatedMetaboliteTable.create_from_csv_file(csv_file2)
+    db.session.add_all([validated1, validated2])
+    db.session.commit()
+
+    resp = client.post(url_for('csv.merge_csv_files'),
+                       json={'csv_file_ids': [csv_file1.id, csv_file2.id]})
+    assert resp.status_code == 201
+    assert resp.json['columns'] == [{
+        'column_header': 'id',
+        'column_index': 0,
+        'column_type': 'key'
+    }, {
+        'column_header': 'g',
+        'column_index': 1,
+        'column_type': 'group'
+    }, {
+        'column_header': 'col1',
+        'column_index': 2,
+        'column_type': 'measurement'
+    }, {
+        'column_header': 'col2',
+        'column_index': 3,
+        'column_type': 'measurement'
+    }, {
+        'column_header': 'col3',
+        'column_index': 4,
+        'column_type': 'measurement'
+    }, {
+        'column_header': 'col4',
+        'column_index': 5,
+        'column_type': 'measurement'
+    }]
+    assert resp.json['rows'] == [{
+        'row_index': 0,
+        'row_name': 'id',
+        'row_type': 'header'
+    }, {
+        'row_index': 1,
+        'row_name': 'row1',
+        'row_type': 'sample'
+    }, {
+        'row_index': 2,
+        'row_name': 'row2',
+        'row_type': 'sample'
+    }]
