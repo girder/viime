@@ -325,11 +325,28 @@ export default {
           // the eigenvectors are pointing into.
           const rotation = Math.sign(eigvec[0][1]) * Math.acos(eigvec[0][0]);
 
+          // Compute the correct dimension of the ellipses.
+          //
+          // The ellipse major and minor axes are given in eigval, in *mixed
+          // units* of the PCx and PCy axes. Therefore, it is not correct to use
+          // this.scaleX and this.scaleY to determine their pixel extents.
+          // Instead, we need a bit of geometry: trigonometric identities
+          // together with the rotation angle will enable calculating the x and
+          // y projections of the axes onto the PC axes, and then the correct
+          // pixel size in the mixed direction can be calculated via Pythagoras.
+          const sq = x => x * x;
+          const sin_t = Math.abs(Math.sin(rotation));
+          const cos_t = Math.abs(Math.cos(rotation));
+
+          const xPixels = (v) => this.scaleX(v) - this.scaleX(0);
+          const yPixels = (v) => this.scaleY(v) - this.scaleY(0);
+          const pixels = (h) => Math.sqrt(sq(xPixels(h * cos_t)) + sq(yPixels(h * sin_t)));
+
           ellipses.push({
             xMean,
             yMean,
             rotation,
-            eigval,
+            axes: eigval.map(Math.sqrt).map(pixels),
             category,
           });
         });
@@ -359,10 +376,8 @@ export default {
             const xMean = this.scaleX(d.xMean);
             const yMean = this.scaleY(d.yMean);
             const rotation = -180 * d.rotation / Math.PI;
-            const xScale = this.scaleX(Math.sqrt(d.eigval[0])) - this.scaleX(0);
-            const yScale = this.scaleY(Math.sqrt(d.eigval[1])) - this.scaleY(0);
 
-            return `translate(${xMean}, ${yMean}) rotate(${rotation}) scale(${xScale}, ${yScale})`;
+            return `translate(${xMean}, ${yMean}) rotate(${rotation}) scale(${d.axes[0]}, ${d.axes[1]})`;
           });
       } else {
         svg.select('g.ellipses')
