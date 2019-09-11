@@ -95,6 +95,14 @@ v-layout.pretreatment-component(row, fill-height)
               v-list-tile-title.pl-2
                 v-icon.pr-1.middle {{ $vuetify.icons.bubbles }}
                 | Transform Table
+
+            v-list-tile.ml-2(
+                :class="{ active: $router.currentRoute.name === 'Analyze Data' }",
+                :disabled="!valid(dataset)",
+                @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze` })")
+              v-list-tile-title.pl-2
+                v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
+                | Analyze Table
   keep-alive
     router-view
 </template>

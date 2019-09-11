@@ -5,6 +5,7 @@ import Pretreatment from '../components/Pretreatment.vue';
 import Cleanup from '../components/Cleanup.vue';
 import Upload from '../components/Upload.vue';
 import Transform from '../components/Transform.vue';
+import Analyze from '../components/Analyze.vue';
 import ProblemBar from '../components/ProblemBar.vue';
 
 Vue.use(Router);
@@ -38,6 +39,12 @@ export const routes = [
         path: 'transform',
         name: 'Transform Data',
         component: Transform,
+        props: true,
+      },
+      {
+        path: 'analyze',
+        name: 'Analyze Data',
+        component: Analyze,
         props: true,
       },
     ],
