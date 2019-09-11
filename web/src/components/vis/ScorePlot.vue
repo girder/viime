@@ -321,9 +321,11 @@ export default {
             : unit([[eigval[0] - yy, xy],
               [eigval[1] - yy, xy]]);
 
-          // Compute the rotation of the ellipse, taking into account the quadrant
-          // the eigenvectors are pointing into.
-          const rotation = Math.sign(eigvec[0][1]) * Math.acos(eigvec[0][0]);
+          // Compute the rotation of the ellipse, mapping it into [-pi/2, pi/2].
+          let rotation = Math.acos(eigvec[0][0]);
+          if (rotation > Math.PI / 2) {
+            rotation -= Math.PI;
+          }
 
           // Compute the correct dimension of the ellipses.
           //
