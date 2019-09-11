@@ -29,8 +29,6 @@ export const axisPlot = {
         bottom: null,
         left: null,
       },
-      xrange: [-1, 1],
-      yrange: [-1, 1],
       duration: 500,
       svg: null,
     };
@@ -43,6 +41,12 @@ export const axisPlot = {
     dheight() {
       const { height, margin } = this;
       return height - margin.top - margin.bottom;
+    },
+    xrange() {
+      return [-1, 1];
+    },
+    yrange() {
+      return [-1, 1];
     },
     scaleX() {
       const { xrange, dwidth } = this;

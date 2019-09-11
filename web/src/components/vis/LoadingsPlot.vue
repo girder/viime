@@ -75,8 +75,6 @@ export default {
         bottom: 50,
         left: 50,
       },
-      xrange: [-1.2, 1.2],
-      yrange: [-1.2, 1.2],
       fadeInDuration: 500,
       duration: 200,
     };
@@ -87,6 +85,14 @@ export default {
       const column = dataset._source.columns.find(elem => elem.column_type === 'group');
 
       return column.column_header;
+    },
+
+    xrange() {
+      return [-1.2, 1.2];
+    },
+
+    yrange() {
+      return [-1.2, 1.2];
     },
   },
   watch: {
