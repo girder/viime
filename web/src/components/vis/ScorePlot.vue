@@ -340,9 +340,9 @@ export default {
           const sin_t = Math.abs(Math.sin(rotation));
           const cos_t = Math.abs(Math.cos(rotation));
 
-          const xPixels = (v) => this.scaleX(v) - this.scaleX(0);
-          const yPixels = (v) => this.scaleY(v) - this.scaleY(0);
-          const pixels = (h) => Math.sqrt(sq(xPixels(h * cos_t)) + sq(yPixels(h * sin_t)));
+          const xPixels = v => this.scaleX(v) - this.scaleX(0);
+          const yPixels = v => this.scaleY(v) - this.scaleY(0);
+          const pixels = h => Math.sqrt(sq(xPixels(h * cos_t)) + sq(yPixels(h * sin_t)));
 
           ellipses.push({
             xMean,
