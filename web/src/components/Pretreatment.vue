@@ -113,7 +113,7 @@ v-layout.pretreatment-component(row, fill-height)
                     v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
                     | Analyze Table
               v-list-tile.ml-2.small-tile(
-                  v-for="a in analyses" :key="a.path"
+                  v-for="a in analyses", :key="a.path",
                   :class="{ active: $router.currentRoute.name === a.shortName }",
                   @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/${a.path}` })")
                 v-list-tile-title.pl-2
