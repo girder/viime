@@ -283,7 +283,7 @@ export default {
 
       // Plot the diagnostic cutoff lines.
       const drawCutoff = (which, where) => {
-        const line = svg.select(`line.${which}`);
+        const line = svg.select(`line.cutoff${which}`);
 
         if (where === null || where >= numComponents) {
           line.style('opacity', 0.0);
@@ -297,15 +297,29 @@ export default {
           .attr('y2', this.scaleY(this.yrange[1]))
           .attr('stroke-dasharray', '10 5 5 5')
           .style('opacity', 1)
+          .on('mouseover', () => {
+            tooltip.style('left', `${event.clientX + 15}px`)
+              .style('top', `${event.clientY - 30}px`)
+              .transition()
+              .duration(duration)
+              .style('opacity', 0.9);
+
+            tooltip.html(`The PCs to the left account for ${which}% of the variance`);
+          })
+          .on('mouseout', () => {
+            tooltip.transition()
+              .duration(duration)
+              .style('opacity', 0.0);
+          })
           .transition()
           .duration(fadeInDuration)
           .attr('x1', x)
           .attr('x2', x);
       };
 
-      drawCutoff('cutoff50', cutoffs[0]);
-      drawCutoff('cutoff80', cutoffs[1]);
-      drawCutoff('cutoff90', cutoffs[2]);
+      drawCutoff('50', cutoffs[0]);
+      drawCutoff('80', cutoffs[1]);
+      drawCutoff('90', cutoffs[2]);
     },
   },
 
