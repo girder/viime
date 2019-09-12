@@ -95,7 +95,7 @@ block toolbar
               @change="changeOption({alternative: $event})")
             v-radio(v-for="m in alternatives", :label="m.label",
                 :value="m.value", :key="`alt${m.value}`")
-      v-btn(v-if="analyzesState === 'initial'", @click="compute()")
+      v-btn(v-if="analysisState === 'initial'", @click="compute()")
         | Analyze
 
 block content

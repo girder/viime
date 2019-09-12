@@ -42,8 +42,8 @@ export default {
         });
       }
     },
-    isSubRoute(start) {
-      return this.dataset && this.$router.currentRoute.path.startsWith(`/pretreatment/${this.dataset.id}/${start}`);
+    isSubRoute(dataset, start) {
+      return this.$router.currentRoute.path.startsWith(`/pretreatment/${dataset.id}/${start}`);
     },
   },
 };
@@ -101,7 +101,7 @@ v-layout.pretreatment-component(row, fill-height)
 
             v-list-group.ml-2(
                 :append-icon="null",
-                :value="isSubRoute(`analyze/`)",
+                :value="isSubRoute(dataset, `analyze/`)",
                 :disabled="!valid(dataset)",
                 @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze` })")
               template(v-slot:activator)

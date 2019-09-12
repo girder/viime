@@ -14,7 +14,7 @@ import {
   LOAD_SESSION,
   UPLOAD_CSV,
   CHANGE_IMPUTATION_OPTIONS,
-  CHANGE_ANALYZE_OPTIONS,
+  CHANGE_ANALYSIS_OPTIONS,
 } from './actions.type';
 
 import {
@@ -28,9 +28,9 @@ import {
   SET_SESSION_STORE,
   SET_SOURCE_DATA,
   SET_TRANSFORMATION,
-  SET_ANALYZIS_OPTIONS,
-  SET_ANALYZIS_DATA,
-  SET_ANALYZIS_STATE,
+  SET_ANALYSIS_OPTIONS,
+  SET_ANALYSIS_DATA,
+  SET_ANALYSIS_STATE,
 } from './mutations.type';
 import { wilcoxon_zero_methods, wilcoxon_alternatives } from '../utils/constants';
 
@@ -50,7 +50,7 @@ const plotDefaults = {
   },
 };
 
-const analyzesDefaults = {
+const analysisDefaults = {
   wilcoxon: {
     options: {
       zero_method: wilcoxon_zero_methods[0].value,
@@ -65,7 +65,7 @@ const appstate = {
   // map of all datasets in the session by csv UUID
   datasets: {},
   plots: {},
-  analyzes: {},
+  analyses: {},
   lasterror: null,
   loading: false,
   /** @type {WindowLocalStorage} */
@@ -82,10 +82,10 @@ const getters = {
     && state.datasets[id][category],
   plotData: state => (id, name) => getters.ready(state)(id) && state.plots[id][name].data,
   plotValid: state => (id, name) => getters.ready(state)(id) && state.plots[id][name].valid,
-  analyzesOptions: state => (id, name) => getters.ready(state)(id)
-    && state.analyzes[id][name].options,
-  analyzesData: state => (id, name) => getters.ready(state)(id) && state.analyzes[id][name].data,
-  analyzesState: state => (id, name) => getters.ready(state)(id) && state.analyzes[id][name].state,
+  analysisOptions: state => (id, name) => getters.ready(state)(id)
+    && state.analyses[id][name].options,
+  analysisData: state => (id, name) => getters.ready(state)(id) && state.analyses[id][name].data,
+  analysisState: state => (id, name) => getters.ready(state)(id) && state.analyses[id][name].state,
 };
 
 /*
@@ -131,8 +131,8 @@ const mutations = {
     if (!state.plots[id]) {
       Vue.set(state.plots, id, cloneDeep(plotDefaults));
     }
-    if (!state.analyzes[id]) {
-      Vue.set(state.analyzes, id, cloneDeep(analyzesDefaults));
+    if (!state.analyses[id]) {
+      Vue.set(state.analyses, id, cloneDeep(analysisDefaults));
     }
     const cols = data.columns.sort((a, b) => a.column_index - b.column_index);
     // serialize CSV string as JSON
@@ -183,21 +183,21 @@ const mutations = {
     if (!state.plots[dataset.id]) {
       Vue.set(state.plots, dataset.id, cloneDeep(plotDefaults));
     }
-    if (!state.analyzes[dataset.id]) {
-      Vue.set(state.analyzes, dataset.id, cloneDeep(analyzesDefaults));
+    if (!state.analyses[dataset.id]) {
+      Vue.set(state.analyses, dataset.id, cloneDeep(analysisDefaults));
     }
   },
 
-  [SET_ANALYZIS_OPTIONS](state, { dataset_id, key, options }) {
-    Vue.set(state.analyzes[dataset_id][key], 'options', options);
+  [SET_ANALYSIS_OPTIONS](state, { dataset_id, key, options }) {
+    Vue.set(state.analyses[dataset_id][key], 'options', options);
   },
 
-  [SET_ANALYZIS_DATA](state, { dataset_id, key, data }) {
-    Vue.set(state.analyzes[dataset_id][key], 'data', data);
+  [SET_ANALYSIS_DATA](state, { dataset_id, key, data }) {
+    Vue.set(state.analyses[dataset_id][key], 'data', data);
   },
 
-  [SET_ANALYZIS_STATE](state, { dataset_id, key, state: status }) {
-    Vue.set(state.analyzes[dataset_id][key], 'state', status);
+  [SET_ANALYSIS_STATE](state, { dataset_id, key, state: status }) {
+    Vue.set(state.analyses[dataset_id][key], 'state', status);
   },
 
   [REFRESH_PLOT](state, { key, name, data }) {
@@ -341,23 +341,23 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [CHANGE_ANALYZE_OPTIONS]({ state, commit }, { dataset_id, key, changes }) {
-    commit(SET_ANALYZIS_STATE, { dataset_id, key, state: 'computing' });
+  async [CHANGE_ANALYSIS_OPTIONS]({ state, commit }, { dataset_id, key, changes }) {
+    commit(SET_ANALYSIS_STATE, { dataset_id, key, state: 'computing' });
     try {
       // create full options
       const options = {
-        ...state.analyzes[dataset_id][key].options,
+        ...state.analyses[dataset_id][key].options,
         ...changes,
       };
-      commit(SET_ANALYZIS_OPTIONS, { dataset_id, key, options });
-      const { data } = await CSVService.getAnalyzis(dataset_id, key, options);
-      commit(SET_ANALYZIS_DATA, { dataset_id, key, data });
+      commit(SET_ANALYSIS_OPTIONS, { dataset_id, key, options });
+      const { data } = await CSVService.getAnalysis(dataset_id, key, options);
+      commit(SET_ANALYSIS_DATA, { dataset_id, key, data });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
-      commit(SET_ANALYZIS_STATE, { dataset_id, key, state: 'error' });
+      commit(SET_ANALYSIS_STATE, { dataset_id, key, state: 'error' });
       throw err;
     }
-    commit(SET_ANALYZIS_STATE, { dataset_id, key, state: 'ready' });
+    commit(SET_ANALYSIS_STATE, { dataset_id, key, state: 'ready' });
   },
 };
 

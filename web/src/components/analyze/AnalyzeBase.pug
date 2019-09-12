@@ -1,17 +1,17 @@
-v-layout.analyze-component(row, fill-height)
+v-layout(row, fill-height)
   block toolbar
 
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
 
-  v-layout(v-else-if="dataset && ready && analyzesState === 'initial'", justify-center, align-center)
+  v-layout(v-else-if="dataset && ready && analysisState === 'initial'", justify-center, align-center)
     v-btn(@click="compute()")
         | Analyze
 
-  v-layout(v-else-if="analyzesState === 'computing'", justify-center, align-center)
+  v-layout(v-else-if="analysisState === 'computing'", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Computing...
 
-  v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-else-if="dataset && ready && valid && results && analyzesState === 'ready'")
+  v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-else-if="dataset && ready && valid && results && analysisState === 'ready'")
     block content

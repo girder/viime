@@ -10,7 +10,7 @@ import pandas
 from webargs.flaskparser import use_kwargs
 
 from metabulo import opencpu
-from metabulo.analyzes import wilcoxon_test
+from metabulo.analyses import wilcoxon_test
 from metabulo.cache import csv_file_cache
 from metabulo.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
@@ -481,18 +481,10 @@ def _get_wilcoxon_test(validated_table):
     zero_method = request.args.get('zero_method')
     alternative = request.args.get('alternative')
 
-    data = wilcoxon_test(table, zero_method, alternative)
-
-    # insert per row label metadata information
-    # labels = validated_table.sample_metadata
-    # groups = validated_table.groups
-    # data['labels'] = pandas.concat([groups, labels], axis=1).to_dict('list')
-    # data['rows'] = table.index.tolist()
-
-    return data
+    return wilcoxon_test(table, zero_method, alternative)
 
 
-@csv_bp.route('/csv/<uuid:csv_id>/analyzes/wilcoxon', methods=['GET'])
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/wilcoxon', methods=['GET'])
 @load_validated_csv_file
 def get_wilcoxon_test(validated_table):
     return jsonify(_get_wilcoxon_test(validated_table)), 200
