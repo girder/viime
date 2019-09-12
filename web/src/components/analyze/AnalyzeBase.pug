@@ -1,13 +1,19 @@
 v-layout.analyze-component(row, fill-height)
   block toolbar
   
-  v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-if="dataset && ready && valid")
-    block content
 
-  v-layout(v-else-if="!dataset || !ready", justify-center, align-center)
+  v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
-  v-container.overflow-auto(v-else-if="ready", fill-height)
-    v-layout(column)
-      .display-2 Error: Cannot analyze data
-      a.headline(:href="`#/pretreatment/${dataset.id}/cleanup`") Correct validation error(s)
+
+  v-layout(v-else-if="dataset && ready && analyzesState === 'initial'", justify-center, align-center)
+    v-btn(@click="compute()")
+        | Analyze
+
+  v-layout(v-else-if="analyzesState === 'computing'", justify-center, align-center)
+    v-progress-circular(indeterminate, size="100", width="5")
+    h4.display-1.pa-3 Computing...
+
+  v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-else-if="dataset && ready && valid && results && analyzesState === 'ready'")
+    block content
+  

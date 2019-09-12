@@ -30,6 +30,7 @@ import {
   SET_TRANSFORMATION,
   SET_ANALYZIS_OPTIONS,
   SET_ANALYZIS_DATA,
+  SET_ANALYZIS_STATE,
 } from './mutations.type';
 import { wilcoxon_zero_methods, wilcoxon_alternatives } from '../utils/constants';
 
@@ -56,6 +57,7 @@ const analyzesDefaults = {
       alternative: wilcoxon_alternatives[0].value,
     },
     data: null,
+    state: 'initial', // initial,loading,ready
   },
 };
 
@@ -83,6 +85,7 @@ const getters = {
   analyzesOptions: state => (id, name) => getters.ready(state)(id)
     && state.analyzes[id][name].options,
   analyzesData: state => (id, name) => getters.ready(state)(id) && state.analyzes[id][name].data,
+  analyzesState: state => (id, name) => getters.ready(state)(id) && state.analyzes[id][name].state,
 };
 
 /*
@@ -191,6 +194,10 @@ const mutations = {
 
   [SET_ANALYZIS_DATA](state, { dataset_id, key, data }) {
     Vue.set(state.analyzes[dataset_id][key], 'data', data);
+  },
+
+  [SET_ANALYZIS_STATE](state, { dataset_id, key, state: status }) {
+    Vue.set(state.analyzes[dataset_id][key], 'state', status);
   },
 
   [REFRESH_PLOT](state, { key, name, data }) {
@@ -335,7 +342,7 @@ const actions = {
   },
 
   async [CHANGE_ANALYZE_OPTIONS]({ state, commit }, { dataset_id, key, changes }) {
-    commit(SET_LOADING, true);
+    commit(SET_ANALYZIS_STATE, { dataset_id, key, state: 'computing' });
     try {
       // create full options
       const options = {
@@ -347,10 +354,10 @@ const actions = {
       commit(SET_ANALYZIS_DATA, { dataset_id, key, data });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
+      commit(SET_ANALYZIS_STATE, { dataset_id, key, state: 'error' });
       throw err;
     }
-    commit(SET_LOADING, false);
+    commit(SET_ANALYZIS_STATE, { dataset_id, key, state: 'ready' });
   },
 };
 
