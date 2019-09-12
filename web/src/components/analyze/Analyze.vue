@@ -37,6 +37,3 @@ v-layout.analyze-component(row, fill-height)
                   @click="$router.push({ path: `/pretreatment/${id}/analyze/${card.path}` })")
                 | Analyze
 </template>
-
-<style scoped lang="scss">
-</style>

@@ -110,7 +110,7 @@ v-layout.pretreatment-component(row, fill-height)
                   v-list-tile-title.pl-2
                     v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
                     | Analyze Table
-              v-list-tile.ml-2(
+              v-list-tile.ml-2.small-tile(
                   :class="{ active: $router.currentRoute.name === 'Wilcoxon Test' }",
                   @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/wilcoxon` })")
                 v-list-tile-title.pl-2
