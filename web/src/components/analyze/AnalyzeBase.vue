@@ -4,17 +4,15 @@ import { CHANGE_ANALYZE_OPTIONS } from '../../store/actions.type';
 export default {
   components: {
   },
-  data: () => {
-    return {
-      key: 'unknown'
-    }
-  },
   props: {
     id: {
       type: String,
       required: true,
     },
   },
+  data: () => ({
+    key: 'unknown',
+  }),
   computed: {
     dataset() { return this.$store.getters.dataset(this.id); },
     ready() { return this.$store.getters.ready(this.id); },
@@ -28,7 +26,7 @@ export default {
   },
   methods: {
     changeOption(changes) {
-      return this.$store.dispatch(CHANGE_ANALYZE_OPTIONS, { 
+      return this.$store.dispatch(CHANGE_ANALYZE_OPTIONS, {
         dataset_id: this.id,
         key: this.key,
         changes,
@@ -37,7 +35,7 @@ export default {
     compute() {
       // dummy change to trigger
       return this.changeOption({});
-    }
+    },
   },
 };
 </script>

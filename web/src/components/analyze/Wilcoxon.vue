@@ -1,16 +1,16 @@
 <script>
+import { scaleSequential } from 'd3-scale';
+import { interpolateGreys } from 'd3-scale-chromatic';
+import { format } from 'd3-format';
+import { wilcoxon_zero_methods, wilcoxon_alternatives } from '../../utils/constants';
 import AnalyzeBaseVue from './AnalyzeBase.vue';
-import {wilcoxon_zero_methods, wilcoxon_alternatives} from '../../utils/constants';
-import {scaleSequential} from 'd3-scale';
-import {interpolateGreys} from 'd3-scale-chromatic';
-import {format} from 'd3-format';
 
 export default {
-  extends: AnalyzeBaseVue,
   components: {
   },
+  extends: AnalyzeBaseVue,
   props: {
-    
+
   },
   data() {
     return {
@@ -21,53 +21,52 @@ export default {
   },
   computed: {
     scale() {
-      const max_p_value = this.results ? this.results.data.reduce((acc, entry) => Math.max(acc, entry.p), 0) : 1;
+      const max_p_value = this.results ? this.results.data.reduce(
+        (acc, entry) => Math.max(acc, entry.p), 0,
+      ) : 1;
       return scaleSequential(interpolateGreys).domain([max_p_value, 0]);
     },
-    indices() { return this.results ? this.results.indices : []},
+    indices() { return this.results ? this.results.indices : []; },
     resultLookup() {
       if (!this.results) {
         return new Map();
       }
-      const scale = this.scale;
       const f = format('.2e');
       const r = new Map();
       this.results.data.forEach((entry) => {
-        const {x, y} = entry;
+        const { x, y } = entry;
         const key = this.computeKey(x, y);
-        entry.color = scale(entry.p);
+        entry.color = this.scale(entry.p);
         entry.title = `${entry.x} / ${entry.y} : p-value: ${f(entry.p)} score: ${f(entry.score)}`;
         r.set(key, entry);
       });
       return r;
-    }
+    },
   },
   watch: {
   },
   methods: {
     computeKey(i, j) {
-      if (j < i) {
-        // swap to have a clear name
-        const s = i;
-        i = j;
-        j = s;
-      }
-      return `${i}#${j}`;
+      return j < i ? `${j}#${i}` : `${i}#${j}`;
     },
     getCell(x, y) {
       const key = this.computeKey(x, y);
       if (!this.resultLookup.has(key)) {
         if (x === y) {
           // center
-          return {x, y, p: '', score: NaN, color: null};  
+          return {
+            x, y, p: '', score: NaN, color: null,
+          };
         }
-        return {x, y, p: NaN, score: NaN, color: null};
+        return {
+          x, y, p: NaN, score: NaN, color: null,
+        };
       }
       return this.resultLookup.get(key);
     },
     getRow(x) {
-      return this.indices.map((y) => this.getCell(x, y));
-    }
+      return this.indices.map(y => this.getCell(x, y));
+    },
   },
 };
 </script>
@@ -108,8 +107,10 @@ block content
     tbody
       tr(v-for="(x,i) in indices", :key="i")
         th(v-text="x", :title="x")
-        td(v-for="(cell,j) in getRow(x)", :key="j", :style="{backgroundColor: cell.color}", :title="cell.title")
-  
+        td(v-for="(cell,j) in getRow(x)",
+          :key="j",
+          :style="{backgroundColor: cell.color}", :title="cell.title")
+
 </template>
 
 <style scoped lang="scss">
