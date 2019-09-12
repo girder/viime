@@ -163,8 +163,8 @@ v-layout.transform-component(row, fill-height)
           :height="600",
           :points="loadingsData")
       scree-plot-tile(
-          :width="600"
-          :height="600"
+          :width="600",
+          :height="600",
           :eigenvalues="pcaData.sdev")
   v-container.overflow-auto(v-else-if="ready", fill-height)
     v-layout(column)

@@ -41,10 +41,10 @@ export default {
 <template lang="pug">
 vis-tile(title="PCA Scree Plot")
   scree-plot(
-      :width="width"
-      :height="height"
-      :eigenvalues="eigenvalues"
-      :num-components="numComponents"
+      :width="width",
+      :height="height",
+      :eigenvalues="eigenvalues",
+      :num-components="numComponents",
       :show-cutoffs="showCutoffs")
   template(v-slot:controls)
     v-menu(bottom, offset-y, left, :min-width="150", :close-on-content-click="false")
