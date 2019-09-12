@@ -7,13 +7,15 @@ export default {
     ScreePlot,
     VisTile,
   },
+
+  props: ScreePlot.props,
 };
 </script>
 
 <template lang="pug">
 vis-tile(title="PCA Scree Plot")
   scree-plot(
-      :width="600"
-      :height="600"
-      :eigenvalues="[0.6, 0.2, 0.1, 0.05]")
+      :width="width"
+      :height="height"
+      :eigenvalues="eigenvalues")
 </template>
