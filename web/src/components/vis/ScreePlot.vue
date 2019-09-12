@@ -8,6 +8,8 @@ div
       g.label.y
         text {{ ylabel }}
       g.plot
+        path.line
+        g.points
   .tooltip(ref="tooltip")
 </template>
 
@@ -23,12 +25,18 @@ div.tooltip {
   z-index: 20;
   opacity: 0;
 }
+
+path.line {
+  fill: none;
+  stroke: black;
+}
 </style>
 
 <script>
 import { scalePoint } from 'd3-scale';
 import { select } from 'd3-selection';
 import { format } from 'd3-format';
+import { line } from 'd3-shape';
 import 'd3-transition';
 
 import { axisPlot } from './mixins/axisPlot';
@@ -155,7 +163,7 @@ export default {
       const floatFormat = format('.2f');
 
       this.axisPlot(svg);
-      svg.select('g.plot')
+      svg.select('g.points')
         .selectAll('circle')
         .data(data)
         .join(enter => enter.append('circle')
@@ -163,7 +171,8 @@ export default {
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
           .style('stroke', 'black')
-          .style('fill-opacity', 0.001)
+          .style('fill', 'white')
+          .style('fill-opacity', 1.0)
           .on('mouseover', function mouseover(d, i) {
             select(this)
               .transition()
@@ -199,6 +208,27 @@ export default {
         .attr('r', radius)
         .attr('cx', (d, i) => this.scaleX(i + 1))
         .attr('cy', d => this.scaleY(d.eigenvalue));
+
+      const pathData = [...Array(numComponents).keys()].map(i => [
+        this.scaleX(i + 1),
+        this.scaleY(eigenvalues[i]),
+      ]);
+
+      const pathDataNull = pathData.map(([x, y]) => [
+        x,
+        this.scaleY(0.0),
+      ]);
+
+      const lineFunc = line();
+      const curPath = svg.select('path.line').attr('d');
+      const startPath = curPath ? `${curPath}L${curPath.split('L').slice(-1)[0]}` : lineFunc(pathDataNull);
+      const endPath = lineFunc(pathData);
+
+      svg.select('path.line')
+        .attr('d', startPath)
+        .transition()
+        .duration(fadeInDuration)
+        .attr('d', endPath);
     },
   },
 
