@@ -1,8 +1,12 @@
 <script>
-import AnalyzeBaseVue from './AnalyzeBase.vue';
 
 export default {
-  extends: AnalyzeBaseVue,
+  props: {
+    id: {
+      type: String,
+      required: true,
+    },
+  },
   data() {
     return {
       cards: [
@@ -18,21 +22,20 @@ export default {
 </script>
 
 <template lang="pug">
-extends AnalyzeBase.pug
-
-block content
- v-container.pa-2(fluid)
-  v-layout(row)
-    v-flex(v-for="card in cards", :key="card.path" md3)
-      v-card
-        v-card-title(primary-title)
-          div
-            .headline(v-text="card.name")
-            span(v-text="card.description")
-        v-card-actions
-          v-btn(text,
-            @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/${card.path}` })"
-          ) Analyze
+v-layout.analyze-component(row, fill-height)
+  v-container.overflow-auto.ma-0(grid-list-lg, fluid)
+    v-container.pa-2(fluid)
+      v-layout(row)
+        v-flex(v-for="card in cards", :key="card.path" md3)
+          v-card
+            v-card-title(primary-title)
+              div
+                .headline(v-text="card.name")
+                span(v-text="card.description")
+            v-card-actions
+              v-btn(text,
+                @click="$router.push({ path: `/pretreatment/${id}/analyze/${card.path}` })"
+              ) Analyze
 </template>
 
 <style scoped lang="scss">
