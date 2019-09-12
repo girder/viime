@@ -98,11 +98,13 @@ v-layout.pretreatment-component(row, fill-height)
 
             v-list-group.ml-2(
               :append-icon="null",
+              :value="$router.currentRoute.path.startsWith(`/pretreatment/${dataset.id}/analyze/`)",
               :disabled="!valid(dataset)",
-              :class="{ active: $router.currentRoute.name === 'Analyze Data' }",
               @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze` })")
               template(v-slot:activator)
-                v-list-tile
+                v-list-tile(
+                   :class="{ active: $router.currentRoute.name === 'Analyze Data' }",
+                  )
                   v-list-tile-title.pl-2
                     v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
                     | Analyze Table
