@@ -28,9 +28,12 @@ div.tooltip {
 <script>
 import { scalePoint } from 'd3-scale';
 import { select } from 'd3-selection';
+import { format } from 'd3-format';
 import 'd3-transition';
 
 import { axisPlot } from './mixins/axisPlot';
+
+const sum = arr => arr.reduce((acc, x) => acc + x, 0);
 
 export default {
   mixins: [
@@ -89,6 +92,20 @@ export default {
 
       return [0.0, Math.max(...eigenvalues) * 1.1];
     },
+
+    percents() {
+      const total = sum(this.eigenvalues);
+      return this.eigenvalues.map(d => d / total);
+    },
+
+    cumulativePercents() {
+      const result = [0, ...this.percents];
+      for (let i = 1; i < result.length; i++) {
+        result[i] += result[i - 1];
+      }
+
+      return result.slice(1);
+    },
   },
 
   mounted() {
@@ -105,6 +122,8 @@ export default {
     update() {
       const {
         eigenvalues,
+        percents,
+        cumulativePercents,
         fadeInDuration,
         duration,
       } = this;
@@ -114,9 +133,18 @@ export default {
       const svg = select(this.$refs.svg);
       const tooltip = select(this.$refs.tooltip);
 
+      const data = eigenvalues.map((d, i) => ({
+        eigenvalue: d,
+        percent: percents[i],
+        cumPercent: cumulativePercents[i],
+      }));
+
+      const pctFormat = format('.2%');
+      const floatFormat = format('.2f');
+
       svg.select('g.plot')
         .selectAll('circle')
-        .data(eigenvalues)
+        .data(data)
         .join(enter => enter.append('circle')
           .attr('cx', this.scaleX(1))
           .attr('cy', this.scaleY(0))
@@ -133,7 +161,11 @@ export default {
               .duration(duration)
               .style('opacity', 0.9)
 
-            tooltip.html(`<b>Eigenvalue:</b> ${d}`)
+            const eig = floatFormat(d.eigenvalue);
+            const pct = pctFormat(d.percent);
+            const cpct = pctFormat(d.cumPercent);
+
+            tooltip.html(`<b>Principal Component ${i + 1}</b><br>${eig}<br>${pct} total variance<br>(${cpct} cumulative)`)
               .style('left', `${event.clientX + 15}px`)
               .style('top', `${event.clientY - 30}px`);
 
@@ -153,7 +185,7 @@ export default {
         .duration(fadeInDuration)
         .attr('r', radius)
         .attr('cx', (d, i) => this.scaleX(i + 1))
-        .attr('cy', d => this.scaleY(d));
+        .attr('cy', d => this.scaleY(d.eigenvalue));
     },
   },
 
