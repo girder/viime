@@ -18,8 +18,8 @@ from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
     TableColumn, TableColumnSchema, TableRow, \
     TableRowSchema, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
 from metabulo.normalization import validate_normalization_method
-from metabulo.plot import pca
 from metabulo.analyzes import wilcoxon_test
+from metabulo.plot import pca
 from metabulo.scaling import SCALING_METHODS
 from metabulo.table_validation import get_fatal_index_errors, ValidationSchema
 from metabulo.transformation import TRANSFORMATION_METHODS
