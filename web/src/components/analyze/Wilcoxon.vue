@@ -1,7 +1,7 @@
 <script>
 import AnalyzeBaseVue from './AnalyzeBase.vue';
 import { CHANGE_ANALYZE_OPTIONS } from '../../store/actions.type';
-import {wilcoxon_zero_methods} from '../../utils/constants';
+import {wilcoxon_zero_methods, wilcoxon_alternatives} from '../../utils/constants';
 
 const key = 'wilcoxon';
 
@@ -14,7 +14,8 @@ export default {
   },
   data() {
     return {
-      zero_methods: wilcoxon_zero_methods
+      zero_methods: wilcoxon_zero_methods,
+      alternatives: wilcoxon_alternatives,
     };
   },
   computed: {
@@ -50,6 +51,15 @@ block toolbar
               @change="changeOption({zero_method: $event})",)
             v-radio(v-for="m in zero_methods", :label="m.label",
                 :value="m.value", :key="`zero${m.value}`")
+      v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
+        v-toolbar-title Alternatives
+      v-card.mx-3(flat)
+        v-card-actions
+          v-radio-group.my-0(:value="options.alternative",
+              hide-details,
+              @change="changeOption({alternative: $event})",)
+            v-radio(v-for="m in alternatives", :label="m.label",
+                :value="m.value", :key="`alt${m.value}`")
 
 block content
  | TODO asdfsd

@@ -174,6 +174,21 @@ const wilcoxon_zero_methods = [
   },
 ];
 
+const wilcoxon_alternatives = [
+  {
+    label: 'Two-Sided',
+    value: 'two-sided',
+  },
+  {
+    label: 'Greater',
+    value: 'greater',
+  },
+  {
+    label: 'Less',
+    value: 'less',
+  },
+];
+
 export {
   rowMenuOptions,
   defaultRowOption,
@@ -194,4 +209,5 @@ export {
 
   validationMeta,
   wilcoxon_zero_methods,
+  wilcoxon_alternatives,
 };

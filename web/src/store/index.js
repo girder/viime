@@ -30,7 +30,7 @@ import {
   SET_TRANSFORMATION,
   SET_ANALYZIS_OPTIONS,
 } from './mutations.type';
-import { wilcoxon_zero_methods } from '../utils/constants';
+import { wilcoxon_zero_methods, wilcoxon_alternatives } from '../utils/constants';
 
 Vue.use(Vuex);
 
@@ -52,6 +52,7 @@ const analyzesDefaults = {
   wilcoxon: {
     options: {
       zero_method: wilcoxon_zero_methods[0].value,
+      alternative: wilcoxon_alternatives[0].value,
     },
     data: null,
   },
