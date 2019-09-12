@@ -1,0 +1,17 @@
+v-layout.analyze-component(row, fill-height)
+  block has-toolbar
+    v-navigation-drawer.primary.darken-3(permanent, style="width: 200px; min-width: 200px;")
+      v-layout(column, fill-height, v-if="dataset && ready")
+        v-toolbar.primary.darken-3(dark, flat, dense, :card="false")
+          block toolbar
+  
+  v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-if="dataset && ready && valid")
+    block content
+
+  v-layout(v-else-if="!dataset || !ready", justify-center, align-center)
+    v-progress-circular(indeterminate, size="100", width="5")
+    h4.display-1.pa-3 Loading Data Set
+  v-container.overflow-auto(v-else-if="ready", fill-height)
+    v-layout(column)
+      .display-2 Error: Cannot analyze data
+      a.headline(:href="`#/pretreatment/${dataset.id}/cleanup`") Correct validation error(s)

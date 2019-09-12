@@ -99,7 +99,9 @@ v-layout.pretreatment-component(row, fill-height)
             v-list-group(
               no-action,
               :append-icon="null",
-              :disabled="!valid(dataset)",)
+              :disabled="!valid(dataset)",
+              :class="{ active: $router.currentRoute.name === 'Analzye Data' }",
+              @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze` })")
               template(v-slot:activator)
                 v-list-tile
                   v-list-tile-title.pl-2

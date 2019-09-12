@@ -26,10 +26,11 @@ export default {
 <template lang="pug">
 extends AnalyzeBase.pug
 
-block toolbar
- | TODO
+block has-toolbar
+ .dummy
+ 
 block content
- | TODO asdfsd
+ | TODO wilcox
 
 </template>
 

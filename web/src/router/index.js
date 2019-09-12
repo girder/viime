@@ -5,7 +5,7 @@ import Pretreatment from '../components/Pretreatment.vue';
 import Cleanup from '../components/Cleanup.vue';
 import Upload from '../components/Upload.vue';
 import Transform from '../components/Transform.vue';
-import Analyze from '../components/Analyze.vue';
+import Analyze from '../components/analyze/Analyze.vue';
 import Wilcox from '../components/analyze/Wilcox.vue';
 import ProblemBar from '../components/ProblemBar.vue';
 
