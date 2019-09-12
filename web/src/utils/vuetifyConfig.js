@@ -35,6 +35,7 @@ export default {
     chevronUp: 'mdi-chevron-up',
     clearAll: 'mdi-notification-clear-all',
     cogs: 'mdi-cogs',
+    compare: 'mdi-compare',
     error: 'mdi-close',
     eye: 'mdi-eye',
     fileUpload: 'mdi-file-upload',
