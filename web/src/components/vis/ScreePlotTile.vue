@@ -8,11 +8,20 @@ export default {
     VisTile,
   },
 
-  props: [
-    'width',
-    'height',
-    'eigenvalues',
-  ],
+  props: {
+    width: {
+      required: true,
+      type: Number,
+    },
+    height: {
+      required: true,
+      type: Number,
+    },
+    eigenvalues: {
+      required: true,
+      type: Array,
+    },
+  },
 
   data() {
     return {
@@ -25,7 +34,7 @@ export default {
     numComponents() {
       return Number.parseInt(this.numComponentsText, 10);
     },
-  }
+  },
 };
 </script>
 

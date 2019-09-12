@@ -182,7 +182,6 @@ export default {
     rawPoints(newval) {
       if (newval) {
         if (!this.axisPlotInitialized) {
-          const { xyPoints } = this;
           const svg = select(this.$refs.svg);
           this.axisPlot(svg);
         }

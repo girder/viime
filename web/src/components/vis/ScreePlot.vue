@@ -50,7 +50,7 @@ line.cutoff90 {
 
 <script>
 import { scalePoint } from 'd3-scale';
-import { select } from 'd3-selection';
+import { select, event } from 'd3-selection';
 import { format } from 'd3-format';
 import { line } from 'd3-shape';
 import 'd3-transition';
@@ -76,7 +76,7 @@ export default {
     eigenvalues: {
       required: true,
       type: Array,
-      validator: prop => prop.every(v => Number.isFinite(v) && v > 0.0)
+      validator: prop => prop.every(v => Number.isFinite(v) && v > 0.0),
     },
     numComponents: {
       default: 10,
@@ -133,7 +133,7 @@ export default {
 
     cumulativePercents() {
       const result = [0, ...this.percents];
-      for (let i = 1; i < result.length; i++) {
+      for (let i = 1; i < result.length; i += 1) {
         result[i] += result[i - 1];
       }
 
@@ -145,9 +145,9 @@ export default {
         cumulativePercents,
       } = this;
 
-      let result = [null, null, null];
+      const result = [null, null, null];
 
-      for (let i = 0; i < cumulativePercents.length; i++) {
+      for (let i = 0; i < cumulativePercents.length; i += 1) {
         const val = cumulativePercents[i];
         if (val > 0.90) {
           result[2] = i;
@@ -235,7 +235,7 @@ export default {
 
             tooltip.transition()
               .duration(duration)
-              .style('opacity', 0.9)
+              .style('opacity', 0.9);
 
             const eig = floatFormat(d.eigenvalue);
             const pct = pctFormat(d.percent);
@@ -244,7 +244,6 @@ export default {
             tooltip.html(`<b>Principal Component ${i + 1}</b><br>${eig}<br>${pct} total variance<br>(${cpct} cumulative)`)
               .style('left', `${event.clientX + 15}px`)
               .style('top', `${event.clientY - 30}px`);
-
           })
           .on('mouseout', function mouseout() {
             select(this)
@@ -255,8 +254,7 @@ export default {
             tooltip.transition()
               .duration(duration)
               .style('opacity', 0.0);
-          })
-        )
+          }))
         .transition()
         .duration(fadeInDuration)
         .attr('r', radius)
@@ -269,7 +267,7 @@ export default {
         this.scaleY(eigenvalues[i]),
       ]);
 
-      const pathDataNull = pathData.map(([x, y]) => [
+      const pathDataNull = pathData.map(([x]) => [
         x,
         this.scaleY(0.0),
       ]);
@@ -287,17 +285,17 @@ export default {
 
       // Plot the diagnostic cutoff lines.
       const drawCutoff = (which, where) => {
-        const line = svg.select(`line.cutoff${which}`);
+        const cutoff = svg.select(`line.cutoff${which}`);
 
         if (where === null || where >= numComponents) {
-          line.style('opacity', 0.0);
+          cutoff.style('opacity', 0.0);
           return;
         }
 
         const step = this.scaleX.step();
-        const x = this.scaleX(where) + step / 2
+        const x = this.scaleX(where) + step / 2;
 
-        line.attr('y1', this.scaleY(0))
+        cutoff.attr('y1', this.scaleY(0))
           .attr('y2', this.scaleY(this.yrange[1]))
           .attr('stroke-dasharray', '10 5 5 5')
           .style('opacity', 1)
