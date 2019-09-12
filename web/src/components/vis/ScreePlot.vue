@@ -54,6 +54,11 @@ export default {
       type: Array,
       validator: prop => prop.every(v => Number.isFinite(v) && v > 0.0)
     },
+    numComponents: {
+      default: 10,
+      type: Number,
+      validator: Number.isInteger,
+    },
   },
 
   data() {
@@ -74,11 +79,11 @@ export default {
   computed: {
     scaleX() {
       const {
-        eigenvalues,
+        numComponents,
         dwidth,
       } = this;
 
-      const labels = [...Array(eigenvalues.length).keys()].map(d => d + 1);
+      const labels = [...Array(numComponents).keys()].map(d => d + 1);
 
       return scalePoint()
         .domain(labels)
@@ -108,6 +113,12 @@ export default {
     },
   },
 
+  watch: {
+    numComponents() {
+      this.update();
+    },
+  },
+
   mounted() {
     const svg = select(this.$refs.svg);
     this.axisPlot(svg);
@@ -126,6 +137,7 @@ export default {
         cumulativePercents,
         fadeInDuration,
         duration,
+        numComponents,
       } = this;
 
       const radius = 4;
@@ -137,16 +149,17 @@ export default {
         eigenvalue: d,
         percent: percents[i],
         cumPercent: cumulativePercents[i],
-      }));
+      })).slice(0, numComponents);
 
       const pctFormat = format('.2%');
       const floatFormat = format('.2f');
 
+      this.axisPlot(svg);
       svg.select('g.plot')
         .selectAll('circle')
         .data(data)
         .join(enter => enter.append('circle')
-          .attr('cx', this.scaleX(1))
+          .attr('cx', (d, i) => this.scaleX(i + 1))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
           .style('stroke', 'black')
