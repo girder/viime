@@ -156,12 +156,6 @@ v-layout.cleanup-wrapper(row)
 .cleanup-wrapper {
   width: 100%;
 
-  .grow-overflow {
-    flex: 1 1 0;
-    overflow: auto;
-    max-height: 100%;
-  }
-
   .radio-toolbar {
     .v-toolbar__content {
       height: inherit !important;
