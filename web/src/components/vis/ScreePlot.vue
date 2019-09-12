@@ -10,6 +10,10 @@ div
       g.plot
         path.line
         g.points
+        g.cutoffs
+          line.cutoff.cutoff50
+          line.cutoff.cutoff80
+          line.cutoff.cutoff90
   .tooltip(ref="tooltip")
 </template>
 
@@ -29,6 +33,18 @@ div.tooltip {
 path.line {
   fill: none;
   stroke: black;
+}
+
+line.cutoff50 {
+  stroke: gray;
+}
+
+line.cutoff80 {
+  stroke: firebrick;
+}
+
+line.cutoff90 {
+  stroke: red;
 }
 </style>
 
@@ -66,6 +82,10 @@ export default {
       default: 10,
       type: Number,
       validator: Number.isInteger,
+    },
+    showCutoffs: {
+      type: Boolean,
+      default: true,
     },
   },
 
@@ -119,11 +139,39 @@ export default {
 
       return result.slice(1);
     },
+
+    cutoffs() {
+      const {
+        cumulativePercents,
+      } = this;
+
+      let result = [null, null, null];
+
+      for (let i = 0; i < cumulativePercents.length; i++) {
+        const val = cumulativePercents[i];
+        if (val > 0.90) {
+          result[2] = i;
+          break;
+        } else if (val > 0.80 && result[1] === null) {
+          result[1] = i;
+        } else if (val > 0.50 && result[0] === null) {
+          result[0] = i;
+        }
+      }
+
+      return result;
+    },
   },
 
   watch: {
     numComponents() {
       this.update();
+    },
+
+    showCutoffs(show) {
+      select(this.$refs.svg)
+        .selectAll('line.cutoff')
+        .style('display', show ? null : 'none');
     },
   },
 
@@ -146,6 +194,7 @@ export default {
         fadeInDuration,
         duration,
         numComponents,
+        cutoffs,
       } = this;
 
       const radius = 4;
@@ -162,6 +211,7 @@ export default {
       const pctFormat = format('.2%');
       const floatFormat = format('.2f');
 
+      // Plot the points.
       this.axisPlot(svg);
       svg.select('g.points')
         .selectAll('circle')
@@ -209,6 +259,7 @@ export default {
         .attr('cx', (d, i) => this.scaleX(i + 1))
         .attr('cy', d => this.scaleY(d.eigenvalue));
 
+      // Plot the line.
       const pathData = [...Array(numComponents).keys()].map(i => [
         this.scaleX(i + 1),
         this.scaleY(eigenvalues[i]),
@@ -229,6 +280,32 @@ export default {
         .transition()
         .duration(fadeInDuration)
         .attr('d', endPath);
+
+      // Plot the diagnostic cutoff lines.
+      const drawCutoff = (which, where) => {
+        const line = svg.select(`line.${which}`);
+
+        if (where === null || where >= numComponents) {
+          line.style('opacity', 0.0);
+          return;
+        }
+
+        const step = this.scaleX.step();
+        const x = this.scaleX(where) + step / 2
+
+        line.attr('y1', this.scaleY(0))
+          .attr('y2', this.scaleY(this.yrange[1]))
+          .attr('stroke-dasharray', '10 5 5 5')
+          .style('opacity', 1)
+          .transition()
+          .duration(fadeInDuration)
+          .attr('x1', x)
+          .attr('x2', x);
+      };
+
+      drawCutoff('cutoff50', cutoffs[0]);
+      drawCutoff('cutoff80', cutoffs[1]);
+      drawCutoff('cutoff90', cutoffs[2]);
     },
   },
 

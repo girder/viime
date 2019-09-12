@@ -17,6 +17,7 @@ export default {
   data() {
     return {
       numComponentsText: '10',
+      showCutoffs: true,
     };
   },
 
@@ -34,7 +35,8 @@ vis-tile(title="PCA Scree Plot")
       :width="width"
       :height="height"
       :eigenvalues="eigenvalues"
-      :num-components="numComponents")
+      :num-components="numComponents"
+      :show-cutoffs="showCutoffs")
   template(v-slot:controls)
     v-menu(bottom, offset-y, left, :min-width="150", :close-on-content-click="false")
       template(v-slot:activator="{ on }")
@@ -50,4 +52,5 @@ vis-tile(title="PCA Scree Plot")
               min="1",
               outline,
               v-model="numComponentsText")
+          v-switch.py-2(v-model="showCutoffs", label="Diagnostic cutoffs", hide-details)
 </template>
