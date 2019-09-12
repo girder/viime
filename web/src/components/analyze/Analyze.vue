@@ -25,8 +25,10 @@ block content
   v-layout(row)
     v-flex(v-for="card in cards", :key="card.path" md3)
       v-card
-        v-card-title.fill-height.align-end(v-text="card.name")
-        v-card-text(v-text="card.description")
+        v-card-title(primary-title)
+          div
+            .headline(v-text="card.name")
+            span(v-text="card.description")
         v-card-actions
           v-btn(text,
             @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/${card.path}` })"
