@@ -5,10 +5,6 @@ v-layout(row, fill-height)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
 
-  v-layout(v-else-if="dataset && ready && analysisState === 'initial'", justify-center, align-center)
-    v-btn(@click="compute()")
-        | Analyze
-
   v-layout(v-else-if="analysisState === 'computing'", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Computing...

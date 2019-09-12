@@ -22,7 +22,10 @@ export default {
     results() { return this.$store.getters.analysisData(this.id, this.key); },
     analysisState() { return this.$store.getters.analysisState(this.id, this.key); },
   },
-  watch: {
+  created() {
+    if (this.analysisState === 'initial') {
+      this.compute();
+    }
   },
   methods: {
     changeOption(changes) {
