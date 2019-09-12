@@ -10,6 +10,13 @@ export default {
   },
   data() {
     return {
+      cards: [
+        {
+          name: 'Wilcox',
+          description: 'TODO fancy description',
+          path: 'wilcox'
+        }
+      ]
     };
   },
   computed: {
@@ -27,8 +34,16 @@ export default {
 extends AnalyzeBase.pug
 
 block content
- | TODO wilcox
-
+ v-container.pa-2(fluid)
+  v-row
+    v-col(v-for="card in cards", :key="card.path", cols="6")
+      v-card
+        v-card-title.fill-height.align-end(v-text="card.name")
+        v-card-text(v-text="card.description")
+        v-card-actions
+          v-btn(text,
+            @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/${card.path}` })"
+          ) Analyze
 </template>
 
 <style scoped lang="scss">
