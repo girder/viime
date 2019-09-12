@@ -9,5 +9,5 @@ v-layout(row, fill-height)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Computing...
 
-  v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-else-if="dataset && ready && valid && results && analysisState === 'ready'")
+  v-container.grow-overflow.ma-0(grid-list-lg, fluid, v-else-if="dataset && ready && valid && results && analysisState === 'ready'")
     block content
