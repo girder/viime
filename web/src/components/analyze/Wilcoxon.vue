@@ -20,7 +20,7 @@ export default {
   },
   computed: {
     options() { return this.$store.getters.analyzesOptions(this.id, key); },
-    plotData() { return this.$store.getters.analyzesData(this.id, key); },
+    results() { return this.$store.getters.analyzesData(this.id, key); },
   },
   watch: {
   },
@@ -30,7 +30,7 @@ export default {
         dataset_id: this.id,
         key,
         changes,
-        });
+      });
     },
   },
 };
@@ -62,7 +62,7 @@ block toolbar
                 :value="m.value", :key="`alt${m.value}`")
 
 block content
- | TODO asdfsd
+ div(v-text="results ? JSON.stringify(results) : 'None'")
 
 </template>
 

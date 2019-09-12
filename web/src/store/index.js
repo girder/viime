@@ -29,6 +29,7 @@ import {
   SET_SOURCE_DATA,
   SET_TRANSFORMATION,
   SET_ANALYZIS_OPTIONS,
+  SET_ANALYZIS_DATA,
 } from './mutations.type';
 import { wilcoxon_zero_methods, wilcoxon_alternatives } from '../utils/constants';
 
@@ -184,11 +185,12 @@ const mutations = {
     }
   },
 
-  [SET_ANALYZIS_OPTIONS](state, { dataset_id, key, changes }) {
-    const base = state.analyzes[dataset_id][key];
-    Object.entries(changes).forEach(([k, v]) => {
-      Vue.set(base, k, v);
-    });
+  [SET_ANALYZIS_OPTIONS](state, { dataset_id, key, options }) {
+    Vue.set(state.analyzes[dataset_id][key], 'options', options);
+  },
+
+  [SET_ANALYZIS_DATA](state, { dataset_id, key, data }) {
+    Vue.set(state.analyzes[dataset_id][key], 'data', data);
   },
 
   [REFRESH_PLOT](state, { key, name, data }) {
@@ -332,11 +334,17 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [CHANGE_ANALYZE_OPTIONS]({ commit }, { dataset_id, key, changes }) {
+  async [CHANGE_ANALYZE_OPTIONS]({ state, commit }, { dataset_id, key, changes }) {
     commit(SET_LOADING, true);
     try {
-      commit(SET_ANALYZIS_OPTIONS, { dataset_id, key, changes });
-      // TODO recompute wilcoxon plot data
+      // create full options
+      const options = {
+        ...state.analyzes[dataset_id][key].options,
+        ...changes,
+      };
+      commit(SET_ANALYZIS_OPTIONS, { dataset_id, key, options });
+      const { data } = await CSVService.getAnalyzis(dataset_id, key, options);
+      commit(SET_ANALYZIS_DATA, { dataset_id, key, data });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
       commit(SET_LOADING, false);

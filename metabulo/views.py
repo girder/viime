@@ -19,6 +19,7 @@ from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
     TableRowSchema, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
 from metabulo.normalization import validate_normalization_method
 from metabulo.plot import pca
+from metabulo.analyzes import wilcoxon_test
 from metabulo.scaling import SCALING_METHODS
 from metabulo.table_validation import get_fatal_index_errors, ValidationSchema
 from metabulo.transformation import TRANSFORMATION_METHODS
@@ -472,3 +473,26 @@ def get_pca_overview(validated_table):
     png_content = opencpu.generate_image('/metabulo/R/pca_overview_plot',
                                          validated_table.measurements)
     return Response(png_content, mimetype='image/png')
+
+
+def _get_wilcoxon_test(validated_table):
+    table = validated_table.measurements
+
+    zero_method = request.args.get('zero_method')
+    alternative = request.args.get('alternative')
+
+    data = wilcoxon_test(table, zero_method, alternative)
+
+    # insert per row label metadata information
+    # labels = validated_table.sample_metadata
+    # groups = validated_table.groups
+    # data['labels'] = pandas.concat([groups, labels], axis=1).to_dict('list')
+    # data['rows'] = table.index.tolist()
+
+    return data
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyzes/wilcoxon', methods=['GET'])
+@load_validated_csv_file
+def get_wilcoxon_test(validated_table):
+    return jsonify(_get_wilcoxon_test(validated_table)), 200

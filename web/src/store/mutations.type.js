@@ -9,3 +9,4 @@ export const SET_SOURCE_DATA = 'set_source_data';
 export const SET_SESSION_STORE = 'set_session_store';
 export const SET_TRANSFORMATION = 'set_transformation';
 export const SET_ANALYZIS_OPTIONS = 'set_analyzis_options';
+export const SET_ANALYZIS_DATA = 'set_analyzis_data';
