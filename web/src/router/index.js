@@ -47,14 +47,12 @@ export const routes = [
         name: 'Analyze Data',
         component: Analyze,
         props: true,
-        children: [
-          {
-            path: 'wilcox',
-            name: 'Wilcox Test',
-            component: Wilcox,
-            props: true,
-          },
-        ],
+      },
+      {
+        path: 'analyze/wilcox',
+        name: 'Wilcox Test',
+        component: Wilcox,
+        props: true,
       },
     ],
   },

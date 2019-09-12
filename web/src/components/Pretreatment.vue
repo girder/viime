@@ -96,11 +96,10 @@ v-layout.pretreatment-component(row, fill-height)
                 v-icon.pr-1.middle {{ $vuetify.icons.bubbles }}
                 | Transform Table
 
-            v-list-group(
-              no-action,
+            v-list-group.ml-2(
               :append-icon="null",
               :disabled="!valid(dataset)",
-              :class="{ active: $router.currentRoute.name === 'Analzye Data' }",
+              :class="{ active: $router.currentRoute.name === 'Analyze Data' }",
               @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze` })")
               template(v-slot:activator)
                 v-list-tile
@@ -111,6 +110,7 @@ v-layout.pretreatment-component(row, fill-height)
                 :class="{ active: $router.currentRoute.name === 'Wilcox Test' }",
                 @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/wilcox` })")
                 v-list-tile-title.pl-2
+                  v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
                   | Wilcox Test
 
   keep-alive

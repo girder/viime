@@ -26,9 +26,6 @@ export default {
 <template lang="pug">
 extends AnalyzeBase.pug
 
-block has-toolbar
- .dummy
- 
 block content
  | TODO wilcox
 

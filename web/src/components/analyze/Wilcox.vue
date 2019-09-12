@@ -27,7 +27,11 @@ export default {
 extends AnalyzeBase.pug
 
 block toolbar
- | TODO
+  v-navigation-drawer.primary.darken-3(permanent, style="width: 200px; min-width: 200px;")
+    v-layout(column, fill-height, v-if="dataset && ready")
+      v-toolbar.primary.darken-3(dark, flat, dense, :card="false")
+        | Option 1
+
 block content
  | TODO asdfsd
 
