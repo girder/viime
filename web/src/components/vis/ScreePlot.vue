@@ -28,6 +28,7 @@ div.tooltip {
 <script>
 import { scalePoint } from 'd3-scale';
 import { select } from 'd3-selection';
+import 'd3-transition';
 
 import { axisPlot } from './mixins/axisPlot';
 
@@ -104,11 +105,14 @@ export default {
     update() {
       const {
         eigenvalues,
+        fadeInDuration,
+        duration,
       } = this;
 
       const radius = 4;
 
       const svg = select(this.$refs.svg);
+      const tooltip = select(this.$refs.tooltip);
 
       svg.select('g.plot')
         .selectAll('circle')
@@ -118,9 +122,35 @@ export default {
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
           .style('stroke', 'black')
-          .style('fill-opacity', 0.001))
+          .style('fill-opacity', 0.001)
+          .on('mouseover', function mouseover(d, i) {
+            select(this)
+              .transition()
+              .duration(duration)
+              .attr('r', 2 * radius);
+
+            tooltip.transition()
+              .duration(duration)
+              .style('opacity', 0.9)
+
+            tooltip.html(`<b>Eigenvalue:</b> ${d}`)
+              .style('left', `${event.clientX + 15}px`)
+              .style('top', `${event.clientY - 30}px`);
+
+          })
+          .on('mouseout', function mouseout() {
+            select(this)
+              .transition()
+              .duration(duration)
+              .attr('r', radius);
+
+            tooltip.transition()
+              .duration(duration)
+              .style('opacity', 0.0);
+          })
+        )
         .transition()
-        .duration(this.fadeInDuration)
+        .duration(fadeInDuration)
         .attr('r', radius)
         .attr('cx', (d, i) => this.scaleX(i + 1))
         .attr('cy', d => this.scaleY(d));
