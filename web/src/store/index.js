@@ -14,6 +14,7 @@ import {
   LOAD_SESSION,
   UPLOAD_CSV,
   CHANGE_IMPUTATION_OPTIONS,
+  CHANGE_ANALYZE_OPTIONS,
 } from './actions.type';
 
 import {
@@ -27,7 +28,9 @@ import {
   SET_SESSION_STORE,
   SET_SOURCE_DATA,
   SET_TRANSFORMATION,
+  SET_ANALYZIS_OPTIONS,
 } from './mutations.type';
+import { wilcoxon_zero_methods } from '../utils/constants';
 
 Vue.use(Vuex);
 
@@ -45,10 +48,20 @@ const plotDefaults = {
   },
 };
 
+const analyzesDefaults = {
+  wilcoxon: {
+    options: {
+      zero_method: wilcoxon_zero_methods[0].value,
+    },
+    data: null,
+  },
+};
+
 const appstate = {
   // map of all datasets in the session by csv UUID
   datasets: {},
   plots: {},
+  analyzes: {},
   lasterror: null,
   loading: false,
   /** @type {WindowLocalStorage} */
@@ -65,6 +78,9 @@ const getters = {
     && state.datasets[id][category],
   plotData: state => (id, name) => getters.ready(state)(id) && state.plots[id][name].data,
   plotValid: state => (id, name) => getters.ready(state)(id) && state.plots[id][name].valid,
+  analyzesOptions: state => (id, name) => getters.ready(state)(id)
+    && state.analyzes[id][name].options,
+  analyzesData: state => (id, name) => getters.ready(state)(id) && state.analyzes[id][name].data,
 };
 
 /*
@@ -109,6 +125,9 @@ const mutations = {
     const { id, name, size } = data;
     if (!state.plots[id]) {
       Vue.set(state.plots, id, cloneDeep(plotDefaults));
+    }
+    if (!state.analyzes[id]) {
+      Vue.set(state.analyzes, id, cloneDeep(analyzesDefaults));
     }
     const cols = data.columns.sort((a, b) => a.column_index - b.column_index);
     // serialize CSV string as JSON
@@ -159,6 +178,16 @@ const mutations = {
     if (!state.plots[dataset.id]) {
       Vue.set(state.plots, dataset.id, cloneDeep(plotDefaults));
     }
+    if (!state.analyzes[dataset.id]) {
+      Vue.set(state.analyzes, dataset.id, cloneDeep(analyzesDefaults));
+    }
+  },
+
+  [SET_ANALYZIS_OPTIONS](state, { dataset_id, key, changes }) {
+    const base = state.analyzes[dataset_id][key];
+    Object.entries(changes).forEach(([k, v]) => {
+      Vue.set(base, k, v);
+    });
   },
 
   [REFRESH_PLOT](state, { key, name, data }) {
@@ -299,6 +328,19 @@ const actions = {
     commit(SET_LOADING, true);
     await CSVService.setImputation(dataset_id, options);
     await load_dataset({ commit }, { dataset_id });
+    commit(SET_LOADING, false);
+  },
+
+  async [CHANGE_ANALYZE_OPTIONS]({ commit }, { dataset_id, key, changes }) {
+    commit(SET_LOADING, true);
+    try {
+      commit(SET_ANALYZIS_OPTIONS, { dataset_id, key, changes });
+      // TODO recompute wilcoxon plot data
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
     commit(SET_LOADING, false);
   },
 };

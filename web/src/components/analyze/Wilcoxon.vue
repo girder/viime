@@ -1,20 +1,9 @@
 <script>
 import AnalyzeBaseVue from './AnalyzeBase.vue';
+import { CHANGE_ANALYZE_OPTIONS } from '../../store/actions.type';
+import {wilcoxon_zero_methods} from '../../utils/constants';
 
-const zero_methods = [
-  {
-    label: '',
-    value: 'wilcox'
-  },
-  {
-    label: '',
-    value: '“pratt”'
-  },
-  {
-    label: '',
-    value: '“zsplit”'
-  }
-]
+const key = 'wilcoxon';
 
 export default {
   extends: AnalyzeBaseVue,
@@ -25,16 +14,23 @@ export default {
   },
   data() {
     return {
-      zero_methods
+      zero_methods: wilcoxon_zero_methods
     };
   },
   computed: {
-    
+    options() { return this.$store.getters.analyzesOptions(this.id, key); },
+    plotData() { return this.$store.getters.analyzesData(this.id, key); },
   },
   watch: {
   },
   methods: {
-
+    changeOption(changes) {
+      return this.$store.dispatch(CHANGE_ANALYZE_OPTIONS, { 
+        dataset_id: this.id,
+        key,
+        changes,
+        });
+    },
   },
 };
 </script>
@@ -49,8 +45,9 @@ block toolbar
         v-toolbar-title Zero Methods
       v-card.mx-3(flat)
         v-card-actions
-          v-radio-group.my-0(:value="zero_method",
-              hide-details)
+          v-radio-group.my-0(:value="options.zero_method",
+              hide-details,
+              @change="changeOption({zero_method: $event})",)
             v-radio(v-for="m in zero_methods", :label="m.label",
                 :value="m.value", :key="`zero${m.value}`")
 

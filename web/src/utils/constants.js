@@ -159,6 +159,21 @@ const validationMeta = {
   },
 };
 
+const wilcoxon_zero_methods = [
+  {
+    label: 'Wilcox',
+    value: 'wilcox',
+  },
+  {
+    label: 'Pratt',
+    value: 'pratt',
+  },
+  {
+    label: 'Z-Split',
+    value: 'zsplit',
+  },
+];
+
 export {
   rowMenuOptions,
   defaultRowOption,
@@ -178,4 +193,5 @@ export {
   transform_methods,
 
   validationMeta,
+  wilcoxon_zero_methods,
 };
