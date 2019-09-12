@@ -6,8 +6,8 @@ import Cleanup from '../components/Cleanup.vue';
 import Upload from '../components/Upload.vue';
 import Transform from '../components/Transform.vue';
 import Analyze from '../components/analyze/Analyze.vue';
-import Wilcoxon from '../components/analyze/Wilcoxon.vue';
 import ProblemBar from '../components/ProblemBar.vue';
+import analyses from '../components/analyze';
 
 Vue.use(Router);
 
@@ -48,12 +48,9 @@ export const routes = [
         component: Analyze,
         props: true,
       },
-      {
-        path: 'analyze/wilcoxon',
-        name: 'Wilcoxon Test',
-        component: Wilcoxon,
-        props: true,
-      },
+      ...analyses.map(({ path, shortName: name, component }) => ({
+        path: `analyze/${path}`, name, component, props: true,
+      })),
     ],
   },
   {

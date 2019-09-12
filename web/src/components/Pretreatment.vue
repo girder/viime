@@ -1,6 +1,7 @@
 <script>
 import { SET_SELECTION } from '@/store/mutations.type';
 import { loadDataset } from '@/utils/mixins';
+import analyses from './analyze';
 
 export default {
   mixins: [loadDataset],
@@ -13,6 +14,7 @@ export default {
   data() {
     return {
       datasets: this.$store.state.datasets,
+      analyses,
     };
   },
   methods: {
@@ -111,11 +113,12 @@ v-layout.pretreatment-component(row, fill-height)
                     v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
                     | Analyze Table
               v-list-tile.ml-2.small-tile(
-                  :class="{ active: $router.currentRoute.name === 'Wilcoxon Test' }",
-                  @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/wilcoxon` })")
+                  v-for="a in analyses" :key="a.path"
+                  :class="{ active: $router.currentRoute.name === a.shortName }",
+                  @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/${a.path}` })")
                 v-list-tile-title.pl-2
                   v-icon.pr-1.middle {{ $vuetify.icons.compare }}
-                  | Wilcoxon Test
+                  | {{a.shortName}}
 
   keep-alive
     router-view

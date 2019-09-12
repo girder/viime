@@ -6,6 +6,7 @@ import {
   convertCsvToRows, RangeList, mapValidationErrors,
 } from '../utils';
 import { CSVService } from '../common/api.service';
+import analyses from '../components/analyze';
 
 import {
   CHANGE_AXIS_LABEL,
@@ -32,7 +33,6 @@ import {
   SET_ANALYSIS_DATA,
   SET_ANALYSIS_STATE,
 } from './mutations.type';
-import { wilcoxon_zero_methods, wilcoxon_alternatives } from '../utils/constants';
 
 Vue.use(Vuex);
 
@@ -50,16 +50,14 @@ const plotDefaults = {
   },
 };
 
-const analysisDefaults = {
-  wilcoxon: {
-    options: {
-      zero_method: wilcoxon_zero_methods[0].value,
-      alternative: wilcoxon_alternatives[0].value,
-    },
+const analysisDefaults = {};
+analyses.forEach(({ options, path, key }) => {
+  analysisDefaults[key || path] = {
+    options,
     data: null,
-    state: 'initial', // initial,loading,ready
-  },
-};
+    state: 'initial', // initial,computing,error,ready
+  };
+});
 
 const appstate = {
   // map of all datasets in the session by csv UUID

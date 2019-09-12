@@ -2,7 +2,7 @@
 import { scaleSequential } from 'd3-scale';
 import { interpolateGreys } from 'd3-scale-chromatic';
 import { format } from 'd3-format';
-import { wilcoxon_zero_methods, wilcoxon_alternatives } from '../../utils/constants';
+import { wilcoxon_zero_methods, wilcoxon_alternatives } from './constants';
 import AnalyzeBaseVue from './AnalyzeBase.vue';
 
 export default {

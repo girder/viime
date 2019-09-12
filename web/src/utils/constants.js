@@ -159,35 +159,6 @@ const validationMeta = {
   },
 };
 
-const wilcoxon_zero_methods = [
-  {
-    label: 'Wilcox',
-    value: 'wilcox',
-  },
-  {
-    label: 'Pratt',
-    value: 'pratt',
-  },
-  {
-    label: 'Z-Split',
-    value: 'zsplit',
-  },
-];
-
-const wilcoxon_alternatives = [
-  {
-    label: 'Two-Sided',
-    value: 'two-sided',
-  },
-  {
-    label: 'Greater',
-    value: 'greater',
-  },
-  {
-    label: 'Less',
-    value: 'less',
-  },
-];
 
 export {
   rowMenuOptions,
@@ -208,6 +179,4 @@ export {
   transform_methods,
 
   validationMeta,
-  wilcoxon_zero_methods,
-  wilcoxon_alternatives,
 };
