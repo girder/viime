@@ -168,6 +168,10 @@ export default {
       this.update();
     },
 
+    eigenvalues() {
+      this.update();
+    },
+
     showCutoffs(show) {
       select(this.$refs.svg)
         .selectAll('line.cutoff')
