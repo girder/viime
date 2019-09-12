@@ -15,5 +15,5 @@ vis-tile(title="PCA Scree Plot")
   scree-plot(
       :width="600"
       :height="600"
-      :variances="[0.6, 0.2, 0.1, 0.05]")
+      :eigenvalues="[0.6, 0.2, 0.1, 0.05]")
 </template>

@@ -45,11 +45,10 @@ export default {
       type: Number,
       default: 300,
     },
-    variances: {
+    eigenvalues: {
       required: true,
       type: Array,
-      validator: prop => prop.every(v => Number.isFinite(v) && v >= 0.0 && v <= 1.0)
-        && prop.reduce((acc, x) => acc + x, 0) <= 1.0,
+      validator: prop => prop.every(v => Number.isFinite(v) && v > 0.0)
     },
   },
 
@@ -64,18 +63,18 @@ export default {
       fadeInDuration: 500,
       duration: 200,
       xlabel: 'Principal Component',
-      ylabel: 'Percent Total Variance',
+      ylabel: 'Eigenvalue',
     };
   },
 
   computed: {
     scaleX() {
       const {
-        variances,
+        eigenvalues,
         dwidth,
       } = this;
 
-      const labels = [...Array(variances.length).keys()].map(d => d + 1);
+      const labels = [...Array(eigenvalues.length).keys()].map(d => d + 1);
 
       return scalePoint()
         .domain(labels)
@@ -84,10 +83,10 @@ export default {
 
     yrange() {
       const {
-        variances,
+        eigenvalues,
       } = this;
 
-      return [0.0, Math.max(...variances) * 1.1];
+      return [0.0, Math.max(...eigenvalues) * 1.1];
     },
   },
 
@@ -104,7 +103,7 @@ export default {
   methods: {
     update() {
       const {
-        variances,
+        eigenvalues,
       } = this;
 
       const radius = 4;
@@ -113,7 +112,7 @@ export default {
 
       svg.select('g.plot')
         .selectAll('circle')
-        .data(variances)
+        .data(eigenvalues)
         .join(enter => enter.append('circle')
           .attr('cx', this.scaleX(1))
           .attr('cy', this.scaleY(0))
