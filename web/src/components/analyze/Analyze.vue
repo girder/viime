@@ -3,11 +3,6 @@ import AnalyzeBaseVue from './AnalyzeBase.vue';
 
 export default {
   extends: AnalyzeBaseVue,
-  components: {
-  },
-  props: {
-    
-  },
   data() {
     return {
       cards: [
@@ -18,15 +13,7 @@ export default {
         }
       ]
     };
-  },
-  computed: {
-    
-  },
-  watch: {
-  },
-  methods: {
-
-  },
+  }
 };
 </script>
 
@@ -35,8 +22,8 @@ extends AnalyzeBase.pug
 
 block content
  v-container.pa-2(fluid)
-  v-row
-    v-col(v-for="card in cards", :key="card.path", cols="6")
+  v-layout(row)
+    v-flex(v-for="card in cards", :key="card.path" md6)
       v-card
         v-card-title.fill-height.align-end(v-text="card.name")
         v-card-text(v-text="card.description")
