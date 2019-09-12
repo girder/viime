@@ -10,6 +10,7 @@ import pandas
 from webargs.flaskparser import use_kwargs
 
 from metabulo import opencpu
+from metabulo.analyzes import wilcoxon_test
 from metabulo.cache import csv_file_cache
 from metabulo.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
@@ -17,7 +18,6 @@ from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     TableColumn, TableColumnSchema, TableRow, \
     TableRowSchema, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
-from metabulo.analyzes import wilcoxon_test
 from metabulo.normalization import validate_normalization_method
 from metabulo.plot import pca
 from metabulo.scaling import SCALING_METHODS

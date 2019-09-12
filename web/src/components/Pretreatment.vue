@@ -42,6 +42,9 @@ export default {
         });
       }
     },
+    isSubRoute(start) {
+      return this.dataset && this.$router.currentRoute.path.startsWith(`/pretreatment/${this.dataset.id}/${start}`);
+    },
   },
 };
 </script>
@@ -97,20 +100,19 @@ v-layout.pretreatment-component(row, fill-height)
                 | Transform Table
 
             v-list-group.ml-2(
-              :append-icon="null",
-              :value="$router.currentRoute.path.startsWith(`/pretreatment/${dataset.id}/analyze/`)",
-              :disabled="!valid(dataset)",
-              @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze` })")
+                :append-icon="null",
+                :value="isSubRoute(`analyze/`)",
+                :disabled="!valid(dataset)",
+                @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze` })")
               template(v-slot:activator)
                 v-list-tile(
-                   :class="{ active: $router.currentRoute.name === 'Analyze Data' }",
-                  )
+                   :class="{ active: $router.currentRoute.name === 'Analyze Data' }")
                   v-list-tile-title.pl-2
                     v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
                     | Analyze Table
               v-list-tile.ml-2(
-                :class="{ active: $router.currentRoute.name === 'Wilcoxon Test' }",
-                @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/wilcoxon` })")
+                  :class="{ active: $router.currentRoute.name === 'Wilcoxon Test' }",
+                  @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/wilcoxon` })")
                 v-list-tile-title.pl-2
                   v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
                   | Wilcoxon Test

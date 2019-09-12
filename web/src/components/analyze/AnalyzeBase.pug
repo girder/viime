@@ -1,6 +1,5 @@
 v-layout.analyze-component(row, fill-height)
   block toolbar
-  
 
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
@@ -16,4 +15,3 @@ v-layout.analyze-component(row, fill-height)
 
   v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-else-if="dataset && ready && valid && results && analyzesState === 'ready'")
     block content
-  

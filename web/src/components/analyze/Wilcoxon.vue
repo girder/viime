@@ -83,7 +83,7 @@ block toolbar
         v-card-actions
           v-radio-group.my-0(:value="options.zero_method",
               hide-details,
-              @change="changeOption({zero_method: $event})",)
+              @change="changeOption({zero_method: $event})")
             v-radio(v-for="m in zero_methods", :label="m.label",
                 :value="m.value", :key="`zero${m.value}`")
       v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
@@ -92,7 +92,7 @@ block toolbar
         v-card-actions
           v-radio-group.my-0(:value="options.alternative",
               hide-details,
-              @change="changeOption({alternative: $event})",)
+              @change="changeOption({alternative: $event})")
             v-radio(v-for="m in alternatives", :label="m.label",
                 :value="m.value", :key="`alt${m.value}`")
       v-btn(v-if="analyzesState === 'initial'", @click="compute()")
@@ -108,9 +108,8 @@ block content
       tr(v-for="(x,i) in indices", :key="i")
         th(v-text="x", :title="x")
         td(v-for="(cell,j) in getRow(x)",
-          :key="j",
-          :style="{backgroundColor: cell.color}", :title="cell.title")
-
+            :key="j",
+            :style="{backgroundColor: cell.color}", :title="cell.title")
 </template>
 
 <style scoped lang="scss">
