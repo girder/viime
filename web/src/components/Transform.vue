@@ -165,7 +165,7 @@ v-layout.transform-component(row, fill-height)
       scree-plot-tile(
           :width="600"
           :height="600"
-          :eigenvalues="[0.6, 0.2, 0.1, 0.05]")
+          :eigenvalues="pcaData.sdev")
   v-container.overflow-auto(v-else-if="ready", fill-height)
     v-layout(column)
       .display-2 Error: Cannot show transform table
