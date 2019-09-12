@@ -40,7 +40,8 @@ body {
     }
   }
 
-  .overflow-auto {
+  .grow-overflow {
+    flex: 1 1 0;
     overflow: auto;
     max-height: 100%;
   }
