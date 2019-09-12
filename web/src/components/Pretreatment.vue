@@ -109,11 +109,11 @@ v-layout.pretreatment-component(row, fill-height)
                     v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
                     | Analyze Table
               v-list-tile.ml-2(
-                :class="{ active: $router.currentRoute.name === 'Wilcox Test' }",
-                @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/wilcox` })")
+                :class="{ active: $router.currentRoute.name === 'Wilcoxon Test' }",
+                @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/wilcoxon` })")
                 v-list-tile-title.pl-2
                   v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
-                  | Wilcox Test
+                  | Wilcoxon Test
 
   keep-alive
     router-view

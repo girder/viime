@@ -7,9 +7,9 @@ export default {
     return {
       cards: [
         {
-          name: 'Wilcox',
-          description: 'TODO fancy description',
-          path: 'wilcox'
+          name: 'Wilcoxon signed-rank test',
+          description: `The Wilcoxon signed-rank test tests the null hypothesis that two related paired samples come from the same distribution. In particular, it tests whether the distribution of the differences x - y is symmetric about zero. It is a non-parametric version of the paired T-test.`,
+          path: 'wilcoxon'
         }
       ]
     };
@@ -23,7 +23,7 @@ extends AnalyzeBase.pug
 block content
  v-container.pa-2(fluid)
   v-layout(row)
-    v-flex(v-for="card in cards", :key="card.path" md6)
+    v-flex(v-for="card in cards", :key="card.path" md3)
       v-card
         v-card-title.fill-height.align-end(v-text="card.name")
         v-card-text(v-text="card.description")
