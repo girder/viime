@@ -27,6 +27,13 @@ export default {
       this.compute();
     }
   },
+  watch: {
+    ready() {
+      if (this.analysisState === 'initial') {
+        this.compute();
+      }
+    }
+  },
   methods: {
     changeOption(changes) {
       return this.$store.dispatch(CHANGE_ANALYSIS_OPTIONS, {

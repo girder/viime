@@ -6,12 +6,7 @@ import { wilcoxon_zero_methods, wilcoxon_alternatives } from './constants';
 import AnalyzeBaseVue from './AnalyzeBase.vue';
 
 export default {
-  components: {
-  },
   extends: AnalyzeBaseVue,
-  props: {
-
-  },
   data() {
     return {
       key: 'wilcoxon',
@@ -42,8 +37,6 @@ export default {
       });
       return r;
     },
-  },
-  watch: {
   },
   methods: {
     computeKey(i, j) {
