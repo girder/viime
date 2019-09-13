@@ -1,17 +1,9 @@
 <script>
-import { scaleSequential } from 'd3-scale';
-import { interpolateGreys } from 'd3-scale-chromatic';
-import { format } from 'd3-format';
 import { wilcoxon_zero_methods, wilcoxon_alternatives } from './constants';
 import AnalyzeBaseVue from './AnalyzeBase.vue';
 
 export default {
-  components: {
-  },
   extends: AnalyzeBaseVue,
-  props: {
-
-  },
   data() {
     return {
       key: 'anova',
@@ -20,9 +12,9 @@ export default {
     };
   },
   computed: {
-
-  },
-  watch: {
+    ddd() {
+      return JSON.stringify(this.results ? this.results.data : null);
+    },
   },
   methods: {
 
@@ -34,7 +26,7 @@ export default {
 extends AnalyzeBase.pug
 
 block content
-  TODO
+  | Test {{ ddd }}
 </template>
 
 <style scoped lang="scss">
