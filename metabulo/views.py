@@ -4,13 +4,13 @@ import json
 import math
 from uuid import uuid4
 
-from flask import Blueprint, current_app, jsonify, request, Response, send_file
+from flask import Blueprint, current_app, jsonify, request, Response, send_file, abort
 from marshmallow import fields, validate, ValidationError
 import pandas
 from webargs.flaskparser import use_kwargs
 
 from metabulo import opencpu
-from metabulo.analyses import wilcoxon_test
+from metabulo.analyses import anova_test, wilcoxon_test
 from metabulo.cache import csv_file_cache
 from metabulo.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
@@ -487,5 +487,23 @@ def get_wilcoxon_test(validated_table, zero_method, alternative):
     table = validated_table.measurements
 
     data = wilcoxon_test(table, zero_method, alternative)
+
+    return jsonify(data), 200
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/anova', methods=['GET'])
+@use_kwargs({
+    'group_column': fields.Str()
+})
+@load_validated_csv_file
+def get_anova_test(validated_table, group_column=None):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+
+    group = groups.iloc[:, 0] if group_column is None else groups.loc[:, group_column]
+    if group is None:
+        abort(404, 'invalid group column')
+
+    data = anova_test(measurements, group)
 
     return jsonify(data), 200

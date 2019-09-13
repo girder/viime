@@ -4,6 +4,8 @@ from typing import Any, Dict, Optional
 import pandas as pd
 from scipy.stats import wilcoxon
 
+from .opencpu import opencpu_request
+
 
 def wilcoxon_test(measurements: pd.DataFrame, zero_method: Optional[str] = None,
                   alternative: Optional[str] = None) -> Dict[str, Any]:
@@ -26,4 +28,22 @@ def wilcoxon_test(measurements: pd.DataFrame, zero_method: Optional[str] = None,
     return {
         'indices': indices,
         'data': data
+    }
+
+
+def anova_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, Any]:
+    files = {
+        'measurements': measurements.to_csv().encode(),
+        'groups': groups.to_csv(header=True).encode()
+    }
+    params = {
+
+    }
+
+    print(groups)
+
+    # data = opencpu_request('anova_turkey_adjustment', files, params)
+
+    return {
+
     }
