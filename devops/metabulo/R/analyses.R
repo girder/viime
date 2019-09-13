@@ -4,7 +4,7 @@
 
 anova_turkey_adjustment <- function(measurements, groups) {
   Metab = read.csv(measurements, row.names=1)
-  groups = read.csv(groups)
+  groups = read.csv(groups, row.names=1)
 
   # take the first column
   Group = as.factor(groups[, 1])
