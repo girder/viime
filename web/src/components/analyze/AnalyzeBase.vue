@@ -22,16 +22,16 @@ export default {
     results() { return this.$store.getters.analysisData(this.id, this.key); },
     analysisState() { return this.$store.getters.analysisState(this.id, this.key); },
   },
-  created() {
-    if (this.analysisState === 'initial') {
-      this.compute();
-    }
-  },
   watch: {
     ready() {
       if (this.analysisState === 'initial') {
         this.compute();
       }
+    },
+  },
+  created() {
+    if (this.analysisState === 'initial') {
+      this.compute();
     }
   },
   methods: {
