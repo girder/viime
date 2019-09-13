@@ -1,4 +1,5 @@
 import Wilcoxon from './Wilcoxon.vue';
+import Anova from './Anova.vue';
 import { wilcoxon_zero_methods, wilcoxon_alternatives } from './constants';
 
 export default [
@@ -12,5 +13,16 @@ export default [
       zero_method: wilcoxon_zero_methods[0].value,
       alternative: wilcoxon_alternatives[0].value,
     },
+    help: 'https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wilcoxon.html',
+  },
+  {
+    path: 'anova', // same as key
+    name: 'ANOVA',
+    shortName: 'ANOVA',
+    description: 'The one-way ANOVA tests the null hypothesis that two or more groups have the same population mean. The test is applied to samples from two or more groups, possibly with differing sizes.',
+    component: Anova,
+    options: {
+    },
+    help: 'https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.f_oneway.html',
   },
 ];
