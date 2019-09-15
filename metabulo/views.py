@@ -51,27 +51,27 @@ def _serialize_csv_file(csv_file):
     return csv_file_schema.dump(csv_file)
 
 
+class JSONDictStr(fields.Dict):
+    def _deserialize(self, value, *args, **kwargs):
+        try:
+            value = json.loads(value)
+        except Exception:
+            pass
+        return super()._deserialize(value, *args, **kwargs)
+
+
 @csv_bp.route('/csv/upload', methods=['POST'])
-def upload_csv_file():
-    if 'file' not in request.files:
-        return jsonify('No file provided in request'), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify('No file selected'), 400
-
+@use_kwargs({
+    'file': fields.Field(location='files', validate=lambda f: f.content_type == 'text/csv'),
+    'meta': JSONDictStr(missing=dict)
+})
+def upload_csv_file(file, meta):
     csv_file = None
-    meta_string = request.form.get('meta', '{}')
-    try:
-        meta = json.loads(meta_string)
-    except Exception:
-        raise ValidationError(
-            'Expected a json encoded string for metadata', field_name='meta', data=meta_string)
 
     try:
         csv_file = csv_file_schema.load({
             'name': file.filename,
-            'table': file.read().decode(),
+            'table': file.read().decode(errors='replace'),
             'meta': meta
         })
 
