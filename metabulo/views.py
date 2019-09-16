@@ -2,6 +2,7 @@ from functools import wraps
 from io import BytesIO
 import json
 import math
+from typing import Optional
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
@@ -497,7 +498,7 @@ def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable,
     'group_column': fields.Str()
 })
 @load_validated_csv_file
-def get_anova_test(validated_table, group_column=None):
+def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Optional[str] = None):
     measurements = validated_table.measurements
     groups = validated_table.groups
 
