@@ -3,13 +3,12 @@ import { scaleSequential } from 'd3-scale';
 import { interpolateGreys } from 'd3-scale-chromatic';
 import { format } from 'd3-format';
 import { wilcoxon_zero_methods, wilcoxon_alternatives } from './constants';
-import AnalyzeBaseVue from './AnalyzeBase.vue';
+import { analyzeMixin } from './mixins';
 
 export default {
-  extends: AnalyzeBaseVue,
+  mixins: [analyzeMixin('wilcoxon')],
   data() {
     return {
-      key: 'wilcoxon',
       zero_methods: wilcoxon_zero_methods,
       alternatives: wilcoxon_alternatives,
     };
@@ -65,31 +64,15 @@ export default {
 </script>
 
 <template lang="pug">
-extends AnalyzeBase.pug
+analyze-wrapper(:id="id", :name="name")
+  template(v-slot:toolbar)
+    toolbar-option(title="Zero Methods", :value="options.zero_method",
+        :options="zero_methods",
+        @change="changeOption({zero_method: $event})")
+    toolbar-option(title="Alternatives", :value="options.alternative",
+        :options="alternatives",
+        @change="changeOption({alternative: $event})")
 
-block toolbar
-  v-navigation-drawer.primary.darken-3(permanent, style="width: 200px; min-width: 200px;")
-    v-layout(column, fill-height, v-if="dataset && ready")
-      v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-        v-toolbar-title Zero Methods
-      v-card.mx-3(flat)
-        v-card-actions
-          v-radio-group.my-0(:value="options.zero_method",
-              hide-details,
-              @change="changeOption({zero_method: $event})")
-            v-radio(v-for="m in zero_methods", :label="m.label",
-                :value="m.value", :key="`zero${m.value}`")
-      v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-        v-toolbar-title Alternatives
-      v-card.mx-3(flat)
-        v-card-actions
-          v-radio-group.my-0(:value="options.alternative",
-              hide-details,
-              @change="changeOption({alternative: $event})")
-            v-radio(v-for="m in alternatives", :label="m.label",
-                :value="m.value", :key="`alt${m.value}`")
-
-block content
   table
     thead
       tr
