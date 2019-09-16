@@ -1,13 +1,12 @@
 <script>
 import { format } from 'd3-format';
 import { wilcoxon_zero_methods, wilcoxon_alternatives } from './constants';
-import AnalyzeBaseVue from './AnalyzeBase.vue';
+import { analyzeMixin } from './mixins';
 
 export default {
-  extends: AnalyzeBaseVue,
+  mixins: [analyzeMixin('anova')],
   data() {
     return {
-      key: 'anova',
       zero_methods: wilcoxon_zero_methods,
       alternatives: wilcoxon_alternatives,
       format: format('.2e'),
@@ -44,16 +43,11 @@ export default {
       ];
     },
   },
-  methods: {
-
-  },
 };
 </script>
 
 <template lang="pug">
-extends AnalyzeBase.pug
-
-block content
+analyze-wrapper(:id="id", :name="name", toolbarHidden)
   v-data-table.elevation-1(:headers="headers", :items="items", disable-initial-sort,
       item-key="Metabolite")
     template(v-slot:items="props")
@@ -63,7 +57,3 @@ block content
       td.text-xs-right {{ format(props.item.Residuals) }}
       td.text-xs-right(v-for="p in pairs", :key="p") {{ format(props.item[p]) }}
 </template>
-
-<style scoped lang="scss">
-
-</style>
