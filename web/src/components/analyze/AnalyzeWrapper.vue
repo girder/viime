@@ -1,6 +1,7 @@
 <script>
+import Vue from 'vue';
 
-export default {
+export default Vue.extend({
   props: {
     id: {
       type: String,
@@ -21,7 +22,7 @@ export default {
     loading() { return this.$store.state.loading; },
     analysisState() { return this.$store.getters.analysisState(this.id, this.name); },
   },
-};
+});
 </script>
 
 <template lang="pug">

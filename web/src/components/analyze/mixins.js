@@ -26,13 +26,6 @@ export function analyzeMixin(name) {
       results() { return this.$store.getters.analysisData(this.id, name); },
       analysisState() { return this.$store.getters.analysisState(this.id, name); },
     },
-    created() {
-      if (this.analysisState === 'initial') {
-        this.compute();
-      }
-    },
-    activated() { this.active = true; },
-    deactivated() { this.active = false; },
     watch: {
       ready() {
         this.compute();
@@ -43,6 +36,13 @@ export function analyzeMixin(name) {
         }
       },
     },
+    created() {
+      if (this.analysisState === 'initial') {
+        this.compute();
+      }
+    },
+    activated() { this.active = true; },
+    deactivated() { this.active = false; },
     methods: {
       changeOption(changes) {
         return this.$store.dispatch(CHANGE_ANALYSIS_OPTIONS, {

@@ -1,5 +1,5 @@
 from itertools import combinations
-from typing import Any, Dict, Optional
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 from scipy.stats import wilcoxon
@@ -8,7 +8,7 @@ from .opencpu import opencpu_request
 
 
 def wilcoxon_test(measurements: pd.DataFrame, zero_method: Optional[str] = None,
-                  alternative: Optional[str] = None) -> Dict[str, Any]:
+                  alternative: Optional[str] = None) -> Dict[str, Union[List[str], List[Dict]]]:
 
     if zero_method is None:
         zero_method = 'wilcox'

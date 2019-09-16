@@ -1,7 +1,8 @@
 <script>
+import Vue from 'vue';
 import analyses from '.';
 
-export default {
+export default Vue.extend({
   props: {
     id: {
       type: String,
@@ -13,7 +14,7 @@ export default {
       analyses,
     };
   },
-};
+});
 </script>
 
 <template lang="pug">
