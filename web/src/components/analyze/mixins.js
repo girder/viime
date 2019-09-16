@@ -1,9 +1,10 @@
+import Vue from 'vue';
 import { CHANGE_ANALYSIS_OPTIONS } from '../../store/actions.type';
 import AnalyzeWrapper from './AnalyzeWrapper.vue';
 import ToolbarOption from '../utils/ToolbarOption.vue';
 
 export function analyzeMixin(name) {
-  return {
+  return Vue.extend({
     components: {
       AnalyzeWrapper,
       ToolbarOption,
@@ -26,13 +27,6 @@ export function analyzeMixin(name) {
       results() { return this.$store.getters.analysisData(this.id, name); },
       analysisState() { return this.$store.getters.analysisState(this.id, name); },
     },
-    created() {
-      if (this.analysisState === 'initial') {
-        this.compute();
-      }
-    },
-    activated() { this.active = true; },
-    deactivated() { this.active = false; },
     watch: {
       ready() {
         this.compute();
@@ -43,6 +37,13 @@ export function analyzeMixin(name) {
         }
       },
     },
+    created() {
+      if (this.analysisState === 'initial') {
+        this.compute();
+      }
+    },
+    activated() { this.active = true; },
+    deactivated() { this.active = false; },
     methods: {
       changeOption(changes) {
         return this.$store.dispatch(CHANGE_ANALYSIS_OPTIONS, {
@@ -58,5 +59,5 @@ export function analyzeMixin(name) {
         }
       },
     },
-  };
+  });
 }
