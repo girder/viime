@@ -23,6 +23,10 @@ export default {
       required: true,
       validator: d => d === null || d instanceof Object,
     },
+    pcCoords: {
+      required: true,
+      type: Array,
+    },
     columns: {
       required: true,
       type: Array,
@@ -56,6 +60,7 @@ vis-tile(title="PCA Score Plot")
       :width="width",
       :height="height",
       :raw-points="rawPoints",
+      :pc-coords="pcCoords",
       :columns="columns",
       :pc-x="pcX",
       :pc-y="pcY",

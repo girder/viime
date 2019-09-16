@@ -101,6 +101,13 @@ export default {
       validator: prop => !prop
           || (typeof prop === 'object' && ['x', 'labels'].every(key => key in prop)),
     },
+    pcCoords: {
+      required: true,
+      type: Array,
+      validator: prop => {
+        return prop.every(coord => coord.every(Number.isFinite))
+      },
+    },
     columns: {
       required: true,
       type: Array,
@@ -132,19 +139,15 @@ export default {
 
     xyPoints() {
       const {
-        rawPoints,
+        pcCoords,
         pcX,
         pcY,
       } = this;
 
-      if (rawPoints) {
-        return rawPoints.x.map(p => ({
-          x: p[pcX - 1],
-          y: p[pcY - 1],
-        }));
-      }
-
-      return null;
+      return pcCoords.map(p => ({
+        x: p[pcX - 1],
+        y: p[pcY - 1],
+      }));
     },
     rowLabels() {
       return this.rawPoints.rows;
