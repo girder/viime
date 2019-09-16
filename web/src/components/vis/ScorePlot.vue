@@ -91,16 +91,6 @@ export default {
       type: Boolean,
       default: true,
     },
-    /* {{
-     *   x: Array<Array<Number>>,
-     *   labels: Object<string, Array<string>>
-     * }}
-     */
-    rawPoints: {
-      required: true,
-      validator: prop => !prop
-          || (typeof prop === 'object' && ['x', 'labels'].every(key => key in prop)),
-    },
     pcCoords: {
       required: true,
       type: Array,
@@ -181,18 +171,6 @@ export default {
 
     showEllipses() {
       this.update();
-    },
-
-    rawPoints(newval) {
-      if (newval) {
-        if (!this.axisPlotInitialized) {
-          const { xyPoints } = this;
-          this.setRanges(xyPoints);
-          const svg = select(this.$refs.svg);
-          this.axisPlot(svg);
-        }
-        this.update();
-      }
     },
   },
   mounted() {

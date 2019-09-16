@@ -19,10 +19,6 @@ export default {
       type: Number,
       validator: Number.isInteger,
     },
-    rawPoints: {
-      required: true,
-      validator: d => d === null || d instanceof Object,
-    },
     pcCoords: {
       required: true,
       type: Array,
@@ -71,7 +67,6 @@ vis-tile(title="PCA Score Plot")
   score-plot(
       :width="width",
       :height="height",
-      :raw-points="rawPoints",
       :pc-coords="pcCoords",
       :row-labels="rowLabels",
       :group-labels="groupLabels",
