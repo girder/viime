@@ -54,9 +54,9 @@ export default {
 extends AnalyzeBase.pug
 
 block content
-  v-data-table.elevation-1(:headers='headers', :items='items', disable-initial-sort,
-      item-key='Metabolite')
-    template(v-slot:items='props')
+  v-data-table.elevation-1(:headers="headers", :items="items", disable-initial-sort,
+      item-key="Metabolite")
+    template(v-slot:items="props")
       td {{ props.item.Metabolite }}
       td.text-xs-right {{ format(props.item.Intercept) }}
       td.text-xs-right {{ format(props.item.Group) }}
