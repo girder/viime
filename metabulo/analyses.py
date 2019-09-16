@@ -43,5 +43,6 @@ def anova_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, Any]:
 
     return {
         'groups': list(set(groups)),
+        'pairs': list(data)[4:],
         'data': data.replace({pd.np.nan: None}).to_dict(orient='records')
     }

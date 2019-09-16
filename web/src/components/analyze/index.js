@@ -19,10 +19,9 @@ export default [
     path: 'anova', // same as key
     name: 'ANOVA',
     shortName: 'ANOVA',
-    description: 'The one-way ANOVA tests the null hypothesis that two or more groups have the same population mean. The test is applied to samples from two or more groups, possibly with differing sizes.',
+    description: 'TODO R custom code',
     component: Anova,
     options: {
     },
-    help: 'https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.f_oneway.html',
   },
 ];
