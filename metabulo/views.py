@@ -4,7 +4,7 @@ import json
 import math
 from uuid import uuid4
 
-from flask import abort, Blueprint, current_app, jsonify, request, Response, send_file
+from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
 import pandas
 from webargs.flaskparser import use_kwargs
@@ -502,7 +502,8 @@ def get_anova_test(validated_table, group_column=None):
 
     group = groups.iloc[:, 0] if group_column is None else groups.loc[:, group_column]
     if group is None:
-        abort(404, 'invalid group column')
+        raise ValidationError(
+            'invalid group column', field_name='group_column', data=group_column)
 
     data = anova_test(measurements, group)
 

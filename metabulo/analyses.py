@@ -37,7 +37,7 @@ def anova_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, Any]:
         'groups': groups.to_csv(header=True).encode()
     }
 
-    data = opencpu_request('anova_turkey_adjustment', files, {})
+    data = opencpu_request('anova_tukey_adjustment', files, {})
 
     data = data.rename(columns={'(Intercept)': 'Intercept'})
 

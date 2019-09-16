@@ -2,7 +2,7 @@
 #'
 #' Uses MetaboAnalystR's PlotPCAPairSummary method
 
-anova_turkey_adjustment <- function(measurements, groups) {
+anova_tukey_adjustment <- function(measurements, groups) {
   Metab = read.csv(measurements, row.names=1)
   groups = read.csv(groups, row.names=1)
 
