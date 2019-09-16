@@ -3,13 +3,14 @@ from io import BytesIO
 import json
 import math
 from pathlib import PurePath
-from typing import Dict
+from typing import Any, Dict
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
 import pandas
 from webargs.flaskparser import use_kwargs
+from werkzeug import FileStorage
 
 from metabulo import opencpu
 from metabulo.cache import csv_file_cache
@@ -94,9 +95,9 @@ def upload_csv_file():
                          validate=lambda x: x and x.filename != ''),
     'meta': fields.Str(missing='{}')
 })
-def upload_excel_file(file, meta):
+def upload_excel_file(file: FileStorage, meta: str):
     try:
-        meta = json.loads(meta)
+        meta_obj = json.loads(meta)  # Dict[str, Any]
     except Exception:
         raise ValidationError(
             'Expected a json encoded string for metadata', field_name='meta', data=meta)
@@ -113,7 +114,7 @@ def upload_excel_file(file, meta):
             db_file = csv_file_schema.load({
                 'name': name.with_suffix('.csv').name,
                 'table': data.to_csv(index=False),
-                'meta': meta
+                'meta': meta_obj
             })
 
             db_files.append(db_file)
