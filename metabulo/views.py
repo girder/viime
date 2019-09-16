@@ -86,6 +86,51 @@ def upload_csv_file():
         raise
 
 
+@csv_bp.route('/excel/upload', methods=['POST'])
+@use_kwargs({
+    'file': fields.Field(required=True, location='files',
+                         validate=lambda x: x and x.filename != ''),
+    'meta': fields.Str(missing='{}')
+})
+def upload_excel_file(file, meta):
+    try:
+        meta = json.loads(meta)
+    except Exception:
+        raise ValidationError(
+            'Expected a json encoded string for metadata', field_name='meta', data=meta)
+
+    excel_files = pandas.read_excel(file, sheet_name=None)
+
+    try:
+        db_files = []
+
+        def push_file(name, data):
+            db_file = csv_file_schema.load({
+                'name': name,
+                'table': data.to_csv(),
+                'meta': meta
+            })
+            db_files.append(db_file)
+            db.session.add(db_file)
+
+        if len(excel_files) == 1:
+            # single file case, simple name
+            data = next(iter(excel_files.values()))
+            push_file(file.filename, data)
+        else:
+            for sheet, data in excel_files:
+                push_file('%s-%s' % (file.filename, sheet), data)
+        db.session.commit()
+
+        return jsonify([_serialize_csv_file(f) for f in db_files]), 201
+    except Exception:
+        for f in db_files:
+            if f.uri.is_file():
+                f.uri.unlink()
+        db.session.rollback()
+        raise
+
+
 @csv_bp.route('/csv/merge', methods=['POST'])
 @use_kwargs({
     'csv_file_ids': fields.List(
