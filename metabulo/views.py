@@ -478,9 +478,9 @@ def get_pca_overview(validated_table):
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/wilcoxon', methods=['GET'])
 @use_kwargs({
     'zero_method': fields.Str(missing='wilcox',
-                              validate=lambda x: not x or x in ['wilcox', 'pratt', 'zsplit']),
+                              validate=validate.OneOf(['wilcox', 'pratt', 'zsplit'])),
     'alternative': fields.Str(missing='two-sided',
-                              validate=lambda x: not x or x in ['two-sided', 'greater', 'less'])
+                              validate=validate.OneOf(['two-sided', 'greater', 'less']))
 })
 @load_validated_csv_file
 def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable,
