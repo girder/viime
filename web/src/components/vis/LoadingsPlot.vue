@@ -12,6 +12,7 @@ div
         line.vert
       g.plot
   .tooltip(ref="tooltip")
+  span(style="display: none") {{ update }}
 </template>
 
 <style scoped lang="scss">
@@ -88,36 +89,7 @@ export default {
 
       return column.column_header;
     },
-  },
-  watch: {
-    points(newval) {
-      if (newval) {
-        this.update();
-      }
-    },
 
-    pcX() {
-      this.update();
-    },
-
-    pcY() {
-      this.update();
-    },
-
-    showCrosshairs() {
-      this.update();
-    },
-  },
-  mounted() {
-    const svg = select(this.$refs.svg);
-    this.axisPlot(svg);
-    this.setXLabel('PC1 correlation');
-    this.setYLabel('PC2 correlation');
-    if (this.points) {
-      this.update();
-    }
-  },
-  methods: {
     update() {
       // Grab the input props.
       const {
@@ -204,7 +176,16 @@ export default {
         .attr('r', radius)
         .attr('cx', d => this.scaleX(d.cor[pcX - 1]))
         .attr('cy', d => this.scaleY(d.cor[pcY - 1]));
+
+      return '';
     },
+  },
+
+  mounted() {
+    const svg = select(this.$refs.svg);
+    this.axisPlot(svg);
+    this.setXLabel('PC1 correlation');
+    this.setYLabel('PC2 correlation');
   },
 };
 </script>
