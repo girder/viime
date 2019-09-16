@@ -10,6 +10,7 @@ div
       g.ellipses
       g.plot
   .tooltip(ref="tooltip")
+  span(style="display: none") {{ update }}
 </template>
 
 <style scoped lang="scss">
@@ -178,49 +179,7 @@ export default {
         && Object.keys(groupLabels).length > 0
         && eigenvalues.length > 0;
     },
-  },
-  watch: {
-    pcX() {
-      this.update();
-    },
 
-    pcY() {
-      this.update();
-    },
-
-    showEllipses() {
-      this.update();
-    },
-
-    pcCoords() {
-      this.update();
-    },
-
-    rowLabels() {
-      this.update();
-    },
-
-    groupLabels() {
-      this.update();
-    },
-
-    eigenvalues() {
-      this.update();
-    },
-  },
-  mounted() {
-    const {
-      xyPoints,
-      valid,
-    } = this;
-
-    if (valid && xyPoints) {
-      const svg = select(this.$refs.svg);
-      this.axisPlot(svg);
-      this.update();
-    }
-  },
-  methods: {
     update() {
       // Grab the input props.
       const {
@@ -412,6 +371,14 @@ export default {
           .style('opacity', 0.0)
           .remove();
       }
+
+      return '';
+    },
+  },
+  methods: {
+    setRanges(xyPoints) {
+      this.xrange = minmax(xyPoints.map(p => p.x), 0.1);
+      this.yrange = minmax(xyPoints.map(p => p.y), 0.1);
     },
   },
 };
