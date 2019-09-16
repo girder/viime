@@ -186,16 +186,16 @@ const mutations = {
     }
   },
 
-  [SET_ANALYSIS_OPTIONS](state, { dataset_id, key, options }) {
-    Vue.set(state.analyses[dataset_id][key], 'options', options);
+  [SET_ANALYSIS_OPTIONS](state, { dataset_id, name, options }) {
+    Vue.set(state.analyses[dataset_id][name], 'options', options);
   },
 
-  [SET_ANALYSIS_DATA](state, { dataset_id, key, data }) {
-    Vue.set(state.analyses[dataset_id][key], 'data', data);
+  [SET_ANALYSIS_DATA](state, { dataset_id, name, data }) {
+    Vue.set(state.analyses[dataset_id][name], 'data', data);
   },
 
-  [SET_ANALYSIS_STATE](state, { dataset_id, key, state: status }) {
-    Vue.set(state.analyses[dataset_id][key], 'state', status);
+  [SET_ANALYSIS_STATE](state, { dataset_id, name, state: status }) {
+    Vue.set(state.analyses[dataset_id][name], 'state', status);
   },
 
   [REFRESH_PLOT](state, { key, name, data }) {
@@ -339,23 +339,23 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [CHANGE_ANALYSIS_OPTIONS]({ state, commit }, { dataset_id, key, changes }) {
-    commit(SET_ANALYSIS_STATE, { dataset_id, key, state: 'computing' });
+  async [CHANGE_ANALYSIS_OPTIONS]({ state, commit }, { dataset_id, name, changes }) {
+    commit(SET_ANALYSIS_STATE, { dataset_id, name, state: 'computing' });
     try {
       // create full options
       const options = {
-        ...state.analyses[dataset_id][key].options,
+        ...state.analyses[dataset_id][name].options,
         ...changes,
       };
-      commit(SET_ANALYSIS_OPTIONS, { dataset_id, key, options });
-      const { data } = await CSVService.getAnalysis(dataset_id, key, options);
-      commit(SET_ANALYSIS_DATA, { dataset_id, key, data });
+      commit(SET_ANALYSIS_OPTIONS, { dataset_id, name, options });
+      const { data } = await CSVService.getAnalysis(dataset_id, name, options);
+      commit(SET_ANALYSIS_DATA, { dataset_id, name, data });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
-      commit(SET_ANALYSIS_STATE, { dataset_id, key, state: 'error' });
+      commit(SET_ANALYSIS_STATE, { dataset_id, name, state: 'error' });
       throw err;
     }
-    commit(SET_ANALYSIS_STATE, { dataset_id, key, state: 'ready' });
+    commit(SET_ANALYSIS_STATE, { dataset_id, name, state: 'ready' });
   },
 };
 
