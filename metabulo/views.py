@@ -3,7 +3,7 @@ from io import BytesIO
 import json
 import math
 from pathlib import PurePath
-from typing import Any, Dict
+from typing import Dict
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
@@ -97,7 +97,7 @@ def upload_csv_file():
 })
 def upload_excel_file(file: FileStorage, meta: str):
     try:
-        meta_obj = json.loads(meta)  # Dict[str, Any]
+        meta_obj = json.loads(meta)
     except Exception:
         raise ValidationError(
             'Expected a json encoded string for metadata', field_name='meta', data=meta)
