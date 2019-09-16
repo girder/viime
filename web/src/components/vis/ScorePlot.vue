@@ -113,6 +113,11 @@ export default {
       type: Array,
       validator: prop => prop.every(val => typeof val === 'string'),
     },
+    groupLabels: {
+      required: true,
+      type: Object,
+      validator: prop => Object.values(prop).every(labels => labels.every(val => typeof val === 'string')),
+    },
     eigenvalues: {
       required: true,
       type: Array,
@@ -216,6 +221,7 @@ export default {
         eigenvalues,
         xyPoints,
         group,
+        groupLabels,
         xlabel,
         ylabel,
         pcX,
@@ -254,7 +260,7 @@ export default {
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
-          .style('stroke', (d, i) => (group ? cmap(rawPoints.labels[group][i]) : null))
+          .style('stroke', (d, i) => (group ? cmap(groupLabels[group][i]) : null))
           .style('fill-opacity', 0.001)
           .on('mouseover', function mouseover(d, i) {
             select(this)
@@ -288,7 +294,7 @@ export default {
       // Decompose the data into its label categories.
       const streams = {};
       xyPoints.forEach((p, i) => {
-        const category = rawPoints.labels[group][i];
+        const category = groupLabels[group][i];
         if (!streams[category]) {
           streams[category] = [];
         }
