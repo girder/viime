@@ -15,6 +15,8 @@ div
 </template>
 
 <style scoped lang="scss">
+// bad smell: script, template, style
+// bad smell: multiple tooltips
 div.tooltip {
   position: fixed;
   text-align: center;
@@ -52,7 +54,7 @@ export default {
       required: true,
       validator: prop => !prop
           || (typeof prop === 'object'
-          && prop.every(val => ['col', 'cor'].every(key => key in val))),
+          && prop.every(val => ['col', 'cor'].every(key => key in val))), // bad smell prefer val.col != null && val.cor != null
     },
     pcX: {
       default: 1,
@@ -132,7 +134,7 @@ export default {
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
       const radius = 4;
-      const { duration } = this;
+      const { duration } = this; // bad smell why not put with the others?
 
       const crosshair = {
         color: 'gray',
@@ -141,7 +143,7 @@ export default {
       if (showCrosshairs) {
         svg.select('g.crosshairs')
           .select('line.horz')
-          .style('display', null)
+          .style('display', null) // why not just .style('display', showCrosshairs: null : 'none')
           .attr('x1', this.scaleX(0) - 10)
           .attr('x2', this.scaleX(0) + 10)
           .attr('y1', this.scaleY(0))

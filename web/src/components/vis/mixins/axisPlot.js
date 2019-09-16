@@ -3,7 +3,7 @@ import { axisBottom, axisLeft } from 'd3-axis';
 
 function labelAxis(label, msg, xFunc, yFunc, rot) {
   const text = label.select('text')
-    .html(`${msg}`);
+    .html(msg); // bad smell: prefer .text
   const bbox = text.node().getBBox();
   label.attr('transform', `translate(${xFunc(bbox)},${yFunc(bbox)}) rotate(${rot})`)
     .style('opacity', 1.0);
@@ -37,6 +37,7 @@ export const axisPlot = {
   },
   computed: {
     dwidth() {
+      // bad smell: unclear name: what about innerWidth?
       const { width, margin } = this;
       return width - margin.left - margin.right;
     },
@@ -83,7 +84,7 @@ export const axisPlot = {
       // Draw axes.
       const axes = master.select('g.axes');
 
-      if (axes.select('.x-axis').size() === 0) {
+      if (axes.select('.x-axis').size() === 0) { // bad smell: prefer .empty()
         axes.append('g')
           .classed('x-axis', true)
           .attr('transform', `translate(0,${dheight})`)
