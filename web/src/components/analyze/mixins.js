@@ -1,10 +1,9 @@
-import Vue from 'vue';
 import { CHANGE_ANALYSIS_OPTIONS } from '../../store/actions.type';
 import AnalyzeWrapper from './AnalyzeWrapper.vue';
 import ToolbarOption from '../utils/ToolbarOption.vue';
 
 export function analyzeMixin(name) {
-  return Vue.extend({
+  return {
     components: {
       AnalyzeWrapper,
       ToolbarOption,
@@ -59,5 +58,5 @@ export function analyzeMixin(name) {
         }
       },
     },
-  });
+  };
 }
