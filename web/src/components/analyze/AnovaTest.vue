@@ -1,9 +1,10 @@
 <script>
 import { format } from 'd3-format';
+import Vue from 'vue';
 import { wilcoxon_zero_methods, wilcoxon_alternatives } from './constants';
 import { analyzeMixin } from './mixins';
 
-export default {
+export default Vue.extend({
   mixins: [analyzeMixin('anova')],
   data() {
     return {
@@ -20,7 +21,6 @@ export default {
       return this.results ? this.results.pairs : [];
     },
     headers() {
-      // const groups = this.results ? this.results.groups : [];
       return [
         {
           text: 'Metabolite',
@@ -43,7 +43,7 @@ export default {
       ];
     },
   },
-};
+});
 </script>
 
 <template lang="pug">
