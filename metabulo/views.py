@@ -483,7 +483,8 @@ def get_pca_overview(validated_table):
                               validate=lambda x: not x or x in ['two-sided', 'greater', 'less'])
 })
 @load_validated_csv_file
-def get_wilcoxon_test(validated_table, zero_method, alternative):
+def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable,
+                      zero_method: str, alternative: str):
     table = validated_table.measurements
 
     data = wilcoxon_test(table, zero_method, alternative)
