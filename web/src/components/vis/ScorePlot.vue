@@ -228,6 +228,8 @@ export default {
         xyPoints,
         group,
         groupLabels,
+        rowLabels,
+        duration,
         xlabel,
         ylabel,
         pcX,
@@ -259,10 +261,6 @@ export default {
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
       const radius = 4;
-      const {
-        rowLabels,
-        duration,
-      } = this;
       svg.select('g.plot')
         .selectAll('circle')
         .data(xyPoints)
