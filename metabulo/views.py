@@ -2,6 +2,8 @@ from functools import wraps
 from io import BytesIO
 import json
 import math
+from pathlib import PurePath
+from typing import Dict
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
@@ -99,27 +101,31 @@ def upload_excel_file(file, meta):
         raise ValidationError(
             'Expected a json encoded string for metadata', field_name='meta', data=meta)
 
-    excel_files = pandas.read_excel(file, sheet_name=None)
+    excel_sheets = pandas.read_excel(file, sheet_name=None)  # type: Dict[str, pandas.DataFrame]
+    excel_sheets = {sheet: data for (sheet, data) in excel_sheets.items() if not data.empty}
+
+    basename = PurePath(file.filename).with_suffix('')
 
     try:
         db_files = []
 
-        def push_file(name, data):
+        def push_file(name: PurePath, data: pandas.DataFrame):
             db_file = csv_file_schema.load({
-                'name': name,
-                'table': data.to_csv(),
+                'name': name.with_suffix('.csv').name,
+                'table': data.to_csv(index=False),
                 'meta': meta
             })
+
             db_files.append(db_file)
             db.session.add(db_file)
 
-        if len(excel_files) == 1:
+        if len(excel_sheets) == 1:
             # single file case, simple name
-            data = next(iter(excel_files.values()))
-            push_file(file.filename, data)
+            data = next(iter(excel_sheets.values()))
+            push_file(basename, data)
         else:
-            for sheet, data in excel_files:
-                push_file('%s-%s' % (file.filename, sheet), data)
+            for sheet, data in excel_sheets.items():
+                push_file(basename.with_name('%s-%s' % (basename.name, sheet)), data)
         db.session.commit()
 
         return jsonify([_serialize_csv_file(f) for f in db_files]), 201
