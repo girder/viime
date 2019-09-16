@@ -32,11 +32,11 @@ v-layout(row, fill-height)
     v-layout(column, fill-height)
       slot(name="toolbar")
 
-  v-layout(v-if="!dataset || !ready", justify-center, align-center)
+  v-layout(v-if="!dataset || !ready", :key="layout", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
 
-  v-layout(v-else-if="analysisState === 'computing'", justify-center, align-center)
+  v-layout(v-else-if="analysisState === 'computing'", :key="layout", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Computing...
 
