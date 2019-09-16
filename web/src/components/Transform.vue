@@ -156,7 +156,7 @@ v-layout.transform-component(row, fill-height)
             :width="600",
             :height="600",
             :raw-points="pcaData",
-            :dataset="dataset")
+            :columns="dataset._source.columns")
         loadings-plot-tile(
             :width="600",
             :height="600",

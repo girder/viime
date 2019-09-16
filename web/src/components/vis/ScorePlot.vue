@@ -101,13 +101,10 @@ export default {
       validator: prop => !prop
           || (typeof prop === 'object' && ['x', 'labels'].every(key => key in prop)),
     },
-    dataset: {
+    columns: {
       required: true,
-      validator: prop => typeof prop === 'object'
-        && '_source' in prop
-        && typeof prop._source === 'object'
-        && 'columns' in prop._source
-        && Array.isArray(prop._source.columns),
+      type: Array,
+      validator: prop => prop.every(column => ['column_header', 'column_type'].every(key => Object.prototype.hasOwnProperty.call(column, key))),
     },
   },
   data() {
@@ -153,8 +150,8 @@ export default {
       return this.rawPoints.rows;
     },
     group() {
-      const { dataset } = this;
-      const column = dataset._source.columns.find(elem => elem.column_type === 'group');
+      const { columns } = this;
+      const column = columns.find(elem => elem.column_type === 'group');
 
       return column.column_header;
     },

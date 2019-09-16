@@ -23,9 +23,9 @@ export default {
       required: true,
       validator: d => d === null || d instanceof Object,
     },
-    dataset: {
+    columns: {
       required: true,
-      type: Object,
+      type: Array,
     },
   },
 
@@ -56,7 +56,7 @@ vis-tile(title="PCA Score Plot")
       :width="width",
       :height="height",
       :raw-points="rawPoints",
-      :dataset="dataset",
+      :columns="columns",
       :pc-x="pcX",
       :pc-y="pcY",
       :show-ellipses="showEllipses")
