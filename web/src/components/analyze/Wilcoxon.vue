@@ -2,10 +2,11 @@
 import { scaleSequential } from 'd3-scale';
 import { interpolateGreys } from 'd3-scale-chromatic';
 import { format } from 'd3-format';
+import Vue from 'vue';
 import { wilcoxon_zero_methods, wilcoxon_alternatives } from './constants';
 import { analyzeMixin } from './mixins';
 
-export default {
+export default Vue.extend({
   mixins: [analyzeMixin('wilcoxon')],
   data() {
     return {
@@ -60,7 +61,7 @@ export default {
       return this.indices.map(y => this.getCell(x, y));
     },
   },
-};
+});
 </script>
 
 <template lang="pug">
