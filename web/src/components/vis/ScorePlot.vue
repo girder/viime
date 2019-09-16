@@ -108,6 +108,11 @@ export default {
         return prop.every(coord => coord.every(Number.isFinite))
       },
     },
+    rowLabels: {
+      required: true,
+      type: Array,
+      validator: prop => prop.every(val => typeof val === 'string'),
+    },
     columns: {
       required: true,
       type: Array,
@@ -149,9 +154,7 @@ export default {
         y: p[pcY - 1],
       }));
     },
-    rowLabels() {
-      return this.rawPoints.rows;
-    },
+
     group() {
       const { columns } = this;
       const column = columns.find(elem => elem.column_type === 'group');
