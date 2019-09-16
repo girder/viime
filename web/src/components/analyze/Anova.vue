@@ -47,7 +47,7 @@ export default {
 </script>
 
 <template lang="pug">
-analyze-wrapper(:id="id", :name="name", toolbarHidden)
+analyze-wrapper(:id="id", :name="name", toolbar-hidden)
   v-data-table.elevation-1(:headers="headers", :items="items", disable-initial-sort,
       item-key="Metabolite")
     template(v-slot:items="props")
