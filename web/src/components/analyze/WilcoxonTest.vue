@@ -66,7 +66,7 @@ export default Vue.extend({
 
 <template lang="pug">
 analyze-wrapper(:id="id", :name="name")
-  template(v-slot:toolbar)
+  template(#toolbar)
     toolbar-option(title="Zero Methods", :value="options.zero_method",
         :options="zero_methods",
         @change="changeOption({zero_method: $event})")
@@ -74,26 +74,25 @@ analyze-wrapper(:id="id", :name="name")
         :options="alternatives",
         @change="changeOption({alternative: $event})")
 
-  table
+  table.heatmap
     thead
       tr
         th
-        th(v-for="(y,i) in indices", :key="i", v-text="y", :title="y")
+        th.cell(v-for="(y,i) in indices", :key="i", v-text="y", :title="y")
     tbody
       tr(v-for="(x,i) in indices", :key="i")
-        th(v-text="x", :title="x")
-        td(v-for="(cell,j) in getRow(x)",
+        th.heatmaplabel(v-text="x", :title="x")
+        td.cell(v-for="(cell,j) in getRow(x)",
             :key="j",
             :style="{backgroundColor: cell.color}", :title="cell.title")
 </template>
 
 <style scoped lang="scss">
-  table {
+  .heatmap {
     table-layout: fixed;
   }
 
-  thead th,
-  td {
+  .cell {
     max-width: 3em;
     width: 3em;
     min-width: 3em;
@@ -102,7 +101,7 @@ analyze-wrapper(:id="id", :name="name")
     white-space: nowrap;
   }
 
-  tbody th {
+  .heatmaplabel {
     text-align: left;
   }
 </style>
