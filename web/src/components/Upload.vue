@@ -3,7 +3,7 @@ import { mapState } from 'vuex';
 import { sizeFormatter } from '@girder/components/src/utils/mixins';
 import Dropzone from '@girder/components/src/components/Presentation/Dropzone.vue';
 import FileList from '@girder/components/src/components/Presentation/FileUploadList.vue';
-import { UPLOAD_CSV } from '@/store/actions.type';
+import { UPLOAD_CSV, UPLOAD_EXCEL } from '@/store/actions.type';
 import { REMOVE_DATASET } from '@/store/mutations.type';
 
 const sampleTypes = [
@@ -75,12 +75,15 @@ export default {
         progress: {},
         meta: {},
       })));
+
+      const isExcelFile = file => file.name.match(/\.xlsx?$/i);
+
       const promises = this.pendingFiles
         .filter(f => f.status === 'pending')
         .map(async (file) => {
           file.status = 'uploading';
           try {
-            await this.$store.dispatch(UPLOAD_CSV,
+            await this.$store.dispatch(isExcelFile(file.file) ? UPLOAD_EXCEL : UPLOAD_CSV,
               { file: file.file });
             file.status = 'done';
           } catch (err) {
