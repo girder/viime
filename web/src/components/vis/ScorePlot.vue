@@ -104,9 +104,7 @@ export default {
     pcCoords: {
       required: true,
       type: Array,
-      validator: prop => {
-        return prop.every(coord => coord.every(Number.isFinite))
-      },
+      validator: prop => prop.every(coord => coord.every(Number.isFinite)),
     },
     rowLabels: {
       required: true,
@@ -217,7 +215,6 @@ export default {
     update() {
       // Grab the input props.
       const {
-        rawPoints,
         eigenvalues,
         xyPoints,
         group,
