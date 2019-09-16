@@ -1,10 +1,12 @@
 import { CHANGE_ANALYSIS_OPTIONS } from '../../store/actions.type';
 import AnalyzeWrapper from './AnalyzeWrapper.vue';
+import ToolbarOption from '../utils/ToolbarOption.vue';
 
 export function analyzeMixin(name) {
   return {
     components: {
       AnalyzeWrapper,
+      ToolbarOption,
     },
     props: {
       id: {

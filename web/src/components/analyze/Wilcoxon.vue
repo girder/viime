@@ -66,24 +66,12 @@ export default {
 <template lang="pug">
 analyze-wrapper(:id="id", :name="name")
   template(v-slot:toolbar)
-    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-      v-toolbar-title Zero Methods
-    v-card.mx-3(flat)
-      v-card-actions
-        v-radio-group.my-0(:value="options.zero_method",
-            hide-details,
-            @change="changeOption({zero_method: $event})")
-          v-radio(v-for="m in zero_methods", :label="m.label",
-              :value="m.value", :key="`zero${m.value}`")
-    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-      v-toolbar-title Alternatives
-    v-card.mx-3(flat)
-      v-card-actions
-        v-radio-group.my-0(:value="options.alternative",
-            hide-details,
-            @change="changeOption({alternative: $event})")
-          v-radio(v-for="m in alternatives", :label="m.label",
-              :value="m.value", :key="`alt${m.value}`")
+    toolbar-option(title="Zero Methods", :value="options.zero_method",
+        :options="zero_methods",
+        @change="changeOption({zero_method: $event})")
+    toolbar-option(title="Alternatives", :value="options.alternative",
+        :options="alternatives",
+        @change="changeOption({alternative: $event})")
 
   table
     thead
