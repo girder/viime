@@ -31,6 +31,10 @@ export default {
       required: true,
       type: Array,
     },
+    eigenvalues: {
+      required: true,
+      type: Array,
+    },
     columns: {
       required: true,
       type: Array,
@@ -66,6 +70,7 @@ vis-tile(title="PCA Score Plot")
       :raw-points="rawPoints",
       :pc-coords="pcCoords",
       :row-labels="rowLabels",
+      :eigenvalues="eigenvalues",
       :columns="columns",
       :pc-x="pcX",
       :pc-y="pcY",

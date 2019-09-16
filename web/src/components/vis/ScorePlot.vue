@@ -113,6 +113,11 @@ export default {
       type: Array,
       validator: prop => prop.every(val => typeof val === 'string'),
     },
+    eigenvalues: {
+      required: true,
+      type: Array,
+      validator: prop => prop.every(Number.isFinite),
+    },
     columns: {
       required: true,
       type: Array,
@@ -208,6 +213,7 @@ export default {
       // Grab the input props.
       const {
         rawPoints,
+        eigenvalues,
         xyPoints,
         group,
         xlabel,
@@ -220,13 +226,13 @@ export default {
       // Set the axis labels.
       //
       // Compute the total variance in all the PCs.
-      const totVariance = rawPoints.sdev.reduce((acc, x) => acc + x, 0);
+      const totVariance = eigenvalues.reduce((acc, x) => acc + x, 0);
       const pctFormat = format('.2%');
       const svg = select(this.$refs.svg);
       this.setRanges(xyPoints);
       this.axisPlot(svg);
-      this.setXLabel(`${xlabel} (${pctFormat(rawPoints.sdev[pcX - 1] / totVariance)})`);
-      this.setYLabel(`${ylabel} (${pctFormat(rawPoints.sdev[pcY - 1] / totVariance)})`);
+      this.setXLabel(`${xlabel} (${pctFormat(eigenvalues[pcX - 1] / totVariance)})`);
+      this.setYLabel(`${ylabel} (${pctFormat(eigenvalues[pcY - 1] / totVariance)})`);
 
       // Draw the data.
       //
