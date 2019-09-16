@@ -3,7 +3,7 @@ from io import BytesIO
 import json
 import math
 from pathlib import PurePath
-from typing import Dict
+from typing import cast, Dict
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
@@ -89,23 +89,23 @@ def upload_csv_file(file, meta):
         raise
 
 
+_excel_mime_types = [
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+]
+
+
 @csv_bp.route('/excel/upload', methods=['POST'])
 @use_kwargs({
-    'file': fields.Field(required=True, location='files',
-                         validate=lambda x: x and x.filename != ''),
-    'meta': fields.Str(missing='{}')
+    'file': fields.Field(location='files', required=True,
+                         validate=lambda f: f.content_type in _excel_mime_types),
+    'meta': JSONDictStr(missing={})
 })
-def upload_excel_file(file: FileStorage, meta: str):
-    try:
-        meta_obj = json.loads(meta)
-    except Exception:
-        raise ValidationError(
-            'Expected a json encoded string for metadata', field_name='meta', data=meta)
-
+def upload_excel_file(file: FileStorage, meta: Dict):
     excel_sheets = pandas.read_excel(file, sheet_name=None)  # type: Dict[str, pandas.DataFrame]
     excel_sheets = {sheet: data for (sheet, data) in excel_sheets.items() if not data.empty}
 
-    basename = PurePath(file.filename).with_suffix('')
+    basename = PurePath(cast(str, file.filename)).with_suffix('')
 
     try:
         db_files = []
@@ -114,7 +114,7 @@ def upload_excel_file(file: FileStorage, meta: str):
             db_file = csv_file_schema.load({
                 'name': name.with_suffix('.csv').name,
                 'table': data.to_csv(index=False),
-                'meta': meta_obj
+                'meta': meta
             })
 
             db_files.append(db_file)
