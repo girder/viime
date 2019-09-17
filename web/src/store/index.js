@@ -17,12 +17,12 @@ import {
 } from './actions.type';
 
 import {
-  REFRESH_PLOT,
   REMOVE_DATASET,
   SET_DATASET,
   SET_LAST_ERROR,
   SET_LOADING,
   SET_LABELS,
+  SET_PLOT,
   SET_SELECTION,
   SET_SESSION_STORE,
   SET_SOURCE_DATA,
@@ -38,10 +38,14 @@ const plotDefaults = {
   pca: {
     data: null,
     valid: false,
+    loading: false,
+    args: {},
   },
   loadings: {
     data: null,
     valid: false,
+    loading: false,
+    args: {},
   },
 };
 
@@ -63,8 +67,7 @@ const getters = {
     && state.datasets[id].validation.filter(v => v.severity === 'error').length === 0,
   txType: state => (id, category) => getters.ready(state)(id)
     && state.datasets[id][category],
-  plotData: state => (id, name) => getters.ready(state)(id) && state.plots[id][name].data,
-  plotValid: state => (id, name) => getters.ready(state)(id) && state.plots[id][name].valid,
+  plot: state => (id, name) => getters.ready(state)(id) && state.plots[id][name],
 };
 
 /*
@@ -75,8 +78,8 @@ function _invalidatePlots(state, { key, plotList }) {
     Vue.set(state.plots[key][name], 'valid', false);
   });
 }
+
 function _setLables(state, { key, rows, columns }) {
-  _invalidatePlots(state, { key, plotList: ['pca', 'loadings'] });
   const rowsSorted = rows.sort((a, b) => a.row_index - b.row_index);
   const colsSorted = columns.sort((a, b) => a.column_index - b.column_index);
   Vue.set(state.datasets[key], 'row', {
@@ -161,11 +164,6 @@ const mutations = {
     }
   },
 
-  [REFRESH_PLOT](state, { key, name, data }) {
-    Vue.set(state.plots[key][name], 'data', data);
-    Vue.set(state.plots[key][name], 'valid', true);
-  },
-
   [REMOVE_DATASET](state, { key }) {
     Vue.delete(state.datasets, key);
     state.store.save(state, state.session_id);
@@ -177,6 +175,12 @@ const mutations = {
 
   [SET_LOADING](state, loading) {
     Vue.set(state, 'loading', loading);
+  },
+
+  [SET_PLOT](state, { dataset_id, name, obj }) {
+    Object.keys(obj).forEach((key) => {
+      Vue.set(state.plots[dataset_id][name], key, obj[key]);
+    });
   },
 
   [SET_SELECTION](state, {
@@ -225,15 +229,32 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [LOAD_PLOT]({ commit }, { dataset_id, name, max_components }) {
-    try {
-      const { data } = await CSVService.getPlot(dataset_id, name, {
-        max_components,
-      });
-      commit(REFRESH_PLOT, { key: dataset_id, name, data });
-    } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      throw err;
+  async [LOAD_PLOT]({ state, commit }, { dataset_id, name }) {
+    if (state.plots[dataset_id]) {
+      const { loading, valid, args } = state.plots[dataset_id][name];
+      if (!valid && !loading) {
+        try {
+          commit(SET_PLOT, {
+            dataset_id,
+            name,
+            obj: { loading: true },
+          });
+          const { data } = await CSVService.getPlot(dataset_id, name, args);
+          commit(SET_PLOT, {
+            dataset_id,
+            name,
+            obj: { loading: false, data, valid: true },
+          });
+        } catch (err) {
+          commit(SET_PLOT, {
+            dataset_id,
+            name,
+            obj: { loading: false, valid: false },
+          });
+          commit(SET_LAST_ERROR, err);
+          throw err;
+        }
+      }
     }
   },
 

@@ -1,12 +1,15 @@
 <script>
 import ScreePlot from '@/components/vis/ScreePlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
+import { plotDataMixin } from '../../utils/mixins';
 
 export default {
   components: {
     ScreePlot,
     VisTile,
   },
+
+  mixins: [plotDataMixin('pca')],
 
   props: {
     width: {
@@ -17,9 +20,9 @@ export default {
       required: true,
       type: Number,
     },
-    eigenvalues: {
+    id: {
       required: true,
-      type: Array,
+      type: String,
     },
   },
 
@@ -43,7 +46,7 @@ vis-tile(title="PCA Scree Plot")
   scree-plot(
       :width="width",
       :height="height",
-      :eigenvalues="eigenvalues",
+      :eigenvalues="plot.data.s",
       :num-components="numComponents",
       :show-cutoffs="showCutoffs")
   template(v-slot:controls)
