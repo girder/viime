@@ -15,18 +15,6 @@ export default {
   mixins: [plotData('wilcoxon')],
 
   props: {
-    width: {
-      // required: true,
-      default: 600,
-      type: Number,
-      validator: Number.isInteger,
-    },
-    height: {
-      // required: true,
-      default: 600,
-      type: Number,
-      validator: Number.isInteger,
-    },
     id: {
       type: String,
       required: true,

@@ -1,49 +1,53 @@
 <script>
 import { format } from 'd3-format';
 import Vue from 'vue';
-import { wilcoxon_zero_methods, wilcoxon_alternatives } from './constants';
-import { analyzeMixin } from './mixins';
 
-export default Vue.extend({
-  mixins: [analyzeMixin('anova')],
+export default {
+
+  props: {
+    data: {
+      type: Array,
+      required: true,
+    },
+  },
+
   data() {
     return {
-      zero_methods: wilcoxon_zero_methods,
-      alternatives: wilcoxon_alternatives,
-      format: format('.2e'),
+      format: format('.2e')
     };
   },
+
   computed: {
-    items() {
-      return this.results ? this.results.data : [];
+    items(){
+      return (this.data && this.data.data) || [];
     },
     pairs() {
-      return this.results ? this.results.pairs : [];
+      return (this.data && this.data.pairs) || [];
     },
     headers() {
       return [
         {
           text: 'Metabolite',
           align: 'left',
-          value: 'Metabolite',
+          value: 'Metabolite'
         },
         {
           text: 'Intercept',
-          value: 'Intercept',
+          value: 'Intercept'
         },
         {
           text: 'Group',
-          value: 'Group',
+          value: 'Group'
         },
         {
           text: 'Residuals',
-          value: 'Residuals',
+          value: 'Residuals'
         },
-        ...this.pairs.map(text => ({ text, value: text })),
+        ...this.pairs.map(text => ({ text, value: text }))
       ];
-    },
-  },
-});
+    }
+  }
+}
 </script>
 
 <template lang="pug">

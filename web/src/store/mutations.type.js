@@ -8,6 +8,3 @@ export const SET_SELECTION = 'set_selection';
 export const SET_SOURCE_DATA = 'set_source_data';
 export const SET_SESSION_STORE = 'set_session_store';
 export const SET_TRANSFORMATION = 'set_transformation';
-export const SET_ANALYSIS_OPTIONS = 'set_analysis_options';
-export const SET_ANALYSIS_DATA = 'set_analysis_data';
-export const SET_ANALYSIS_STATE = 'set_analysis_state';

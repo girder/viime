@@ -29,9 +29,6 @@ import {
   SET_SESSION_STORE,
   SET_SOURCE_DATA,
   SET_TRANSFORMATION,
-  SET_ANALYSIS_OPTIONS,
-  SET_ANALYSIS_DATA,
-  SET_ANALYSIS_STATE,
 } from './mutations.type';
 
 Vue.use(Vuex);
@@ -91,11 +88,6 @@ const getters = {
   txType: state => (id, category) => getters.ready(state)(id)
     && state.datasets[id][category],
   plot: state => (id, name) => getters.ready(state)(id) && state.plots[id][name],
-
-  analysisOptions: state => (id, name) => getters.ready(state)(id)
-    && state.analyses[id][name].options,
-  analysisData: state => (id, name) => getters.ready(state)(id) && state.analyses[id][name].data,
-  analysisState: state => (id, name) => getters.ready(state)(id) && state.analyses[id][name].state,
 };
 
 /*
@@ -190,18 +182,6 @@ const mutations = {
     if (!state.plots[dataset.id]) {
       Vue.set(state.plots, dataset.id, cloneDeep(plotDefaults));
     }
-  },
-
-  [SET_ANALYSIS_OPTIONS](state, { dataset_id, name, options }) {
-    Vue.set(state.analyses[dataset_id][name], 'options', options);
-  },
-
-  [SET_ANALYSIS_DATA](state, { dataset_id, name, data }) {
-    Vue.set(state.analyses[dataset_id][name], 'data', data);
-  },
-
-  [SET_ANALYSIS_STATE](state, { dataset_id, name, state: status }) {
-    Vue.set(state.analyses[dataset_id][name], 'state', status);
   },
 
   [REMOVE_DATASET](state, { key }) {
