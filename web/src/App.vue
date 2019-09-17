@@ -4,7 +4,7 @@ v-app
     v-toolbar-side-icon.logo(@click="$router.push('/')") BA
     v-breadcrumbs(:items="breadcrumbs", divider="»")
       template(#item="props")
-        v-breadcrumbs-item(:to="props.item.to") {{props.item.text}}
+        v-breadcrumbs-item(:to="props.item.to", exact) {{props.item.text}}
     v-spacer
     //- v-btn(icon)
     //-   v-icon {{ $vuetify.icons.settings }}
@@ -18,17 +18,22 @@ export default {
   name: 'App',
   computed: {
     breadcrumbs() {
+      const toBreadcrumb = (route, isFull) => {
+        const b = route.meta.breadcrumb;
+        return {
+          text: route.name,
+          to: route.path,
+          ...(b ? b.call(route, this.$route.params, this.$store, isFull) : {}),
+        };
+      };
+
       return [
         {
           text: 'Biomarker Analysis',
           to: '/',
-          disabled: false,
         },
-        {
-          text: this.$route.name,
-          to: this.$route.path,
-          disabled: false,
-        },
+        ...this.$route.matched.slice(0, this.$route.matched.length - 1).map(d => toBreadcrumb(d)),
+        toBreadcrumb(this.$route, true),
       ];
     },
   },

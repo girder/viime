@@ -9,6 +9,14 @@ import ProblemBar from '../components/ProblemBar.vue';
 
 Vue.use(Router);
 
+function injectParams(path, params) {
+  let parsed = path;
+  Object.entries(params).forEach(([k, v]) => {
+    parsed = parsed.replace(`:${k}`, v);
+  });
+  return parsed;
+}
+
 export const routes = [
   {
     path: '/select',
@@ -20,6 +28,15 @@ export const routes = [
     name: 'Pretreat Data',
     component: Pretreatment,
     props: true,
+    meta: {
+      breadcrumb(params, store, isFull) {
+        const ds = store.getters.dataset(params.id);
+        return {
+          text: ds ? ds.name : params.id,
+          to: isFull ? this.path : injectParams(this.path, params),
+        };
+      },
+    },
     children: [
       {
         path: 'cleanup',
