@@ -76,7 +76,12 @@ export default {
         meta: {},
       })));
 
-      const isExcelFile = file => file.name.match(/\.xlsx?$/i);
+      const excelMimeTypes = [
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ];
+
+      const isExcelFile = file => excelMimeTypes.includes(file.type) || file.name.match(/\.xlsx?$/i);
 
       const promises = this.pendingFiles
         .filter(f => f.status === 'pending')
