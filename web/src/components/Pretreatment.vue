@@ -1,6 +1,7 @@
 <script>
 import { SET_SELECTION } from '@/store/mutations.type';
 import { loadDataset } from '@/utils/mixins';
+import analyses from './analyze';
 
 export default {
   mixins: [loadDataset],
@@ -13,6 +14,7 @@ export default {
   data() {
     return {
       datasets: this.$store.state.datasets,
+      analyses,
     };
   },
   methods: {
@@ -41,6 +43,9 @@ export default {
           idx: problem[`${problem.context}_index`],
         });
       }
+    },
+    isSubRoute(dataset, start) {
+      return this.$router.currentRoute.path.startsWith(`/pretreatment/${dataset.id}/${start}`);
     },
   },
 };
@@ -95,6 +100,26 @@ v-layout.pretreatment-component(row, fill-height)
               v-list-tile-title.pl-2
                 v-icon.pr-1.middle {{ $vuetify.icons.bubbles }}
                 | Transform Table
+
+            v-list-group.ml-2.link-group(
+                :append-icon="null",
+                :value="isSubRoute(dataset, `analyze/`)",
+                :disabled="!valid(dataset)",
+                @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze` })")
+              template(v-slot:activator)
+                v-list-tile(
+                   :class="{ active: $router.currentRoute.name === 'Analyze Data' }")
+                  v-list-tile-title.pl-2
+                    v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
+                    | Analyze Table
+              v-list-tile.ml-2.small-tile(
+                  v-for="a in analyses", :key="a.path",
+                  :class="{ active: $router.currentRoute.name === a.shortName }",
+                  @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/${a.path}` })")
+                v-list-tile-title.pl-2
+                  v-icon.pr-1.middle {{ $vuetify.icons.compare }}
+                  | {{a.shortName}}
+
   keep-alive
     router-view
 </template>
@@ -125,7 +150,8 @@ v-layout.pretreatment-component(row, fill-height)
     }
   }
 
-  .view-list .v-list__tile--link {
+  .view-list .v-list__tile--link,
+  .view-list .link-group > .v-list__group__header {
     transition: none;
 
     .v-list__tile__title {

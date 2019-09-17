@@ -60,7 +60,7 @@ docker build -t metabulo .
 and start the instance
 
 ```sh
-docker run -it -p 8004:8004 metabulo
+docker run -it --rm -p 8004:8004 metabulo
 ```
 
 You may find that changes to the position or size of the window in which the

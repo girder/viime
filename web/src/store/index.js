@@ -6,6 +6,7 @@ import {
   convertCsvToRows, RangeList, mapValidationErrors,
 } from '../utils';
 import { CSVService } from '../common/api.service';
+import analyses from '../components/analyze';
 
 import {
   CHANGE_AXIS_LABEL,
@@ -14,6 +15,7 @@ import {
   LOAD_SESSION,
   UPLOAD_CSV,
   CHANGE_IMPUTATION_OPTIONS,
+  CHANGE_ANALYSIS_OPTIONS,
 } from './actions.type';
 
 import {
@@ -27,6 +29,9 @@ import {
   SET_SESSION_STORE,
   SET_SOURCE_DATA,
   SET_TRANSFORMATION,
+  SET_ANALYSIS_OPTIONS,
+  SET_ANALYSIS_DATA,
+  SET_ANALYSIS_STATE,
 } from './mutations.type';
 
 Vue.use(Vuex);
@@ -49,10 +54,20 @@ const plotDefaults = {
   },
 };
 
+const analysisDefaults = {};
+analyses.forEach(({ options, path, key }) => {
+  analysisDefaults[key || path] = {
+    options,
+    data: null,
+    state: 'initial', // initial,computing,error,ready
+  };
+});
+
 const appstate = {
   // map of all datasets in the session by csv UUID
   datasets: {},
   plots: {},
+  analyses: {},
   lasterror: null,
   loading: false,
   /** @type {WindowLocalStorage} */
@@ -68,6 +83,11 @@ const getters = {
   txType: state => (id, category) => getters.ready(state)(id)
     && state.datasets[id][category],
   plot: state => (id, name) => getters.ready(state)(id) && state.plots[id][name],
+
+  analysisOptions: state => (id, name) => getters.ready(state)(id)
+    && state.analyses[id][name].options,
+  analysisData: state => (id, name) => getters.ready(state)(id) && state.analyses[id][name].data,
+  analysisState: state => (id, name) => getters.ready(state)(id) && state.analyses[id][name].state,
 };
 
 /*
@@ -112,6 +132,9 @@ const mutations = {
     const { id, name, size } = data;
     if (!state.plots[id]) {
       Vue.set(state.plots, id, cloneDeep(plotDefaults));
+    }
+    if (!state.analyses[id]) {
+      Vue.set(state.analyses, id, cloneDeep(analysisDefaults));
     }
     const cols = data.columns.sort((a, b) => a.column_index - b.column_index);
     // serialize CSV string as JSON
@@ -162,6 +185,21 @@ const mutations = {
     if (!state.plots[dataset.id]) {
       Vue.set(state.plots, dataset.id, cloneDeep(plotDefaults));
     }
+    if (!state.analyses[dataset.id]) {
+      Vue.set(state.analyses, dataset.id, cloneDeep(analysisDefaults));
+    }
+  },
+
+  [SET_ANALYSIS_OPTIONS](state, { dataset_id, name, options }) {
+    Vue.set(state.analyses[dataset_id][name], 'options', options);
+  },
+
+  [SET_ANALYSIS_DATA](state, { dataset_id, name, data }) {
+    Vue.set(state.analyses[dataset_id][name], 'data', data);
+  },
+
+  [SET_ANALYSIS_STATE](state, { dataset_id, name, state: status }) {
+    Vue.set(state.analyses[dataset_id][name], 'state', status);
   },
 
   [REMOVE_DATASET](state, { key }) {
@@ -321,6 +359,25 @@ const actions = {
     await CSVService.setImputation(dataset_id, options);
     await load_dataset({ commit }, { dataset_id });
     commit(SET_LOADING, false);
+  },
+
+  async [CHANGE_ANALYSIS_OPTIONS]({ state, commit }, { dataset_id, name, changes }) {
+    commit(SET_ANALYSIS_STATE, { dataset_id, name, state: 'computing' });
+    try {
+      // create full options
+      const options = {
+        ...state.analyses[dataset_id][name].options,
+        ...changes,
+      };
+      commit(SET_ANALYSIS_OPTIONS, { dataset_id, name, options });
+      const { data } = await CSVService.getAnalysis(dataset_id, name, options);
+      commit(SET_ANALYSIS_DATA, { dataset_id, name, data });
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_ANALYSIS_STATE, { dataset_id, name, state: 'error' });
+      throw err;
+    }
+    commit(SET_ANALYSIS_STATE, { dataset_id, name, state: 'ready' });
   },
 };
 

@@ -5,7 +5,9 @@ import Pretreatment from '../components/Pretreatment.vue';
 import Cleanup from '../components/Cleanup.vue';
 import Upload from '../components/Upload.vue';
 import Transform from '../components/Transform.vue';
+import AnalyzeData from '../components/analyze/AnalyzeData.vue';
 import ProblemBar from '../components/ProblemBar.vue';
+import analyses from '../components/analyze';
 
 Vue.use(Router);
 
@@ -40,6 +42,15 @@ export const routes = [
         component: Transform,
         props: true,
       },
+      {
+        path: 'analyze',
+        name: 'Analyze Data',
+        component: AnalyzeData,
+        props: true,
+      },
+      ...analyses.map(({ path, shortName: name, component }) => ({
+        path: `analyze/${path}`, name, component, props: true,
+      })),
     ],
   },
   {
