@@ -1,6 +1,6 @@
 <script>
 import WilcoxonPlot from '@/components/vis/WilcoxonPlot.vue';
-import VisTile from '@/components/vis/VisTile.vue';
+import VisTileLarge from '@/components/vis/VisTileLarge.vue';
 import ToolbarOption from '../ToolbarOption.vue';
 import plotData from './mixins/plotData';
 import { wilcoxon_zero_methods, wilcoxon_alternatives } from '../../utils/constants';
@@ -9,7 +9,7 @@ export default {
   components: {
     WilcoxonPlot,
     ToolbarOption,
-    VisTile,
+    VisTileLarge,
   },
 
   mixins: [plotData('wilcoxon')],
@@ -43,7 +43,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(title="Wilcoxon Test", :loading="plot.loading", expanded)
+vis-tile-large(title="Wilcoxon Test", :loading="plot.loading", expanded)
   template(#controls)
     toolbar-option(title="Zero Methods", :value="plot.args.zero_method",
         :options="zero_methods",
@@ -51,10 +51,9 @@ vis-tile(title="Wilcoxon Test", :loading="plot.loading", expanded)
     toolbar-option(title="Alternatives", :value="plot.args.alternative",
         :options="alternatives",
         @change="changePlotArgs({alternative: $event})")
-  v-container.grow-overflow.ma-0(grid-list-lg, fluid)
-    wilcoxon-plot(
-        :width="width",
-        :height="height",
-        :data="plot.data && plot.data.data",
-        :indices="plot.data && plot.data.indices")
+  wilcoxon-plot(
+      :width="width",
+      :height="height",
+      :data="plot.data && plot.data.data",
+      :indices="plot.data && plot.data.indices")
 </template>
