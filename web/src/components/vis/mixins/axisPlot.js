@@ -29,8 +29,6 @@ export const axisPlot = {
         bottom: null,
         left: null,
       },
-      xrange: [-1, 1],
-      yrange: [-1, 1],
       duration: 500,
       svg: null,
     };
@@ -43,6 +41,17 @@ export const axisPlot = {
     dheight() {
       const { height, margin } = this;
       return height - margin.top - margin.bottom;
+    },
+    xrange() {
+      // This value (and `yrange` below) are defined as computed properties with
+      // a constant function to provide flexibility for clients of this mixin,
+      // which may want these properties to be reactive based on other, private
+      // properties.
+      return [-1, 1];
+    },
+    yrange() {
+      // (See note above for `xrange`.)
+      return [-1, 1];
     },
     scaleX() {
       const { xrange, dwidth } = this;

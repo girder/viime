@@ -76,8 +76,6 @@ export default {
         bottom: 50,
         left: 50,
       },
-      xrange: [-1.2, 1.2],
-      yrange: [-1.2, 1.2],
       fadeInDuration: 500,
       duration: 200,
     };
