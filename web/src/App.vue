@@ -1,21 +1,37 @@
 <template lang="pug">
 v-app
-  v-toolbar.main-toolbar.darken-4(dark, dense, color="primary")
-    v-toolbar-items
-      v-btn.px-0.square-button.darken-4(flat, color="white", to="/select")
-        v-icon {{ $vuetify.icons.close }}
+  v-toolbar.darken-3(dense, dark, color="primary")
+    v-toolbar-side-icon.logo(@click="$router.push('/')") BA
+    v-breadcrumbs(:items="breadcrumbs", divider="»")
+      template(#item="props")
+        v-breadcrumbs-item(:to="props.item.to") {{props.item.text}}
     v-spacer
-    v-toolbar-title.title
-      span.font-weight-bold.secondary--text.text--lighten-3 Biomarker Analysis »
-      span.font-weight-bold.white--text  {{ $router.currentRoute.name }}
-    v-spacer
+    //- v-btn(icon)
+    //-   v-icon {{ $vuetify.icons.settings }}
   v-container.pa-0.d-flex(fluid)
     router-view.grow
 </template>
 
 <script>
+
 export default {
   name: 'App',
+  computed: {
+    breadcrumbs() {
+      return [
+        {
+          text: 'Biomarker Analysis',
+          to: '/',
+          disabled: false,
+        },
+        {
+          text: this.$route.name,
+          to: this.$route.path,
+          disabled: false,
+        },
+      ];
+    },
+  },
 };
 </script>
 
@@ -24,21 +40,25 @@ body {
   overflow-x: auto;
 }
 
+.logo.v-btn--icon {
+  // background: url('./assets/logo.png');
+  // background-size: contain;
+  font-size: 150%;
+}
+
+.v-breadcrumbs li {
+  font-size: 20px;
+
+  > a {
+    color: inherit
+  }
+}
+
 #app {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   max-height: 100vh;
   min-width: 900px;
-
-  .main-toolbar {
-    .v-toolbar__content {
-      padding-left: 0px;
-
-      .square-button {
-        min-width: 64px;
-      }
-    }
-  }
 
   .grow-overflow {
     flex: 1 1 0;
