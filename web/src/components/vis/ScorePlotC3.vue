@@ -215,6 +215,29 @@ export default {
             label: y,
           },
         },
+        legend: {
+          item: {
+            onmouseover: (id) => {
+              console.log('legend', id);
+              this.chart.focus(id);
+
+              select(this.$refs.chart)
+                .selectAll('circle.ellipse')
+                .style('opacity', 0.3);
+
+              select(this.$refs.chart)
+                .select(`circle.ellipse-${id}`)
+                .style('opacity', 1.0);
+            },
+
+            onmouseout: () => {
+              this.chart.focus();
+              select(this.$refs.chart)
+                .selectAll('circle.ellipse')
+                .style('opacity', 1.0);
+            },
+          },
+        },
       });
 
       // Draw the data ellipses.
@@ -238,6 +261,8 @@ export default {
         .classed('ellipse', true)
         .attr('transform', d => `translate(${scaleX(d.xMean)}, ${scaleY(d.yMean)}) rotate(0) scale(1, 1)`)
         .append('circle')
+        .attr('class', d => `ellipse-${d.category}`)
+        .classed('ellipse', true)
         .attr('cx', 0)
         .attr('cy', 0)
         .attr('r', 1)
