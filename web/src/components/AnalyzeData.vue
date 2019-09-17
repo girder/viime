@@ -1,6 +1,6 @@
 <script>
 import Vue from 'vue';
-import analyses from '.';
+import { analyses } from '.';
 
 export default Vue.extend({
   props: {

@@ -5,9 +5,9 @@ import Pretreatment from '../components/Pretreatment.vue';
 import Cleanup from '../components/Cleanup.vue';
 import Upload from '../components/Upload.vue';
 import Transform from '../components/Transform.vue';
-import AnalyzeData from '../components/analyze/AnalyzeData.vue';
+import AnalyzeData from '../components/AnalyzeData.vue';
 import ProblemBar from '../components/ProblemBar.vue';
-import analyses from '../components/analyze';
+import { analyses } from '../components';
 
 Vue.use(Router);
 

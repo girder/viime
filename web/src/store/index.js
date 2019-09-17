@@ -6,7 +6,8 @@ import {
   convertCsvToRows, RangeList, mapValidationErrors,
 } from '../utils';
 import { CSVService } from '../common/api.service';
-import analyses from '../components/analyze';
+import { analyses } from '../components';
+import { plot_types } from '../utils/constants';
 
 import {
   CHANGE_AXIS_LABEL,
@@ -15,7 +16,6 @@ import {
   LOAD_SESSION,
   UPLOAD_CSV,
   CHANGE_IMPUTATION_OPTIONS,
-  CHANGE_ANALYSIS_OPTIONS,
 } from './actions.type';
 
 import {
@@ -45,21 +45,29 @@ const plotDefaults = {
     valid: false,
     loading: false,
     args: {},
+    type: plot_types.TRANSFORM,
   },
   loadings: {
     data: null,
     valid: false,
     loading: false,
     args: {},
+    type: plot_types.TRANSFORM,
   },
 };
 
-const analysisDefaults = {};
-analyses.forEach(({ options, path, key }) => {
-  analysisDefaults[key || path] = {
-    options,
+analyses.forEach(({
+  args,
+  path,
+  key,
+  type,
+}) => {
+  plotDefaults[key || path] = {
     data: null,
-    state: 'initial', // initial,computing,error,ready
+    valid: false,
+    loading: false,
+    args,
+    type,
   };
 });
 
@@ -133,9 +141,6 @@ const mutations = {
     if (!state.plots[id]) {
       Vue.set(state.plots, id, cloneDeep(plotDefaults));
     }
-    if (!state.analyses[id]) {
-      Vue.set(state.analyses, id, cloneDeep(analysisDefaults));
-    }
     const cols = data.columns.sort((a, b) => a.column_index - b.column_index);
     // serialize CSV string as JSON
     const { data: sourcerows } = convertCsvToRows(data.table);
@@ -184,9 +189,6 @@ const mutations = {
     Vue.set(state.datasets, dataset.id, dataset);
     if (!state.plots[dataset.id]) {
       Vue.set(state.plots, dataset.id, cloneDeep(plotDefaults));
-    }
-    if (!state.analyses[dataset.id]) {
-      Vue.set(state.analyses, dataset.id, cloneDeep(analysisDefaults));
     }
   },
 
@@ -267,9 +269,15 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [LOAD_PLOT]({ state, commit }, { dataset_id, name }) {
-    if (state.plots[dataset_id]) {
-      const { loading, valid, args } = state.plots[dataset_id][name];
+  async [LOAD_PLOT]({ getters: _getters, commit }, { dataset_id, name }) {
+    const plot = _getters.plot(dataset_id, name);
+    if (plot) {
+      const {
+        loading,
+        valid,
+        args,
+        type: plotType,
+      } = plot;
       if (!valid && !loading) {
         try {
           commit(SET_PLOT, {
@@ -277,11 +285,21 @@ const actions = {
             name,
             obj: { loading: true },
           });
-          const { data } = await CSVService.getPlot(dataset_id, name, args);
+          let d;
+          switch (plotType) {
+            case plot_types.TRANSFORM:
+              ({ data: d } = await CSVService.getPlot(dataset_id, name, args));
+              break;
+            case plot_types.ANALYSIS:
+              ({ data: d } = await CSVService.getAnalysis(dataset_id, name, args));
+              break;
+            default:
+              throw new Error('Plot type unknown:', plotType);
+          }
           commit(SET_PLOT, {
             dataset_id,
             name,
-            obj: { loading: false, data, valid: true },
+            obj: { loading: false, data: d, valid: true },
           });
         } catch (err) {
           commit(SET_PLOT, {
@@ -361,24 +379,6 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [CHANGE_ANALYSIS_OPTIONS]({ state, commit }, { dataset_id, name, changes }) {
-    commit(SET_ANALYSIS_STATE, { dataset_id, name, state: 'computing' });
-    try {
-      // create full options
-      const options = {
-        ...state.analyses[dataset_id][name].options,
-        ...changes,
-      };
-      commit(SET_ANALYSIS_OPTIONS, { dataset_id, name, options });
-      const { data } = await CSVService.getAnalysis(dataset_id, name, options);
-      commit(SET_ANALYSIS_DATA, { dataset_id, name, data });
-    } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_ANALYSIS_STATE, { dataset_id, name, state: 'error' });
-      throw err;
-    }
-    commit(SET_ANALYSIS_STATE, { dataset_id, name, state: 'ready' });
-  },
 };
 
 export default new Vuex.Store({

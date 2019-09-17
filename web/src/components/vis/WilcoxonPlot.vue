@@ -3,32 +3,32 @@ import { scaleSequential } from 'd3-scale';
 import { interpolateGreys } from 'd3-scale-chromatic';
 import { format } from 'd3-format';
 import Vue from 'vue';
-import { wilcoxon_zero_methods, wilcoxon_alternatives } from './constants';
-import { analyzeMixin } from './mixins';
 
-export default Vue.extend({
-  mixins: [analyzeMixin('wilcoxon')],
-  data() {
-    return {
-      zero_methods: wilcoxon_zero_methods,
-      alternatives: wilcoxon_alternatives,
-    };
+export default {
+  props: {
+    data: {
+      type: Array,
+      required: true,
+    },
+    indices: {
+      type: Array,
+      required: true,
+    },
   },
+
   computed: {
+    dataInternal() { return this.data || []; },
+    indicesInternal() { return this.indices || []; },
     scale() {
-      const max_p_value = this.results ? this.results.data.reduce(
+      const max_p_value = this.dataInternal.reduce(
         (acc, entry) => Math.max(acc, entry.p), 0,
-      ) : 1;
+      ) || 1;
       return scaleSequential(interpolateGreys).domain([max_p_value, 0]);
     },
-    indices() { return this.results ? this.results.indices : []; },
     resultLookup() {
-      if (!this.results) {
-        return new Map();
-      }
       const f = format('.2e');
       const r = new Map();
-      this.results.data.forEach((entry) => {
+      this.dataInternal.forEach((entry) => {
         const { x, y } = entry;
         const key = this.computeKey(x, y);
         entry.color = this.scale(entry.p);
@@ -58,36 +58,27 @@ export default Vue.extend({
       return this.resultLookup.get(key);
     },
     getRow(x) {
-      return this.indices.map(y => this.getCell(x, y));
+      return this.indicesInternal.map(y => this.getCell(x, y));
     },
   },
-});
+};
 </script>
 
 <template lang="pug">
-analyze-wrapper(:id="id", :name="name")
-  template(#toolbar)
-    toolbar-option(title="Zero Methods", :value="options.zero_method",
-        :options="zero_methods",
-        @change="changeOption({zero_method: $event})")
-    toolbar-option(title="Alternatives", :value="options.alternative",
-        :options="alternatives",
-        @change="changeOption({alternative: $event})")
-
-  table.heatmap
-    thead
-      tr
-        th
-        th.cell(v-for="(y,i) in indices", :key="i", v-text="y", :title="y")
-    tbody
-      tr(v-for="(x,i) in indices", :key="i")
-        th.heatmaplabel(v-text="x", :title="x")
-        td.cell(v-for="(cell,j) in getRow(x)",
-            :key="j",
-            :style="{backgroundColor: cell.color}", :title="cell.title")
+table.heatmap
+  thead
+    tr
+      th
+      th.cell(v-for="(y,i) in indicesInternal", :key="i", v-text="y", :title="y")
+  tbody
+    tr(v-for="(x,i) in indicesInternal", :key="i")
+      td.heatmaplabel(v-text="x", :title="x")
+      td.cell(v-for="(cell,j) in getRow(x)",
+          :key="j",
+          :style="{ backgroundColor: cell.color }", :title="cell.title")
 </template>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
   .heatmap {
     table-layout: fixed;
   }

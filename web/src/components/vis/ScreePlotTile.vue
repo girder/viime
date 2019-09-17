@@ -1,7 +1,7 @@
 <script>
 import ScreePlot from '@/components/vis/ScreePlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
-import { plotDataMixin } from '../../utils/mixins';
+import plotData from './mixins/plotData';
 
 export default {
   components: {
@@ -9,7 +9,7 @@ export default {
     VisTile,
   },
 
-  mixins: [plotDataMixin('pca')],
+  mixins: [plotData('pca')],
 
   props: {
     width: {

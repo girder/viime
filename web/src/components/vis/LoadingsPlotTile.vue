@@ -1,7 +1,7 @@
 <script>
 import LoadingsPlot from './LoadingsPlot.vue';
 import VisTile from './VisTile.vue';
-import { plotDataMixin } from '../../utils/mixins';
+import plotData from './mixins/plotData';
 
 export default {
   components: {
@@ -9,7 +9,7 @@ export default {
     VisTile,
   },
 
-  mixins: [plotDataMixin('loadings')],
+  mixins: [plotData('loadings')],
 
   props: {
     width: {
