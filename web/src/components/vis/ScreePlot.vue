@@ -176,9 +176,7 @@ export default {
     },
 
     showCutoffs(show) {
-      select(this.$refs.svg)
-        .selectAll('line.cutoff')
-        .style('display', show ? null : 'none');
+      this.update();
     },
   },
 
@@ -201,6 +199,7 @@ export default {
         fadeInDuration,
         duration,
         numComponents,
+        showCutoffs,
         cutoffs,
       } = this;
 
@@ -306,6 +305,7 @@ export default {
           .attr('y2', this.scaleY(this.yrange[1]))
           .attr('stroke-dasharray', '10 5 5 5')
           .style('opacity', 1)
+          .style('display', showCutoffs ? null : 'none')
           .on('mouseover', () => {
             tooltip.style('left', `${event.clientX + 15}px`)
               .style('top', `${event.clientY - 30}px`)
