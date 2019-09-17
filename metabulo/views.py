@@ -2,12 +2,15 @@ from functools import wraps
 from io import BytesIO
 import json
 import math
+from pathlib import PurePath
+from typing import cast, Dict
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
 import pandas
 from webargs.flaskparser import use_kwargs
+from werkzeug import FileStorage
 
 from metabulo import opencpu
 from metabulo.cache import csv_file_cache
@@ -82,6 +85,60 @@ def upload_csv_file(file, meta):
     except Exception:
         if csv_file and csv_file.uri.is_file():
             csv_file.uri.unlink()
+        db.session.rollback()
+        raise
+
+
+_excel_mime_types = [
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+]
+
+
+@csv_bp.route('/excel/upload', methods=['POST'])
+@use_kwargs({
+    'file': fields.Field(location='files', required=True,
+                         validate=lambda f: f.content_type in _excel_mime_types),
+    'meta': JSONDictStr(missing={})
+})
+def upload_excel_file(file: FileStorage, meta: Dict):
+    excel_sheets = pandas.read_excel(file, sheet_name=None)  # type: Dict[str, pandas.DataFrame]
+    excel_sheets = {sheet: data for (sheet, data) in excel_sheets.items() if not data.empty}
+
+    basename = PurePath(cast(str, file.filename)).with_suffix('')
+
+    try:
+        db_files = []
+
+        def push_file(name: PurePath, data: pandas.DataFrame):
+            db_file = csv_file_schema.load({
+                'name': name.with_suffix('.csv').name,
+                'table': data.to_csv(index=False),
+                'meta': meta
+            })
+
+            db_files.append(db_file)
+            db.session.add(db_file)
+
+        if len(excel_sheets) == 1:
+            # single file case, simple name
+            data = next(iter(excel_sheets.values()))
+            push_file(basename, data)
+        else:
+            for sheet, data in excel_sheets.items():
+                push_file(basename.with_name('%s-%s' % (basename.name, sheet)), data)
+
+        db.session.flush()
+
+        serialized = [_serialize_csv_file(f) for f in db_files]
+
+        db.session.commit()
+
+        return jsonify(serialized), 201
+    except Exception:
+        for f in db_files:
+            if f.uri.is_file():
+                f.uri.unlink()
         db.session.rollback()
         raise
 
