@@ -1,5 +1,5 @@
 import WilcoxonPlotTile from './vis/WilcoxonPlotTile.vue';
-// import AnovaTest from './AnovaTest.vue';
+import AnovaTableTile from './vis/AnovaTableTile.vue';
 import { wilcoxon_zero_methods, wilcoxon_alternatives, plot_types } from '../utils/constants';
 
 export const analyses = [
@@ -16,13 +16,13 @@ export const analyses = [
     type: plot_types.ANALYSIS,
     help: 'https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wilcoxon.html',
   },
-  // {
-  //   path: 'anova', // same as key
-  //   name: 'ANOVA',
-  //   shortName: 'ANOVA',
-  //   description: 'TODO R custom code',
-  //   component: AnovaTest,
-  //   options: {
-  //   },
-  // },
+  {
+    path: 'anova', // same as key
+    name: 'ANOVA',
+    shortName: 'ANOVA',
+    description: 'TODO R custom code',
+    component: AnovaTableTile,
+    options: {},
+    type: plot_types.ANALYSIS,
+  },
 ];
