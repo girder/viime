@@ -148,7 +148,7 @@ v-layout.cleanup-wrapper(row)
             v-btn(flat, @click="saveImputationSettings") Save
       v-icon {{ $vuetify.icons.download }}
 
-    .overflow-auto
+    .grow-overflow
       data-table(v-bind="{ id, dataset, selected }", @setselection="setSelection")
 </template>
 

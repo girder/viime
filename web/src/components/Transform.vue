@@ -151,22 +151,23 @@ v-layout.transform-component(row, fill-height)
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
-  v-container.overflow-auto.ma-0(grid-list-lg, fluid, v-else-if="ready && valid")
-    v-layout(row, wrap)
-      score-plot-tile(
-          :width="600",
-          :height="600",
-          :raw-points="pcaData",
-          :dataset="dataset")
-      loadings-plot-tile(
-          :width="600",
-          :height="600",
-          :points="loadingsData")
-      scree-plot-tile(
-          :width="600",
-          :height="600",
-          :eigenvalues="pcaData.sdev")
-  v-container.overflow-auto(v-else-if="ready", fill-height)
+  v-layout(column, v-else-if="ready && valid")
+    v-container.grow-overflow.ma-0(grid-list-lg, fluid)
+      v-layout(row, wrap)
+        score-plot-tile(
+            :width="600",
+            :height="600",
+            :raw-points="pcaData",
+            :dataset="dataset")
+        loadings-plot-tile(
+            :width="600",
+            :height="600",
+            :points="loadingsData")
+        scree-plot-tile(
+            :width="600",
+            :height="600",
+            :eigenvalues="pcaData.sdev")
+  v-container(v-else-if="ready", fill-height)
     v-layout(column)
       .display-2 Error: Cannot show transform table
       a.headline(:href="`#/pretreatment/${dataset.id}/cleanup`") Correct validation error(s)

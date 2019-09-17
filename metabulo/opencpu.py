@@ -41,6 +41,7 @@ def opencpu_request(method, files=None, params=None, return_type='csv'):
         raise OpenCPUException(f'Error connecting to OpenCPU server', method, e.response)
 
     if not resp.ok:
+        current_app.logger.error(resp.content)
         raise OpenCPUException(f'OpenCPU error calling {method}', method, resp)
 
     result = resp.content

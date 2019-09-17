@@ -12,6 +12,7 @@ div
         line.vert
       g.plot
   .tooltip(ref="tooltip")
+  span(style="display: none") {{ update }}
 </template>
 
 <style scoped lang="scss">
@@ -87,43 +88,6 @@ export default {
       return column.column_header;
     },
 
-    xrange() {
-      return [-1.2, 1.2];
-    },
-
-    yrange() {
-      return [-1.2, 1.2];
-    },
-  },
-  watch: {
-    points(newval) {
-      if (newval) {
-        this.update();
-      }
-    },
-
-    pcX() {
-      this.update();
-    },
-
-    pcY() {
-      this.update();
-    },
-
-    showCrosshairs() {
-      this.update();
-    },
-  },
-  mounted() {
-    const svg = select(this.$refs.svg);
-    this.axisPlot(svg);
-    this.setXLabel('PC1 correlation');
-    this.setYLabel('PC2 correlation');
-    if (this.points) {
-      this.update();
-    }
-  },
-  methods: {
     update() {
       // Grab the input props.
       const {
@@ -191,7 +155,7 @@ export default {
             tooltip.transition()
               .duration(duration)
               .style('opacity', 0.9);
-            tooltip.html(`<b>${d.col}</b><br>(${coordFormat(d.x)}, ${coordFormat(d.y)})`)
+            tooltip.html(`<b>${d.col}</b><br>(${coordFormat(d.cor[pcX - 1])}, ${coordFormat(d.cor[pcY - 1])})`)
               .style('left', `${event.clientX + 15}px`)
               .style('top', `${event.pageY - 30}px`);
           })
@@ -210,7 +174,16 @@ export default {
         .attr('r', radius)
         .attr('cx', d => this.scaleX(d.cor[pcX - 1]))
         .attr('cy', d => this.scaleY(d.cor[pcY - 1]));
+
+      return '';
     },
+  },
+
+  mounted() {
+    const svg = select(this.$refs.svg);
+    this.axisPlot(svg);
+    this.setXLabel('PC1 correlation');
+    this.setYLabel('PC2 correlation');
   },
 };
 </script>
