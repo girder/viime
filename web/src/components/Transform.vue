@@ -7,6 +7,7 @@ import {
   transform_methods,
 } from '@/utils/constants';
 import ScorePlotTile from '@/components/vis/ScorePlotTile.vue';
+import ScorePlotC3Tile from '@/components/vis/ScorePlotC3Tile.vue';
 import ScreePlotTile from '@/components/vis/ScreePlotTile.vue';
 import LoadingsPlotTile from '@/components/vis/LoadingsPlotTile.vue';
 
@@ -14,6 +15,7 @@ export default {
   components: {
     LoadingsPlotTile,
     ScorePlotTile,
+    ScorePlotC3Tile,
     ScreePlotTile,
   },
   props: {
@@ -121,6 +123,15 @@ v-layout.transform-component(row, fill-height)
             :height="600",
             :columns="dataset._source.columns",
             :id="id")
+        score-plot-c3-tile(
+            :width="600",
+            :height="600",
+            :raw-points="pcaData",
+            :pc-coords="pcaData.x",
+            :row-labels="pcaData.rows",
+            :group-labels="pcaData.labels",
+            :eigenvalues="pcaData.sdev",
+            :columns="dataset._source.columns")
         loadings-plot-tile(
             :width="600",
             :height="600",
