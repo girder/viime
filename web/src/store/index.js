@@ -5,9 +5,9 @@ import Vuex from 'vuex';
 import {
   convertCsvToRows, RangeList, mapValidationErrors,
 } from '../utils';
-import { CSVService } from '../common/api.service';
 import { analyses } from '../components';
 import { plot_types } from '../utils/constants';
+import { CSVService, ExcelService } from '../common/api.service';
 
 import {
   CHANGE_AXIS_LABEL,
@@ -15,6 +15,7 @@ import {
   LOAD_PLOT,
   LOAD_SESSION,
   UPLOAD_CSV,
+  UPLOAD_EXCEL,
   CHANGE_IMPUTATION_OPTIONS,
 } from './actions.type';
 
@@ -239,6 +240,22 @@ const actions = {
     try {
       const { data } = await CSVService.upload(file);
       commit(SET_SOURCE_DATA, { data });
+      state.store.save(state, state.session_id);
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
+    commit(SET_LOADING, false);
+  },
+
+  async [UPLOAD_EXCEL]({ state, commit }, { file }) {
+    commit(SET_LOADING, true);
+    try {
+      const { data } = await ExcelService.upload(file);
+      data.forEach((dataFile) => {
+        commit(SET_SOURCE_DATA, { data: dataFile });
+      });
       state.store.save(state, state.session_id);
     } catch (err) {
       commit(SET_LAST_ERROR, err);
