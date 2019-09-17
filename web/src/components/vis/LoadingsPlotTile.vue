@@ -20,14 +20,13 @@ export default {
       validator: Number.isInteger,
     },
     points: {
-      validator: d => d === null || Array.isArray(d), // bad smell, allow null (and just null) but is required
+      validator: d => d === null || Array.isArray(d),
       required: true,
     },
   },
 
   data() {
     return {
-      // bad smell: pc axis selection not stored in the store
       pcXval: '1',
       pcYval: '2',
       showCrosshairs: true,

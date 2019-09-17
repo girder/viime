@@ -104,9 +104,9 @@ export default {
     dataset: {
       required: true,
       validator: prop => typeof prop === 'object'
-        && '_source' in prop // bad smell: avoid in operator
+        && '_source' in prop
         && typeof prop._source === 'object'
-        && 'columns' in prop._source // bad smell: redundant prop._source.columsn will just return undefined
+        && 'columns' in prop._source
         && Array.isArray(prop._source.columns),
     },
   },
@@ -147,7 +147,7 @@ export default {
         }));
       }
 
-      return null; // bad smell why not returning an empty array?
+      return null;
     },
     rowLabels() {
       return this.rawPoints.rows;
@@ -156,7 +156,7 @@ export default {
       const { dataset } = this;
       const column = dataset._source.columns.find(elem => elem.column_type === 'group');
 
-      return column.column_header; // bad smell: what if there is no group column?
+      return column.column_header;
     },
   },
   watch: {
@@ -277,7 +277,7 @@ export default {
         .attr('cy', d => this.scaleY(d.y));
 
       // Decompose the data into its label categories.
-      const streams = {}; // bad smell: prefer Map
+      const streams = {};
       xyPoints.forEach((p, i) => {
         const category = rawPoints.labels[group][i];
         if (!streams[category]) {
@@ -336,7 +336,7 @@ export default {
           // together with the rotation angle will enable calculating the x and
           // y projections of the axes onto the PC axes, and then the correct
           // pixel size in the mixed direction can be calculated via Pythagoras.
-          const sq = x => x * x; // bad smell: prefer Math.pow(x, 2)
+          const sq = x => x * x;
           const sin_t = Math.abs(Math.sin(rotation));
           const cos_t = Math.abs(Math.cos(rotation));
 
@@ -354,7 +354,6 @@ export default {
         });
 
         // Draw the ellipses.
-        // bad smell: use proper d3 binding either .join() or separate phases
         svg.select('g.ellipses')
           .selectAll('g.ellipse')
           .data(ellipses)
@@ -384,7 +383,7 @@ export default {
           });
       } else {
         svg.select('g.ellipses')
-          .selectAll('*') // bad smell: why *
+          .selectAll('*')
           .transition()
           .duration(this.duration)
           .style('opacity', 0.0)
