@@ -128,11 +128,9 @@ def upload_excel_file(file: FileStorage, meta: Dict):
             for sheet, data in excel_sheets.items():
                 push_file(basename.with_name('%s-%s' % (basename.name, sheet)), data)
 
-        serialized_files = [_serialize_csv_file(f) for f in db_files]
-
         db.session.commit()
 
-        return jsonify(serialized_files), 201
+        return jsonify([_serialize_csv_file(f) for f in db_files]), 201
     except Exception:
         for f in db_files:
             if f.uri.is_file():
