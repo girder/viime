@@ -39,9 +39,5 @@ vis-tile-large(title="Wilcoxon Test", :loading="plot.loading", expanded)
     toolbar-option(title="Alternatives", :value="plot.args.alternative",
         :options="alternatives",
         @change="changePlotArgs({alternative: $event})")
-  wilcoxon-plot(
-      :width="width",
-      :height="height",
-      :data="plot.data && plot.data.data",
-      :indices="plot.data && plot.data.indices")
+  wilcoxon-plot(:data="plot.data")
 </template>

@@ -6,8 +6,8 @@ export default {
       default: '',
     },
     loading: {
-      type: Boolean,
       default: false,
+      validator: prop => true,
     },
   },
 

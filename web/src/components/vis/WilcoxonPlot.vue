@@ -7,20 +7,16 @@ import Vue from 'vue';
 export default {
   props: {
     data: {
-      type: Array,
       required: true,
-    },
-    indices: {
-      type: Array,
-      required: true,
+      validator: prop => !prop || ('data' in prop && 'indices' in prop),
     },
   },
 
   computed: {
-    dataInternal() { return this.data || []; },
-    indicesInternal() { return this.indices || []; },
+    entries() { return (this.data && this.data.data) || []; },
+    indices() { return (this.data && this.data.indices) || []; },
     scale() {
-      const max_p_value = this.dataInternal.reduce(
+      const max_p_value = this.entries.reduce(
         (acc, entry) => Math.max(acc, entry.p), 0,
       ) || 1;
       return scaleSequential(interpolateGreys).domain([max_p_value, 0]);
@@ -28,7 +24,7 @@ export default {
     resultLookup() {
       const f = format('.2e');
       const r = new Map();
-      this.dataInternal.forEach((entry) => {
+      this.entries.forEach((entry) => {
         const { x, y } = entry;
         const key = this.computeKey(x, y);
         entry.color = this.scale(entry.p);
@@ -58,7 +54,7 @@ export default {
       return this.resultLookup.get(key);
     },
     getRow(x) {
-      return this.indicesInternal.map(y => this.getCell(x, y));
+      return this.indices.map(y => this.getCell(x, y));
     },
   },
 };
@@ -69,9 +65,9 @@ table.heatmap
   thead
     tr
       th
-      th.cell(v-for="(y,i) in indicesInternal", :key="i", v-text="y", :title="y")
+      th.cell(v-for="(y,i) in indices", :key="i", v-text="y", :title="y")
   tbody
-    tr(v-for="(x,i) in indicesInternal", :key="i")
+    tr(v-for="(x,i) in indices", :key="i")
       th.heatmaplabel(v-text="x", :title="x")
       td.cell(v-for="(cell,j) in getRow(x)",
           :key="j",

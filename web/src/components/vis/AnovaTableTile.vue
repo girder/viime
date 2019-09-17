@@ -11,7 +11,7 @@ export default {
     VisTileLarge,
   },
 
-  mixins: [plotData('wilcoxon')],
+  mixins: [plotData('anova')],
 
   props: {
     id: {
@@ -24,8 +24,5 @@ export default {
 
 <template lang="pug">
 vis-tile-large(title="Anova Table", :loading="plot.loading", expanded)
-  anova-table(
-      :width="width",
-      :height="height",
-      :data="plot.data")
+  anova-table(:data="plot.data")
 </template>
