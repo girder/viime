@@ -6,6 +6,8 @@ div
 
 <script>
 import c3 from 'c3';
+import { select } from 'd3-selection';
+
 import 'c3/c3.css';
 
 export default {
@@ -59,6 +61,12 @@ export default {
     },
   },
 
+  data() {
+    return {
+      chart: null,
+    };
+  },
+
   computed: {
     pcPoints() {
       const {
@@ -97,9 +105,9 @@ export default {
       const yGrouped = this.grouped(yData);
 
       const groups = Object.keys(xGrouped);
-      let columns = []
-      let xs = {};
-      groups.forEach(g => {
+      const columns = [];
+      const xs = {};
+      groups.forEach((g) => {
         const xName = `${g}_x`;
 
         columns.push([xName, ...xGrouped[g]]);
@@ -108,7 +116,7 @@ export default {
         xs[g] = xName;
       });
 
-      c3.generate({
+      this.chart = window.chart = c3.generate({
         bindto: this.$refs.chart,
         size: {
           width: 600,
@@ -132,6 +140,17 @@ export default {
         },
       });
 
+      select(this.$refs.chart)
+        .select('.c3-chart')
+        .append('g')
+        .classed('.c3-custom-ellipses', true)
+        .append('circle')
+        .attr('cx', this.chart.internal.x(4800))
+        .attr('cy', this.chart.internal.y(-572))
+        .attr('r', 50)
+        .style('stroke', 'red')
+        .style('fill', 'none');
+
       return String(Math.random());
     },
   },
@@ -145,7 +164,7 @@ export default {
 
       console.log(groupLabels, group);
 
-      let grouped = {};
+      const grouped = {};
 
       data.forEach((d, i) => {
         const g = groupLabels[group][i];
