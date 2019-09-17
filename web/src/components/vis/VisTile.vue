@@ -7,7 +7,7 @@ export default {
     },
     loading: {
       default: false,
-      validator: prop => true,
+      validator: () => true,
     },
   },
 

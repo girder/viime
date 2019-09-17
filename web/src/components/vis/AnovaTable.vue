@@ -1,6 +1,5 @@
 <script>
 import { format } from 'd3-format';
-import Vue from 'vue';
 
 export default {
 
@@ -13,12 +12,12 @@ export default {
 
   data() {
     return {
-      format: format('.2e')
+      format: format('.2e'),
     };
   },
 
   computed: {
-    items(){
+    items() {
       return (this.data && this.data.data) || [];
     },
     pairs() {
@@ -29,28 +28,28 @@ export default {
         {
           text: 'Metabolite',
           align: 'left',
-          value: 'Metabolite'
+          value: 'Metabolite',
         },
         {
           text: 'Intercept',
           align: 'right',
-          value: 'Intercept'
+          value: 'Intercept',
         },
         {
           text: 'Group',
           align: 'right',
-          value: 'Group'
+          value: 'Group',
         },
         {
           text: 'Residuals',
           align: 'right',
-          value: 'Residuals'
+          value: 'Residuals',
         },
-        ...this.pairs.map(text => ({ text, value: text, align: 'right' }))
+        ...this.pairs.map(text => ({ text, value: text, align: 'right' })),
       ];
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template lang="pug">

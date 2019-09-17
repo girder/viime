@@ -2,7 +2,6 @@
 import { scaleSequential } from 'd3-scale';
 import { interpolateGreys } from 'd3-scale-chromatic';
 import { format } from 'd3-format';
-import Vue from 'vue';
 
 export default {
   props: {
