@@ -73,6 +73,13 @@ export default {
       return [x, y];
     },
 
+    group() {
+      const { columns } = this;
+      const column = columns.find(elem => elem.column_type === 'group');
+
+      return column.column_header;
+    },
+
     update() {
       const {
         pcCoords,
@@ -86,6 +93,21 @@ export default {
 
       const [xData, yData] = pcPoints;
 
+      const xGrouped = this.grouped(xData);
+      const yGrouped = this.grouped(yData);
+
+      const groups = Object.keys(xGrouped);
+      let columns = []
+      let xs = {};
+      groups.forEach(g => {
+        const xName = `${g}_x`;
+
+        columns.push([xName, ...xGrouped[g]]);
+        columns.push([g, ...yGrouped[g]]);
+
+        xs[g] = xName;
+      });
+
       c3.generate({
         bindto: this.$refs.chart,
         size: {
@@ -93,14 +115,8 @@ export default {
           height: 600,
         },
         data: {
-          xs: {
-            // [y]: x,
-            PC2: 'PC1',
-          },
-          columns: [
-            [x, ...xData],
-            [y, ...yData],
-          ],
+          xs,
+          columns,
           type: 'scatter',
         },
         axis: {
@@ -117,6 +133,31 @@ export default {
       });
 
       return String(Math.random());
+    },
+  },
+
+  methods: {
+    grouped(data) {
+      const {
+        groupLabels,
+        group,
+      } = this;
+
+      console.log(groupLabels, group);
+
+      let grouped = {};
+
+      data.forEach((d, i) => {
+        const g = groupLabels[group][i];
+
+        if (!Object.prototype.hasOwnProperty.call(grouped, g)) {
+          grouped[g] = [];
+        }
+
+        grouped[g].push(d);
+      });
+
+      return grouped;
     },
   },
 };
