@@ -218,9 +218,8 @@ const mutations = {
   },
 
   [SET_PLOT](state, { dataset_id, name, obj }) {
-    Object.keys(obj).forEach((key) => {
-      Vue.set(state.plots[dataset_id][name], key, obj[key]);
-    });
+    const plot = state.plots[dataset_id][name];
+    Vue.set(state.plots[dataset_id], name, { ...plot, ...obj });
   },
 
   [SET_SELECTION](state, {

@@ -72,7 +72,7 @@ table.heatmap
       th.cell(v-for="(y,i) in indicesInternal", :key="i", v-text="y", :title="y")
   tbody
     tr(v-for="(x,i) in indicesInternal", :key="i")
-      td.heatmaplabel(v-text="x", :title="x")
+      th.heatmaplabel(v-text="x", :title="x")
       td.cell(v-for="(cell,j) in getRow(x)",
           :key="j",
           :style="{ backgroundColor: cell.color }", :title="cell.title")

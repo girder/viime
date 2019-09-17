@@ -38,7 +38,7 @@ export default function (plotName) {
         this.setPlot({
           dataset_id: this.id,
           name: plotName,
-          obj: { loading: true, valid: false, args },
+          obj: { loading: false, valid: false, args: { ...this.plot.args, ...args }},
         });
       },
       reloadPlot() {
