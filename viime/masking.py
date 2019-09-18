@@ -1,4 +1,4 @@
-from metabulo.opencpu import opencpu_request
+from viime.opencpu import opencpu_request
 
 
 def mask_columns_by_group(table, groups, threshold):

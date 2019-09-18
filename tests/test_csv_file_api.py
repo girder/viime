@@ -2,7 +2,7 @@ from io import BytesIO
 
 from flask import url_for
 
-from metabulo.models import CSVFile, CSVFileSchema, db, ValidatedMetaboliteTable
+from viime.models import CSVFile, CSVFileSchema, db, ValidatedMetaboliteTable
 
 csv_data = """
 id,col1,col2

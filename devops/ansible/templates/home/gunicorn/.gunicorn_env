@@ -1,5 +1,5 @@
 export SECRET_KEY={{ flask_secret }}
-export FLASK_APP=metabulo/wsgi:app
+export FLASK_APP=viime/wsgi:app
 export FLASK_ENV=production
 
 export SQLALCHEMY_DATABASE_URI={{ sqlalchemy_database_uri }}

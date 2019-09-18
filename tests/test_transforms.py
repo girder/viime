@@ -6,10 +6,10 @@ import pandas
 from pandas.testing import assert_frame_equal
 import pytest
 
-from metabulo import normalization
-from metabulo import scaling
-from metabulo import transformation
-from metabulo.models import CSVFile, db, ValidatedMetaboliteTable
+from viime import normalization
+from viime import scaling
+from viime import transformation
+from viime.models import CSVFile, db, ValidatedMetaboliteTable
 
 
 @pytest.fixture
