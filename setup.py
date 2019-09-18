@@ -42,7 +42,8 @@ setup(
         'sklearn',
         'sqlalchemy-utils',
         'webargs',
-        'Werkzeug>=0.15'
+        'Werkzeug>=0.15',
+        'xlrd>= 1.0.0'
     ],
     extras_require={
         'memcached': ['pylibmc'],

@@ -3,7 +3,7 @@ import { mapState } from 'vuex';
 import { sizeFormatter } from '@girder/components/src/utils/mixins';
 import Dropzone from '@girder/components/src/components/Presentation/Dropzone.vue';
 import FileList from '@girder/components/src/components/Presentation/FileUploadList.vue';
-import { UPLOAD_CSV } from '@/store/actions.type';
+import { UPLOAD_CSV, UPLOAD_EXCEL } from '@/store/actions.type';
 import { REMOVE_DATASET } from '@/store/mutations.type';
 
 const sampleTypes = [
@@ -75,12 +75,20 @@ export default {
         progress: {},
         meta: {},
       })));
+
+      const excelMimeTypes = [
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ];
+
+      const isExcelFile = file => excelMimeTypes.includes(file.type) || file.name.match(/\.xlsx?$/i);
+
       const promises = this.pendingFiles
         .filter(f => f.status === 'pending')
         .map(async (file) => {
           file.status = 'uploading';
           try {
-            await this.$store.dispatch(UPLOAD_CSV,
+            await this.$store.dispatch(isExcelFile(file.file) ? UPLOAD_EXCEL : UPLOAD_CSV,
               { file: file.file });
             file.status = 'done';
           } catch (err) {
@@ -123,7 +131,7 @@ v-layout.upload-component(column, fill-height)
 
   v-layout.grow-overflow(column, fill-height)
     .ma-4
-      h3.headline.font-weight-bold.primary--text.text--darken-3 Upload your data (csv or txt)
+      h3.headline.font-weight-bold.primary--text.text--darken-3 Upload your data (csv, xlsx, or txt)
       p.secondary--text.text--lighten-1 Choose a file from your computer
 
     .mx-4.mb-4(v-if="files.length")

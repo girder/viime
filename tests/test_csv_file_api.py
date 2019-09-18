@@ -13,7 +13,7 @@ row2,1.5,0
 
 def test_upload_csv_file(client):
     data = {
-        'file': (BytesIO(csv_data.encode()), 'test_file1.csv'),
+        'file': (BytesIO(csv_data.encode()), 'test_file1.csv', 'text/csv'),
         'meta': '{"foo": "bar"}'
     }
     resp = client.post(

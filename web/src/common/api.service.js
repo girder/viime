@@ -81,3 +81,12 @@ export const CSVService = {
     return ApiService.post(`csv/${slug}/validate`);
   },
 };
+
+
+export const ExcelService = {
+  upload(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return ApiService.upload('excel', formData);
+  },
+};
