@@ -15,6 +15,7 @@ import {
   UPLOAD_CSV,
   UPLOAD_EXCEL,
   CHANGE_IMPUTATION_OPTIONS,
+  EDIT_META_DATA,
 } from './actions.type';
 
 import {
@@ -119,7 +120,9 @@ const mutations = {
       _source: data,
       id,
       name,
+      label: data.meta.label || name, // label is either the name or part of the meta data
       size,
+      meta: data.meta,
       ready: true,
       width: sourcerows[0].length, // TODO: get from server
       height: sourcerows.length, // TODO: get from server
@@ -315,6 +318,13 @@ const actions = {
   async [CHANGE_IMPUTATION_OPTIONS]({ commit }, { dataset_id, options }) {
     commit(SET_LOADING, true);
     await CSVService.setImputation(dataset_id, options);
+    await load_dataset({ commit }, { dataset_id });
+    commit(SET_LOADING, false);
+  },
+
+  async [EDIT_META_DATA]({ commit }, { dataset_id, metaData }) {
+    commit(SET_LOADING, true);
+    await CSVService.setMetaData(dataset_id, metaData);
     await load_dataset({ commit }, { dataset_id });
     commit(SET_LOADING, false);
   },

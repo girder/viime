@@ -73,6 +73,10 @@ export const CSVService = {
     return ApiService.put(`csv/${slug}/imputation`, methods);
   },
 
+  setMetaData(slug, metaData) {
+    return ApiService.put(`csv/${slug}/metadata`, metaData);
+  },
+
   updateLabel(csvSlug, changes) {
     return ApiService.put(`csv/${csvSlug}/batch/label`, { changes });
   },

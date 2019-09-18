@@ -3,8 +3,9 @@ import { mapState } from 'vuex';
 import { sizeFormatter } from '@girder/components/src/utils/mixins';
 import Dropzone from '@girder/components/src/components/Presentation/Dropzone.vue';
 import FileList from '@girder/components/src/components/Presentation/FileUploadList.vue';
-import { UPLOAD_CSV, UPLOAD_EXCEL } from '@/store/actions.type';
+import { UPLOAD_CSV, UPLOAD_EXCEL, EDIT_META_DATA } from '@/store/actions.type';
 import { REMOVE_DATASET } from '@/store/mutations.type';
+import EditDatasetDialog from './EditDatasetDialog.vue';
 
 const sampleTypes = [
   { name: 'Serum', value: 'serum' },
@@ -26,6 +27,7 @@ export default {
   components: {
     FileList,
     Dropzone,
+    EditDatasetDialog,
   },
   mixins: [sizeFormatter],
   data() {
@@ -35,6 +37,7 @@ export default {
       pendingFiles: [],
       dataTypes,
       sampleTypes,
+      toEdit: null,
     };
   },
   computed: {
@@ -114,6 +117,21 @@ export default {
     removeAll() {
       this.readyFiles.concat(this.pendingFiles).forEach(f => this.remove(f));
     },
+
+    editDataset(dataset) {
+      this.toEdit = dataset;
+    },
+
+    async saveDatasetMetadata(metaData) {
+      const ds = this.toEdit;
+      this.toEdit = null;
+
+      if (!metaData) {
+        // canceled
+        return;
+      }
+      await this.$store.dispatch(EDIT_META_DATA, { dataset_id: ds.id, metaData });
+    },
   },
 };
 </script>
@@ -143,13 +161,13 @@ v-layout.upload-component(column, fill-height)
           | clear all
       v-list.upload-list
         template(v-for="(file, idx) in files")
-          v-list-tile.pa-2(:key="file.file.name + file.status")
+          v-list-tile.pa-2(:key="file.meta.id || (file.file.name + file.status)")
             v-list-tile-action
               v-btn(:disabled="file.status === 'uploading'",
                   icon, @click="doDelete = () => { remove(file); }; deleteCount = 1;")
                 v-icon {{ $vuetify.icons.close }}
             v-list-tile-content.shrink
-              v-list-tile-title(v-text="`${file.file.name} `")
+              v-list-tile-title(v-text="`${file.meta.label || file.file.name} `")
               v-list-tile-sub-title(v-text="formatSize(file.file.size)")
             v-list-tile-content.px-2.shrink(v-if="file.status === 'error'")
               v-chip.largetext(small, color="error", text-color="white")
@@ -187,6 +205,8 @@ v-layout.upload-component(column, fill-height)
                   :disabled="true",
                   :items="dataTypes", label="Type of data",
                   item-text="name", item-value="value")
+              v-btn(icon, @click="editDataset(file.meta)", :disabled="file.status !== 'done'")
+                v-icon {{ $vuetify.icons.edit }}
           v-divider(v-if="idx + 1 < files.length", :key="idx")
     dropzone.filezone.mx-4.mb-4(:multiple="true", :message="message", @change="onFileChange")
 
@@ -195,6 +215,9 @@ v-layout.upload-component(column, fill-height)
     v-btn.ma-0(:disabled="readyFiles.length === 0", depressed, color="accent", @click="next")
       | Continue
       v-icon.pl-1 {{ $vuetify.icons.arrowRight }}
+
+  edit-dataset-dialog(v-if="toEdit != null", :dataset="toEdit",
+      @submit="saveDatasetMetadata($event)")
 </template>
 
 <style lang="scss", scoped>
