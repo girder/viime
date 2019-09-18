@@ -18,12 +18,12 @@ from sqlalchemy_utils.types.json import JSONType
 from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
 
-from metabulo.cache import clear_cache, csv_file_cache, region
-from metabulo.imputation import IMPUTE_MCAR_METHODS, impute_missing, IMPUTE_MNAR_METHODS
-from metabulo.normalization import NORMALIZATION_METHODS, normalize
-from metabulo.scaling import scale, SCALING_METHODS
-from metabulo.table_validation import get_fatal_index_errors, get_validation_list
-from metabulo.transformation import transform, TRANSFORMATION_METHODS
+from viime.cache import clear_cache, csv_file_cache, region
+from viime.imputation import IMPUTE_MCAR_METHODS, impute_missing, IMPUTE_MNAR_METHODS
+from viime.normalization import NORMALIZATION_METHODS, normalize
+from viime.scaling import scale, SCALING_METHODS
+from viime.table_validation import get_fatal_index_errors, get_validation_list
+from viime.transformation import transform, TRANSFORMATION_METHODS
 
 
 # This is to avoid having to manually name all constraints

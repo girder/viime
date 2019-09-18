@@ -1,8 +1,8 @@
 import click
 import flask_migrate
 
-from metabulo.app import create_app
-from metabulo.models import db
+from viime.app import create_app
+from viime.models import db
 
 
 @click.command()

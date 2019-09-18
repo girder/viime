@@ -63,7 +63,7 @@ jobs:
             tox -e release
       - run:
           name: Copy to a standard location
-          command: cp dist/metabulo* dist/metabulo-sdist.tar.gz
+          command: cp dist/viime* dist/viime-sdist.tar.gz
       - persist_to_workspace:
           root: .
           paths:
@@ -80,9 +80,9 @@ jobs:
           working_directory: ./devops
           name: Build and push Docker image
           command: |
-            docker build -t metabulo/opencpu:latest .
+            docker build -t viime/opencpu:latest .
             echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USERNAME --password-stdin
-            docker push metabulo/opencpu:latest
+            docker push viime/opencpu:latest
 
   deploy:
     docker:
@@ -92,7 +92,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: /tmp/metabulo
+          at: /tmp/viime
       - run:
           name: Install jq
           command: (sudo apt-get update || true) && sudo apt-get install -y jq

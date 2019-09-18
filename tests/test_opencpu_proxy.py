@@ -4,7 +4,7 @@ from httmock import all_requests, HTTMock
 import pandas
 import pytest
 
-from metabulo.opencpu import OpenCPUException, process_table
+from viime.opencpu import OpenCPUException, process_table
 
 csv_data = """id,col1,col2
 row1,0.5,2.0
