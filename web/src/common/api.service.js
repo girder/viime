@@ -51,6 +51,10 @@ export const CSVService = {
     return ApiService.get('csv', `${slug}/plot/${type}`, params);
   },
 
+  getAnalysis(slug, key, params = {}) {
+    return ApiService.get('csv', `${slug}/analyses/${key}`, params);
+  },
+
   post(data) {
     return ApiService.post('csv', data);
   },
@@ -79,5 +83,14 @@ export const CSVService = {
 
   validateTable(slug) {
     return ApiService.post(`csv/${slug}/validate`);
+  },
+};
+
+
+export const ExcelService = {
+  upload(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return ApiService.upload('excel', formData);
   },
 };

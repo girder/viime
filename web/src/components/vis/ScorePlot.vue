@@ -125,8 +125,6 @@ export default {
         bottom: 50,
         left: 50,
       },
-      xrange: [-1, 1],
-      yrange: [-1, 1],
       fadeInDuration: 500,
       duration: 200,
     };
@@ -151,6 +149,18 @@ export default {
         x: p[pcX - 1],
         y: p[pcY - 1],
       }));
+    },
+
+    xrange() {
+      return minmax(this.xyPoints.map(p => p.x), 0.1);
+    },
+
+    yrange() {
+      return minmax(this.xyPoints.map(p => p.y), 0.1);
+    },
+
+    rowLabels() {
+      return this.rawPoints.rows;
     },
 
     group() {
@@ -179,17 +189,12 @@ export default {
     } = this;
 
     if (xyPoints) {
-      this.setRanges(xyPoints);
       const svg = select(this.$refs.svg);
       this.axisPlot(svg);
       this.update();
     }
   },
   methods: {
-    setRanges(xyPoints) {
-      this.xrange = minmax(xyPoints.map(p => p.x), 0.1);
-      this.yrange = minmax(xyPoints.map(p => p.y), 0.1);
-    },
     update() {
       // Grab the input props.
       const {
@@ -210,7 +215,6 @@ export default {
       const totVariance = eigenvalues.reduce((acc, x) => acc + x, 0);
       const pctFormat = format('.2%');
       const svg = select(this.$refs.svg);
-      this.setRanges(xyPoints);
       this.axisPlot(svg);
       this.setXLabel(`${xlabel} (${pctFormat(eigenvalues[pcX - 1] / totVariance)})`);
       this.setYLabel(`${ylabel} (${pctFormat(eigenvalues[pcY - 1] / totVariance)})`);

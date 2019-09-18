@@ -12,6 +12,7 @@ div
         line.vert
       g.plot
   .tooltip(ref="tooltip")
+  span(style="display: none", v-if="pointsInternal.length > 0") {{ update }}
 </template>
 
 <style scoped lang="scss">
@@ -75,53 +76,19 @@ export default {
         bottom: 50,
         left: 50,
       },
-      xrange: [-1.2, 1.2],
-      yrange: [-1.2, 1.2],
       fadeInDuration: 500,
       duration: 200,
     };
   },
   computed: {
-    group() {
-      const { dataset } = this;
-      const column = dataset._source.columns.find(elem => elem.column_type === 'group');
-
-      return column.column_header;
-    },
-  },
-  watch: {
-    points(newval) {
-      if (newval) {
-        this.update();
-      }
+    pointsInternal() {
+      return this.points || [];
     },
 
-    pcX() {
-      this.update();
-    },
-
-    pcY() {
-      this.update();
-    },
-
-    showCrosshairs() {
-      this.update();
-    },
-  },
-  mounted() {
-    const svg = select(this.$refs.svg);
-    this.axisPlot(svg);
-    this.setXLabel('PC1 correlation');
-    this.setYLabel('PC2 correlation');
-    if (this.points) {
-      this.update();
-    }
-  },
-  methods: {
     update() {
       // Grab the input props.
       const {
-        points,
+        pointsInternal,
         pcX,
         pcY,
         showCrosshairs,
@@ -169,7 +136,7 @@ export default {
 
       svg.select('g.plot')
         .selectAll('circle')
-        .data(points)
+        .data(pointsInternal)
         .join(enter => enter.append('circle')
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))
@@ -204,7 +171,16 @@ export default {
         .attr('r', radius)
         .attr('cx', d => this.scaleX(d.cor[pcX - 1]))
         .attr('cy', d => this.scaleY(d.cor[pcY - 1]));
+
+      return '';
     },
+  },
+
+  mounted() {
+    const svg = select(this.$refs.svg);
+    this.axisPlot(svg);
+    this.setXLabel('PC1 correlation');
+    this.setYLabel('PC2 correlation');
   },
 };
 </script>

@@ -1,7 +1,7 @@
 from pytest import fixture
 
-from metabulo.models import CSVFileSchema, db, TABLE_COLUMN_TYPES, TABLE_ROW_TYPES
-from metabulo.table_validation import get_low_variance_warnings, \
+from viime.models import CSVFileSchema, db, TABLE_COLUMN_TYPES, TABLE_ROW_TYPES
+from viime.table_validation import get_low_variance_warnings, \
     get_missing_percent_warnings, get_non_numeric_warnings, \
     get_validation_list, ValidationSchema
 

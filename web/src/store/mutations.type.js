@@ -1,9 +1,9 @@
-export const REFRESH_PLOT = 'refresh_plot';
 export const REMOVE_DATASET = 'remove_dataset';
 export const SET_DATASET = 'set_dataset';
 export const SET_LABELS = 'set_labels';
 export const SET_LAST_ERROR = 'set_last_error';
 export const SET_LOADING = 'set_loading';
+export const SET_PLOT = 'set_plot';
 export const SET_SELECTION = 'set_selection';
 export const SET_SOURCE_DATA = 'set_source_data';
 export const SET_SESSION_STORE = 'set_session_store';

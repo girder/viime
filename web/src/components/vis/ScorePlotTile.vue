@@ -1,12 +1,15 @@
 <script>
 import ScorePlot from '@/components/vis/ScorePlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
+import plotData from './mixins/plotData';
 
 export default {
   components: {
     ScorePlot,
     VisTile,
   },
+
+  mixins: [plotData('pca')],
 
   props: {
     width: {
@@ -19,21 +22,9 @@ export default {
       type: Number,
       validator: Number.isInteger,
     },
-    pcCoords: {
+    id: {
+      type: String,
       required: true,
-      type: Array,
-    },
-    rowLabels: {
-      required: true,
-      type: Array,
-    },
-    groupLabels: {
-      required: true,
-      type: Object,
-    },
-    eigenvalues: {
-      required: true,
-      type: Array,
     },
     columns: {
       required: true,
@@ -63,15 +54,16 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(title="PCA Score Plot")
+vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading")
   score-plot(
       :width="width",
       :height="height",
-      :pc-coords="pcCoords",
-      :row-labels="rowLabels",
-      :group-labels="groupLabels",
-      :eigenvalues="eigenvalues",
+      :pc-coords="plot.data.x",
+      :row-labels="plot.data.rows",
+      :group-labels="plot.data.labels",
+      :eigenvalues="plot.data.sdev",
       :columns="columns",
+      :dataset="dataset",
       :pc-x="pcX",
       :pc-y="pcY",
       :show-ellipses="showEllipses")

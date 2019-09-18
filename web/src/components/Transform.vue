@@ -1,18 +1,20 @@
 <script>
 import { mapState } from 'vuex';
-import { MUTEX_TRANSFORM_TABLE, LOAD_PLOT } from '@/store/actions.type';
+import { MUTEX_TRANSFORM_TABLE } from '@/store/actions.type';
 import {
   normalize_methods,
   scaling_methods,
   transform_methods,
 } from '@/utils/constants';
 import ScorePlotTile from '@/components/vis/ScorePlotTile.vue';
+import ScreePlotTile from '@/components/vis/ScreePlotTile.vue';
 import LoadingsPlotTile from '@/components/vis/LoadingsPlotTile.vue';
 
 export default {
   components: {
     LoadingsPlotTile,
     ScorePlotTile,
+    ScreePlotTile,
   },
   props: {
     id: {
@@ -37,46 +39,8 @@ export default {
     norm_arg() { return this.$store.getters.txType(this.id, 'normalization_argument'); },
     trans() { return this.$store.getters.txType(this.id, 'transformation'); },
     scaling() { return this.$store.getters.txType(this.id, 'scaling'); },
-    pcaData() { return this.$store.getters.plotData(this.id, 'pca'); },
-    pcaValid() { return this.$store.getters.plotValid(this.id, 'pca'); },
-    loadingsData() { return this.$store.getters.plotData(this.id, 'loadings'); },
-    loadingsValid() { return this.$store.getters.plotValid(this.id, 'loadings'); },
-  },
-  watch: {
-    pcaValid: {
-      immediate: true,
-      handler(valid) { this.pcaLoader(valid); },
-    },
-    loadingsValid: {
-      immediate: true,
-      handler(valid) { this.loadingsLoader(valid); },
-    },
-    id() {
-      this.pcaLoader(this.pcaValid);
-      this.loadingsLoader(this.loadingsValid);
-    },
-    loading() {
-      this.pcaLoader(this.pcaValid);
-      this.loadingsLoader(this.loadingsValid);
-    },
   },
   methods: {
-    pcaLoader(valid) {
-      if (valid === false) {
-        this.$store.dispatch(LOAD_PLOT, {
-          dataset_id: this.id,
-          name: 'pca',
-        });
-      }
-    },
-    loadingsLoader(valid) {
-      if (valid === false) {
-        this.$store.dispatch(LOAD_PLOT, {
-          dataset_id: this.id,
-          name: 'loadings',
-        });
-      }
-    },
     async transformTable(value, category, argument, methods) {
       /* If there's no argument and there should be, pick the firt from the list */
       const method = methods.find(v => v.value === value);
@@ -155,16 +119,16 @@ v-layout.transform-component(row, fill-height)
         score-plot-tile(
             :width="600",
             :height="600",
-            :raw-points="pcaData",
-            :pc-coords="pcaData.x",
-            :row-labels="pcaData.rows",
-            :group-labels="pcaData.labels",
-            :eigenvalues="pcaData.sdev",
-            :columns="dataset._source.columns")
+            :columns="dataset._source.columns"
+            :id="id")
         loadings-plot-tile(
             :width="600",
             :height="600",
-            :points="loadingsData")
+            :id="id")
+        scree-plot-tile(
+            :width="600",
+            :height="600",
+            :id="id")
   v-container(v-else-if="ready", fill-height)
     v-layout(column)
       .display-2 Error: Cannot show transform table

@@ -18,7 +18,7 @@ const step3 = {
 };
 const step4 = {
   name: 'Analysis',
-  description: '',
+  description: 'Analyze your data using statistical tests and visualizations',
   icon: 'checkedFlag',
 };
 const steps = [step1, step2, step3, step4];

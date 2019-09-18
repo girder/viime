@@ -10,7 +10,7 @@ from alembic import op
 import sqlalchemy as sa
 import sqlalchemy_utils
 
-from metabulo.models import CSVFile, db, ValidatedMetaboliteTable
+from viime.models import CSVFile, db, ValidatedMetaboliteTable
 
 
 revision = '543488f52e75'

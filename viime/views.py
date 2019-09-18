@@ -2,26 +2,30 @@ from functools import wraps
 from io import BytesIO
 import json
 import math
+from pathlib import PurePath
+from typing import cast, Dict, Optional
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
 import pandas
 from webargs.flaskparser import use_kwargs
+from werkzeug import FileStorage
 
-from metabulo import opencpu
-from metabulo.cache import csv_file_cache
-from metabulo.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
-from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
+from viime import opencpu
+from viime.analyses import anova_test, wilcoxon_test
+from viime.cache import csv_file_cache
+from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
+from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
     ModifyLabelListSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     TableColumn, TableColumnSchema, TableRow, \
     TableRowSchema, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
-from metabulo.normalization import validate_normalization_method
-from metabulo.plot import pca
-from metabulo.scaling import SCALING_METHODS
-from metabulo.table_validation import get_fatal_index_errors, ValidationSchema
-from metabulo.transformation import TRANSFORMATION_METHODS
+from viime.normalization import validate_normalization_method
+from viime.plot import pca
+from viime.scaling import SCALING_METHODS
+from viime.table_validation import get_fatal_index_errors, ValidationSchema
+from viime.transformation import TRANSFORMATION_METHODS
 
 csv_file_schema = CSVFileSchema()
 modify_label_list_schema = ModifyLabelListSchema()
@@ -51,27 +55,27 @@ def _serialize_csv_file(csv_file):
     return csv_file_schema.dump(csv_file)
 
 
+class JSONDictStr(fields.Dict):
+    def _deserialize(self, value, *args, **kwargs):
+        try:
+            value = json.loads(value)
+        except Exception:
+            pass
+        return super()._deserialize(value, *args, **kwargs)
+
+
 @csv_bp.route('/csv/upload', methods=['POST'])
-def upload_csv_file():
-    if 'file' not in request.files:
-        return jsonify('No file provided in request'), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify('No file selected'), 400
-
+@use_kwargs({
+    'file': fields.Field(location='files', validate=lambda f: f.content_type == 'text/csv'),
+    'meta': JSONDictStr(missing=dict)
+})
+def upload_csv_file(file, meta):
     csv_file = None
-    meta_string = request.form.get('meta', '{}')
-    try:
-        meta = json.loads(meta_string)
-    except Exception:
-        raise ValidationError(
-            'Expected a json encoded string for metadata', field_name='meta', data=meta_string)
 
     try:
         csv_file = csv_file_schema.load({
             'name': file.filename,
-            'table': file.read().decode(),
+            'table': file.read().decode(errors='replace'),
             'meta': meta
         })
 
@@ -82,6 +86,60 @@ def upload_csv_file():
     except Exception:
         if csv_file and csv_file.uri.is_file():
             csv_file.uri.unlink()
+        db.session.rollback()
+        raise
+
+
+_excel_mime_types = [
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+]
+
+
+@csv_bp.route('/excel/upload', methods=['POST'])
+@use_kwargs({
+    'file': fields.Field(location='files', required=True,
+                         validate=lambda f: f.content_type in _excel_mime_types),
+    'meta': JSONDictStr(missing={})
+})
+def upload_excel_file(file: FileStorage, meta: Dict):
+    excel_sheets = pandas.read_excel(file, sheet_name=None)  # type: Dict[str, pandas.DataFrame]
+    excel_sheets = {sheet: data for (sheet, data) in excel_sheets.items() if not data.empty}
+
+    basename = PurePath(cast(str, file.filename)).with_suffix('')
+
+    try:
+        db_files = []
+
+        def push_file(name: PurePath, data: pandas.DataFrame):
+            db_file = csv_file_schema.load({
+                'name': name.with_suffix('.csv').name,
+                'table': data.to_csv(index=False),
+                'meta': meta
+            })
+
+            db_files.append(db_file)
+            db.session.add(db_file)
+
+        if len(excel_sheets) == 1:
+            # single file case, simple name
+            data = next(iter(excel_sheets.values()))
+            push_file(basename, data)
+        else:
+            for sheet, data in excel_sheets.items():
+                push_file(basename.with_name('%s-%s' % (basename.name, sheet)), data)
+
+        db.session.flush()
+
+        serialized = [_serialize_csv_file(f) for f in db_files]
+
+        db.session.commit()
+
+        return jsonify(serialized), 201
+    except Exception:
+        for f in db_files:
+            if f.uri.is_file():
+                f.uri.unlink()
         db.session.rollback()
         raise
 
@@ -469,6 +527,42 @@ def get_loadings_plot(validated_table):
 @csv_bp.route('/csv/<uuid:csv_id>/pca-overview', methods=['GET'])
 @load_validated_csv_file
 def get_pca_overview(validated_table):
-    png_content = opencpu.generate_image('/metabulo/R/pca_overview_plot',
+    png_content = opencpu.generate_image('/viime/R/pca_overview_plot',
                                          validated_table.measurements)
     return Response(png_content, mimetype='image/png')
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/wilcoxon', methods=['GET'])
+@use_kwargs({
+    'zero_method': fields.Str(missing='wilcox',
+                              validate=validate.OneOf(['wilcox', 'pratt', 'zsplit'])),
+    'alternative': fields.Str(missing='two-sided',
+                              validate=validate.OneOf(['two-sided', 'greater', 'less']))
+})
+@load_validated_csv_file
+def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable,
+                      zero_method: str, alternative: str):
+    table = validated_table.measurements
+
+    data = wilcoxon_test(table, zero_method, alternative)
+
+    return jsonify(data), 200
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/anova', methods=['GET'])
+@use_kwargs({
+    'group_column': fields.Str()
+})
+@load_validated_csv_file
+def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Optional[str] = None):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+
+    group = groups.iloc[:, 0] if group_column is None else groups.loc[:, group_column]
+    if group is None:
+        raise ValidationError(
+            'invalid group column', field_name='group_column', data=group_column)
+
+    data = anova_test(measurements, group)
+
+    return jsonify(data), 200
