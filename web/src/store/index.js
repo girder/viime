@@ -35,6 +35,7 @@ const SET_LAST_ERROR = 'set_last_error';
 const SET_LOADING = 'set_loading';
 const SET_SESSION_STORE = 'set_session_store';
 const SET_TRANSFORMATION = 'set_transformation';
+const SET_ALL_TRANSFORMATIONS = 'set_all_transformations';
 
 Vue.use(Vuex);
 
@@ -147,15 +148,10 @@ const mutations = {
       sourcerows,
       // most recent copy of data with all transforms applied.
       transformed: data,
-      // mutually exclusive transformation categories
-      normalization: data.normalization,
-      normalization_argument: data.normalization_argument,
-      transformation: data.transformation,
-      transformation_argument: null,
-      scaling: data.scaling,
-      scaling_argument: null,
       imputationMCAR: data.imputation_mcar,
       imputationMNAR: data.imputation_mnar,
+      // danger: use _source as a last resort
+      // _source: data,
     }});
   },
 
@@ -227,11 +223,19 @@ const mutations = {
    * @private
    */
   [SET_TRANSFORMATION](state, {
-    key, data, transform_type, category, argument,
+    dataset_id, transform_type, category, argument,
   }) {
-    Vue.set(state.datasets[key], category, transform_type);
-    Vue.set(state.datasets[key], `${category}_argument`, argument);
-    Vue.set(state.datasets[key], 'transformed', data);
+    Vue.set(state.datasets[dataset_id], category, transform_type);
+    Vue.set(state.datasets[dataset_id], `${category}_argument`, argument);
+  },
+
+  [SET_ALL_TRANSFORMATIONS](state, { dataset_id, data }) {
+    Vue.set(state.datasets[dataset_id], 'normalization', data.normalization);
+    Vue.set(state.datasets[dataset_id], 'normalization_argument', data.normalization_argument);
+    Vue.set(state.datasets[dataset_id], 'transformation', data.transformation);
+    Vue.set(state.datasets[dataset_id], 'transformation_argument', null);
+    Vue.set(state.datasets[dataset_id], 'scaling', data.scaling);
+    Vue.set(state.datasets[dataset_id], 'scaling_argument', null);
   },
 };
 
@@ -283,7 +287,8 @@ const actions = {
       const valid = _getters.valid(dataset_id);
       if (valid) {
         // checkpoint
-        await CSVService.validateTable(dataset_id);
+        const { data: validationdata } = await CSVService.validateTable(dataset_id);
+        commit(SET_ALL_TRANSFORMATIONS, { dataset_id, data: validationdata });
       }
     } catch (err) {
       commit(SET_LAST_ERROR, err);
@@ -353,8 +358,8 @@ const actions = {
     const key = dataset_id;
     commit(SET_LOADING, true);
     try {
-      const { data } = await CSVService.setTransform(key, category, transform_type, argument);
-      commit(SET_TRANSFORMATION, { key, data, transform_type, category, argument });
+      await CSVService.setTransform(key, category, transform_type, argument);
+      commit(SET_TRANSFORMATION, { dataset_id, transform_type, category, argument });
       commit(INVALIDATE_PLOTS, { dataset_id });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
