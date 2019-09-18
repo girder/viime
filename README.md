@@ -69,7 +69,7 @@ actually intended behavior and can be avoided by running the image *without*
 allocating a pseudo-terminal and keeping `stdin` open:
 
 ```sh
-docker run --name viime -p 8004:8004 viime
+docker run --rm --name viime -p 8004:8004 viime
 ```
 
 To stop this container, use a command like `docker stop viime` from another
