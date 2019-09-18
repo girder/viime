@@ -48,6 +48,32 @@ export default {
     pcY() {
       return Number.parseInt(this.pcYval, 10);
     },
+
+    pcCoords() {
+      return this.maybeData('x', []);
+    },
+
+    rowLabels() {
+      return this.maybeData('rows', []);
+    },
+
+    groupLabels() {
+      return this.maybeData('labels', {});
+    },
+
+    eigenvalues() {
+      return this.maybeData('sdev', []);
+    },
+  },
+
+  methods: {
+    maybeData(key, dflt) {
+      const {
+        plot,
+      } = this;
+
+      return plot.data ? plot.data[key] : dflt;
+    },
   },
 };
 
@@ -58,10 +84,10 @@ vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading")
   score-plot(
       :width="width",
       :height="height",
-      :pc-coords="plot.data.x",
-      :row-labels="plot.data.rows",
-      :group-labels="plot.data.labels",
-      :eigenvalues="plot.data.sdev",
+      :pc-coords="pcCoords",
+      :row-labels="rowLabels",
+      :group-labels="groupLabels",
+      :eigenvalues="eigenvalues",
       :columns="columns",
       :dataset="dataset",
       :pc-x="pcX",

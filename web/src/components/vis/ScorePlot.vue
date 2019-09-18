@@ -104,7 +104,6 @@ export default {
     groupLabels: {
       required: true,
       type: Object,
-      validator: prop => Object.values(prop).every(labels => labels.every(val => typeof val === 'string')),
     },
     eigenvalues: {
       required: true,
@@ -159,15 +158,25 @@ export default {
       return minmax(this.xyPoints.map(p => p.y), 0.1);
     },
 
-    rowLabels() {
-      return this.rawPoints.rows;
-    },
-
     group() {
       const { columns } = this;
       const column = columns.find(elem => elem.column_type === 'group');
 
       return column.column_header;
+    },
+
+    valid() {
+      const {
+        pcCoords,
+        rowLabels,
+        groupLabels,
+        eigenvalues,
+      } = this;
+
+      return pcCoords.length > 0
+        && rowLabels.length > 0
+        && Object.keys(groupLabels).length > 0
+        && eigenvalues.length > 0;
     },
   },
   watch: {
@@ -186,9 +195,10 @@ export default {
   mounted() {
     const {
       xyPoints,
+      valid,
     } = this;
 
-    if (xyPoints) {
+    if (valid && xyPoints) {
       const svg = select(this.$refs.svg);
       this.axisPlot(svg);
       this.update();
@@ -207,7 +217,12 @@ export default {
         pcX,
         pcY,
         showEllipses,
+        valid,
       } = this;
+
+      if (!valid) {
+        return;
+      }
 
       // Set the axis labels.
       //
