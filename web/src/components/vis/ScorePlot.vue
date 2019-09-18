@@ -191,7 +191,23 @@ export default {
     showEllipses() {
       this.update();
     },
-  },
+
+    pcCoords() {
+      this.update();
+    },
+
+    rowLabels() {
+      this.update();
+    },
+
+    groupLabels() {
+      this.update();
+    },
+
+    eigenvalues() {
+      this.update();
+    },
+   },
   mounted() {
     const {
       xyPoints,
