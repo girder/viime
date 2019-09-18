@@ -2,7 +2,7 @@ import WilcoxonPlotTile from './WilcoxonPlotTile.vue';
 import AnovaTableTile from './AnovaTableTile.vue';
 import { wilcoxon_zero_methods, wilcoxon_alternatives, plot_types } from '../../utils/constants';
 
-export const analyses = [
+export default [
   {
     path: 'wilcoxon', // same as key
     name: 'Wilcoxon signed-rank test',
