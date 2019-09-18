@@ -7,7 +7,7 @@
     sqlalchemy_database_uri: "sqlite:///{{ sqlalchemy_database_path }}"
     upload_folder: "/home/gunicorn/files"
     opencpu_api_root: "http://localhost:8004/ocpu/library"
-    deploy_domain: "metabolomics.kitware.com"
+    deploy_domain: "viime.org"
     metabulo_sdist_path: "/tmp/metabulo/dist/metabulo-sdist.tar.gz"
 
   pre_tasks:
