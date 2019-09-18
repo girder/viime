@@ -23,6 +23,6 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(title="Anova Table", :loading="plot.loading", expanded)
+vis-tile-large(v-if="plot", title="Anova Table", :loading="plot.loading", expanded)
   anova-table(:data="plot.data")
 </template>

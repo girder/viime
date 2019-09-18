@@ -22,7 +22,6 @@ export default function (plotName) {
       plot() { return this.$store.getters.plot(this.id, plotName); },
     },
     watch: {
-      // eslint-disable-next-line func-names
       'plot.valid': function f() { this.reloadPlot(); },
       id() { this.reloadPlot(); },
       active(val) {
@@ -48,6 +47,12 @@ export default function (plotName) {
             name: plotName,
           });
         }
+      },
+      getPlotDataProperty(property) {
+        if (this.plot && this.plot.data !== null) {
+          return this.plot.data[property];
+        }
+        return null;
       },
     },
   };
