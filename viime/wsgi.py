@@ -1,6 +1,6 @@
 from logging.config import dictConfig
 
-from metabulo.app import create_app
+from viime.app import create_app
 
 
 dictConfig({

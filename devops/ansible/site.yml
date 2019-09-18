@@ -2,13 +2,13 @@
 - hosts: all
   vars:
     ansible_python_interpreter: /usr/bin/python3
-    venv: /home/gunicorn/venvs/metabulo
+    venv: /home/gunicorn/venvs/viime
     sqlalchemy_database_path: "/home/gunicorn/db.sqlite3"
     sqlalchemy_database_uri: "sqlite:///{{ sqlalchemy_database_path }}"
     upload_folder: "/home/gunicorn/files"
     opencpu_api_root: "http://localhost:8004/ocpu/library"
     deploy_domain: "viime.org"
-    metabulo_sdist_path: "/tmp/metabulo/dist/metabulo-sdist.tar.gz"
+    viime_sdist_path: "/tmp/viime/dist/viime-sdist.tar.gz"
 
   pre_tasks:
     - name: Install core system dependencies
@@ -38,7 +38,7 @@
     - name: Start opencpu container
       docker_container:
         name: opencpu
-        image: metabulo/opencpu
+        image: viime/opencpu
         published_ports:
           - 127.0.0.1:8004:8004
         pull: true
@@ -78,14 +78,14 @@
       become: true
       become_user: gunicorn
 
-    - name: Copy metabulo sdist to the remote machine
+    - name: Copy viime sdist to the remote machine
       copy:
-        src: "{{ metabulo_sdist_path }}"
-        dest: "/tmp/metabulo-sdist.tar.gz"
+        src: "{{ viime_sdist_path }}"
+        dest: "/tmp/viime-sdist.tar.gz"
 
-    - name: Install metabulo python package
+    - name: Install viime python package
       pip:
-        name: "/tmp/metabulo-sdist.tar.gz[memcached,sentry]"
+        name: "/tmp/viime-sdist.tar.gz[memcached,sentry]"
         state: "forcereinstall"
         extra_args: "--no-cache-dir"
         virtualenv: "{{ venv }}"
@@ -163,9 +163,9 @@
 
     - name: Migrate database
       command: |
-        {{ venv }}/bin/flask db upgrade --directory {{ venv }}/share/metabulo/migrations
+        {{ venv }}/bin/flask db upgrade --directory {{ venv }}/share/viime/migrations
       environment:
-        FLASK_APP: "metabulo.wsgi"
+        FLASK_APP: "viime.wsgi"
         SQLALCHEMY_DATABASE_URI: sqlite:///{{ sqlalchemy_database_path }}
         DOTENV_PATH: "/home/gunicorn"
         OPENCPU_API_ROOT: "{{ opencpu_api_root }}"

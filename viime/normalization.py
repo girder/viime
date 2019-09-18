@@ -1,7 +1,7 @@
 from marshmallow import ValidationError
 from sklearn import preprocessing
 
-from metabulo.cache import persistent_region
+from viime.cache import persistent_region
 
 NORMALIZATION_METHODS = {'minmax', 'sum', 'reference-sample', 'weight-volume'}
 

@@ -11,11 +11,11 @@ PIDFile=/run/gunicorn/pid
 User=gunicorn
 Group=gunicorn
 RuntimeDirectory=gunicorn
-ExecStart={{ venv }}/bin/gunicorn --name metabulo \
+ExecStart={{ venv }}/bin/gunicorn --name viime \
                                   --pid /run/gunicorn/pid \
                                   --workers 4 \
                                   --statsd-host 127.0.0.1:8125 \
-                                  --bind 127.0.0.1:8000 metabulo.wsgi:app
+                                  --bind 127.0.0.1:8000 viime.wsgi:app
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID
 PrivateTmp=true

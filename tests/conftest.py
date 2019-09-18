@@ -4,9 +4,9 @@ from tempfile import TemporaryDirectory
 import dotenv
 import pytest
 
-from metabulo import models
-from metabulo.app import create_app
-from metabulo.models import CSVFileSchema, db
+from viime import models
+from viime.app import create_app
+from viime.models import CSVFileSchema, db
 
 csv_file_schema = CSVFileSchema()
 pathological_file_path = Path(__file__).parent / 'pathological.csv'

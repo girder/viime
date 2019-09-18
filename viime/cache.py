@@ -27,7 +27,7 @@ def csv_file_cache(func):
 
 
 def hash_argument(arg):
-    from metabulo.models import CSVFile, TableColumn, TableRow
+    from viime.models import CSVFile, TableColumn, TableRow
     if isinstance(arg, PandasObject):
         r = hash_pandas_object(arg, index=True)
         return sha256(r.values.tostring()).hexdigest()
@@ -65,14 +65,14 @@ class FlaskRequestLocalBackend(MemoryBackend):
 
 
 region = make_region(
-    'metabulo.app.local',
+    'viime.app.local',
     function_key_generator=partial(kwarg_function_key_generator, to_str=hash_argument)
 )
 region.configure('flask_request_local')
 
 
 persistent_region = make_region(
-    'metabulo.app.persistent',
+    'viime.app.persistent',
     function_key_generator=partial(kwarg_function_key_generator, to_str=hash_argument),
     key_mangler=mangle_key
 )

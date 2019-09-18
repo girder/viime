@@ -1,5 +1,5 @@
-from metabulo.cache import region
-from metabulo.opencpu import opencpu_request
+from viime.cache import region
+from viime.opencpu import opencpu_request
 
 IMPUTE_MNAR_METHODS = ['zero', 'half-minimum']
 IMPUTE_MCAR_METHODS = ['random-forest', 'knn', 'mean', 'median']

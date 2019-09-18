@@ -12,19 +12,19 @@ import pandas
 from webargs.flaskparser import use_kwargs
 from werkzeug import FileStorage
 
-from metabulo import opencpu
-from metabulo.cache import csv_file_cache
-from metabulo.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
-from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
+from viime import opencpu
+from viime.cache import csv_file_cache
+from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
+from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
     ModifyLabelListSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     TableColumn, TableColumnSchema, TableRow, \
     TableRowSchema, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
-from metabulo.normalization import validate_normalization_method
-from metabulo.plot import pca
-from metabulo.scaling import SCALING_METHODS
-from metabulo.table_validation import get_fatal_index_errors, ValidationSchema
-from metabulo.transformation import TRANSFORMATION_METHODS
+from viime.normalization import validate_normalization_method
+from viime.plot import pca
+from viime.scaling import SCALING_METHODS
+from viime.table_validation import get_fatal_index_errors, ValidationSchema
+from viime.transformation import TRANSFORMATION_METHODS
 
 csv_file_schema = CSVFileSchema()
 modify_label_list_schema = ModifyLabelListSchema()
@@ -526,6 +526,6 @@ def get_loadings_plot(validated_table):
 @csv_bp.route('/csv/<uuid:csv_id>/pca-overview', methods=['GET'])
 @load_validated_csv_file
 def get_pca_overview(validated_table):
-    png_content = opencpu.generate_image('/metabulo/R/pca_overview_plot',
+    png_content = opencpu.generate_image('/viime/R/pca_overview_plot',
                                          validated_table.measurements)
     return Response(png_content, mimetype='image/png')

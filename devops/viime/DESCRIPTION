@@ -1,5 +1,5 @@
-Package: metabulo
-Title: Analytics for the Metabulo Web Application
+Package: viime
+Title: Analytics for the VIIME Web Application
 Version: 0.0.0.9000
 Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
 Description: The package contains functions that are exposed via RPC for the Metabolomics web application.
