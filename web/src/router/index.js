@@ -40,7 +40,7 @@ export const routes = [
     children: [
       {
         path: 'cleanup',
-        name: 'Cleanup Data',
+        name: 'Clean Up Table',
         component: Cleanup,
         props: true,
         children: [
@@ -53,7 +53,7 @@ export const routes = [
       },
       {
         path: 'transform',
-        name: 'Transform Data',
+        name: 'Transform Table',
         component: Transform,
         props: true,
       },
