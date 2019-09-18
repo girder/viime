@@ -123,12 +123,6 @@ jobs:
             chmod og-rwx /tmp/metabolomics.pem
             echo "eval $(ssh-agent) ssh-add /tmp/metabolomics.pem" >> $BASH_ENV
       - run:
-          name: Add ssl certificate
-          command: |
-            aws secretsmanager get-secret-value --secret-id "metabolomics.ssl.crt" | jq -r .SecretString > data/nginx/ssl/viime.org.crt
-            aws secretsmanager get-secret-value --secret-id "metabolomics.ssl.key" | jq -r .SecretString > data/nginx/ssl/viime.org.key
-          working_directory: devops/ansible
-      - run:
           name: Run ansible
           command: ansible-playbook -e "flask_secret=$FLASK_SECRET" -e "sentry_dsn=$SENTRY_DSN" --inventory inventory site.yml
           working_directory: devops/ansible
