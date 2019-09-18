@@ -57,10 +57,9 @@ const plotDefaults = {
 analyses.forEach(({
   args,
   path,
-  key,
   type,
 }) => {
-  plotDefaults[key || path] = {
+  plotDefaults[path] = {
     data: null,
     valid: false,
     loading: false,
