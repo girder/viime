@@ -65,7 +65,7 @@ v-layout.pretreatment-component(row, fill-height)
           template(v-slot:activator)
             v-list-tile.file-name
               v-list-tile-title.title {{ dataset.name }}
-              v-list-tile-action(v-if="dataset.validation.length")
+              v-list-tile-action(v-if="dataset.ready && dataset.validation.length")
                 v-icon.pr-1(color="warning") {{ $vuetify.icons.warning }}
               v-list-tile-action(v-else)
                 v-icon.pr-1(color="success") {{ $vuetify.icons.check }}

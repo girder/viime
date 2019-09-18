@@ -111,10 +111,13 @@ const mutations = {
    * @private
    */
   [INITIALIZE_DATASET](state, { data }) {
-    const { id } = data;
+    const { id, size, name } = data;
     Vue.set(state.plots, id, cloneDeep(plotDefaults));
     Vue.set(state.datasets, id, {
       ready: false,
+      size,
+      name,
+      id,
       selected: {
         type: 'column',
         last: 1,
@@ -362,12 +365,12 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [CHANGE_AXIS_LABEL]({ state, commit }, { dataset_id, changes }) {
+  async [CHANGE_AXIS_LABEL]({ dispatch, commit }, { dataset_id, changes }) {
     commit(SET_LOADING, true);
     try {
       const { data } = await CSVService.updateLabel(dataset_id, changes);
       const { rows, columns } = data;
-      commit(SET_LABELS, { key: dataset_id, rows, columns });
+      commit(SET_LABELS, { dataset_id, rows, columns });
       await dispatch(LOAD_DATASET, { dataset_id });
       // must await before plot invalidation because a new checkpoint
       // needs to be created before plots can refresh
@@ -380,7 +383,7 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [CHANGE_IMPUTATION_OPTIONS]({ commit }, { dataset_id, options }) {
+  async [CHANGE_IMPUTATION_OPTIONS]({ dispatch, commit }, { dataset_id, options }) {
     commit(SET_LOADING, true);
     await CSVService.setImputation(dataset_id, options);
     await dispatch(LOAD_DATASET, { dataset_id });
