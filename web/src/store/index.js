@@ -61,10 +61,9 @@ const plotDefaults = {
 analyses.forEach(({
   args,
   path,
-  key,
   type,
 }) => {
-  plotDefaults[key || path] = {
+  plotDefaults[path] = {
     data: null,
     valid: false,
     loading: false,
@@ -279,7 +278,7 @@ const actions = {
   async [LOAD_DATASET]({ getters: _getters, commit }, { dataset_id }) {
     try {
       const { data } = await CSVService.get(dataset_id);
-      commit(SET_LABELS, { dataset_id, rows: data.rows, columns: data.columns});
+      commit(SET_LABELS, { dataset_id, rows: data.rows, columns: data.columns });
       commit(SET_DATASET_DATA, { data });
       const valid = _getters.valid(dataset_id);
       if (valid) {
