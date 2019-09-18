@@ -217,7 +217,6 @@ export default {
         legend: {
           item: {
             onmouseover: (id) => {
-              console.log('legend', id);
               this.chart.focus(id);
 
               select(this.$refs.chart)
@@ -293,8 +292,6 @@ export default {
         groupLabels,
         group,
       } = this;
-
-      console.log(groupLabels, group);
 
       const grouped = {};
 
