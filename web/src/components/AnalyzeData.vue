@@ -1,5 +1,4 @@
 <script>
-import Vue from 'vue';
 import analyses from './vis/analyses';
 
 export default {
@@ -14,7 +13,7 @@ export default {
       analyses,
     };
   },
-}
+};
 </script>
 
 <template lang="pug">

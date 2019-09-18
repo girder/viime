@@ -5,7 +5,7 @@ import Vuex from 'vuex';
 import {
   convertCsvToRows, RangeList, mapValidationErrors,
 } from '../utils';
-import { analyses } from '../components/vis';
+import analyses from '../components/vis/analyses';
 import { plot_types } from '../utils/constants';
 import { CSVService, ExcelService } from '../common/api.service';
 
