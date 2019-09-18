@@ -3,7 +3,7 @@ from io import BytesIO
 import json
 import math
 from pathlib import PurePath
-from typing import cast, Dict
+from typing import cast, Dict, Optional
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
@@ -13,6 +13,7 @@ from webargs.flaskparser import use_kwargs
 from werkzeug import FileStorage
 
 from viime import opencpu
+from viime.analyses import anova_test, wilcoxon_test
 from viime.cache import csv_file_cache
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
@@ -529,3 +530,39 @@ def get_pca_overview(validated_table):
     png_content = opencpu.generate_image('/viime/R/pca_overview_plot',
                                          validated_table.measurements)
     return Response(png_content, mimetype='image/png')
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/wilcoxon', methods=['GET'])
+@use_kwargs({
+    'zero_method': fields.Str(missing='wilcox',
+                              validate=validate.OneOf(['wilcox', 'pratt', 'zsplit'])),
+    'alternative': fields.Str(missing='two-sided',
+                              validate=validate.OneOf(['two-sided', 'greater', 'less']))
+})
+@load_validated_csv_file
+def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable,
+                      zero_method: str, alternative: str):
+    table = validated_table.measurements
+
+    data = wilcoxon_test(table, zero_method, alternative)
+
+    return jsonify(data), 200
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/anova', methods=['GET'])
+@use_kwargs({
+    'group_column': fields.Str()
+})
+@load_validated_csv_file
+def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Optional[str] = None):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+
+    group = groups.iloc[:, 0] if group_column is None else groups.loc[:, group_column]
+    if group is None:
+        raise ValidationError(
+            'invalid group column', field_name='group_column', data=group_column)
+
+    data = anova_test(measurements, group)
+
+    return jsonify(data), 200

@@ -75,8 +75,7 @@ export default {
     },
     eigenvalues: {
       required: true,
-      type: Array,
-      validator: prop => prop.every(v => Number.isFinite(v) && v > 0.0),
+      validator: prop => !prop || prop.every(v => Number.isFinite(v) && v > 0.0),
     },
     numComponents: {
       default: 10,
@@ -105,6 +104,10 @@ export default {
   },
 
   computed: {
+    eigenvaluesInternal() {
+      return this.eigenvalues || [];
+    },
+
     scaleX() {
       const {
         numComponents,
@@ -120,15 +123,15 @@ export default {
 
     yrange() {
       const {
-        eigenvalues,
+        eigenvaluesInternal,
       } = this;
 
-      return [0.0, Math.max(...eigenvalues) * 1.1];
+      return [0.0, Math.max(...eigenvaluesInternal) * 1.1];
     },
 
     percents() {
-      const total = sum(this.eigenvalues);
-      return this.eigenvalues.map(d => d / total);
+      const total = sum(this.eigenvaluesInternal);
+      return this.eigenvaluesInternal.map(d => d / total);
     },
 
     cumulativePercents() {
@@ -168,7 +171,7 @@ export default {
       this.update();
     },
 
-    eigenvalues() {
+    eigenvaluesInternal() {
       this.update();
     },
 
@@ -192,7 +195,7 @@ export default {
   methods: {
     update() {
       const {
-        eigenvalues,
+        eigenvaluesInternal,
         percents,
         cumulativePercents,
         fadeInDuration,
@@ -201,12 +204,16 @@ export default {
         cutoffs,
       } = this;
 
+      if (this.eigenvaluesInternal.length === 0) {
+        return;
+      }
+
       const radius = 4;
 
       const svg = select(this.$refs.svg);
       const tooltip = select(this.$refs.tooltip);
 
-      const data = eigenvalues.map((d, i) => ({
+      const data = eigenvaluesInternal.map((d, i) => ({
         eigenvalue: d,
         percent: percents[i],
         cumPercent: cumulativePercents[i],
@@ -264,7 +271,7 @@ export default {
       // Plot the line.
       const pathData = [...Array(numComponents).keys()].map(i => [
         this.scaleX(i + 1),
-        this.scaleY(eigenvalues[i]),
+        this.scaleY(eigenvaluesInternal[i]),
       ]);
 
       const pathDataNull = pathData.map(([x]) => [
