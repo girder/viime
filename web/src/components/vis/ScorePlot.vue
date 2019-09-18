@@ -104,10 +104,10 @@ export default {
     dataset: {
       required: true,
       validator: prop => typeof prop === 'object'
-        && '_source' in prop
-        && typeof prop._source === 'object'
-        && 'columns' in prop._source
-        && Array.isArray(prop._source.columns),
+        && 'transformed' in prop
+        && typeof prop.transformed === 'object'
+        && 'columns' in prop.transformed
+        && Array.isArray(prop.transformed.columns),
     },
   },
   data() {
@@ -161,7 +161,7 @@ export default {
     },
     group() {
       const { dataset } = this;
-      const column = dataset._source.columns.find(elem => elem.column_type === 'group');
+      const column = dataset.transformed.columns.find(elem => elem.column_type === 'group');
 
       return column.column_header;
     },

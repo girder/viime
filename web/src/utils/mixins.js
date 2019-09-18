@@ -1,4 +1,4 @@
-import { load_dataset } from '../store';
+import { LOAD_DATASET } from '../store/actions.type';
 
 /**
  * Load dataset from server for any view where
@@ -19,7 +19,7 @@ const loadDataset = {
   created() {
     const dataset = this.$store.getters.dataset(this.id);
     if (!dataset) {
-      load_dataset(this.$store, { dataset_id: this.id });
+      this.$store.dispatch(LOAD_DATASET, { dataset_id: this.id });
     }
   },
 };
