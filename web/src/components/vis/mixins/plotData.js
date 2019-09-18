@@ -23,7 +23,7 @@ export default function (plotName) {
     },
     watch: {
       // eslint-disable-next-line func-names
-      'plot.valid': function () { this.reloadPlot(); },
+      'plot.valid': function f() { this.reloadPlot(); },
       id() { this.reloadPlot(); },
       active(val) {
         if (val) {
