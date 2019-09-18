@@ -123,7 +123,6 @@ export default {
     groupLabels: {
       required: true,
       type: Object,
-      validator: prop => Object.values(prop).every(labels => labels.every(val => typeof val === 'string')),
     },
     eigenvalues: {
       required: true,

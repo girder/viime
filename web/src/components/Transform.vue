@@ -126,12 +126,8 @@ v-layout.transform-component(row, fill-height)
         score-plot-c3-tile(
             :width="600",
             :height="600",
-            :raw-points="pcaData",
-            :pc-coords="pcaData.x",
-            :row-labels="pcaData.rows",
-            :group-labels="pcaData.labels",
-            :eigenvalues="pcaData.sdev",
-            :columns="dataset._source.columns")
+            :columns="dataset._source.columns",
+            :id="id")
         loadings-plot-tile(
             :width="600",
             :height="600",

@@ -1,12 +1,15 @@
 <script>
 import ScorePlotC3 from '@/components/vis/ScorePlotC3.vue';
 import VisTile from '@/components/vis/VisTile.vue';
+import plotData from './mixins/plotData';
 
 export default {
   components: {
     ScorePlotC3,
     VisTile,
   },
+
+  mixins: [plotData('pca')],
 
   props: {
     width: {
@@ -19,21 +22,9 @@ export default {
       type: Number,
       validator: Number.isInteger,
     },
-    pcCoords: {
+    id: {
+      type: String,
       required: true,
-      type: Array,
-    },
-    rowLabels: {
-      required: true,
-      type: Array,
-    },
-    groupLabels: {
-      required: true,
-      type: Object,
-    },
-    eigenvalues: {
-      required: true,
-      type: Array,
     },
     columns: {
       required: true,
@@ -56,6 +47,32 @@ export default {
 
     pcY() {
       return Number.parseInt(this.pcYval, 10);
+    },
+
+    pcCoords() {
+      return this.maybeData('x', []);
+    },
+
+    rowLabels() {
+      return this.maybeData('rows', []);
+    },
+
+    groupLabels() {
+      return this.maybeData('labels', {});
+    },
+
+    eigenvalues() {
+      return this.maybeData('sdev', []);
+    },
+  },
+
+  methods: {
+    maybeData(key, dflt) {
+      const {
+        plot,
+      } = this;
+
+      return plot.data ? plot.data[key] : dflt;
     },
   },
 };
