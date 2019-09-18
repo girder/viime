@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4feaa7d63e3649dd0455e15c9524cba4cf1f3d98fc707a46ef70626fd2163729"
+            "sha256": "701eca715a8ed756d4ba4c863e64c4d5b18f739d34ea8fcf68e08beff08f44c6"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -187,10 +187,10 @@
         },
         "marshmallow": {
             "hashes": [
-                "sha256:5e0b15f33c6e227b51e1fbe29a306676686f3c3a3bf7fe0aca005144c3e74d7c",
-                "sha256:8c6a22cfc9ca33945e2707c771c44030a035be96082a18643d431280b9b8f08e"
+                "sha256:6dca0125320c15795c4f2dfe8f2f5c37a96916e7a09a123eba05ef24d3126b94",
+                "sha256:801a7c70f0596b812a086773b9d7ba85b4bbad1becab14cde460ab7798511409"
             ],
-            "version": "==3.0.0rc6"
+            "version": "==3.2.0"
         },
         "matplotlib": {
             "hashes": [
@@ -205,10 +205,6 @@
                 "sha256:ec6bd0a6a58df3628ff269978f4a4b924a0d371ad8ce1f8e2b635b99e482877a"
             ],
             "version": "==3.1.1"
-        },
-        "viime": {
-            "editable": true,
-            "path": "."
         },
         "numpy": {
             "hashes": [
@@ -373,6 +369,10 @@
             ],
             "version": "==1.25.3"
         },
+        "viime": {
+            "editable": true,
+            "path": "."
+        },
         "webargs": {
             "hashes": [
                 "sha256:97b94d375196422a7037971a0a7e0b405a15b06099635dddcb3ecad48872f073",
@@ -393,7 +393,6 @@
                 "sha256:546eb36cee8db40c3eaa46c351e67ffee6eeb5fa2650b71bc4c758a29a1b29b2",
                 "sha256:e551fb498759fa3a5384a94ccd4c3c02eb7c00ea424426e212ac0c57be9dfbde"
             ],
-            "index": "pypi",
             "version": "==1.2.0"
         }
     },

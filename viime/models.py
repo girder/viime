@@ -60,7 +60,7 @@ class BaseSchema(Schema):
     __model__ = None
 
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         if self.__model__ is not None:
             return self.__model__(**data)
         return data
@@ -308,12 +308,12 @@ class CSVFileSchema(BaseSchema):
     size = fields.Int(dump_only=True)
 
     @post_load
-    def fix_file_name(self, data):
+    def fix_file_name(self, data, **kwargs):
         data['name'] = secure_filename(data['name'])
         return data
 
     @post_dump
-    def read_csv_file(self, data):
+    def read_csv_file(self, data, **kwargs):
         def get_csv(key):
             if data.get(key) is not None:
                 return data[key].to_csv()
@@ -329,7 +329,7 @@ class CSVFileSchema(BaseSchema):
         return data
 
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         csv_file, rows, columns = CSVFile.create_csv_file(**data)
         db.session.add(csv_file)
         db.session.add_all(rows + columns)
@@ -423,7 +423,7 @@ class ModifyLabelChangesSchema(Schema):
     label = fields.Str(required=True)
 
     @validates_schema
-    def validate_label(self, data):
+    def validate_label(self, data, **kwargs):
         context = data['context']
         label = data['label']
         if context == AXIS_NAME_TYPES.COLUMN:
@@ -749,7 +749,7 @@ class ValidatedMetaboliteTableSchema(BaseSchema):
     # raw_measurements = fields.Raw(required=True, load_only=True) if needed in the future
 
     @post_dump
-    def serialize_tables(self, data):
+    def serialize_tables(self, data, **kwargs):
         for attr in ['measurements', 'measurement_metadata', 'sample_metadata', 'groups']:
             data[attr] = data[attr].to_csv()
         return data
