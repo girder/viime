@@ -4,7 +4,7 @@ import { wilcoxon_zero_methods, wilcoxon_alternatives, plot_types } from '../../
 
 export default [
   {
-    path: 'wilcoxon', // same as key
+    path: 'wilcoxon',
     name: 'Wilcoxon signed-rank test',
     shortName: 'Wilcoxon Test',
     description: 'The Wilcoxon signed-rank test tests the null hypothesis that two related paired samples come from the same distribution. In particular, it tests whether the distribution of the differences x - y is symmetric about zero. It is a non-parametric version of the paired T-test.',
@@ -17,7 +17,7 @@ export default [
     help: 'https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wilcoxon.html',
   },
   {
-    path: 'anova', // same as key
+    path: 'anova',
     name: 'ANOVA',
     shortName: 'ANOVA',
     description: 'TODO R custom code',
