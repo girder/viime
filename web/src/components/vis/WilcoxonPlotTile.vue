@@ -31,7 +31,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(title="Wilcoxon Test", :loading="plot.loading", expanded)
+vis-tile-large(v-if="plot", title="Wilcoxon Test", :loading="plot.loading", expanded)
   template(#controls)
     toolbar-option(title="Zero Methods", :value="plot.args.zero_method",
         :options="zero_methods",

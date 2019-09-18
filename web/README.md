@@ -1,4 +1,4 @@
-# metabulo
+# VIIME
 
 ## Project setup
 ```

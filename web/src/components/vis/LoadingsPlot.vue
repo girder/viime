@@ -12,7 +12,7 @@ div
         line.vert
       g.plot
   .tooltip(ref="tooltip")
-  span(style="display: none") {{ update }}
+  span(style="display: none", v-if="pointsInternal.length > 0") {{ update }}
 </template>
 
 <style scoped lang="scss">
@@ -81,17 +81,14 @@ export default {
     };
   },
   computed: {
-    group() {
-      const { dataset } = this;
-      const column = dataset.transformed.columns.find(elem => elem.column_type === 'group');
-
-      return column.column_header;
+    pointsInternal() {
+      return this.points || [];
     },
 
     update() {
       // Grab the input props.
       const {
-        points,
+        pointsInternal,
         pcX,
         pcY,
         showCrosshairs,
@@ -139,7 +136,7 @@ export default {
 
       svg.select('g.plot')
         .selectAll('circle')
-        .data(points)
+        .data(pointsInternal)
         .join(enter => enter.append('circle')
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))

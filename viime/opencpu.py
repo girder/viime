@@ -5,7 +5,7 @@ from flask import current_app, Response
 import pandas
 import requests
 
-from metabulo.cache import persistent_region
+from viime.cache import persistent_region
 
 
 class OpenCPUException(Exception):
@@ -27,7 +27,7 @@ def opencpu_request(method, files=None, params=None, return_type='csv'):
     params = {
         k: json.dumps(v) for k, v in params.items()
     }
-    url = current_app.config['OPENCPU_API_ROOT'] + '/metabulo/R/' + method
+    url = current_app.config['OPENCPU_API_ROOT'] + '/viime/R/' + method
     if return_type == 'csv':
         url += '/csv?row.names=true'
     elif return_type == 'png':

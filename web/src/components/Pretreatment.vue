@@ -1,7 +1,7 @@
 <script>
 import { SET_SELECTION } from '@/store/mutations.type';
 import { loadDataset } from '@/utils/mixins';
-import { analyses } from '.';
+import analyses from './vis/analyses';
 
 export default {
   mixins: [loadDataset],

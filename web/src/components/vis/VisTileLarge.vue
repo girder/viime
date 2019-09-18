@@ -6,7 +6,7 @@ export default {
       required: true,
     },
     loading: {
-      validator: () => true,
+      type: Boolean,
       required: true,
     },
   },

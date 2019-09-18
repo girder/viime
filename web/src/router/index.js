@@ -7,7 +7,7 @@ import Upload from '../components/Upload.vue';
 import Transform from '../components/Transform.vue';
 import AnalyzeData from '../components/AnalyzeData.vue';
 import ProblemBar from '../components/ProblemBar.vue';
-import { analyses } from '../components';
+import analyses from '../components/vis/analyses';
 
 Vue.use(Router);
 

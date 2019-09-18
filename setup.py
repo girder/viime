@@ -6,14 +6,14 @@ from setuptools import find_packages, setup
 
 def list_files_recursive(relpath):
     for root, dirs, files in os.walk(relpath):
-        install_root = os.path.join('share', 'metabulo', root)
+        install_root = os.path.join('share', 'viime', root)
         yield install_root, [os.path.join(root, file) for file in files]
 
 
 if not os.path.exists(os.path.join('static', 'index.html')):
     log.warn(
         'Static assets are not built.  Run "npm install && npm run build" '
-        'in the web directory prior to packaging metabulo.'
+        'in the web directory prior to packaging viime.'
     )
 
 data_files = []
@@ -22,11 +22,11 @@ data_files.extend(list_files_recursive('static'))
 
 
 setup(
-    name='metabulo',
+    name='viime',
     version='0.1.0',
     author='Kitware, Inc.',
     author_email='kitware@kitware.com',
-    packages=find_packages(include=['metabulo']),
+    packages=find_packages(include=['viime']),
     include_package_data=True,
     install_requires=[
         'alembic',
@@ -53,10 +53,10 @@ setup(
     data_files=data_files,
     entry_points={
         'console_scripts': [
-            'metabulo-create-tables=metabulo.cli:create_tables'
+            'viime-create-tables=viime.cli:create_tables'
         ],
         'dogpile.cache': [
-            'flask_request_local = metabulo.cache:FlaskRequestLocalBackend'
+            'flask_request_local = viime.cache:FlaskRequestLocalBackend'
         ]
     }
 )

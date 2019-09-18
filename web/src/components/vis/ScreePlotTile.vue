@@ -42,11 +42,11 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(title="PCA Scree Plot", :loading="plot.loading")
+vis-tile(v-if="plot", title="PCA Scree Plot", :loading="plot.loading")
   scree-plot(
       :width="width",
       :height="height",
-      :eigenvalues="plot.data.sdev",
+      :eigenvalues="getPlotDataProperty('sdev')",
       :num-components="numComponents",
       :show-cutoffs="showCutoffs")
   template(v-slot:controls)
