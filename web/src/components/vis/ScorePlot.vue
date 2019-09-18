@@ -207,7 +207,7 @@ export default {
     eigenvalues() {
       this.update();
     },
-   },
+  },
   mounted() {
     const {
       xyPoints,

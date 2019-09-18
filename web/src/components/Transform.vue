@@ -119,7 +119,7 @@ v-layout.transform-component(row, fill-height)
         score-plot-tile(
             :width="600",
             :height="600",
-            :columns="dataset._source.columns"
+            :columns="dataset._source.columns",
             :id="id")
         loadings-plot-tile(
             :width="600",
