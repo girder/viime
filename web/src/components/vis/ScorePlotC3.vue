@@ -4,6 +4,12 @@ div
   span(style="display: none") {{ update }}
 </template>
 
+<style>
+.c3 text {
+  font-family: Barlow Condensed;
+}
+</style>
+
 <script>
 import c3 from 'c3';
 import { select } from 'd3-selection';
