@@ -6,7 +6,7 @@ import {
   convertCsvToRows, RangeList, mapValidationErrors,
 } from '../utils';
 import { CSVService } from '../common/api.service';
-import { analyses } from '../components';
+import { analyses } from '../components/vis';
 import { plot_types } from '../utils/constants';
 
 import {
