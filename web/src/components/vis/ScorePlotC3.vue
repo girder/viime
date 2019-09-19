@@ -238,7 +238,8 @@ export default {
           exit => exit.transition('exit')
             .duration(duration)
             .style('opacity', 0)
-            .remove())
+            .remove(),
+        )
         .transition('update')
         .duration(duration)
         .attr('rx', d => d.rx)
@@ -340,14 +341,26 @@ export default {
         .style('opacity', 0.3);
     },
 
-    setEllipseVisibility(on) {
+    async setEllipseVisibility(on) {
       const opacity = on ? 1.0 : 0.0;
 
-      select(this.$refs.chart)
-        .selectAll('ellipse')
-        .transition()
+      const sel = select(this.$refs.chart)
+        .selectAll('ellipse');
+
+      if (on) {
+        sel.style('opacity', 0.0)
+          .style('display', null);
+      }
+
+      await sel.transition()
         .duration(this.duration)
-        .style('opacity', opacity);
+        .style('opacity', opacity)
+        .end();
+
+      if (!on) {
+        sel.style('display', 'none')
+          .style('opacity', 1.0);
+      }
     },
   },
 };
