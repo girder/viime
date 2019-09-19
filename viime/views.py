@@ -3,7 +3,7 @@ from io import BytesIO
 import json
 import math
 from pathlib import PurePath
-from typing import cast, Dict
+from typing import cast, Dict, Optional
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
@@ -12,19 +12,20 @@ import pandas
 from webargs.flaskparser import use_kwargs
 from werkzeug import FileStorage
 
-from metabulo import opencpu
-from metabulo.cache import csv_file_cache
-from metabulo.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
-from metabulo.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
+from viime import opencpu
+from viime.analyses import anova_test, wilcoxon_test
+from viime.cache import csv_file_cache
+from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
+from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
     ModifyLabelListSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     TableColumn, TableColumnSchema, TableRow, \
     TableRowSchema, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
-from metabulo.normalization import validate_normalization_method
-from metabulo.plot import pca
-from metabulo.scaling import SCALING_METHODS
-from metabulo.table_validation import get_fatal_index_errors, ValidationSchema
-from metabulo.transformation import TRANSFORMATION_METHODS
+from viime.normalization import validate_normalization_method
+from viime.plot import pca
+from viime.scaling import SCALING_METHODS
+from viime.table_validation import get_fatal_index_errors, ValidationSchema
+from viime.transformation import TRANSFORMATION_METHODS
 
 csv_file_schema = CSVFileSchema()
 modify_label_list_schema = ModifyLabelListSchema()
@@ -212,8 +213,19 @@ def create_csv_file():
 
 @csv_bp.route('/csv/<uuid:csv_id>', methods=['GET'])
 def get_csv_file(csv_id):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    return jsonify(_serialize_csv_file(csv_file))
+    csv_file = _serialize_csv_file(CSVFile.query.get_or_404(csv_id))
+
+    # inject properties from the validated table model (normalization, transformation, etc.)
+    validated_table = ValidatedMetaboliteTable.query.filter_by(csv_file_id=csv_id).first()
+    if validated_table is not None:
+        transformation_schema = ValidatedMetaboliteTableSchema(
+            only=['normalization', 'normalization_argument', 'scaling',
+                  'scaling', 'transformation']
+        )
+        transformation = transformation_schema.dump(validated_table)
+        csv_file.update(transformation)
+
+    return jsonify(csv_file)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/validation', methods=['GET'])
@@ -526,6 +538,42 @@ def get_loadings_plot(validated_table):
 @csv_bp.route('/csv/<uuid:csv_id>/pca-overview', methods=['GET'])
 @load_validated_csv_file
 def get_pca_overview(validated_table):
-    png_content = opencpu.generate_image('/metabulo/R/pca_overview_plot',
+    png_content = opencpu.generate_image('/viime/R/pca_overview_plot',
                                          validated_table.measurements)
     return Response(png_content, mimetype='image/png')
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/wilcoxon', methods=['GET'])
+@use_kwargs({
+    'zero_method': fields.Str(missing='wilcox',
+                              validate=validate.OneOf(['wilcox', 'pratt', 'zsplit'])),
+    'alternative': fields.Str(missing='two-sided',
+                              validate=validate.OneOf(['two-sided', 'greater', 'less']))
+})
+@load_validated_csv_file
+def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable,
+                      zero_method: str, alternative: str):
+    table = validated_table.measurements
+
+    data = wilcoxon_test(table, zero_method, alternative)
+
+    return jsonify(data), 200
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/anova', methods=['GET'])
+@use_kwargs({
+    'group_column': fields.Str()
+})
+@load_validated_csv_file
+def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Optional[str] = None):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+
+    group = groups.iloc[:, 0] if group_column is None else groups.loc[:, group_column]
+    if group is None:
+        raise ValidationError(
+            'invalid group column', field_name='group_column', data=group_column)
+
+    data = anova_test(measurements, group)
+
+    return jsonify(data), 200

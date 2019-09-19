@@ -1,2 +1,2 @@
-[metabulo]
+[viime]
 viime.org ansible_ssh_user=ubuntu ansible_python_interpreter=/usr/bin/python3

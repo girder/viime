@@ -51,6 +51,10 @@ export const CSVService = {
     return ApiService.get('csv', `${slug}/plot/${type}`, params);
   },
 
+  getAnalysis(slug, key, params = {}) {
+    return ApiService.get('csv', `${slug}/analyses/${key}`, params);
+  },
+
   post(data) {
     return ApiService.post('csv', data);
   },

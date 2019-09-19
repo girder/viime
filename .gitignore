@@ -73,6 +73,7 @@ instance/
 .scrapy
 
 # Sqlite stuff:
+viime_sqlite/
 metabulo_sqlite/
 
 # Sphinx documentation
@@ -115,6 +116,9 @@ venv.bak/
 
 # mkdocs documentation
 /site
+
+# VS Code config
+.vscode/
 
 # mypy
 .mypy_cache/

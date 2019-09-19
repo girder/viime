@@ -7,7 +7,7 @@ from collections import namedtuple
 from marshmallow import fields, post_dump, Schema, validate
 from pandas import Index
 
-from metabulo.cache import region
+from viime.cache import region
 
 SEVERITY_VALUES = ['error', 'warning']
 CONTEXT_VALUES = ['table', 'column', 'row']
@@ -176,7 +176,7 @@ def check_valid_groups(groups):
 
 
 def get_invalid_index_errors(csv_file):
-    from metabulo.models import TABLE_COLUMN_TYPES, TABLE_ROW_TYPES
+    from viime.models import TABLE_COLUMN_TYPES, TABLE_ROW_TYPES
 
     errors = []
     table = csv_file.filter_table_by_types(

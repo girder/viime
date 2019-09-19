@@ -7,10 +7,10 @@ from marshmallow import ValidationError
 from webargs.flaskparser import parser
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from metabulo.cache import clear_cache, persistent_region
-from metabulo.models import db
-from metabulo.opencpu import OpenCPUException
-from metabulo.views import csv_bp
+from viime.cache import clear_cache, persistent_region
+from viime.models import db
+from viime.opencpu import OpenCPUException
+from viime.views import csv_bp
 
 try:
     import pylibmc

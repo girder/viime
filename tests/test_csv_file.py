@@ -1,4 +1,4 @@
-from metabulo.models import CSVFileSchema, db
+from viime.models import CSVFileSchema, db
 
 csv_file_schema = CSVFileSchema()
 

@@ -5,6 +5,8 @@ import Vuex from 'vuex';
 import {
   convertCsvToRows, RangeList, mapValidationErrors,
 } from '../utils';
+import analyses from '../components/vis/analyses';
+import { plot_types } from '../utils/constants';
 import { CSVService, ExcelService } from '../common/api.service';
 
 import {
@@ -18,12 +20,12 @@ import {
 } from './actions.type';
 
 import {
-  REFRESH_PLOT,
   REMOVE_DATASET,
   SET_DATASET,
   SET_LAST_ERROR,
   SET_LOADING,
   SET_LABELS,
+  SET_PLOT,
   SET_SELECTION,
   SET_SESSION_STORE,
   SET_SOURCE_DATA,
@@ -39,17 +41,38 @@ const plotDefaults = {
   pca: {
     data: null,
     valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.TRANSFORM,
   },
   loadings: {
     data: null,
     valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.TRANSFORM,
   },
 };
+
+analyses.forEach(({
+  args,
+  path,
+  type,
+}) => {
+  plotDefaults[path] = {
+    data: null,
+    valid: false,
+    loading: false,
+    args,
+    type,
+  };
+});
 
 const appstate = {
   // map of all datasets in the session by csv UUID
   datasets: {},
   plots: {},
+  analyses: {},
   lasterror: null,
   loading: false,
   /** @type {WindowLocalStorage} */
@@ -64,8 +87,7 @@ const getters = {
     && state.datasets[id].validation.filter(v => v.severity === 'error').length === 0,
   txType: state => (id, category) => getters.ready(state)(id)
     && state.datasets[id][category],
-  plotData: state => (id, name) => getters.ready(state)(id) && state.plots[id][name].data,
-  plotValid: state => (id, name) => getters.ready(state)(id) && state.plots[id][name].valid,
+  plot: state => (id, name) => getters.ready(state)(id) && state.plots[id][name],
 };
 
 /*
@@ -76,8 +98,8 @@ function _invalidatePlots(state, { key, plotList }) {
     Vue.set(state.plots[key][name], 'valid', false);
   });
 }
+
 function _setLables(state, { key, rows, columns }) {
-  _invalidatePlots(state, { key, plotList: ['pca', 'loadings'] });
   const rowsSorted = rows.sort((a, b) => a.row_index - b.row_index);
   const colsSorted = columns.sort((a, b) => a.column_index - b.column_index);
   Vue.set(state.datasets[key], 'row', {
@@ -162,11 +184,6 @@ const mutations = {
     }
   },
 
-  [REFRESH_PLOT](state, { key, name, data }) {
-    Vue.set(state.plots[key][name], 'data', data);
-    Vue.set(state.plots[key][name], 'valid', true);
-  },
-
   [REMOVE_DATASET](state, { key }) {
     Vue.delete(state.datasets, key);
     state.store.save(state, state.session_id);
@@ -178,6 +195,11 @@ const mutations = {
 
   [SET_LOADING](state, loading) {
     Vue.set(state, 'loading', loading);
+  },
+
+  [SET_PLOT](state, { dataset_id, name, obj }) {
+    const plot = state.plots[dataset_id][name];
+    Vue.set(state.plots[dataset_id], name, { ...plot, ...obj });
   },
 
   [SET_SELECTION](state, {
@@ -242,15 +264,48 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [LOAD_PLOT]({ commit }, { dataset_id, name, max_components }) {
-    try {
-      const { data } = await CSVService.getPlot(dataset_id, name, {
-        max_components,
-      });
-      commit(REFRESH_PLOT, { key: dataset_id, name, data });
-    } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      throw err;
+  async [LOAD_PLOT]({ getters: _getters, commit }, { dataset_id, name }) {
+    const plot = _getters.plot(dataset_id, name);
+    if (plot) {
+      const {
+        loading,
+        valid,
+        args,
+        type: plotType,
+      } = plot;
+      if (!valid && !loading) {
+        try {
+          commit(SET_PLOT, {
+            dataset_id,
+            name,
+            obj: { loading: true },
+          });
+          let d;
+          switch (plotType) {
+            case plot_types.TRANSFORM:
+              ({ data: d } = await CSVService.getPlot(dataset_id, name, args));
+              break;
+            case plot_types.ANALYSIS:
+              ({ data: d } = await CSVService.getAnalysis(dataset_id, name, args));
+              break;
+            default:
+              throw new Error('Plot type unknown:', plotType);
+          }
+          commit(SET_PLOT, {
+            dataset_id,
+            name,
+            obj: { loading: false, data: d, valid: true },
+          });
+        } catch (err) {
+          commit(SET_PLOT, {
+            dataset_id,
+            name,
+            obj: { loading: false, valid: false },
+          });
+          commit(SET_LAST_ERROR, err);
+          throw err;
+        }
+      }
     }
   },
 
@@ -318,6 +373,7 @@ const actions = {
     await load_dataset({ commit }, { dataset_id });
     commit(SET_LOADING, false);
   },
+
 };
 
 export default new Vuex.Store({

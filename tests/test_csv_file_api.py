@@ -2,7 +2,7 @@ from io import BytesIO
 
 from flask import url_for
 
-from metabulo.models import CSVFile, CSVFileSchema, db, ValidatedMetaboliteTable
+from viime.models import CSVFile, CSVFileSchema, db, ValidatedMetaboliteTable
 
 csv_data = """
 id,col1,col2
@@ -156,6 +156,25 @@ def test_set_imputation_options(client, csv_file):
     )
     assert resp.status_code == 200
     assert resp.json == {'imputation_mnar': 'half-minimum', 'imputation_mcar': 'knn'}
+
+
+def test_set_transformation_options(client, csv_file):
+    resp = client.post(
+        url_for('csv.save_validated_csv_file', csv_id=csv_file.id)
+    )
+    assert resp.status_code == 201
+
+    resp = client.put(
+        url_for('csv.set_transformation_method', csv_id=csv_file.id),
+        json={'method': 'log10'}
+    )
+    assert resp.status_code == 200
+
+    resp = client.get(
+        url_for('csv.get_csv_file', csv_id=csv_file.id)
+    )
+    assert resp.status_code == 200
+    assert resp.json['transformation'] == 'log10'
 
 
 def test_merge_files(client):

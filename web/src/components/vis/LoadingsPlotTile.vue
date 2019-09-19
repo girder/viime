@@ -1,12 +1,15 @@
 <script>
-import LoadingsPlot from '@/components/vis/LoadingsPlot.vue';
-import VisTile from '@/components/vis/VisTile.vue';
+import LoadingsPlot from './LoadingsPlot.vue';
+import VisTile from './VisTile.vue';
+import plotData from './mixins/plotData';
 
 export default {
   components: {
     LoadingsPlot,
     VisTile,
   },
+
+  mixins: [plotData('loadings')],
 
   props: {
     width: {
@@ -19,8 +22,8 @@ export default {
       type: Number,
       validator: Number.isInteger,
     },
-    points: {
-      validator: d => d === null || Array.isArray(d),
+    id: {
+      type: String,
       required: true,
     },
   },
@@ -47,11 +50,11 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(title="PCA Loadings Plot")
+vis-tile(v-if="plot", title="PCA Loadings Plot", :loading="plot.loading")
   loadings-plot(
       :width="width",
       :height="height",
-      :points="points",
+      :points="plot.data",
       :pc-x="pcX",
       :pc-y="pcY",
       :show-crosshairs="showCrosshairs")

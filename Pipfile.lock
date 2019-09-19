@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4feaa7d63e3649dd0455e15c9524cba4cf1f3d98fc707a46ef70626fd2163729"
+            "sha256": "701eca715a8ed756d4ba4c863e64c4d5b18f739d34ea8fcf68e08beff08f44c6"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -206,10 +206,6 @@
             ],
             "version": "==3.1.1"
         },
-        "metabulo": {
-            "editable": true,
-            "path": "."
-        },
         "numpy": {
             "hashes": [
                 "sha256:05dbfe72684cc14b92568de1bc1f41e5f62b00f714afc9adee42f6311738091f",
@@ -373,6 +369,10 @@
             ],
             "version": "==1.25.3"
         },
+        "viime": {
+            "editable": true,
+            "path": "."
+        },
         "webargs": {
             "hashes": [
                 "sha256:97b94d375196422a7037971a0a7e0b405a15b06099635dddcb3ecad48872f073",
@@ -393,7 +393,6 @@
                 "sha256:546eb36cee8db40c3eaa46c351e67ffee6eeb5fa2650b71bc4c758a29a1b29b2",
                 "sha256:e551fb498759fa3a5384a94ccd4c3c02eb7c00ea424426e212ac0c57be9dfbde"
             ],
-            "index": "pypi",
             "version": "==1.2.0"
         }
     },
