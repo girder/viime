@@ -174,15 +174,13 @@ export default {
         pcX,
         pcY,
         showEllipses,
+        duration,
         valid,
       } = this;
 
-      console.log(valid);
       if (!valid) {
         return '';
       }
-
-      console.log(pcCoords);
 
       const x = `PC${pcX}`;
       const y = `PC${pcY}`;
@@ -205,54 +203,10 @@ export default {
       });
 
       // Draw the C3 chart.
-      console.log('hey');
-      console.log('chart', this.$refs.chart);
-      if (!this.chart) {
-        console.log('chart', this.$refs.chart);
-        console.log('hi');
-        this.chart = c3.generate({
-          bindto: this.$refs.chart,
-          size: {
-            width: 600,
-            height: 600,
-          },
-          data: {
-            xs,
-            columns,
-            type: 'scatter',
-          },
-          axis: {
-            x: {
-              label: x,
-              tick: {
-                fit: false,
-              },
-            },
-            y: {
-              label: y,
-            },
-          },
-          legend: {
-            item: {
-              onmouseover: (id) => {
-                this.chart.focus(id);
-                this.focusEllipse(id);
-              },
-
-              onmouseout: () => {
-                this.chart.focus();
-                this.focusEllipse();
-              },
-            },
-          },
-        });
-      } else {
-        console.log(this.chart);
-        this.chart.load({
-          columns,
-          xs,
-        });
-      }
+      this.chart.load({
+        columns,
+        xs,
+      });
 
       // Draw the data ellipses.
       const scaleX = this.chart.internal.x;
@@ -267,25 +221,80 @@ export default {
       const yFactor = (scaleY(1e10) - scaleY(0)) / 1e10;
       const plotTransform = `translate(${scaleX(0)} ${scaleY(0)}) scale(${xFactor} ${yFactor})`;
       select(this.$refs.chart)
-        .select('.c3-chart')
-        .append('g')
-        .classed('c3-custom-ellipses', true)
+        .select('.c3-custom-ellipses')
         .selectAll('ellipse')
         .data(confidenceEllipses)
-        .enter()
-        .append('ellipse')
-        .style('fill', 'none')
-        .style('stroke', d => cmap(d.category))
-        .style('stroke-width', 2)
+        .join(
+          enter => enter.append('ellipse')
+            .style('fill', 'none')
+            .style('stroke', d => cmap(d.category))
+            .style('stroke-width', 1)
+            .attr('vector-effect', 'non-scaling-stroke')
+            .attr('rx', 0)
+            .attr('ry', 0)
+            .attr('transform', d => `${plotTransform} ${d.transform}`)
+            .style('opacity', 0),
+          update => update,
+          exit => exit)
+        .transition()
+        .duration(duration)
         .attr('rx', d => d.rx)
         .attr('ry', d => d.ry)
-        .attr('vector-effect', 'non-scaling-stroke')
-        .attr('transform', d => `${plotTransform} ${d.transform}`);
+        .attr('transform', d => `${plotTransform} ${d.transform}`)
+        .style('opacity', 1);
 
       this.setEllipseVisibility(showEllipses);
 
       return String(Math.random());
     },
+  },
+
+  mounted() {
+    const {
+      width,
+      height,
+    } = this;
+
+    this.chart = c3.generate({
+      bindto: this.$refs.chart,
+      size: {
+        width,
+        height,
+      },
+      data: {
+        columns: [],
+        type: 'scatter',
+      },
+      axis: {
+        x: {
+          label: 'x',
+          tick: {
+            fit: false,
+          },
+        },
+        y: {
+          label: 'y',
+        },
+      },
+      legend: {
+        item: {
+          onmouseover: (id) => {
+            this.chart.focus(id);
+            this.focusEllipse(id);
+          },
+
+          onmouseout: () => {
+            this.chart.focus();
+            this.focusEllipse();
+          },
+        },
+      },
+    });
+
+    select(this.$refs.chart)
+      .select('.c3-chart')
+      .append('g')
+      .classed('c3-custom-ellipses', true);
   },
 
   methods: {
