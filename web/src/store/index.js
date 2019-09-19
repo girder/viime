@@ -39,10 +39,23 @@ const SET_ALL_TRANSFORMATIONS = 'set_all_transformations';
 
 Vue.use(Vuex);
 
+const datasetDefaults = {
+  ready: false,
+  validation: [],
+  sourcerows: [],
+  width: 0,
+  height: 0,
+  imputationMCAR: null,
+  imputationMNAR: null,
+  normalization: null,
+  normalization_argument: null,
+  transformation: null,
+  transformation_argument: null,
+  scaling: null,
+  scaling_argument: null,
+};
+
 const plotDefaults = {
-  // logic for which mutations invalidate plot data cache is internal to vuex state
-  // this could be more granular.  for now, mutations invalidate all plots.
-  // enumerate plot types
   pca: {
     data: null,
     valid: false,
@@ -74,7 +87,6 @@ analyses.forEach(({
 });
 
 const appstate = {
-  // map of all datasets in the session by csv UUID
   datasets: {},
   plots: {},
   analyses: {},
@@ -98,7 +110,6 @@ const getters = {
 
 const mutations = {
   /**
-   * Invalidate plots when transforms, axis labels, and imputation change.
    * @private
    */
   [INVALIDATE_PLOTS](state, { dataset_id }) {
@@ -107,20 +118,13 @@ const mutations = {
   },
 
   /**
-   * Initialize new dataset
    * @private
    */
   [INITIALIZE_DATASET](state, { dataset_id }) {
     Vue.set(state.plots, dataset_id, cloneDeep(plotDefaults));
     Vue.set(state.datasets, dataset_id, {
-      ready: false,
+      ...datasetDefaults,
       id: dataset_id,
-      validation: [],
-      sourcerows: [],
-      width: 0,
-      height: 0,
-      imputationMCAR: null,
-      imputationMNAR: null,
       selected: {
         type: 'column',
         last: 1,
@@ -130,29 +134,28 @@ const mutations = {
   },
 
   /**
-   * Load CSV data into the store.
    * @private
    */
   [SET_DATASET_DATA](state, { data }) {
     const { id, name, size } = data;
-    // serialize CSV string as JSON
     const { data: sourcerows } = convertCsvToRows(data.table);
     const oldData = state.datasets[id];
     Vue.set(state.datasets, id, {
       ...oldData,
       ...{
-        id,
         name,
         size,
         ready: true,
-        width: sourcerows[0].length, // TODO: get from server
-        height: sourcerows.length, // TODO: get from server
-        // user- and server-generated lables for rows and columns
+        width: sourcerows[0].length,
+        height: sourcerows.length,
         validation: mapValidationErrors(data.table_validation, data.columns),
-        // JSON serialized copy of data.table
         sourcerows,
         imputationMCAR: data.imputation_mcar,
         imputationMNAR: data.imputation_mnar,
+        normalization: data.normalization,
+        normalization_argument: data.normalization_argument,
+        transformation: data.transformation,
+        scaling: data.scaling,
       },
     });
   },
@@ -229,15 +232,6 @@ const mutations = {
   }) {
     Vue.set(state.datasets[dataset_id], category, transform_type);
     Vue.set(state.datasets[dataset_id], `${category}_argument`, argument);
-  },
-
-  [SET_ALL_TRANSFORMATIONS](state, { dataset_id, data }) {
-    Vue.set(state.datasets[dataset_id], 'normalization', data.normalization);
-    Vue.set(state.datasets[dataset_id], 'normalization_argument', data.normalization_argument);
-    Vue.set(state.datasets[dataset_id], 'transformation', data.transformation);
-    Vue.set(state.datasets[dataset_id], 'transformation_argument', null);
-    Vue.set(state.datasets[dataset_id], 'scaling', data.scaling);
-    Vue.set(state.datasets[dataset_id], 'scaling_argument', null);
   },
 };
 
@@ -341,7 +335,6 @@ const actions = {
   },
 
   /**
-   * Load datasets from session into the store.
    * @param {Object} vuex
    * @param {import('../utils').SessionStore} sessionStore Store
    */
@@ -368,7 +361,6 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  // set mutually exclusive transformation within category.
   async [MUTEX_TRANSFORM_TABLE]({ commit }, {
     category, dataset_id, transform_type, argument,
   }) {
@@ -396,7 +388,7 @@ const actions = {
       commit(SET_LABELS, { dataset_id, rows, columns });
       await dispatch(LOAD_DATASET, { dataset_id });
       // must await before plot invalidation because a new checkpoint
-      // needs to be created before plots can refresh
+      // needs to be created before plots can be refreshed
       commit(INVALIDATE_PLOTS, { dataset_id });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
