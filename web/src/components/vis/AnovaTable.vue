@@ -1,5 +1,4 @@
 <script>
-import { format } from 'd3-format';
 import MetaboliteTable from './MetaboliteTable.vue';
 
 export default {
