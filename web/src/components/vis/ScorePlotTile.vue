@@ -79,7 +79,6 @@ vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading")
       :group-labels="groupLabels",
       :eigenvalues="eigenvalues",
       :columns="columns",
-      :dataset="dataset",
       :pc-x="pcX",
       :pc-y="pcY",
       :show-ellipses="showEllipses")
