@@ -1,7 +1,7 @@
 <template lang="pug">
 v-app
   v-toolbar.darken-3(dense, dark, color="primary")
-    v-toolbar-side-icon.logo(@click="$router.push('/')") BA
+    v-toolbar-side-icon.logo(@click="$router.push('/')") V
     v-breadcrumbs(:items="breadcrumbs", divider="»")
       template(#item="props")
         v-breadcrumbs-item(:to="props.item.to", exact) {{props.item.text}}
@@ -29,7 +29,7 @@ export default {
 
       return [
         {
-          text: 'Biomarker Analysis',
+          text: 'VIIME',
           to: '/',
         },
         ...this.$route.matched.slice(0, this.$route.matched.length - 1).map(d => toBreadcrumb(d)),
