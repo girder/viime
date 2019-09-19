@@ -11,9 +11,18 @@ export default {
     },
   },
 
+  data() {
+    return {
+      scale: 1,
+    };
+  },
+
   computed: {
-    hasControls() {
-      return !!this.$slots.controls;
+    smallEnough() {
+      return this.scale <= 0.25;
+    },
+    largeEnough() {
+      return this.scale >= 4;
     },
   },
 };
@@ -25,11 +34,15 @@ v-flex(shrink=1)
     v-toolbar.primary.darken-3.top-rounded(dark, flat, dense)
       v-toolbar-title {{ title }}
       v-spacer
-      v-toolbar-items(v-if="hasControls")
+      v-toolbar-items
+        v-btn(@click="scale *= 0.5", :disabled="smallEnough", icon)
+          v-icon {{ $vuetify.icons.viewCollapse }}
+        v-btn(@click="scale *= 2", :disabled="largeEnough", icon)
+          v-icon {{ $vuetify.icons.viewExpand }}
         slot(name="controls")
     v-progress-linear.ma-0.progress(v-if="loading", indeterminate, height=4)
     v-card.bottom-rounded(flat)
-      slot
+      slot(:scale="scale")
 </template>
 
 <style scoped lang="scss">

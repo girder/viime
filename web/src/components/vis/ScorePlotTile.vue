@@ -51,14 +51,15 @@ export default {
 
 <template lang="pug">
 vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading")
-  score-plot(
-      :width="width",
-      :height="height",
-      :raw-points="plot.data",
-      :dataset="dataset",
-      :pc-x="pcX",
-      :pc-y="pcY",
-      :show-ellipses="showEllipses")
+  template(#default="wrapper")
+    score-plot(
+        :width="width * wrapper.scale",
+        :height="height * wrapper.scale",
+        :raw-points="plot.data",
+        :dataset="dataset",
+        :pc-x="pcX",
+        :pc-y="pcY",
+        :show-ellipses="showEllipses")
   template(v-slot:controls)
     v-menu(bottom, offset-y, left, :min-width="150", :close-on-content-click="false")
       template(v-slot:activator="{ on }")
