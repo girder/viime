@@ -179,7 +179,7 @@ export default {
       } = this;
 
       if (this.eigenvaluesInternal.length === 0) {
-        return;
+        return '';
       }
 
       const radius = 4;
