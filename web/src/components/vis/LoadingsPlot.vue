@@ -181,6 +181,8 @@ export default {
     this.axisPlot(svg);
     this.setXLabel('PC1 correlation');
     this.setYLabel('PC2 correlation');
+
+    this.$forceUpdate();
   },
 };
 </script>

@@ -132,6 +132,10 @@ export const axisPlot = {
         svg,
       } = this;
 
+      if (!svg.node()) {
+        return;
+      }
+
       labelAxis(svg.select('.label.x'),
         msg,
         bbox => dwidth / 2 - bbox.width / 2,
@@ -145,6 +149,10 @@ export const axisPlot = {
         dheight,
         svg,
       } = this;
+
+      if (!svg.node()) {
+        return;
+      }
 
       labelAxis(svg.select('.label.y'),
         msg,
