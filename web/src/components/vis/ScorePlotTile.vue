@@ -26,6 +26,10 @@ export default {
       type: String,
       required: true,
     },
+    columns: {
+      required: true,
+      type: Array,
+    },
   },
 
   data() {
@@ -44,6 +48,22 @@ export default {
     pcY() {
       return Number.parseInt(this.pcYval, 10);
     },
+
+    pcCoords() {
+      return this.getPlotDataProperty('x', []);
+    },
+
+    rowLabels() {
+      return this.getPlotDataProperty('rows', []);
+    },
+
+    groupLabels() {
+      return this.getPlotDataProperty('labels', {});
+    },
+
+    eigenvalues() {
+      return this.getPlotDataProperty('sdev', []);
+    },
   },
 };
 
@@ -54,8 +74,11 @@ vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading")
   score-plot(
       :width="width",
       :height="height",
-      :raw-points="plot.data",
-      :dataset="dataset",
+      :pc-coords="pcCoords",
+      :row-labels="rowLabels",
+      :group-labels="groupLabels",
+      :eigenvalues="eigenvalues",
+      :columns="columns",
       :pc-x="pcX",
       :pc-y="pcY",
       :show-ellipses="showEllipses")

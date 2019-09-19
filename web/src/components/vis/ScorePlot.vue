@@ -91,23 +91,29 @@ export default {
       type: Boolean,
       default: true,
     },
-    /* {{
-     *   x: Array<Array<Number>>,
-     *   labels: Object<string, Array<string>>
-     * }}
-     */
-    rawPoints: {
+    pcCoords: {
       required: true,
-      validator: prop => !prop
-          || (typeof prop === 'object' && ['x', 'labels'].every(key => key in prop)),
+      type: Array,
+      validator: prop => prop.every(coord => coord.every(Number.isFinite)),
     },
-    dataset: {
+    rowLabels: {
       required: true,
-      validator: prop => typeof prop === 'object'
-        && '_source' in prop
-        && typeof prop._source === 'object'
-        && 'columns' in prop._source
-        && Array.isArray(prop._source.columns),
+      type: Array,
+      validator: prop => prop.every(val => typeof val === 'string'),
+    },
+    groupLabels: {
+      required: true,
+      type: Object,
+    },
+    eigenvalues: {
+      required: true,
+      type: Array,
+      validator: prop => prop.every(Number.isFinite),
+    },
+    columns: {
+      required: true,
+      type: Array,
+      validator: prop => prop.every(column => ['column_header', 'column_type'].every(key => Object.prototype.hasOwnProperty.call(column, key))),
     },
   },
   data() {
@@ -133,19 +139,15 @@ export default {
 
     xyPoints() {
       const {
-        rawPoints,
+        pcCoords,
         pcX,
         pcY,
       } = this;
 
-      if (rawPoints) {
-        return rawPoints.x.map(p => ({
-          x: p[pcX - 1],
-          y: p[pcY - 1],
-        }));
-      }
-
-      return null;
+      return pcCoords.map(p => ({
+        x: p[pcX - 1],
+        y: p[pcY - 1],
+      }));
     },
 
     xrange() {
@@ -156,14 +158,25 @@ export default {
       return minmax(this.xyPoints.map(p => p.y), 0.1);
     },
 
-    rowLabels() {
-      return this.rawPoints.rows;
-    },
     group() {
-      const { dataset } = this;
-      const column = dataset._source.columns.find(elem => elem.column_type === 'group');
+      const { columns } = this;
+      const column = columns.find(elem => elem.column_type === 'group');
 
       return column.column_header;
+    },
+
+    valid() {
+      const {
+        pcCoords,
+        rowLabels,
+        groupLabels,
+        eigenvalues,
+      } = this;
+
+      return pcCoords.length > 0
+        && rowLabels.length > 0
+        && Object.keys(groupLabels).length > 0
+        && eigenvalues.length > 0;
     },
   },
   watch: {
@@ -179,22 +192,29 @@ export default {
       this.update();
     },
 
-    rawPoints(newval) {
-      if (newval) {
-        if (!this.axisPlotInitialized) {
-          const svg = select(this.$refs.svg);
-          this.axisPlot(svg);
-        }
-        this.update();
-      }
+    pcCoords() {
+      this.update();
+    },
+
+    rowLabels() {
+      this.update();
+    },
+
+    groupLabels() {
+      this.update();
+    },
+
+    eigenvalues() {
+      this.update();
     },
   },
   mounted() {
     const {
       xyPoints,
+      valid,
     } = this;
 
-    if (xyPoints) {
+    if (valid && xyPoints) {
       const svg = select(this.$refs.svg);
       this.axisPlot(svg);
       this.update();
@@ -204,25 +224,31 @@ export default {
     update() {
       // Grab the input props.
       const {
-        rawPoints,
+        eigenvalues,
         xyPoints,
         group,
+        groupLabels,
         xlabel,
         ylabel,
         pcX,
         pcY,
         showEllipses,
+        valid,
       } = this;
+
+      if (!valid) {
+        return;
+      }
 
       // Set the axis labels.
       //
       // Compute the total variance in all the PCs.
-      const totVariance = rawPoints.sdev.reduce((acc, x) => acc + x, 0);
+      const totVariance = eigenvalues.reduce((acc, x) => acc + x, 0);
       const pctFormat = format('.2%');
       const svg = select(this.$refs.svg);
       this.axisPlot(svg);
-      this.setXLabel(`${xlabel} (${pctFormat(rawPoints.sdev[pcX - 1] / totVariance)})`);
-      this.setYLabel(`${ylabel} (${pctFormat(rawPoints.sdev[pcY - 1] / totVariance)})`);
+      this.setXLabel(`${xlabel} (${pctFormat(eigenvalues[pcX - 1] / totVariance)})`);
+      this.setYLabel(`${ylabel} (${pctFormat(eigenvalues[pcY - 1] / totVariance)})`);
 
       // Draw the data.
       //
@@ -244,7 +270,7 @@ export default {
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
-          .style('stroke', (d, i) => (group ? cmap(rawPoints.labels[group][i]) : null))
+          .style('stroke', (d, i) => (group ? cmap(groupLabels[group][i]) : null))
           .style('fill-opacity', 0.001)
           .on('mouseover', function mouseover(d, i) {
             select(this)
@@ -278,7 +304,7 @@ export default {
       // Decompose the data into its label categories.
       const streams = {};
       xyPoints.forEach((p, i) => {
-        const category = rawPoints.labels[group][i];
+        const category = groupLabels[group][i];
         if (!streams[category]) {
           streams[category] = [];
         }
