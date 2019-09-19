@@ -315,5 +315,9 @@ export default {
       return '';
     },
   },
+
+  mounted() {
+    this.$forceUpdate();
+  },
 };
 </script>

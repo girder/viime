@@ -375,6 +375,11 @@ export default {
       return '';
     },
   },
+
+  mounted() {
+    this.$forceUpdate();
+  },
+
   methods: {
     setRanges(xyPoints) {
       this.xrange = minmax(xyPoints.map(p => p.x), 0.1);
