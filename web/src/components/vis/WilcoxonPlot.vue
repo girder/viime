@@ -11,7 +11,7 @@ export default Vue.extend({
     data: {
       type: Object,
       required: true,
-      validator: prop => !prop || ('data' in prop),
+      validator: prop => !prop || ('data' in prop && 'pairs' in prop),
     },
   },
 
@@ -19,24 +19,16 @@ export default Vue.extend({
     items() {
       return (this.data && this.data.data) || [];
     },
+    pairs() {
+      return (this.data && this.data.pairs) || [];
+    },
     headers() {
       return [
         {
           text: 'Metabolite',
           value: 'Metabolite',
         },
-        {
-          text: 'Wilcoxon',
-          value: 'Wilcoxon',
-        },
-        {
-          text: 'Bonferroni',
-          value: 'Bonferroni',
-        },
-        {
-          text: 'Hochberg',
-          value: 'Hochberg',
-        },
+        ...this.pairs.map(text => ({ text, value: text })),
       ];
     },
   },

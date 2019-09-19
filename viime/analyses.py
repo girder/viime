@@ -16,6 +16,7 @@ def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, An
 
     return {
         'groups': list(set(groups)),
+        'pairs': list(data)[1:],
         'data': data.replace({pd.np.nan: None}).to_dict(orient='records')
     }
 

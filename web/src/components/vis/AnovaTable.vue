@@ -16,12 +16,6 @@ export default {
     },
   },
 
-  data() {
-    return {
-      format: format('.2e'),
-    };
-  },
-
   computed: {
     items() {
       return (this.data && this.data.data) || [];
