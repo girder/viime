@@ -52,6 +52,7 @@ export default {
 <template lang="pug">
 vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading")
   score-plot(
+      v-if="plot && dataset.ready",
       :width="width",
       :height="height",
       :raw-points="plot.data",
