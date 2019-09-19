@@ -34,10 +34,8 @@ export default {
       },
       defaultColOption,
       defaultRowOption,
-      settingsDialog: false,
       mnarImputationMethods: mnar_imputation_methods,
       mcarImputationMethods: mcar_imputation_methods,
-      imputation: {},
     };
   },
   computed: {
@@ -65,11 +63,11 @@ export default {
       }
       return `Column ${base26Converter(members[0] + 1)}`;
     },
-  },
-  watch: {
-    dataset() {
-      this.imputation.mnar = this.dataset.imputationMNAR;
-      this.imputation.mcar = this.dataset.imputationMCAR;
+    mnar() {
+      return this.dataset.imputationMNAR;
+    },
+    mcar() {
+      return this.dataset.imputationMCAR;
     },
   },
   methods: {
@@ -80,11 +78,15 @@ export default {
       const changes = ranges.members.map(index => ({ context, index, label }));
       await this.$store.dispatch(CHANGE_AXIS_LABEL, { dataset_id: this.id, changes });
     },
-    async saveImputationSettings() {
-      this.settingsDialog = false;
+    async saveImputationSettings(changed) {
+      const options = {
+        mnar: this.mnar,
+        mcar: this.mcar,
+        ...changed,
+      };
       await this.$store.dispatch(CHANGE_IMPUTATION_OPTIONS, {
         dataset_id: this.id,
-        options: this.imputation,
+        options,
       });
     },
   },
@@ -123,33 +125,31 @@ v-layout.cleanup-wrapper(row)
       v-spacer
 
       save-status
-      v-dialog(v-model="settingsDialog", max-width="500")
-        template(v-slot:activator="{ on }")
-          v-btn(icon, v-on="on")
-            v-icon {{ $vuetify.icons.settings }}
-        v-card
-          v-card-title.headline Imputation Settings
+      v-icon {{ $vuetify.icons.download }}
+
+    v-layout(row, fill-height)
+      v-navigation-drawer.primary.darken-3.nav-drawer(permanent,
+          style="width: 200px;min-width: 200px;")
+        v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
+          v-toolbar-title Imputation Settings
+        v-card.mx-3(flat)
           v-card-text
             v-select(
                 item-value="value",
                 item-text="label",
                 :items="mnarImputationMethods",
                 label="MNAR imputation method",
-                v-model="imputation.mnar")
+                :value="mnar",
+                @change="saveImputationSettings({mnar: $event})")
             v-select(
                 item-value="value",
                 item-text="label",
                 :items="mcarImputationMethods",
                 label="MCAR imputation method",
-                v-model="imputation.mcar")
-          v-card-actions
-            v-spacer
-            v-btn(flat, @click="settingsDialog = false") Close
-            v-btn(flat, @click="saveImputationSettings") Save
-      v-icon {{ $vuetify.icons.download }}
-
-    .grow-overflow
-      data-table(v-bind="{ id, dataset, selected }", @setselection="setSelection")
+                :value="mcar",
+                @change="saveImputationSettings({mcar: $event})")
+      .grow-overflow
+        data-table(v-bind="{ id, dataset, selected }", @setselection="setSelection")
 </template>
 
 <style lang="scss">
