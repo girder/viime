@@ -3,7 +3,7 @@ from io import BytesIO
 import json
 import math
 from pathlib import PurePath
-from typing import cast, Callable, Dict, Optional
+from typing import Callable, cast, Dict, Optional
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
@@ -552,7 +552,8 @@ def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,
     'group_column': fields.Str(missing=None)
 })
 @load_validated_csv_file
-def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable, group_column: Optional[str] = None):
+def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable,
+                      group_column: Optional[str] = None):
     return _group_test(wilcoxon_test, validated_table, group_column)
 
 
