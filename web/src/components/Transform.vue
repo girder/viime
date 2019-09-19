@@ -27,6 +27,11 @@ export default {
       normalize_methods,
       transform_methods,
       scaling_methods,
+      visiblePlots: {
+        score: true,
+        scree: true,
+        loadings: true,
+      },
     };
   },
   computed: {
@@ -110,6 +115,14 @@ v-layout.transform-component(row, fill-height)
             v-radio(v-for="m in scaling_methods", :label="m.label",
                 :value="m.value", :key="`scale${m.value}`")
 
+      v-toolbar.darken-3(color="primary", dark, flat, dense)
+        v-toolbar-title Plots
+      v-card.mx-3(flat)
+        v-card-actions.checkboxlist
+          v-checkbox.my-0(v-model="visiblePlots.score", label="PCA Score Plot", hide-details)
+          v-checkbox.my-0(v-model="visiblePlots.loadings", label="PCA Loadings Plot", hide-details)
+          v-checkbox.my-0(v-model="visiblePlots.scree", label="PCA Scree Plot", hide-details)
+
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
@@ -117,14 +130,17 @@ v-layout.transform-component(row, fill-height)
     v-container.grow-overflow.ma-0(grid-list-lg, fluid)
       v-layout(row, wrap)
         score-plot-tile(
+            v-if="visiblePlots.score", :key="score",
             :width="600",
             :height="600",
             :id="id")
         loadings-plot-tile(
+            v-if="visiblePlots.loadings", :key="loadings",
             :width="600",
             :height="600",
             :id="id")
         scree-plot-tile(
+            v-if="visiblePlots.scree", :key="scree",
             :width="600",
             :height="600",
             :id="id")
@@ -137,5 +153,9 @@ v-layout.transform-component(row, fill-height)
 <style scoped lang="scss">
 .transform-component {
   background: #eee;
+}
+
+.checkboxlist {
+  display: block;
 }
 </style>
