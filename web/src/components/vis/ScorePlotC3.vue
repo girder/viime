@@ -145,6 +145,7 @@ export default {
   data() {
     return {
       chart: null,
+      duration: 500,
     };
   },
 
@@ -169,13 +170,37 @@ export default {
       return column.column_header;
     },
 
+    valid() {
+      const {
+        pcCoords,
+        rowLabels,
+        groupLabels,
+        eigenvalues,
+      } = this;
+
+      return this.$refs.chart
+        && pcCoords.length > 0
+        && rowLabels.length > 0
+        && Object.keys(groupLabels).length > 0
+        && eigenvalues.length > 0;
+    },
+
     update() {
       const {
         pcCoords,
         pcPoints,
         pcX,
         pcY,
+        showEllipses,
+        valid,
       } = this;
+
+      console.log(valid);
+      if (!valid) {
+        return '';
+      }
+
+      console.log(pcCoords);
 
       const x = `PC${pcX}`;
       const y = `PC${pcY}`;
@@ -198,51 +223,54 @@ export default {
       });
 
       // Draw the C3 chart.
-      this.chart = window.chart = c3.generate({
-        bindto: this.$refs.chart,
-        size: {
-          width: 600,
-          height: 600,
-        },
-        data: {
-          xs,
+      console.log('hey');
+      console.log('chart', this.$refs.chart);
+      if (!this.chart) {
+        console.log('chart', this.$refs.chart);
+        console.log('hi');
+        this.chart = c3.generate({
+          bindto: this.$refs.chart,
+          size: {
+            width: 600,
+            height: 600,
+          },
+          data: {
+            xs,
+            columns,
+            type: 'scatter',
+          },
+          axis: {
+            x: {
+              label: x,
+              tick: {
+                fit: false,
+              },
+            },
+            y: {
+              label: y,
+            },
+          },
+          legend: {
+            item: {
+              onmouseover: (id) => {
+                this.chart.focus(id);
+                this.focusEllipse(id);
+              },
+
+              onmouseout: () => {
+                this.chart.focus();
+                this.focusEllipse();
+              },
+            },
+          },
+        });
+      } else {
+        console.log(this.chart);
+        this.chart.load({
           columns,
-          type: 'scatter',
-        },
-        axis: {
-          x: {
-            label: x,
-            tick: {
-              fit: false,
-            },
-          },
-          y: {
-            label: y,
-          },
-        },
-        legend: {
-          item: {
-            onmouseover: (id) => {
-              this.chart.focus(id);
-
-              select(this.$refs.chart)
-                .selectAll('circle.ellipse')
-                .style('opacity', 0.3);
-
-              select(this.$refs.chart)
-                .select(`circle.ellipse-${id}`)
-                .style('opacity', 1.0);
-            },
-
-            onmouseout: () => {
-              this.chart.focus();
-              select(this.$refs.chart)
-                .selectAll('circle.ellipse')
-                .style('opacity', 1.0);
-            },
-          },
-        },
-      });
+          xs,
+        });
+      }
 
       // Draw the data ellipses.
       const scaleX = this.chart.internal.x;
@@ -288,6 +316,8 @@ export default {
           return `translate(${xMean}, ${yMean}) rotate(${rotation}) scale(${d.axes[0]}, ${d.axes[1]})`;
         });
 
+      this.setEllipseVisibility(showEllipses);
+
       return String(Math.random());
     },
   },
@@ -312,6 +342,34 @@ export default {
       });
 
       return grouped;
+    },
+
+    focusEllipse(which) {
+      const selector = which ? `circle.ellipse-${which}` : 'circle.ellipse';
+
+      this.defocusEllipse();
+
+      select(this.$refs.chart)
+        .selectAll(selector)
+        .style('opacity', 1.0);
+    },
+
+    defocusEllipse(which) {
+      const selector = which ? `circle.ellipse-${which}` : 'circle.ellipse';
+
+      select(this.$refs.chart)
+        .selectAll(selector)
+        .style('opacity', 0.3);
+    },
+
+    setEllipseVisibility(on) {
+      const opacity = on ? 1.0 : 0.0;
+
+      select(this.$refs.chart)
+        .selectAll('circle.ellipse')
+        .transition()
+        .duration(this.duration)
+        .style('opacity', opacity);
     },
   },
 };
