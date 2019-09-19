@@ -235,8 +235,11 @@ export default {
             .attr('transform', d => `${plotTransform} ${d.transform}`)
             .style('opacity', 0),
           update => update,
-          exit => exit)
-        .transition()
+          exit => exit.transition('exit')
+            .duration(duration)
+            .style('opacity', 0)
+            .remove())
+        .transition('update')
         .duration(duration)
         .attr('rx', d => d.rx)
         .attr('ry', d => d.ry)
@@ -341,7 +344,7 @@ export default {
       const opacity = on ? 1.0 : 0.0;
 
       select(this.$refs.chart)
-        .selectAll('ellipse.ellipse')
+        .selectAll('ellipse')
         .transition()
         .duration(this.duration)
         .style('opacity', opacity);
