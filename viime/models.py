@@ -751,5 +751,6 @@ class ValidatedMetaboliteTableSchema(BaseSchema):
     @post_dump
     def serialize_tables(self, data):
         for attr in ['measurements', 'measurement_metadata', 'sample_metadata', 'groups']:
-            data[attr] = data[attr].to_csv()
+            if attr in data:
+                data[attr] = data[attr].to_csv()
         return data
