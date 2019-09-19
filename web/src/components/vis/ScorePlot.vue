@@ -198,7 +198,7 @@ export default {
       } = this;
 
       if (!valid) {
-        return;
+        return '';
       }
 
       // Set the axis labels.
