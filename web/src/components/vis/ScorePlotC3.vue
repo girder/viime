@@ -13,13 +13,11 @@ div
 <script>
 import c3 from 'c3';
 import { select } from 'd3-selection';
+import { deviation, mean } from 'd3-array';
 
 import 'c3/c3.css';
 
 function covar(xs, ys) {
-  const sum = arr => arr.reduce((acc, x) => acc + x, 0);
-  const mean = arr => sum(arr) / arr.length;
-
   const e_xy = mean(xs.map((x, i) => x * ys[i]));
   const e_xx = mean(xs);
   const e_yy = mean(ys);
@@ -90,6 +88,55 @@ function dataEllipse(xs, ys, scaleX, scaleY) {
     rotation,
     axes: eigval.map(Math.sqrt).map(pixels),
   };
+}
+
+// Create a plot of the covariance confidence ellipse of `x` and `y`.
+// x, y : array_like, shape (n, )
+//     Input data.
+// std : float
+//     The number of standard deviations to determine the ellipse's radiuses.
+//
+// Port of Python function from:
+//      https://matplotlib.org/gallery/statistics/confidence_ellipse.html
+function confidenceEllipse(x, y, std) {
+  // cov = np.cov(x, y)
+  const xdev = deviation(x);
+  const ydev = deviation(y);
+  const xcov = xdev * xdev;
+  const ycov = ydev * ydev;
+  const xycov = covar(x, y);
+
+  // pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
+  const pearson = xycov / Math.sqrt(xcov * ycov);
+
+  // # Using a special case to obtain the eigenvalues of this
+  // # two-dimensionl dataset.
+  // ell_radius_x = np.sqrt(1 + pearson)
+  // ell_radius_y = np.sqrt(1 - pearson)
+  const ell_radius_x = Math.sqrt(1 + pearson);
+  const ell_radius_y = Math.sqrt(1 - pearson);
+
+  // # Calculating the stdandard deviation of x from
+  // # the squareroot of the variance and multiplying
+  // # with the given number of standard deviations.
+  // scale_x = np.sqrt(cov[0, 0]) * n_std
+  // mean_x = np.mean(x)
+  const scale_x = Math.sqrt(xcov) * std;
+  const mean_x = mean(x);
+
+  // # calculating the stdandard deviation of y ...
+  // scale_y = np.sqrt(cov[1, 1]) * n_std
+  // mean_y = np.mean(y)
+  const scale_y = Math.sqrt(ycov) * std;
+  const mean_y = mean(y);
+
+  // transf = transforms.Affine2D() \
+  //     .rotate_deg(45) \
+  //     .scale(scale_x, scale_y) \
+  //     .translate(mean_x, mean_y)
+  const transform = `translate(${mean_x} ${mean_y}) scale(${scale_x} ${scale_y}) rotate(45)`;
+
+  return { rx: ell_radius_x, ry: ell_radius_y, transform };
 }
 
 export default {
@@ -317,6 +364,29 @@ export default {
         });
 
       this.setEllipseVisibility(showEllipses);
+
+      const confidenceEllipses = Object.keys(xGrouped).map(group => ({
+        ...confidenceEllipse(xGrouped[group], yGrouped[group], 1),
+        category: group,
+      }));
+      const xFactor = (scaleX(1e10) - scaleX(0)) / 1e10;
+      const yFactor = (scaleY(1e10) - scaleY(0)) / 1e10;
+      const plotTransform = `translate(${scaleX(0)} ${scaleY(0)}) scale(${xFactor} ${yFactor})`;
+      select(this.$refs.chart)
+        .select('.c3-chart')
+        .append('g')
+        .classed('c3-custom-ellipses', true)
+        .selectAll('ellipse')
+        .data(confidenceEllipses)
+        .enter()
+        .append('ellipse')
+        .style('fill', 'none')
+        .style('stroke', d => cmap(d.category))
+        .style('stroke-width', 2)
+        .attr('rx', d => d.rx)
+        .attr('ry', d => d.ry)
+        .attr('vector-effect', 'non-scaling-stroke')
+        .attr('transform', d => `${plotTransform} ${d.transform}`);
 
       return String(Math.random());
     },
