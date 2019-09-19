@@ -135,24 +135,27 @@ const mutations = {
     // serialize CSV string as JSON
     const { data: sourcerows } = convertCsvToRows(data.table);
     const oldData = state.datasets[id];
-    Vue.set(state.datasets, id, { ...oldData, ...{
-      id,
-      name,
-      size,
-      ready: true,
-      width: sourcerows[0].length, // TODO: get from server
-      height: sourcerows.length, // TODO: get from server
-      // user- and server-generated lables for rows and columns
-      validation: mapValidationErrors(data.table_validation, data.columns),
-      // JSON serialized copy of data.table
-      sourcerows,
-      // most recent copy of data with all transforms applied.
-      transformed: data,
-      imputationMCAR: data.imputation_mcar,
-      imputationMNAR: data.imputation_mnar,
+    Vue.set(state.datasets, id, {
+      ...oldData,
+      ...{
+        id,
+        name,
+        size,
+        ready: true,
+        width: sourcerows[0].length, // TODO: get from server
+        height: sourcerows.length, // TODO: get from server
+        // user- and server-generated lables for rows and columns
+        validation: mapValidationErrors(data.table_validation, data.columns),
+        // JSON serialized copy of data.table
+        sourcerows,
+        // most recent copy of data with all transforms applied.
+        transformed: data,
+        imputationMCAR: data.imputation_mcar,
+        imputationMNAR: data.imputation_mnar,
       // danger: use _source as a last resort
       // _source: data,
-    }});
+      },
+    });
   },
 
   /**
@@ -184,7 +187,7 @@ const mutations = {
     Vue.set(state, 'lasterror', err);
   },
 
-  /** 
+  /**
    * @private
    */
   [SET_LOADING](state, loading) {
@@ -211,7 +214,7 @@ const mutations = {
     }
   },
 
-  /** 
+  /**
    * @private
    */
   [SET_SESSION_STORE](state, { store, session_id }) {
@@ -219,7 +222,7 @@ const mutations = {
     Vue.set(state, 'session_id', session_id);
   },
 
-  /** 
+  /**
    * @private
    */
   [SET_TRANSFORMATION](state, {
@@ -303,7 +306,9 @@ const actions = {
   async [LOAD_PLOT]({ getters: _getters, commit }, { dataset_id, name }) {
     const plot = _getters.plot(dataset_id, name);
     if (plot) {
-      const { loading, valid, args, type: plotType } = plot;
+      const {
+        loading, valid, args, type: plotType,
+      } = plot;
       if (!valid && !loading) {
         try {
           commit(SET_PLOT, { dataset_id, name, obj: { loading: true } });
@@ -364,7 +369,9 @@ const actions = {
     commit(SET_LOADING, true);
     try {
       await CSVService.setTransform(key, category, transform_type, argument);
-      commit(SET_TRANSFORMATION, { dataset_id, transform_type, category, argument });
+      commit(SET_TRANSFORMATION, {
+        dataset_id, transform_type, category, argument,
+      });
       commit(INVALIDATE_PLOTS, { dataset_id });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
