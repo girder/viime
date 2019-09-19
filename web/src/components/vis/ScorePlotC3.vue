@@ -226,6 +226,8 @@ export default {
         .data(confidenceEllipses)
         .join(
           enter => enter.append('ellipse')
+            .attr('class', d => `ellipse-${d.category}`)
+            .classed('ellipse', true)
             .style('fill', 'none')
             .style('stroke', d => cmap(d.category))
             .style('stroke-width', 1)
@@ -233,7 +235,7 @@ export default {
             .attr('rx', 0)
             .attr('ry', 0)
             .attr('transform', d => `${plotTransform} ${d.transform}`)
-            .style('opacity', 0),
+            .style('opacity', 1),
           update => update,
           exit => exit.transition('exit')
             .duration(duration)
@@ -244,8 +246,7 @@ export default {
         .duration(duration)
         .attr('rx', d => d.rx)
         .attr('ry', d => d.ry)
-        .attr('transform', d => `${plotTransform} ${d.transform}`)
-        .style('opacity', 1);
+        .attr('transform', d => `${plotTransform} ${d.transform}`);
 
       this.setEllipseVisibility(showEllipses);
 
@@ -324,7 +325,7 @@ export default {
     },
 
     focusEllipse(which) {
-      const selector = which ? `circle.ellipse-${which}` : 'circle.ellipse';
+      const selector = which ? `ellipse.ellipse-${which}` : 'ellipse.ellipse';
 
       this.defocusEllipse();
 
@@ -334,33 +335,42 @@ export default {
     },
 
     defocusEllipse(which) {
-      const selector = which ? `circle.ellipse-${which}` : 'circle.ellipse';
+      const selector = which ? `ellipse.ellipse-${which}` : 'ellipse.ellipse';
 
       select(this.$refs.chart)
         .selectAll(selector)
         .style('opacity', 0.3);
     },
 
-    async setEllipseVisibility(on) {
+    setEllipseVisibility(on) {
+      const visible =
+        select(this.$refs.chart).select('.ellipse').style('display') !== 'none';
+
+      console.log(on, visible);
+      if (on === visible) {
+        return;
+      }
+
       const opacity = on ? 1.0 : 0.0;
 
       const sel = select(this.$refs.chart)
-        .selectAll('ellipse');
+        .selectAll('.ellipse');
 
       if (on) {
         sel.style('opacity', 0.0)
           .style('display', null);
       }
 
-      await sel.transition()
+      const t = sel.transition()
         .duration(this.duration)
-        .style('opacity', opacity)
-        .end();
+        .style('opacity', opacity);
 
-      if (!on) {
-        sel.style('display', 'none')
-          .style('opacity', 1.0);
-      }
+      t.on('end', () => {
+        if (!on) {
+          sel.style('display', 'none')
+            .style('opacity', 1.0);
+        }
+      });
     },
   },
 };
