@@ -50,29 +50,19 @@ export default {
     },
 
     pcCoords() {
-      return this.maybeData('x', []);
+      return this.getPlotDataProperty('x', []);
     },
 
     rowLabels() {
-      return this.maybeData('rows', []);
+      return this.getPlotDataProperty('rows', []);
     },
 
     groupLabels() {
-      return this.maybeData('labels', {});
+      return this.getPlotDataProperty('labels', {});
     },
 
     eigenvalues() {
-      return this.maybeData('sdev', []);
-    },
-  },
-
-  methods: {
-    maybeData(key, dflt) {
-      const {
-        plot,
-      } = this;
-
-      return plot.data ? plot.data[key] : dflt;
+      return this.getPlotDataProperty('sdev', []);
     },
   },
 };
@@ -89,7 +79,6 @@ vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading")
       :group-labels="groupLabels",
       :eigenvalues="eigenvalues",
       :columns="columns",
-      :dataset="dataset",
       :pc-x="pcX",
       :pc-y="pcY",
       :show-ellipses="showEllipses")

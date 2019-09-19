@@ -213,8 +213,19 @@ def create_csv_file():
 
 @csv_bp.route('/csv/<uuid:csv_id>', methods=['GET'])
 def get_csv_file(csv_id):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    return jsonify(_serialize_csv_file(csv_file))
+    csv_file = _serialize_csv_file(CSVFile.query.get_or_404(csv_id))
+
+    # inject properties from the validated table model (normalization, transformation, etc.)
+    validated_table = ValidatedMetaboliteTable.query.filter_by(csv_file_id=csv_id).first()
+    if validated_table is not None:
+        transformation_schema = ValidatedMetaboliteTableSchema(
+            only=['normalization', 'normalization_argument', 'scaling',
+                  'scaling', 'transformation']
+        )
+        transformation = transformation_schema.dump(validated_table)
+        csv_file.update(transformation)
+
+    return jsonify(csv_file)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/validation', methods=['GET'])
