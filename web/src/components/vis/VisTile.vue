@@ -19,17 +19,20 @@ export default {
 
   computed: {
     smallEnough() {
-      return this.scale <= 0.25;
+      return this.scale <= 0.5;
     },
     largeEnough() {
       return this.scale >= 4;
+    },
+    scaleClass() {
+      return `scale${Math.round(this.scale * 100)}`;
     },
   },
 };
 </script>
 
 <template lang="pug">
-v-flex(shrink=1)
+v-flex(shrink=1, :class="scaleClass")
   .white.rounded.relative
     v-toolbar.primary.darken-3.top-rounded(dark, flat, dense)
       v-toolbar-title {{ title }}
@@ -46,6 +49,23 @@ v-flex(shrink=1)
 </template>
 
 <style scoped lang="scss">
+.scale50 {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+.scale100 {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.scale200 {
+  grid-column: span 4;
+  grid-row: span 4;
+}
+.scale400 {
+  grid-column: span 8;
+  grid-row: span 8;
+}
+
 .relative {
   position: relative;
 }

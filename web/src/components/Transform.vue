@@ -9,12 +9,14 @@ import {
 import ScorePlotTile from '@/components/vis/ScorePlotTile.vue';
 import ScreePlotTile from '@/components/vis/ScreePlotTile.vue';
 import LoadingsPlotTile from '@/components/vis/LoadingsPlotTile.vue';
+import LayoutGrid from './LayoutGrid.vue';
 
 export default {
   components: {
     LoadingsPlotTile,
     ScorePlotTile,
     ScreePlotTile,
+    LayoutGrid,
   },
   props: {
     id: {
@@ -32,6 +34,8 @@ export default {
         scree: true,
         loadings: true,
       },
+      cellSize: 300,
+      plotHeader: 48 + 5,
     };
   },
   computed: {
@@ -44,6 +48,8 @@ export default {
     norm_arg() { return this.$store.getters.txType(this.id, 'normalization_argument'); },
     trans() { return this.$store.getters.txType(this.id, 'transformation'); },
     scaling() { return this.$store.getters.txType(this.id, 'scaling'); },
+    plotWidth() { return this.cellSize * 2; },
+    plotHeight() { return this.cellSize * 2 - this.plotHeader; },
   },
   methods: {
     async transformTable(value, category, argument, methods) {
@@ -128,21 +134,21 @@ v-layout.transform-component(row, fill-height)
     h4.display-1.pa-3 Loading Data Set
   v-layout(column, v-else-if="ready && valid")
     v-container.grow-overflow.ma-0(grid-list-lg, fluid)
-      v-layout(row, wrap)
+      layout-grid(:cell-size="cellSize")
         score-plot-tile(
-            v-if="visiblePlots.score", :key="score",
-            :width="600",
-            :height="600",
+            v-if="visiblePlots.score", key="score",
+            :width="plotWidth",
+            :height="plotHeight",
             :id="id")
         loadings-plot-tile(
-            v-if="visiblePlots.loadings", :key="loadings",
-            :width="600",
-            :height="600",
+            v-if="visiblePlots.loadings", key="loadings",
+            :width="plotWidth",
+            :height="plotHeight",
             :id="id")
         scree-plot-tile(
-            v-if="visiblePlots.scree", :key="scree",
-            :width="600",
-            :height="600",
+            v-if="visiblePlots.scree", key="scree",
+            :width="plotWidth",
+            :height="plotHeight",
             :id="id")
   v-container(v-else-if="ready", fill-height)
     v-layout(column)
@@ -158,4 +164,5 @@ v-layout.transform-component(row, fill-height)
 .checkboxlist {
   display: block;
 }
+
 </style>
