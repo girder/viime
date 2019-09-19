@@ -172,8 +172,8 @@ const mutations = {
     });
   },
 
-  [REMOVE_DATASET](state, { key }) {
-    Vue.delete(state.datasets, key);
+  [REMOVE_DATASET](state, { dataset_id }) {
+    Vue.delete(state.datasets, dataset_id);
     state.store.save(state, state.session_id);
   },
 
@@ -341,7 +341,12 @@ const actions = {
       await Promise.all(Object.keys(datasets).map(async (dataset_id) => {
         const data = datasets[dataset_id];
         commit(INITIALIZE_DATASET, { data });
-        await dispatch(LOAD_DATASET, { dataset_id: data.id });
+        try {
+          await dispatch(LOAD_DATASET, { dataset_id: data.id });
+        } catch (err) {
+          commit(REMOVE_DATASET, { dataset_id: data.id });
+          throw err;
+        }
       }));
     } catch (err) {
       commit(SET_LAST_ERROR, err);
