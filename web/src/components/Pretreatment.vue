@@ -108,13 +108,13 @@ v-layout.pretreatment-component(row, fill-height)
                 @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze` })")
               template(v-slot:activator)
                 v-list-tile(
-                   :class="{ active: $router.currentRoute.name === 'Analyze Data' }")
+                   :class="{ active: $route.name === 'Analyze Data' }")
                   v-list-tile-title.pl-2
                     v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
                     | Analyze Table
               v-list-tile.ml-2.small-tile(
                   v-for="a in analyses", :key="a.path",
-                  :class="{ active: $router.currentRoute.name === a.shortName }",
+                  :class="{ active: $route.name === a.shortName }",
                   @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze/${a.path}` })")
                 v-list-tile-title.pl-2
                   v-icon.pr-1.middle {{ $vuetify.icons.compare }}
