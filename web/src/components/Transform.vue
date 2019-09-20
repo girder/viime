@@ -136,18 +136,18 @@ v-layout.transform-component(row, fill-height)
     v-container.grow-overflow.ma-0(grid-list-lg, fluid)
       layout-grid(:cell-size="cellSize")
         score-plot-tile(
-            v-if="visiblePlots.score", key="score",
+            v-show="visiblePlots.score",
             :width="plotWidth",
             :height="plotHeight",
             :columns="dataset.column.data",
             :id="id")
         loadings-plot-tile(
-            v-if="visiblePlots.loadings", key="loadings",
+            v-show="visiblePlots.loadings",
             :width="plotWidth",
             :height="plotHeight",
             :id="id")
         scree-plot-tile(
-            v-if="visiblePlots.scree", key="scree",
+            v-show="visiblePlots.scree",
             :width="plotWidth",
             :height="plotHeight",
             :id="id")
