@@ -105,7 +105,7 @@ export default {
     },
     async remove(file) {
       if (file.status === 'done' && file.meta.id) {
-        this.$store.commit(REMOVE_DATASET, { key: file.meta.id });
+        this.$store.commit(REMOVE_DATASET, { dataset_id: file.meta.id });
       } else {
         const i = this.pendingFiles.findIndex(f => f.name === file.name && f.size === file.size);
         this.pendingFiles.splice(i, 1);
@@ -159,7 +159,7 @@ v-layout.upload-component(column, fill-height)
                 span(v-else-if="file.meta.table") {{ file.meta.table[0] }}
                 span(v-else) Fatal Error
 
-            v-list-tile-content.px-2.shrink(v-if="file.status === 'done'")
+            v-list-tile-content.px-2.shrink(v-if="file.status === 'done' && file.meta.ready")
               v-layout(row, align-center)
                 v-chip.largetext(v-if="file.meta.validation.length === 0",
                     small, color="success", text-color="white")

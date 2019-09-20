@@ -48,11 +48,11 @@ export default function (plotName) {
           });
         }
       },
-      getPlotDataProperty(property) {
+      getPlotDataProperty(property, dflt) {
         if (this.plot && this.plot.data !== null) {
           return this.plot.data[property];
         }
-        return null;
+        return dflt === undefined ? null : dflt;
       },
     },
   };
