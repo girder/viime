@@ -5,9 +5,6 @@ v-app
     v-breadcrumbs(:items="breadcrumbs", divider="»")
       template(#item="props")
         v-breadcrumbs-item(:to="props.item.to", exact) {{props.item.text}}
-    v-spacer
-    //- v-btn(icon)
-    //-   v-icon {{ $vuetify.icons.settings }}
   v-container.pa-0.d-flex(fluid)
     router-view.grow
 </template>
@@ -18,23 +15,25 @@ export default {
   name: 'App',
   computed: {
     breadcrumbs() {
-      const toBreadcrumb = (route, isFull) => {
-        const b = route.meta.breadcrumb;
-        return {
-          text: route.name,
-          to: route.path,
-          ...(b ? b.call(route, this.$route.params, this.$store, isFull) : {}),
-        };
-      };
-
       return [
         {
           text: 'VIIME',
           to: '/',
         },
-        ...this.$route.matched.slice(0, this.$route.matched.length - 1).map(d => toBreadcrumb(d)),
-        toBreadcrumb(this.$route, true),
+        ...this.$route.matched.slice(0, this.$route.matched.length - 1)
+          .map(d => this.toBreadcrumb(d)),
+        this.toBreadcrumb(this.$route, true),
       ];
+    },
+  },
+  methods: {
+    toBreadcrumb(route, isFull) {
+      const b = route.meta.breadcrumb;
+      return {
+        text: route.name,
+        to: route.path,
+        ...(b ? b.call(route, this.$route.params, this.$store, isFull) : {}),
+      };
     },
   },
 };
@@ -46,8 +45,6 @@ body {
 }
 
 .logo.v-btn--icon {
-  // background: url('./assets/logo.png');
-  // background-size: contain;
   font-size: 150%;
 }
 
