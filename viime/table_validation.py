@@ -128,7 +128,7 @@ class ValidationSchema(Schema):
     data = fields.Raw(required=False)
 
     @post_dump
-    def remove_null_values(self, data):
+    def remove_null_values(self, data, **kwargs):
         return {k: v for k, v in data.items() if v is not None}
 
 

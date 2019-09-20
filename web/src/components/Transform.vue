@@ -139,6 +139,7 @@ v-layout.transform-component(row, fill-height)
             v-if="visiblePlots.score", key="score",
             :width="plotWidth",
             :height="plotHeight",
+            :columns="dataset.column.data",
             :id="id")
         loadings-plot-tile(
             v-if="visiblePlots.loadings", key="loadings",
