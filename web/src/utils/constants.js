@@ -157,6 +157,16 @@ const validationMeta = {
     clickable: false,
     multi: false,
   },
+  'non-numeric-column': {
+    description: 'A column contains non-numeric metabolite data',
+    clickable: true,
+    multi: true,
+  },
+  'non-numeric-row': {
+    description: 'A row contains non-numeric metabolite data',
+    clickable: true,
+    multi: true,
+  },
 };
 const wilcoxon_zero_methods = [
   {
