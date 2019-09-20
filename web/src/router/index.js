@@ -54,14 +54,8 @@ export const routes = [
       },
       {
         path: 'analyze',
+        name: 'Analyze Data',
         component: RouterWrapper,
-        meta: {
-          breadcrumb() {
-            return {
-              text: 'Analyze Data',
-            };
-          },
-        },
         children: [
           {
             path: '',
