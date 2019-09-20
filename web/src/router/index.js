@@ -6,12 +6,18 @@ import Cleanup from '../components/Cleanup.vue';
 import Upload from '../components/Upload.vue';
 import Transform from '../components/Transform.vue';
 import AnalyzeData from '../components/AnalyzeData.vue';
-import RouterWrapper from '../components/RouterWrapper.vue';
 import ProblemBar from '../components/ProblemBar.vue';
 import analyses from '../components/vis/analyses';
 
 Vue.use(Router);
 
+function injectParams(path, params) {
+  let parsed = path;
+  Object.entries(params).forEach(([k, v]) => {
+    parsed = parsed.replace(`:${k}`, v);
+  });
+  return parsed;
+}
 
 export const routes = [
   {
@@ -25,10 +31,11 @@ export const routes = [
     component: Pretreatment,
     props: true,
     meta: {
-      breadcrumb(params, store) {
+      breadcrumb(params, store, isFull) {
         const ds = store.getters.dataset(params.id);
         return {
           text: ds ? ds.name : params.id,
+          to: isFull ? this.path : injectParams(this.path, params),
         };
       },
     },
@@ -55,22 +62,12 @@ export const routes = [
       {
         path: 'analyze',
         name: 'Analyze Data',
-        component: RouterWrapper,
-        children: [
-          {
-            path: '',
-            name: 'Analyze Data',
-            component: AnalyzeData,
-            props: true,
-            meta: {
-              hidden: true,
-            },
-          },
-          ...analyses.map(({ path, shortName: name, component }) => ({
-            path, name, component, props: true,
-          })),
-        ],
+        component: AnalyzeData,
+        props: true,
       },
+      ...analyses.map(({ path, shortName: name, component }) => ({
+        path: `analyze/${path}`, name, component, props: true,
+      })),
     ],
   },
   {

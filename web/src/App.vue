@@ -14,24 +14,16 @@ v-app
 
 <script>
 
-function injectParams(path, params) {
-  let parsed = path;
-  Object.entries(params).forEach(([k, v]) => {
-    parsed = parsed.replace(`:${k}`, v);
-  });
-  return parsed;
-}
-
 export default {
   name: 'App',
   computed: {
     breadcrumbs() {
-      const toBreadcrumb = (route) => {
+      const toBreadcrumb = (route, isFull) => {
         const b = route.meta.breadcrumb;
         return {
           text: route.name,
-          to: injectParams(route.path, this.$route.params),
-          ...(b ? b.call(route, this.$route.params, this.$store) : {}),
+          to: route.path,
+          ...(b ? b.call(route, this.$route.params, this.$store, isFull) : {}),
         };
       };
 
@@ -40,7 +32,8 @@ export default {
           text: 'VIIME',
           to: '/',
         },
-        ...this.$route.matched.filter(d => !d.meta.hidden).map(d => toBreadcrumb(d)),
+        ...this.$route.matched.slice(0, this.$route.matched.length - 1).map(d => toBreadcrumb(d)),
+        toBreadcrumb(this.$route, true),
       ];
     },
   },
