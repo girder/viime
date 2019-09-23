@@ -33,10 +33,7 @@ export default [
     description: 'TODO',
     component: CorrelationTile,
     args: {
-      min_correlation: 0.3,
-      linkDistance: 50,
-      filteredGroups: [],
-      nodeColor: null, // null use the first one
+      min_correlation: 0.6,
     },
     type: plot_types.ANALYSIS,
   },

@@ -10,21 +10,36 @@ export default {
     resize,
   },
   props: {
+    radius: {
+      type: Number,
+      default: 10,
+      required: false,
+    },
     nodes: { // {id: string}[]
       type: Array,
       required: true,
+    },
+    nodeFilter: {
+      type: Function,
+      default: null,
+      required: false,
     },
     edges: { // {source: string, target: string, value: number}[]
       type: Array,
       required: true,
     },
+    edgesFilter: {
+      type: Function,
+      default: null,
+      required: false,
+    },
     linkDistance: {
       type: Number,
       required: true,
     },
-    minValue: {
-      type: Number,
-      default: Number.NaN,
+    showLabels: {
+      type: Boolean,
+      default: false,
       required: false,
     },
   },
@@ -63,36 +78,31 @@ export default {
       return f;
     },
     update() {
-      console.log('rebind');
       this.simulation.stop();
       const svg = select(this.$refs.svg);
       svg.attr('width', this.width).attr('height', this.height);
 
       // work on local copy since D3 manipulates the data structure
       const localNodes = this.nodes.map(d => Object.assign({}, d));
-      const nodes = svg.select('g.nodes').selectAll('circle').data(localNodes)
-        .join((enter) => {
-          const c = enter.append('circle').attr('r', 10);
-          c.append('title');
-          return c;
-        });
+      const nodes = svg.select('g.nodes').selectAll('g').data(localNodes)
+        .join(enter => enter.append('g').html('<title></title><circle></circle><text></text>'));
+      nodes.select('circle').attr('r', this.radius);
       nodes.select('title').text(d => d.id);
-      this.simulation.nodes(localNodes);
+      nodes.select('text').text(d => d.id);
 
-      let localEdges = Number.isNaN(this.minValue) ? this.edges.slice()
-        : this.edges.filter(d => d.value >= this.minValue);
-      localEdges = localEdges.map(d => Object.assign({}, d));
+      const localEdges = this.edges.map(d => Object.assign({}, d));
       const edges = svg.select('g.edges').selectAll('line').data(localEdges).join('line');
-      const link = this.simulation.force('link');
-      link.distance(this.linkDistance).links(localEdges);
 
       // towards center of screen
+      this.simulation.nodes(localNodes);
+      this.simulation.force('link').distance(this.linkDistance).links(localEdges);
       this.simulation.force('center').x(this.width / 2).y(this.height / 2);
+      this.simulation.force('collide').radius(this.radius);
+
 
       this.simulation.on('tick', () => {
         nodes
-          .attr('cx', d => d.x)
-          .attr('cy', d => d.y);
+          .attr('transform', d => `translate(${d.x},${d.y})`);
         edges
           .attr('x1', d => d.source.x)
           .attr('y1', d => d.source.y)
@@ -116,11 +126,11 @@ export default {
 div.main(v-resize:throttle="onResize")
   svg.svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
     g.edges
-    g.nodes
+    g.nodes(:class="{ hideLabels: !this.showLabels }")
   span(style="display: none") {{ reactivePlotUpdate }}
 </template>
 
-<style lang="css" scoped>
+<style scoped>
 .main {
   position: absolute;
   top: 0;
@@ -130,12 +140,24 @@ div.main(v-resize:throttle="onResize")
   display: flex;
 }
 
-.nodes >>> * {
-  fill: steelblue;
+.nodes >>> g {
   opacity: 0.8;
 }
 
-.nodes >>> *:hover {
+.nodes >>> circle {
+  fill: steelblue;
+}
+
+.nodes >>> text {
+  transform: translate(12px,0);
+  dominant-baseline: central;
+}
+
+.nodes.hideLabels >>> text {
+  display: none;
+}
+
+.nodes >>> g:hover {
   opacity: 1;
 }
 
