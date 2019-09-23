@@ -46,3 +46,19 @@ def anova_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, Any]:
         'pairs': list(data)[4:],
         'data': data.replace({pd.np.nan: None}).to_dict(orient='records')
     }
+
+
+def pairwise_correlation(measurements: pd.DataFrame, min_correlation: float = 0,
+                         method: Optional[str] = None) -> List[Dict]:
+
+    corr = measurements.corr(method=method)
+
+    r = []
+
+    columns = list(corr)
+    for (i, j) in combinations(range(0, len(corr)), 2):
+        value = corr.iloc[i, j]
+        if abs(value) > min_correlation:
+            r.append(dict(x=columns[i], y=columns[j], value=value))
+
+    return r
