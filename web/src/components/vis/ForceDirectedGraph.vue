@@ -35,19 +35,9 @@ export default {
       type: Array,
       required: true,
     },
-    nodeFilter: {
-      type: Function,
-      default: null,
-      required: false,
-    },
     edges: { // {source: string, target: string, value: number}[]
       type: Array,
       required: true,
-    },
-    edgesFilter: {
-      type: Function,
-      default: null,
-      required: false,
     },
     linkDistance: {
       type: Number,
@@ -64,7 +54,7 @@ export default {
       width: 0,
       height: 0,
       simulation: this.initSimulation(),
-      initialRun: false,
+      initialRun: false, // to force an rendering after mounting
     };
   },
   computed: {
