@@ -90,7 +90,7 @@ export default {
       f.force('many', forceManyBody());
       f.force('center', forceCenter());
       f.force('collide', forceCollide());
-      f.force('link', forceLink().id(d => d.id).strength(d => Math.abs(d.value)));
+      f.force('link', forceLink().id(d => d.id).strength(d => d.value));
       return f;
     },
     update() {

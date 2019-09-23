@@ -41,7 +41,7 @@ export default {
       return !this.plot.data ? []
         : this.plot.data.correlations
           .filter(d => d.value > this.min_correlation)
-          .map(d => ({ source: d.x, target: d.y, value: d.value }));
+          .map(d => ({ source: d.x, target: d.y, value: Math.abs(d.value) }));
     },
   },
 
