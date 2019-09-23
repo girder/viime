@@ -28,8 +28,8 @@ export default [
   },
   {
     path: 'correlation',
-    name: 'Correlation Network',
-    shortName: 'Correlation',
+    name: 'Pearson Correlation Network',
+    shortName: 'Pearson Correlation',
     description: 'TODO',
     component: CorrelationTile,
     args: {
