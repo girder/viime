@@ -32,3 +32,6 @@ RUN R -e 'install.packages("devtools"); library(devtools)'
 RUN R -e 'library(devtools); devtools::install_github("klutometis/roxygen")'
 RUN R -e 'BiocManager::install("impute", version = "3.9")'
 RUN R -e 'install.packages("missForest")'
+
+ADD viime /viime
+RUN R -e 'setwd("/viime"); devtools::update_packages(devtools::dev_package_deps()$package, dependencies=NA, upgrade="never");' && rm -fr /viime
