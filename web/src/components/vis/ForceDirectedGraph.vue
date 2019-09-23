@@ -4,6 +4,22 @@ import {
   forceSimulation, forceManyBody, forceCollide, forceLink, forceCenter,
 } from 'd3-force';
 import { select } from 'd3-selection';
+import { scaleLinear } from 'd3-scale';
+
+
+function extent(arr) {
+  return arr.reduce((acc, d) => ({
+    xMin: Math.min(acc.xMin, d.x),
+    xMax: Math.max(acc.xMax, d.x),
+    yMin: Math.min(acc.yMin, d.y),
+    yMax: Math.max(acc.yMax, d.y),
+  }), {
+    xMin: Number.POSITIVE_INFINITY,
+    xMax: Number.NEGATIVE_INFINITY,
+    yMin: Number.POSITIVE_INFINITY,
+    yMax: Number.NEGATIVE_INFINITY,
+  });
+}
 
 export default {
   directives: {
@@ -103,13 +119,19 @@ export default {
 
 
       this.simulation.on('tick', () => {
+        const simNodes = this.simulation.nodes();
+        const domain = extent(simNodes);
+        const xScale = scaleLinear().domain([domain.xMin, domain.xMax])
+          .range([this.radius, this.width - this.radius]);
+        const yScale = scaleLinear().domain([domain.yMin, domain.yMax])
+          .range([this.radius, this.height - this.radius]);
         nodes
-          .attr('transform', d => `translate(${d.x},${d.y})`);
+          .attr('transform', d => `translate(${xScale(d.x)},${yScale(d.y)})`);
         edges
-          .attr('x1', d => d.source.x)
-          .attr('y1', d => d.source.y)
-          .attr('x2', d => d.target.x)
-          .attr('y2', d => d.target.y);
+          .attr('x1', d => xScale(d.source.x))
+          .attr('y1', d => yScale(d.source.y))
+          .attr('x2', d => xScale(d.target.x))
+          .attr('y2', d => yScale(d.target.y));
       });
 
 
