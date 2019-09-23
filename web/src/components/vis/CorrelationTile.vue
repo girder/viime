@@ -22,8 +22,6 @@ export default {
     return {
       showLabels: false,
       linkDistance: 50,
-      hiddenGroups: [],
-      nodeColor: null, // null use the first one
     };
   },
 
