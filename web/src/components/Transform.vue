@@ -35,6 +35,9 @@ export default {
         loadings: true,
       },
       cellSize: 300,
+      // size of the header since the vis tiles
+      // don't consider the header (48) and padding (5) when setting the size
+      // but since we are in a grid we have to stick to the grid cells
       plotHeader: 48 + 5,
     };
   },
