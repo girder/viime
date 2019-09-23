@@ -35,7 +35,6 @@ const SET_LAST_ERROR = 'set_last_error';
 const SET_LOADING = 'set_loading';
 const SET_SESSION_STORE = 'set_session_store';
 const SET_TRANSFORMATION = 'set_transformation';
-const SET_ALL_TRANSFORMATIONS = 'set_all_transformations';
 
 Vue.use(Vuex);
 
@@ -120,11 +119,12 @@ const mutations = {
   /**
    * @private
    */
-  [INITIALIZE_DATASET](state, { dataset_id }) {
+  [INITIALIZE_DATASET](state, { dataset_id, name }) {
     Vue.set(state.plots, dataset_id, cloneDeep(plotDefaults));
     Vue.set(state.datasets, dataset_id, {
       ...datasetDefaults,
       id: dataset_id,
+      name,
       selected: {
         type: 'column',
         last: 1,
@@ -241,7 +241,7 @@ const actions = {
     commit(SET_LOADING, true);
     try {
       const { data } = await CSVService.upload(file);
-      commit(INITIALIZE_DATASET, { dataset_id: data.id });
+      commit(INITIALIZE_DATASET, { dataset_id: data.id, name: data.name });
       commit(SET_LABELS, { dataset_id: data.id, rows: data.rows, columns: data.columns });
       commit(SET_DATASET_DATA, { data });
       state.store.save(state, state.session_id);
@@ -258,7 +258,7 @@ const actions = {
     try {
       const { data } = await ExcelService.upload(file);
       data.forEach((dataFile) => {
-        commit(INITIALIZE_DATASET, { dataset_id: dataFile.id });
+        commit(INITIALIZE_DATASET, { dataset_id: dataFile.id, name: data.name });
         commit(SET_LABELS, {
           dataset_id: dataFile.id,
           rows: dataFile.rows,
@@ -290,9 +290,7 @@ const actions = {
       commit(SET_DATASET_DATA, { data });
       const valid = _getters.valid(dataset_id);
       if (valid) {
-        // checkpoint
-        const { data: validationdata } = await CSVService.validateTable(dataset_id);
-        commit(SET_ALL_TRANSFORMATIONS, { dataset_id, data: validationdata });
+        await CSVService.validateTable(dataset_id);
       }
     } catch (err) {
       commit(SET_LAST_ERROR, err);
@@ -345,7 +343,7 @@ const actions = {
       const { datasets } = store.load(session_id);
       await Promise.all(Object.keys(datasets).map(async (dataset_id) => {
         const data = datasets[dataset_id];
-        commit(INITIALIZE_DATASET, { dataset_id: data.id });
+        commit(INITIALIZE_DATASET, { dataset_id: data.id, name: data.name });
         try {
           await dispatch(LOAD_DATASET, { dataset_id: data.id });
         } catch (err) {

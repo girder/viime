@@ -34,7 +34,7 @@ setup(
         'flask',
         'flask-migrate',
         'flask-sqlalchemy',
-        'marshmallow==3.0.0rc6',
+        'marshmallow>=3.0.0',
         'matplotlib',
         'pandas<0.25.0',
         'python-dotenv',

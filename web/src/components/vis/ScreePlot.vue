@@ -15,6 +15,7 @@ div
           line.cutoff.cutoff80
           line.cutoff.cutoff90
   .tooltip(ref="tooltip")
+  span(style="display: none") {{ update }}
 </template>
 
 <style scoped>
@@ -164,35 +165,7 @@ export default {
 
       return result;
     },
-  },
 
-  watch: {
-    numComponents() {
-      this.update();
-    },
-
-    eigenvaluesInternal() {
-      this.update();
-    },
-
-    showCutoffs(show) {
-      select(this.$refs.svg)
-        .selectAll('line.cutoff')
-        .style('display', show ? null : 'none');
-    },
-  },
-
-  mounted() {
-    const svg = select(this.$refs.svg);
-    this.axisPlot(svg);
-
-    this.setXLabel(this.xlabel);
-    this.setYLabel(this.ylabel);
-
-    this.update();
-  },
-
-  methods: {
     update() {
       const {
         eigenvaluesInternal,
@@ -201,14 +174,19 @@ export default {
         fadeInDuration,
         duration,
         numComponents,
+        showCutoffs,
         cutoffs,
       } = this;
 
       if (this.eigenvaluesInternal.length === 0) {
-        return;
+        return '';
       }
 
       const radius = 4;
+
+      if (!this.$refs.svg) {
+        return '';
+      }
 
       const svg = select(this.$refs.svg);
       const tooltip = select(this.$refs.tooltip);
@@ -224,6 +202,9 @@ export default {
 
       // Plot the points.
       this.axisPlot(svg);
+      this.setXLabel(this.xlabel);
+      this.setYLabel(this.ylabel);
+
       svg.select('g.points')
         .selectAll('circle')
         .data(data)
@@ -306,6 +287,7 @@ export default {
           .attr('y2', this.scaleY(this.yrange[1]))
           .attr('stroke-dasharray', '10 5 5 5')
           .style('opacity', 1)
+          .style('display', showCutoffs ? null : 'none')
           .on('mouseover', () => {
             tooltip.style('left', `${event.clientX + 15}px`)
               .style('top', `${event.clientY - 30}px`)
@@ -329,8 +311,13 @@ export default {
       drawCutoff('50', cutoffs[0]);
       drawCutoff('80', cutoffs[1]);
       drawCutoff('90', cutoffs[2]);
+
+      return '';
     },
   },
 
+  mounted() {
+    this.$forceUpdate();
+  },
 };
 </script>
