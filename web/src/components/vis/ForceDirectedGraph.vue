@@ -147,7 +147,7 @@ export default {
 </script>
 
 <template lang="pug">
-div.main(v-resize:throttle="onResize")
+.main(v-resize:throttle="onResize")
   svg.svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
     g.edges
     g.nodes(:class="{ hideLabels: !this.showLabels }")
