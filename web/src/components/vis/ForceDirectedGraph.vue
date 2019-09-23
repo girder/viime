@@ -15,7 +15,7 @@ export default {
       default: 10,
       required: false,
     },
-    nodes: { // {id: string}[]
+    nodes: { // {id: string, color?: string}[]
       type: Array,
       required: true,
     },
@@ -86,7 +86,9 @@ export default {
       const localNodes = this.nodes.map(d => Object.assign({}, d));
       const nodes = svg.select('g.nodes').selectAll('g').data(localNodes)
         .join(enter => enter.append('g').html('<title></title><circle></circle><text></text>'));
-      nodes.select('circle').attr('r', this.radius);
+      nodes.select('circle')
+        .attr('r', this.radius)
+        .style('fill', d => d.color);
       nodes.select('title').text(d => d.id);
       nodes.select('text').text(d => d.id);
 

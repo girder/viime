@@ -22,26 +22,31 @@ export default {
     return {
       showLabels: false,
       linkDistance: 50,
-      filteredGroups: [],
+      hiddenGroups: [],
       nodeColor: null, // null use the first one
     };
   },
 
   computed: {
-    linkDistanceNumber() {
+    min_correlation() {
+      return this.plot.args.min_correlation;
+    },
+    linkDistanceAsNumber() {
       return parseInt(this.linkDistance, 10);
     },
     nodes() {
       return !this.plot.data ? []
-        : this.plot.data.columns.map(d => ({ id: d }));
+        : this.plot.data.columns
+          .map(d => ({ id: d }));
     },
     edges() {
       return !this.plot.data ? []
         : this.plot.data.correlations
-          .filter(d => d.value > this.plot.args.min_correlation)
+          .filter(d => d.value > this.min_correlation)
           .map(d => ({ source: d.x, target: d.y, value: d.value }));
     },
   },
+
 };
 </script>
 
@@ -50,17 +55,11 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     expanded)
   template(#controls)
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-      v-toolbar-title Node Color
-    v-card.mx-3(flat)
-      v-card-actions
-        | TODO
-
-    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Minimum Correlation
     v-card.mx-3(flat)
       v-card-actions
         v-layout(column)
-          v-slider.minCorrelation(value="plot.args.min_correlation", label="0", thumb-label,
+          v-slider.minCorrelation(value="min_correlation", label="0", thumb-label,
               hide-details, min="0", max="1", step="0",
               @change="changePlotArgs({min_correlation: $event})")
 
@@ -75,7 +74,7 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
 
   template(#default).test
     force-directed-graph(:edges="edges", :nodes="nodes",
-        :linkDistance="linkDistanceNumber", :showLabels="showLabels")
+        :linkDistance="linkDistanceAsNumber", :showLabels="showLabels")
 </template>
 
 <style scoped>
