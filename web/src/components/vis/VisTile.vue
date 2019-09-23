@@ -1,4 +1,6 @@
 <script>
+import { format } from 'd3-format';
+
 export default {
   props: {
     title: {
@@ -13,19 +15,27 @@ export default {
 
   data() {
     return {
-      scale: 1,
+      scales: [
+        { scaleFactor: 0.5, cssClass: 'span1' },
+        { scaleFactor: 1, cssClass: 'span2' },
+        { scaleFactor: 1.5, cssClass: 'span3' },
+        { scaleFactor: 2, cssClass: 'span4' },
+        { scaleFactor: 2.5, cssClass: 'span5' },
+      ],
+      scaleIndex: 1,
     };
   },
 
   computed: {
-    smallEnough() {
-      return this.scale <= 0.5;
-    },
-    largeEnough() {
-      return this.scale >= 4;
-    },
     scaleClass() {
-      return `scale${Math.round(this.scale * 100)}`;
+      return this.scales[this.scaleIndex].cssClass;
+    },
+    scaleFactor() {
+      return this.scales[this.scaleIndex].scaleFactor;
+    },
+    scaleOptions() {
+      const f = format('.0%');
+      return this.scales.map((d, i) => ({ text: f(d.scaleFactor), value: i }));
     },
   },
 };
@@ -38,32 +48,54 @@ v-flex(shrink=1, :class="scaleClass")
       v-toolbar-title {{ title }}
       v-spacer
       v-toolbar-items
-        v-btn(@click="scale *= 0.5", :disabled="smallEnough", icon)
-          v-icon {{ $vuetify.icons.viewCollapse }}
-        v-btn(@click="scale *= 2", :disabled="largeEnough", icon)
-          v-icon {{ $vuetify.icons.viewExpand }}
+        v-btn(@click="scaleIndex--", :disabled="scaleIndex === 0", icon)
+          v-icon {{ $vuetify.icons.magnifyMinus }}
+        v-select.scaleFactor(:value="scaleIndex", @change="scaleIndex = parseInt($event, 10)",
+            :items="scaleOptions", hide-details, item-text="text", item-value="value")
+        v-btn(@click="scaleIndex++", :disabled="scaleIndex === scales.length - 1", icon)
+          v-icon {{ $vuetify.icons.magnifyPlus }}
         slot(name="controls")
     v-progress-linear.ma-0.progress(v-if="loading", indeterminate, height=4)
     v-card.bottom-rounded(flat)
-      slot(:scale="scale")
+      slot(:scale="scaleFactor")
 </template>
 
 <style scoped lang="scss">
-.scale50 {
+.span1 {
   grid-column: span 1;
   grid-row: span 1;
 }
-.scale100 {
+.span2 {
   grid-column: span 2;
   grid-row: span 2;
 }
-.scale200 {
+.span3 {
+  grid-column: span 3;
+  grid-row: span 3;
+}
+.span4 {
   grid-column: span 4;
   grid-row: span 4;
 }
-.scale400 {
+.span5 {
+  grid-column: span 5;
+  grid-row: span 5;
+}
+.span6 {
+  grid-column: span 6;
+  grid-row: span 6;
+}
+.span7 {
+  grid-column: span 7;
+  grid-row: span 7;
+}
+.span8 {
   grid-column: span 8;
   grid-row: span 8;
+}
+
+.scaleFactor {
+  max-width: 4em;
 }
 
 .relative {
