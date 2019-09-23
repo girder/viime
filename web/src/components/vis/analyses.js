@@ -1,5 +1,6 @@
 import WilcoxonPlotTile from './WilcoxonPlotTile.vue';
 import AnovaTableTile from './AnovaTableTile.vue';
+import CorrelationTile from './CorrelationTile.vue';
 import { wilcoxon_zero_methods, wilcoxon_alternatives, plot_types } from '../../utils/constants';
 
 export default [
@@ -23,6 +24,20 @@ export default [
     description: 'TODO R custom code',
     component: AnovaTableTile,
     options: {},
+    type: plot_types.ANALYSIS,
+  },
+  {
+    path: 'correlation',
+    name: 'Correlation Network',
+    shortName: 'Correlation',
+    description: 'TODO',
+    component: CorrelationTile,
+    args: {
+      min_correlation: 0.3,
+      linkDistance: 50,
+      filteredGroups: [],
+      nodeColor: null, // null use the first one
+    },
     type: plot_types.ANALYSIS,
   },
 ];

@@ -61,4 +61,4 @@ def pairwise_correlation(measurements: pd.DataFrame, min_correlation: float = 0,
         if abs(value) > min_correlation:
             r.append(dict(x=columns[i], y=columns[j], value=value))
 
-    return r
+    return dict(columns=columns, correlations=r)
