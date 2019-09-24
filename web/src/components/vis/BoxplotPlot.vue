@@ -1,7 +1,7 @@
 <script>
 import { select } from 'd3-selection';
 import { scaleBand } from 'd3-scale';
-import { boxplot, boxplotStats} from 'd3-boxplot';
+import { boxplot, boxplotStats } from 'd3-boxplot';
 import 'd3-transition';
 
 import { axisPlot } from './mixins/axisPlot';

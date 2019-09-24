@@ -118,10 +118,6 @@ v-layout.transform-component(row, fill-height)
   v-layout(column, v-else-if="ready && valid")
     v-container.grow-overflow.ma-0(grid-list-lg, fluid)
       v-layout(row, wrap)
-        boxplot-plot-tile(
-            :width="600",
-            :height="600",
-            :id="id")
         score-plot-tile(
             :width="600",
             :height="600",
@@ -132,6 +128,10 @@ v-layout.transform-component(row, fill-height)
             :height="600",
             :id="id")
         scree-plot-tile(
+            :width="600",
+            :height="600",
+            :id="id")
+        boxplot-plot-tile(
             :width="600",
             :height="600",
             :id="id")
