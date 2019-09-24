@@ -127,8 +127,4 @@ div
 .label.y {
   dominant-baseline: central;
 }
-/* .axes >>> .tick > text {
-  text-anchor: end;
-  transform: translate(-1em,0)rotate(-45deg);
-} */
 </style>
