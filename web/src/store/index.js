@@ -30,6 +30,7 @@ import {
 const INITIALIZE_DATASET = 'initialize_dataset';
 const INVALIDATE_PLOTS = 'invalidate_plots';
 const SET_DATASET_DATA = 'set_dataset_data';
+const SET_VALIDATED_DATASET_DATA = 'set_validated_dataset_data';
 const SET_LABELS = 'set_labels';
 const SET_LAST_ERROR = 'set_last_error';
 const SET_LOADING = 'set_loading';
@@ -146,7 +147,6 @@ const mutations = {
   [SET_DATASET_DATA](state, { data }) {
     const { id, name, size } = data;
     const { data: sourcerows } = convertCsvToRows(data.table);
-    const measurement_table = parsePandasDataFrame(data.measurement_table);
     const oldData = state.datasets[id];
     Vue.set(state.datasets, id, {
       ...oldData,
@@ -158,7 +158,6 @@ const mutations = {
         height: sourcerows.length,
         validation: mapValidationErrors(data.table_validation, data.columns),
         sourcerows,
-        measurement_table,
         imputationMCAR: data.imputation_mcar,
         imputationMNAR: data.imputation_mnar,
         normalization: data.normalization,
@@ -166,6 +165,27 @@ const mutations = {
         transformation: data.transformation,
         scaling: data.scaling,
       },
+    });
+  },
+  /**
+   * @private
+   */
+  [SET_VALIDATED_DATASET_DATA](state, { data }) {
+    const validatedMeasurements = parsePandasDataFrame(data.measurements);
+    const validatedGroups = parsePandasDataFrame(data.groups);
+    const validatedMeasurementsMetaData = parsePandasDataFrame(data.measurement_metadata);
+    const validatedSampleMetaData = parsePandasDataFrame(data.sample_metadata);
+    const ds = state.datasets[data.csv_file_id];
+
+    const delta = {
+      validatedMeasurements,
+      validatedGroups,
+      validatedMeasurementsMetaData,
+      validatedSampleMetaData,
+    };
+
+    Object.entries(delta).forEach(([k, v]) => {
+      Vue.set(ds, k, v);
     });
   },
 
@@ -299,7 +319,8 @@ const actions = {
       commit(SET_DATASET_DATA, { data });
       const valid = _getters.valid(dataset_id);
       if (valid) {
-        await CSVService.validateTable(dataset_id);
+        const { data: validatedData } = await CSVService.validateTable(dataset_id);
+        commit(SET_VALIDATED_DATASET_DATA, { data: validatedData });
       }
     } catch (err) {
       commit(SET_LAST_ERROR, err);
@@ -371,14 +392,14 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [MUTEX_TRANSFORM_TABLE]({ dispatch, commit }, {
+  async [MUTEX_TRANSFORM_TABLE]({ commit }, {
     category, dataset_id, transform_type, argument,
   }) {
     const key = dataset_id;
     commit(SET_LOADING, true);
     try {
-      await CSVService.setTransform(key, category, transform_type, argument);
-      await dispatch(LOAD_DATASET, { dataset_id });
+      const { data } = await CSVService.setTransform(key, category, transform_type, argument);
+      commit(SET_VALIDATED_DATASET_DATA, { data });
       commit(SET_TRANSFORMATION, {
         dataset_id, transform_type, category, argument,
       });

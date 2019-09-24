@@ -35,7 +35,10 @@ export default {
 
   computed: {
     chartData() {
-      const df = this.dataset.measurement_table;
+      const df = this.dataset.validatedMeasurements;
+      if (!df) {
+        return [];
+      }
       return df.columnNames.map((name, i) => ({
         name,
         values: df.data.map(row => row[i]),
