@@ -33,7 +33,6 @@ export default {
         bottom: 50,
         left: 120,
       },
-      fadeInDuration: 500,
       duration: 200,
       ylabel: 'Metabolite',
       xlabel: 'Value',
@@ -99,6 +98,7 @@ export default {
         .join(enter => enter.append('g').classed('boxplot', true))
         .attr('transform', d => `translate(0, ${this.scaleY(d.name)})`)
         .transition()
+        .duration(this.duration)
         .call(layout);
     },
   },
