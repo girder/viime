@@ -22,6 +22,14 @@ export const routes = [
     path: '/pretreatment/:id',
     component: Pretreatment,
     props: true,
+    meta: {
+      breadcrumb(params, store) {
+        const ds = store.getters.dataset(params.id);
+        return {
+          text: ds ? ds.name : params.id,
+        };
+      },
+    },
     children: [
       {
         path: '',
@@ -31,7 +39,7 @@ export const routes = [
       },
       {
         path: 'cleanup',
-        name: 'Cleanup Data',
+        name: 'Clean Up Table',
         component: Cleanup,
         props: true,
         children: [
@@ -44,7 +52,7 @@ export const routes = [
       },
       {
         path: 'transform',
-        name: 'Transform Data',
+        name: 'Transform Table',
         component: Transform,
         props: true,
       },
@@ -61,6 +69,7 @@ export const routes = [
   },
   {
     path: '/',
+    name: 'Root',
     redirect: { name: 'Upload Data' },
   },
 ];
