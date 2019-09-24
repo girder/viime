@@ -30,16 +30,8 @@ export default {
           value: 'Metabolite',
         },
         {
-          text: 'Intercept',
-          value: 'Intercept',
-        },
-        {
           text: 'Group',
           value: 'Group',
-        },
-        {
-          text: 'Residuals',
-          value: 'Residuals',
         },
         ...this.pairs.map(text => ({ text, value: text })),
       ];

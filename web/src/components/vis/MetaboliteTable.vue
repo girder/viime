@@ -18,7 +18,7 @@ export default {
 
   data() {
     return {
-      format: format('.2e'),
+      format: format('.4e'),
     };
   },
 
