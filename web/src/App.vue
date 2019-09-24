@@ -18,22 +18,17 @@ export default {
       return [
         {
           text: 'VIIME',
-          to: '/',
+          to: { name: 'Root' },
         },
-        ...this.$route.matched.slice(0, this.$route.matched.length - 1)
-          .map(d => this.toBreadcrumb(d)),
-        this.toBreadcrumb(this.$route, true),
+        ...this.$route.matched.map((route) => {
+          const b = route.meta.breadcrumb;
+          return {
+            text: route.name,
+            to: { name: route.name, params: this.$route.params },
+            ...(b ? b.call(route, this.$route.params, this.$store) : {}),
+          };
+        }),
       ];
-    },
-  },
-  methods: {
-    toBreadcrumb(route, isFull) {
-      const b = route.meta.breadcrumb;
-      return {
-        text: route.name,
-        to: route.path,
-        ...(b ? b.call(route, this.$route.params, this.$store, isFull) : {}),
-      };
     },
   },
 };

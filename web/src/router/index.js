@@ -11,14 +11,6 @@ import analyses from '../components/vis/analyses';
 
 Vue.use(Router);
 
-function injectParams(path, params) {
-  let parsed = path;
-  Object.entries(params).forEach(([k, v]) => {
-    parsed = parsed.replace(`:${k}`, v);
-  });
-  return parsed;
-}
-
 export const routes = [
   {
     path: '/select',
@@ -31,11 +23,10 @@ export const routes = [
     component: Pretreatment,
     props: true,
     meta: {
-      breadcrumb(params, store, isFull) {
+      breadcrumb(params, store) {
         const ds = store.getters.dataset(params.id);
         return {
           text: ds ? ds.name : params.id,
-          to: isFull ? this.path : injectParams(this.path, params),
         };
       },
     },
@@ -72,6 +63,7 @@ export const routes = [
   },
   {
     path: '/',
+    name: 'Root',
     redirect: { name: 'Upload Data' },
   },
 ];
