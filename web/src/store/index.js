@@ -139,6 +139,7 @@ const mutations = {
   [SET_DATASET_DATA](state, { data }) {
     const { id, name, size } = data;
     const { data: sourcerows } = convertCsvToRows(data.table);
+    const { data: measurement_table } = convertCsvToRows(data.measurement_table);
     const oldData = state.datasets[id];
     Vue.set(state.datasets, id, {
       ...oldData,
@@ -150,6 +151,7 @@ const mutations = {
         height: sourcerows.length,
         validation: mapValidationErrors(data.table_validation, data.columns),
         sourcerows,
+        measurement_table,
         imputationMCAR: data.imputation_mcar,
         imputationMNAR: data.imputation_mnar,
         normalization: data.normalization,

@@ -38,6 +38,9 @@ function base26Converter(dec) {
 }
 
 function convertCsvToRows(csvstring) {
+  if (!csvstring) {
+    return { data: [] };
+  }
   const { data } = papa.parse(csvstring);
   return { data: data.slice(0, data.length - 1) };
 }
