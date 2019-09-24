@@ -108,7 +108,7 @@ v-layout.pretreatment-component(row, fill-height)
                 @click="$router.push({ path: `/pretreatment/${dataset.id}/analyze` })")
               template(v-slot:activator)
                 v-list-tile(
-                   :class="{ active: $router.currentRoute.name === 'Analyze Data' }")
+                   :class="{ active: $router.currentRoute.name === 'Analysis Options' }")
                   v-list-tile-title.pl-2
                     v-icon.pr-1.middle {{ $vuetify.icons.cogs }}
                     | Analyze Table
