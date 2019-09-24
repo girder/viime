@@ -35,7 +35,7 @@ export default {
       },
       duration: 200,
       ylabel: 'Metabolite',
-      xlabel: 'Value',
+      xlabel: 'Measurement',
       initialRun: false,
     };
   },
