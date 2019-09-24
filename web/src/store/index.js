@@ -24,12 +24,15 @@ import {
   REMOVE_DATASET,
   SET_PLOT,
   SET_SELECTION,
+  SET_DATASET_DESCRIPTION,
+  SET_DATASET_NAME,
 } from './mutations.type';
 
 // private mutations
 const INITIALIZE_DATASET = 'initialize_dataset';
 const INVALIDATE_PLOTS = 'invalidate_plots';
 const SET_DATASET_DATA = 'set_dataset_data';
+const MERGE_INTO_DATASET = 'merge_into_dataset';
 const SET_LABELS = 'set_labels';
 const SET_LAST_ERROR = 'set_last_error';
 const SET_LOADING = 'set_loading';
@@ -137,13 +140,17 @@ const mutations = {
    * @private
    */
   [SET_DATASET_DATA](state, { data }) {
-    const { id, name, size } = data;
+    const {
+      id, name, size, created, description,
+    } = data;
     const { data: sourcerows } = convertCsvToRows(data.table);
     const oldData = state.datasets[id];
     Vue.set(state.datasets, id, {
       ...oldData,
       ...{
         name,
+        description,
+        created: new Date(created),
         size,
         ready: true,
         width: sourcerows[0].length,
@@ -157,6 +164,15 @@ const mutations = {
         transformation: data.transformation,
         scaling: data.scaling,
       },
+    });
+  },
+  /**
+   * @private
+   */
+  [MERGE_INTO_DATASET](state, { dataset_id, data }) {
+    const ds = state.datasets[dataset_id];
+    Object.entries(data).forEach(([k, v]) => {
+      Vue.set(ds, k, v);
     });
   },
 
@@ -401,6 +417,20 @@ const actions = {
     await CSVService.setImputation(dataset_id, options);
     await dispatch(LOAD_DATASET, { dataset_id });
     commit(INVALIDATE_PLOTS, { dataset_id });
+    commit(SET_LOADING, false);
+  },
+
+  async [SET_DATASET_NAME]({ commit }, { dataset_id, name }) {
+    commit(SET_LOADING, true);
+    await CSVService.setName(dataset_id, name);
+    commit(MERGE_INTO_DATASET, { dataset_id, data: { name } });
+    commit(SET_LOADING, false);
+  },
+
+  async [SET_DATASET_DESCRIPTION]({ commit }, { dataset_id, description }) {
+    commit(SET_LOADING, true);
+    await CSVService.setDescription(dataset_id, description);
+    commit(MERGE_INTO_DATASET, { dataset_id, data: { description } });
     commit(SET_LOADING, false);
   },
 
