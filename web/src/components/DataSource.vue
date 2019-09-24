@@ -7,6 +7,10 @@ export default {
   mixins: [loadDataset, sizeFormatter],
   data() {
     return {
+      valid: false,
+      requiredRules: [
+        v => !!v.trim() || 'Name is required',
+      ],
     };
   },
   computed: {
@@ -15,7 +19,10 @@ export default {
   },
   methods: {
     setName(name) {
-      this.$store.dispatch(SET_DATASET_NAME, { dataset_id: this.id, name });
+      if (!name.trim()) {
+        return;
+      }
+      this.$store.dispatch(SET_DATASET_NAME, { dataset_id: this.id, name: name.trim() });
     },
     setDescription(description) {
       this.$store.dispatch(SET_DATASET_DESCRIPTION, { dataset_id: this.id, description });
@@ -28,14 +35,16 @@ export default {
 v-layout.data-source(row, fill-height)
   v-container.grow-overflow.ma-0(grid-list-lg, fluid, v-if="dataset && ready")
     v-container.pa-2(fluid)
-      v-form(column)
+      v-form(column, v-model="valid")
         v-text-field(label="Data Source Name", :value="dataset.name", required,
-            @change="setName($event)")
+            @change="setName($event)", :rules="requiredRules")
         v-textarea(label="Description", :value="dataset.description",
             @change="setDescription($event)")
         v-text-field(label="Creation Date", :value="dataset.created.toISOString().slice(0, -1)",
             type="datetime-local", readonly)
-        v-text-field(label="Size", :value="formatSize(dataset.size)",
+        v-text-field(label="File Size", :value="formatSize(dataset.size)",
+          readonly)
+        v-text-field(label="File Dimensions", :value="`${dataset.width} x ${dataset.height}`",
           readonly)
 
   v-layout(v-else, justify-center, align-center)
