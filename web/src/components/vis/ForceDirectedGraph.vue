@@ -54,6 +54,7 @@ export default {
       width: 0,
       height: 0,
       simulation: this.initSimulation(),
+      strokeScale: scaleLinear().domain([0, 1]).range([1, 8]),
       initialRun: false, // to force an rendering after mounting
     };
   },
@@ -99,7 +100,11 @@ export default {
       nodes.select('text').text(d => d.id);
 
       const localEdges = this.edges.map(d => Object.assign({}, d));
-      const edges = svg.select('g.edges').selectAll('line').data(localEdges).join('line');
+      const edges = svg.select('g.edges').selectAll('line').data(localEdges)
+        .join(enter => enter.append('g').html('<title></title><line></line><text></text>'));
+      edges.select('line').style('stroke-width', d => this.strokeScale(d.value));
+      edges.select('title').text(d => `${d.source} - ${d.target}: ${d.value.toFixed(3)}`);
+      edges.select('text').text(d => d.value.toFixed(3));
 
       // towards center of screen
       this.simulation.nodes(localNodes);
@@ -117,11 +122,14 @@ export default {
           .range([this.radius, this.height - this.radius]);
         nodes
           .attr('transform', d => `translate(${xScale(d.x)},${yScale(d.y)})`);
-        edges
+        edges.select('line')
           .attr('x1', d => xScale(d.source.x))
           .attr('y1', d => yScale(d.source.y))
           .attr('x2', d => xScale(d.target.x))
           .attr('y2', d => yScale(d.target.y));
+        edges.select('text')
+          .attr('x', d => xScale((d.source.x + d.target.x) / 2))
+          .attr('y', d => yScale((d.source.y + d.target.y) / 2));
       });
 
 
@@ -139,7 +147,7 @@ export default {
 <template lang="pug">
 .main(v-resize:throttle="onResize")
   svg.svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
-    g.edges
+    g.edges(:class="{ hideLabels: !this.showLabels }")
     g.nodes(:class="{ hideLabels: !this.showLabels }")
   span(style="display: none") {{ reactivePlotUpdate }}
 </template>
@@ -154,8 +162,10 @@ export default {
   display: flex;
 }
 
-.nodes >>> g {
-  opacity: 0.8;
+.nodes >>> g > circle,
+.edges >>> g > line {
+  fill-opacity: 0.6;
+  stroke-opacity: 0.6;
 }
 
 .nodes >>> circle {
@@ -167,22 +177,24 @@ export default {
   dominant-baseline: central;
 }
 
-.nodes.hideLabels >>> text {
+.hideLabels >>> text {
   display: none;
 }
 
-.nodes >>> g:hover {
-  opacity: 1;
+.nodes >>> g:hover > circle,
+.edges >>> g:hover > line {
+  fill-opacity: 1;
+  stroke-opacity: 1;
 }
 
-.edges >>> * {
+.edges >>> line {
   fill: none;
-  opacity: 0.2;
-  stroke: black;
+  stroke: rgb(189, 189, 189);
 }
 
-.edges >>> *:hover {
-  opacity: 1;
+.edges >>> text {
+  dominant-baseline: central;
+  text-anchor: middle;
 }
 
 </style>
