@@ -43,17 +43,11 @@ v-layout.data-source(row, fill-height)
         v-text-field(label="Creation Date", :value="dataset.created.toISOString().slice(0, -1)",
             type="datetime-local", readonly)
         v-text-field(label="File Size", :value="formatSize(dataset.size)",
-          readonly)
+            readonly)
         v-text-field(label="File Dimensions", :value="`${dataset.width} x ${dataset.height}`",
-          readonly)
+            readonly)
 
   v-layout(v-else, justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
 </template>
-
-<style lang="scss">
-.data-source {
-
-}
-</style>

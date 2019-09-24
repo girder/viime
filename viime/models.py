@@ -1,7 +1,7 @@
 from collections import namedtuple
 from datetime import datetime
 from io import BytesIO
-from pathlib import Path, PurePath
+from pathlib import Path
 import pickle
 from uuid import uuid4
 
