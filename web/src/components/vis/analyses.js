@@ -2,6 +2,7 @@ import WilcoxonPlotTile from './WilcoxonPlotTile.vue';
 import AnovaTableTile from './AnovaTableTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
 import { wilcoxon_zero_methods, wilcoxon_alternatives, plot_types } from '../../utils/constants';
+import { correlation_methods } from './constants';
 
 export default [
   {
@@ -28,12 +29,13 @@ export default [
   },
   {
     path: 'correlation',
-    name: 'Pearson Correlation Network',
-    shortName: 'Pearson Correlation',
+    name: 'Correlation Network',
+    shortName: 'Correlation Network',
     description: 'TODO',
     component: CorrelationTile,
     args: {
       min_correlation: 0.6,
+      method: correlation_methods[0].value,
     },
     type: plot_types.ANALYSIS,
   },

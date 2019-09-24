@@ -1,11 +1,14 @@
 <script>
 import ForceDirectedGraph from './ForceDirectedGraph.vue';
 import VisTileLarge from './VisTileLarge.vue';
+import ToolbarOption from '../ToolbarOption.vue';
 import plotData from './mixins/plotData';
+import { correlation_methods } from './constants';
 
 export default {
   components: {
     ForceDirectedGraph,
+    ToolbarOption,
     VisTileLarge,
   },
 
@@ -22,6 +25,7 @@ export default {
     return {
       showLabels: false,
       linkDistance: 50,
+      correlation_methods,
     };
   },
 
@@ -52,6 +56,9 @@ export default {
 vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="plot.loading",
     expanded)
   template(#controls)
+    toolbar-option(title="Method", :value="plot.args.method",
+        :options="correlation_methods",
+        @change="changePlotArgs({method: $event})")
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Minimum Correlation
     v-card.mx-3(flat)
