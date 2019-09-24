@@ -30,5 +30,21 @@ export default {
 
 <template lang="pug">
 vis-tile-large(v-if="plot", title="Wilcoxon Test", :loading="plot.loading", expanded)
-  wilcoxon-plot(:data="plot.data")
+  template(#controls)
+    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
+      v-toolbar-title Highlight Threshold
+    v-card.mx-3(flat)
+      v-card-actions
+        v-layout(column)
+          v-slider.minCorrelation(v-model="threshold", label="0", thumb-label,
+              hide-details, min="0", max="0.1", step="0.001")
+  wilcoxon-plot(:data="plot.data", :threshold="threshold")
 </template>
+
+<style scoped>
+.minCorrelation >>> .v-input__slot::after {
+  content: "0.1";
+  color: rgba(0,0,0,0.54);
+  margin-left: 16px;
+}
+</style>
