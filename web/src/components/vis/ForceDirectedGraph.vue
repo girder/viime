@@ -55,22 +55,21 @@ export default {
       height: 0,
       simulation: this.initSimulation(),
       strokeScale: scaleLinear().domain([0, 1]).range([1, 8]),
-      initialRun: false, // to force an rendering after mounting
+      refsMounted: false, // to force an rendering after mounting
     };
   },
   computed: {
     reactivePlotUpdate() {
-      if (!this.initialRun) {
+      if (!this.refsMounted) {
         return '';
       }
       this.update();
-      // to indicate that it has changed
-      return Math.random().toString();
+      return '';
     },
   },
   mounted() {
     this.onResize();
-    this.initialRun = true;
+    this.refsMounted = true;
   },
   unmounted() {
     this.simulation.stop();
@@ -146,10 +145,10 @@ export default {
 
 <template lang="pug">
 .main(v-resize:throttle="onResize")
-  svg.svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
+  svg.svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
+      :data-update="reactivePlotUpdate")
     g.edges(:class="{ hideLabels: !this.showLabels }")
     g.nodes(:class="{ hideLabels: !this.showLabels }")
-  span(style="display: none") {{ reactivePlotUpdate }}
 </template>
 
 <style scoped>
