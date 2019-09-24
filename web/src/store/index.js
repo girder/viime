@@ -422,16 +422,28 @@ const actions = {
 
   async [SET_DATASET_NAME]({ commit }, { dataset_id, name }) {
     commit(SET_LOADING, true);
-    await CSVService.setName(dataset_id, name);
-    commit(MERGE_INTO_DATASET, { dataset_id, data: { name } });
-    commit(SET_LOADING, false);
+    try {
+      await CSVService.setName(dataset_id, name);
+      commit(MERGE_INTO_DATASET, { dataset_id, data: { name } });
+      commit(SET_LOADING, false);
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
   },
 
   async [SET_DATASET_DESCRIPTION]({ commit }, { dataset_id, description }) {
     commit(SET_LOADING, true);
-    await CSVService.setDescription(dataset_id, description);
-    commit(MERGE_INTO_DATASET, { dataset_id, data: { description } });
-    commit(SET_LOADING, false);
+    try {
+      await CSVService.setDescription(dataset_id, description);
+      commit(MERGE_INTO_DATASET, { dataset_id, data: { description } });
+      commit(SET_LOADING, false);
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
   },
 
 };
