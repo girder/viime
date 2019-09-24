@@ -48,4 +48,3 @@ vis-tile-large(v-if="plot", title="Anova Table", :loading="plot.loading", expand
   margin-left: 16px;
 }
 </style>
-
