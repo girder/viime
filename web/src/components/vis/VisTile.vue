@@ -38,6 +38,12 @@ export default {
       return this.scales.map((d, i) => ({ text: f(d.scaleFactor), value: i }));
     },
   },
+
+  methods: {
+    setScaleIndex(value) {
+      this.scaleIndex = Math.max(Math.min(Number.parseInt(value, 10), this.scales.length - 1), 0);
+    },
+  },
 };
 </script>
 
@@ -48,11 +54,12 @@ v-flex(shrink=1, :class="scaleClass")
       v-toolbar-title {{ title }}
       v-spacer
       v-toolbar-items
-        v-btn(@click="scaleIndex--", :disabled="scaleIndex === 0", icon)
+        v-btn(@click="setScaleIndex(scaleIndex - 1)", :disabled="scaleIndex === 0", icon)
           v-icon {{ $vuetify.icons.magnifyMinus }}
-        v-select.scaleFactor(:value="scaleIndex", @change="scaleIndex = parseInt($event, 10)",
+        v-select.scaleFactor(:value="scaleIndex", @change="setScaleIndex($event)",
             :items="scaleOptions", hide-details, item-text="text", item-value="value")
-        v-btn(@click="scaleIndex++", :disabled="scaleIndex === scales.length - 1", icon)
+        v-btn(@click="setScaleIndex(scaleIndex + 1)",
+            :disabled="scaleIndex === scales.length - 1", icon)
           v-icon {{ $vuetify.icons.magnifyPlus }}
         slot(name="controls")
     v-progress-linear.ma-0.progress(v-if="loading", indeterminate, height=4)
