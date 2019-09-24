@@ -70,6 +70,7 @@ class CSVFile(db.Model):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     name = db.Column(db.String, nullable=False)
+    description = db.Column(db.String, nullable=True)
     imputation_mnar = db.Column(db.String, nullable=False)
     imputation_mcar = db.Column(db.String, nullable=False)
     meta = db.Column(JSONType, nullable=False)
@@ -282,15 +283,11 @@ def _validate_table_data(table):
         raise ValidationError(str(e).strip(), data=table, field_name='table') from None
 
 
-def _validate_name(name):
-    if PurePath(name).suffix != '.csv':
-        raise ValidationError('Only CSV files are allowed', data=name, field_name='name')
-
-
 class CSVFileSchema(BaseSchema):
     id = fields.UUID(missing=uuid4)
     created = fields.DateTime(dump_only=True)
-    name = fields.Str(required=True, validate=_validate_name)
+    name = fields.Str(required=True)
+    description = fields.Str()
     table = fields.Raw(required=True, validate=_validate_table_data)
     imputation_mnar = fields.Str(missing='zero', validate=validate.OneOf(IMPUTE_MNAR_METHODS))
     imputation_mcar = fields.Str(
@@ -727,7 +724,7 @@ class ValidatedMetaboliteTableSchema(BaseSchema):
     id = fields.UUID(missing=uuid4)
     created = fields.DateTime(dump_only=True)
     csv_file_id = fields.UUID(required=True)
-    name = fields.Str(required=True, validate=_validate_name)
+    name = fields.Str(required=True)
     normalization = fields.Str(missing=None, validate=validate.OneOf(NORMALIZATION_METHODS))
     normalization_argument = fields.Str(missing=None)
     scaling = fields.Str(missing=None, validate=validate.OneOf(SCALING_METHODS))

@@ -247,6 +247,38 @@ def set_csv_file_metadata(csv_id):
         raise
 
 
+@csv_bp.route('/csv/<uuid:csv_id>/name', methods=['PUT'])
+@use_kwargs({
+    'name': fields.Str(required=True)
+})
+def set_csv_file_name(csv_id, name):
+    try:
+        csv_file = CSVFile.query.get_or_404(csv_id)
+        csv_file.name = name
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/description', methods=['PUT'])
+@use_kwargs({
+    'description': fields.Str(required=True)
+})
+def set_csv_file_description(csv_id, description):
+    try:
+        csv_file = CSVFile.query.get_or_404(csv_id)
+        csv_file.description = description
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
+
+
 @csv_bp.route('/csv/<uuid:csv_id>/download', methods=['GET'])
 def download_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
