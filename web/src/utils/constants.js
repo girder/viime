@@ -191,6 +191,7 @@ const wilcoxon_alternatives = [
 const plot_types = {
   TRANSFORM: 'transform',
   ANALYSIS: 'analysis',
+  CLIENT_ONLY: 'clientOnly',
 };
 
 export {

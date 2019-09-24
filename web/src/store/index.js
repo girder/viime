@@ -3,7 +3,7 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 
 import {
-  convertCsvToRows, RangeList, mapValidationErrors,
+  convertCsvToRows, RangeList, mapValidationErrors, parsePandasDataFrame,
 } from '../utils';
 import analyses from '../components/vis/analyses';
 import { plot_types } from '../utils/constants';
@@ -68,6 +68,13 @@ const plotDefaults = {
     loading: false,
     args: {},
     type: plot_types.TRANSFORM,
+  },
+  boxplot: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.CLIENT_ONLY,
   },
 };
 
@@ -139,7 +146,7 @@ const mutations = {
   [SET_DATASET_DATA](state, { data }) {
     const { id, name, size } = data;
     const { data: sourcerows } = convertCsvToRows(data.table);
-    const { data: measurement_table } = convertCsvToRows(data.measurement_table);
+    const measurement_table = parsePandasDataFrame(data.measurement_table);
     const oldData = state.datasets[id];
     Vue.set(state.datasets, id, {
       ...oldData,
@@ -321,6 +328,9 @@ const actions = {
             case plot_types.ANALYSIS:
               ({ data: d } = await CSVService.getAnalysis(dataset_id, name, args));
               break;
+            case plot_types.CLIENT_ONLY:
+              d = {}; // dummy data since locally computed
+              break;
             default:
               throw new Error('Plot type unknown:', plotType);
           }
@@ -361,13 +371,14 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [MUTEX_TRANSFORM_TABLE]({ commit }, {
+  async [MUTEX_TRANSFORM_TABLE]({ dispatch, commit }, {
     category, dataset_id, transform_type, argument,
   }) {
     const key = dataset_id;
     commit(SET_LOADING, true);
     try {
       await CSVService.setTransform(key, category, transform_type, argument);
+      await dispatch(LOAD_DATASET, { dataset_id });
       commit(SET_TRANSFORMATION, {
         dataset_id, transform_type, category, argument,
       });

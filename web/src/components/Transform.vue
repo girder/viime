@@ -9,12 +9,14 @@ import {
 import ScorePlotTile from '@/components/vis/ScorePlotTile.vue';
 import ScreePlotTile from '@/components/vis/ScreePlotTile.vue';
 import LoadingsPlotTile from '@/components/vis/LoadingsPlotTile.vue';
+import BoxplotPlotTile from '@/components/vis/BoxplotPlotTile.vue';
 
 export default {
   components: {
     LoadingsPlotTile,
     ScorePlotTile,
     ScreePlotTile,
+    BoxplotPlotTile,
   },
   props: {
     id: {
@@ -116,6 +118,10 @@ v-layout.transform-component(row, fill-height)
   v-layout(column, v-else-if="ready && valid")
     v-container.grow-overflow.ma-0(grid-list-lg, fluid)
       v-layout(row, wrap)
+        boxplot-plot-tile(
+            :width="600",
+            :height="600",
+            :id="id")
         score-plot-tile(
             :width="600",
             :height="600",
