@@ -13,6 +13,11 @@ export default {
       validator: prop => !prop || ('data' in prop && 'pairs' in prop),
       required: true,
     },
+    threshold: {
+      type: Number,
+      required: false,
+      default: 0.05,
+    },
   },
 
   computed: {
@@ -41,5 +46,5 @@ export default {
 </script>
 
 <template lang="pug">
-metabolite-table(:headers="headers", :items="items")
+metabolite-table(:headers="headers", :items="items", :threshold="threshold")
 </template>

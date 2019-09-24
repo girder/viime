@@ -13,6 +13,11 @@ export default Vue.extend({
       required: true,
       validator: prop => !prop || ('data' in prop && 'pairs' in prop),
     },
+    threshold: {
+      type: Number,
+      required: false,
+      default: 0.05,
+    },
   },
 
   computed: {
@@ -36,5 +41,5 @@ export default Vue.extend({
 </script>
 
 <template lang="pug">
-metabolite-table(:headers="headers", :items="items")
+metabolite-table(:headers="headers", :items="items", :threshold="threshold")
 </template>

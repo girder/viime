@@ -19,6 +19,12 @@ export default {
       required: true,
     },
   },
+
+  data() {
+    return {
+      threshold: 0.05,
+    };
+  },
 };
 </script>
 

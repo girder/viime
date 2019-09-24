@@ -1,8 +1,6 @@
 <script>
 import { format } from 'd3-format';
 
-const RELEVANT_PVALUE = 0.05;
-
 export default {
 
   props: {
@@ -14,6 +12,11 @@ export default {
       type: Array,
       required: true,
     },
+    threshold: {
+      type: Number,
+      required: false,
+      default: 0.05,
+    },
   },
 
   data() {
@@ -24,7 +27,7 @@ export default {
 
   methods: {
     isInteresting(value) {
-      return value < RELEVANT_PVALUE;
+      return value < this.threshold;
     },
   },
 };
