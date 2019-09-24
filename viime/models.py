@@ -752,5 +752,5 @@ class ValidatedMetaboliteTableSchema(BaseSchema):
     def serialize_tables(self, data, **kwargs):
         for attr in ['measurements', 'measurement_metadata', 'sample_metadata', 'groups']:
             if attr in data:
-                data[attr] = data[attr].to_csv()
+                data[attr] = data[attr].to_dict(orient='split')
         return data

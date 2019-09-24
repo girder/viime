@@ -45,28 +45,18 @@ function convertCsvToRows(csvstring) {
   return { data: data.slice(0, data.length - 1) };
 }
 
-function parsePandasDataFrame(csvstring) {
-  if (!csvstring) {
+function parsePandasDataFrame(toSplitDictResult) {
+  if (!toSplitDictResult) {
     return {
       columnNames: [],
       rowNames: [],
       data: [],
     };
   }
-  const r = papa.parse(csvstring, {
-    delimiter: ',',
-    dynamicTyping: true,
-    header: false, // no header to enforce array mode
-    skipEmptyLines: true,
-    trimHeaders: true,
-  });
-  const [columnNames, ...rest] = r.data;
-  const rowNames = rest.map(row => row[0]);
-  const data = rest.map(row => row.slice(1));
   return {
-    columnNames: columnNames.slice(1),
-    rowNames,
-    data,
+    columnNames: toSplitDictResult.columns,
+    data: toSplitDictResult.data,
+    rowNames: toSplitDictResult.index,
   };
 }
 
