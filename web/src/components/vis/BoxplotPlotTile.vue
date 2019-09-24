@@ -51,9 +51,10 @@ export default {
 
 <template lang="pug">
 vis-tile(v-if="plot", title="Boxplot Plot", :loading="plot.loading")
-  boxplot-plot(
-      v-if="plot && dataset.ready",
-      :width="width",
-      :height="height",
-      :rows="chartData")
+  template(#default="wrapper")
+    boxplot-plot(
+        v-if="plot && dataset.ready",
+        :width="width * wrapper.scale",
+        :height="height * wrapper.scale",
+        :rows="chartData")
 </template>
