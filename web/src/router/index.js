@@ -7,6 +7,7 @@ import Upload from '../components/Upload.vue';
 import Transform from '../components/Transform.vue';
 import AnalyzeData from '../components/AnalyzeData.vue';
 import ProblemBar from '../components/ProblemBar.vue';
+import DataSource from '../components/DataSource.vue';
 import analyses from '../components/vis/analyses';
 
 Vue.use(Router);
@@ -19,7 +20,6 @@ export const routes = [
   },
   {
     path: '/pretreatment/:id',
-    name: 'Pretreat Data',
     component: Pretreatment,
     props: true,
     meta: {
@@ -31,6 +31,12 @@ export const routes = [
       },
     },
     children: [
+      {
+        path: '',
+        name: 'Pretreat Data',
+        component: DataSource,
+        props: true,
+      },
       {
         path: 'cleanup',
         name: 'Clean Up Table',

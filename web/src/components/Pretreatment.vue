@@ -23,11 +23,8 @@ export default {
     },
     navigate(dataset) {
       const { id } = dataset;
-      const name = this.valid(dataset)
-        ? this.$router.currentRoute.name
-        : 'Clean Up Table';
       this.$router.push({
-        name,
+        name: 'Pretreat Data',
         params: { id },
       });
     },

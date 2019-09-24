@@ -9,12 +9,14 @@ import {
 import ScorePlotTile from '@/components/vis/ScorePlotTile.vue';
 import ScreePlotTile from '@/components/vis/ScreePlotTile.vue';
 import LoadingsPlotTile from '@/components/vis/LoadingsPlotTile.vue';
+import LayoutGrid from './LayoutGrid.vue';
 
 export default {
   components: {
     LoadingsPlotTile,
     ScorePlotTile,
     ScreePlotTile,
+    LayoutGrid,
   },
   props: {
     id: {
@@ -27,6 +29,16 @@ export default {
       normalize_methods,
       transform_methods,
       scaling_methods,
+      visiblePlots: {
+        score: true,
+        scree: true,
+        loadings: true,
+      },
+      cellSize: 300,
+      // size of the header since the vis tiles
+      // don't consider the header (48) and padding (5) when setting the size
+      // but since we are in a grid we have to stick to the grid cells
+      plotHeader: 48 + 5,
     };
   },
   computed: {
@@ -39,6 +51,8 @@ export default {
     norm_arg() { return this.$store.getters.txType(this.id, 'normalization_argument'); },
     trans() { return this.$store.getters.txType(this.id, 'transformation'); },
     scaling() { return this.$store.getters.txType(this.id, 'scaling'); },
+    plotWidth() { return this.cellSize * 2; },
+    plotHeight() { return this.cellSize * 2 - this.plotHeader; },
   },
   methods: {
     async transformTable(value, category, argument, methods) {
@@ -110,24 +124,35 @@ v-layout.transform-component(row, fill-height)
             v-radio(v-for="m in scaling_methods", :label="m.label",
                 :value="m.value", :key="`scale${m.value}`")
 
+      v-toolbar.darken-3(color="primary", dark, flat, dense)
+        v-toolbar-title Plots
+      v-card.mx-3(flat)
+        v-card-actions.checkboxlist
+          v-checkbox.my-0(v-model="visiblePlots.score", label="PCA Score Plot", hide-details)
+          v-checkbox.my-0(v-model="visiblePlots.loadings", label="PCA Loadings Plot", hide-details)
+          v-checkbox.my-0(v-model="visiblePlots.scree", label="PCA Scree Plot", hide-details)
+
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
   v-layout(column, v-else-if="ready && valid")
     v-container.grow-overflow.ma-0(grid-list-lg, fluid)
-      v-layout(row, wrap)
+      layout-grid(:cell-size="cellSize")
         score-plot-tile(
-            :width="600",
-            :height="600",
+            v-show="visiblePlots.score",
+            :width="plotWidth",
+            :height="plotHeight",
             :columns="dataset.column.data",
             :id="id")
         loadings-plot-tile(
-            :width="600",
-            :height="600",
+            v-show="visiblePlots.loadings",
+            :width="plotWidth",
+            :height="plotHeight",
             :id="id")
         scree-plot-tile(
-            :width="600",
-            :height="600",
+            v-show="visiblePlots.scree",
+            :width="plotWidth",
+            :height="plotHeight",
             :id="id")
   v-container(v-else-if="ready", fill-height)
     v-layout(column)
@@ -139,4 +164,9 @@ v-layout.transform-component(row, fill-height)
 .transform-component {
   background: #eee;
 }
+
+.checkboxlist {
+  display: block;
+}
+
 </style>

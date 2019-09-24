@@ -1,4 +1,6 @@
 <script>
+import { format } from 'd3-format';
+
 export default {
   props: {
     title: {
@@ -11,28 +13,98 @@ export default {
     },
   },
 
+  data() {
+    return {
+      scales: [
+        { scaleFactor: 0.5, cssClass: 'span1' },
+        { scaleFactor: 1, cssClass: 'span2' },
+        { scaleFactor: 1.5, cssClass: 'span3' },
+        { scaleFactor: 2, cssClass: 'span4' },
+        { scaleFactor: 2.5, cssClass: 'span5' },
+      ],
+      scaleIndex: 1,
+    };
+  },
+
   computed: {
-    hasControls() {
-      return !!this.$slots.controls;
+    scaleClass() {
+      return this.scales[this.scaleIndex].cssClass;
+    },
+    scaleFactor() {
+      return this.scales[this.scaleIndex].scaleFactor;
+    },
+    scaleOptions() {
+      const f = format('.0%');
+      return this.scales.map((d, i) => ({ text: f(d.scaleFactor), value: i }));
+    },
+  },
+
+  methods: {
+    setScaleIndex(value) {
+      this.scaleIndex = Math.max(Math.min(Number.parseInt(value, 10), this.scales.length - 1), 0);
     },
   },
 };
 </script>
 
 <template lang="pug">
-v-flex(shrink=1)
+v-flex(shrink=1, :class="scaleClass")
   .white.rounded.relative
     v-toolbar.primary.darken-3.top-rounded(dark, flat, dense)
       v-toolbar-title {{ title }}
       v-spacer
-      v-toolbar-items(v-if="hasControls")
+      v-toolbar-items
+        v-btn(@click="setScaleIndex(scaleIndex - 1)", :disabled="scaleIndex === 0", icon)
+          v-icon {{ $vuetify.icons.magnifyMinus }}
+        v-select.scaleFactor(:value="scaleIndex", @change="setScaleIndex($event)",
+            :items="scaleOptions", hide-details, item-text="text", item-value="value")
+        v-btn(@click="setScaleIndex(scaleIndex + 1)",
+            :disabled="scaleIndex === scales.length - 1", icon)
+          v-icon {{ $vuetify.icons.magnifyPlus }}
         slot(name="controls")
     v-progress-linear.ma-0.progress(v-if="loading", indeterminate, height=4)
     v-card.bottom-rounded(flat)
-      slot
+      slot(:scale="scaleFactor")
 </template>
 
 <style scoped lang="scss">
+.span1 {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+.span2 {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.span3 {
+  grid-column: span 3;
+  grid-row: span 3;
+}
+.span4 {
+  grid-column: span 4;
+  grid-row: span 4;
+}
+.span5 {
+  grid-column: span 5;
+  grid-row: span 5;
+}
+.span6 {
+  grid-column: span 6;
+  grid-row: span 6;
+}
+.span7 {
+  grid-column: span 7;
+  grid-row: span 7;
+}
+.span8 {
+  grid-column: span 8;
+  grid-row: span 8;
+}
+
+.scaleFactor {
+  max-width: 4em;
+}
+
 .relative {
   position: relative;
 }
