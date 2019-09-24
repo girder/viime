@@ -25,6 +25,9 @@ export default {
           .map(route => ({
             text: route.name || route.path,
             to: { name: route.name, params: this.$route.params },
+            ...(typeof route.meta.breadcrumb === 'function'
+              ? route.meta.breadcrumb.call(route, this.$route.params, this.$store)
+              : {}),
           })),
       ];
     },

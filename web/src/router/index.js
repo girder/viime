@@ -23,6 +23,14 @@ export const routes = [
     name: 'Pretreat Data',
     component: Pretreatment,
     props: true,
+    meta: {
+      breadcrumb(params, store) {
+        const ds = store.getters.dataset(params.id);
+        return {
+          text: ds ? ds.name : params.id,
+        };
+      },
+    },
     children: [
       {
         path: 'cleanup',
