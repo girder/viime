@@ -20,14 +20,12 @@ export default {
           text: 'VIIME',
           to: { name: 'Root' },
         },
-        ...this.$route.matched.map((route) => {
-          const b = route.meta.breadcrumb;
-          return {
-            text: route.name,
+        ...this.$route.matched
+          .filter(route => route.name) // Only show named routes in breadcrumb
+          .map(route => ({
+            text: route.name || route.path,
             to: { name: route.name, params: this.$route.params },
-            ...(b ? b.call(route, this.$route.params, this.$store) : {}),
-          };
-        }),
+          })),
       ];
     },
   },
