@@ -99,6 +99,7 @@ export const axisPlot = {
           .call(axisX);
       } else {
         axes.select('.x-axis')
+          .attr('transform', `translate(0,${dheight})`)
           .transition()
           .duration(duration)
           .call(axisX);

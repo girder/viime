@@ -43,6 +43,8 @@ export default {
     group: 'mdi-group',
     header: 'mdi-key-variant',
     info: 'mdi-information',
+    magnifyMinus: 'mdi-magnify-minus',
+    magnifyPlus: 'mdi-magnify-plus',
     masked: 'mdi-eye-off',
     more: 'mdi-dots-horizontal',
     menuDown: 'mdi-menu-down',
