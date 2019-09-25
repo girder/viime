@@ -75,11 +75,12 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
         v-layout(column)
           v-switch(v-model="showLabels", label="Node Labels")
           v-text-field(v-model="linkDistance", label="Link Distance",
-              hide-details, min="0", max="100", step="10", type="number")
+              hide-details, min="0", step="10", type="number")
 
   template(#default)
     force-directed-graph(:edges="edges", :nodes="nodes",
-        :link-distance="linkDistanceAsNumber", :show-labels="showLabels")
+        :link-distance="linkDistanceAsNumber", :show-labels="showLabels",
+        :min-stroke-value="min_correlation")
 </template>
 
 <style scoped>

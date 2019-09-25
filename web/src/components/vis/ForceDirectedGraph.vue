@@ -4,7 +4,7 @@ import {
   forceSimulation, forceManyBody, forceCollide, forceLink, forceCenter,
 } from 'd3-force';
 import { select } from 'd3-selection';
-import { scaleLinear } from 'd3-scale';
+import { scalePow, scaleLinear } from 'd3-scale';
 
 
 function extent(arr) {
@@ -48,13 +48,17 @@ export default {
       default: false,
       required: false,
     },
+    minStrokeValue: {
+      type: Number,
+      default: 0,
+      required: false,
+    },
   },
   data() {
     return {
       width: 0,
       height: 0,
       simulation: this.initSimulation(),
-      strokeScale: scaleLinear().domain([0, 1]).range([1, 8]),
       refsMounted: false, // to force an rendering after mounting
     };
   },
@@ -65,6 +69,10 @@ export default {
       }
       this.update();
       return '';
+    },
+    strokeScale() {
+      return scalePow().exponent(2).domain([this.minStrokeValue, 1]).range([1, 8])
+        .clamp(true);
     },
   },
   mounted() {
@@ -99,7 +107,7 @@ export default {
       nodes.select('text').text(d => d.id);
 
       const localEdges = this.edges.map(d => Object.assign({}, d));
-      const edges = svg.select('g.edges').selectAll('line').data(localEdges)
+      const edges = svg.select('g.edges').selectAll('g').data(localEdges)
         .join(enter => enter.append('g').html('<title></title><line></line><text></text>'));
       edges.select('line').style('stroke-width', d => this.strokeScale(d.value));
       edges.select('title').text(d => `${d.source} - ${d.target}: ${d.value.toFixed(3)}`);
@@ -127,8 +135,7 @@ export default {
           .attr('x2', d => xScale(d.target.x))
           .attr('y2', d => yScale(d.target.y));
         edges.select('text')
-          .attr('x', d => xScale((d.source.x + d.target.x) / 2))
-          .attr('y', d => yScale((d.source.y + d.target.y) / 2));
+          .attr('transform', d => `translate(${xScale((d.source.x + d.target.x) / 2)},${yScale((d.source.y + d.target.y) / 2)})`);
       });
 
 
