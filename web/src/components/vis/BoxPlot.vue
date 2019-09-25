@@ -94,12 +94,37 @@ export default {
         .showInnerDots(false);
 
       const stats = this.rows.map(d => Object.assign({}, d, boxplotStats(d.values)));
-      svg.select('.plot').selectAll('g.boxplot').data(stats)
+      const boxplots = svg.select('.plot').selectAll('g.boxplot').data(stats)
         .join(enter => enter.append('g').classed('boxplot', true))
-        .attr('transform', d => `translate(0, ${this.scaleY(d.name)})`)
+        .attr('transform', d => `translate(0, ${this.scaleY(d.name)})`);
+
+      // update
+      const finished = boxplots
         .transition()
         .duration(this.duration)
-        .call(layout);
+        .call(layout)
+        .end();
+
+      finished.then(() => {
+        // inject tooltips
+
+        const f = d => d.toFixed(3);
+
+        // outliers: show the value
+        boxplots.select('g.point').selectAll('.outlier').html(d => `<title>${f(d.value)}</title>`);
+        // boxes: show the median and upper/lower quartile values, along with item count
+        const box = boxplots.select('g.box');
+        if (box.select('title').empty()) {
+          box.append('title');
+        }
+        box.select('title').text(d => `${d.name} (Median: ${f(d.fiveNums[2])}, Q1: ${f(d.fiveNums[1])}, Q3: ${f(d.fiveNums[2])}, Items: ${d.values.length})`);
+        // whiskers: show the upper/lower quartile value and the extreme value
+        // (along with item count)
+        boxplots.select('.whisker path')
+          .html(d => `<title>${d.name} (Min: ${f(d.fiveNums[0])}, Q1: ${f(d.fiveNums[1])}, Q3: ${f(d.fiveNums[3])}, Items: ${d.values.length})</title>`);
+        boxplots.select('.whisker path:last-of-type')
+          .html(d => `<title>${d.name} (Max: ${f(d.fiveNums[4])}, Q1: ${f(d.fiveNums[1])}, Q3: ${f(d.fiveNums[3])}, Items: ${d.values.length})</title>`);
+      });
     },
   },
 };
