@@ -313,7 +313,7 @@ class CSVFileSchema(BaseSchema):
             return data
 
         data['table'] = data['table'].to_csv(header=False, index=False)
-        if 'measurement_table' in data:
+        if data.get('measurement_table') is not None:
             data['measurement_table'] = data['measurement_table'].to_dict(
                 orient='split')
         return data
