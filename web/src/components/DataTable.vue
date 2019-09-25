@@ -6,11 +6,13 @@
       .column-header
         .column-header-cell
         .row-header-cell(v-for="(r,i) in rowHeaders", :key="i",
-            :class="r.clazz") {{r.text}}
+            :class="r.clazz", @click="onRowClick($event, i)")
+          | {{r.text}}
     template(#default="{ item, index }")
       .column(:class="item.clazz")
-        .column-header-cell(:class="item.header.clazz") {{item.header.text}}
-        .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(r, item, index, i)") {{r}}
+        .column-header-cell(:class="item.header.clazz", @click="onColumnClick($event, index)")
+          | {{item.header.text}}
+        .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(i)") {{r}}
 </template>
 
 <script>
@@ -41,7 +43,11 @@ export default {
   computed: {
     rowHeaders() {
       return this.dataset.row.labels.map(
-        (rowType, i) => this.createHeader(rowType, defaultRowOption, i + 1),
+        (rowType, i) => {
+          const header = this.createHeader(rowType, defaultRowOption, i + 1);
+          header.clazz.push(...this.getSelectionClasses('row', i));
+          return header;
+        },
       );
     },
     columns() {
@@ -53,6 +59,9 @@ export default {
           clazz: [`type-${colType}`],
           values: rows.map(row => row[i]),
         };
+        const selected = this.getSelectionClasses('column', i);
+        column.clazz.push(...selected);
+        column.header.clazz.push(...selected);
         return column;
       });
     },
@@ -70,12 +79,45 @@ export default {
       }
       return header;
     },
-    cellClasses(row, column, columnIndex, rowIndex) {
+    cellClasses(rowIndex) {
       const rowType = this.dataset.row.labels[rowIndex];
-      return [`type-${rowType}`];
+      return [`type-${rowType}`, ...this.getSelectionClasses('row', rowIndex)];
     },
     setSelection(selection) {
       this.$emit('setselection', selection);
+    },
+    getSelectionClasses(axis, index) {
+      if (this.selected.type !== axis) {
+        return [];
+      }
+      const includes = this.selected.ranges.includes(index);
+      const classList = [];
+      if (includes.member) {
+        classList.push('active');
+      }
+      if (includes.first) {
+        classList.push(`${axis}First`);
+      }
+      if (includes.last) {
+        classList.push(`${axis}Last`);
+      }
+      return classList;
+    },
+    onRowClick(event, rowIndex) {
+      this.setSelection({
+        key: this.id,
+        event,
+        axis: 'row',
+        idx: rowIndex,
+      });
+    },
+    onColumnClick(event, columnIndex) {
+      this.setSelection({
+        key: this.id,
+        event,
+        axis: 'column',
+        idx: columnIndex,
+      });
     },
   },
 };
@@ -83,10 +125,15 @@ export default {
 
 <style scoped lang="scss">
 $background: #fafafa;
+$selectionInner: rgba(161, 213, 255, 0.4);
+$selectionBorder: rgb(23, 147, 248);
+$selectionBorderWidth: 2px;
+$selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
 
 .data-table {
   position: relative;
   background-color: $background;
+  user-select: none !important;
 }
 
 .scroller {
@@ -101,9 +148,12 @@ $background: #fafafa;
   width: 80px;
 }
 
-
-.column-header {
-
+.row-header-cell,
+.column-header-cell,
+.cell {
+  height: 25px;
+  padding: 2px 7px;
+  white-space: nowrap;
 }
 
 .column-header-cell {
@@ -120,32 +170,108 @@ $background: #fafafa;
   cursor: pointer;
 }
 
-.type-key {
-  background-color: var(--v-primary-lighten3);
+// selection highlights
+.active {
+  background: linear-gradient(
+    0deg,
+    $selectionInner,
+    $selectionInner
+  );
+
+  &.columnFirst {
+    background: linear-gradient(
+      90deg,
+      $selectionBorder 0px,
+      $selectionInner $selectionBorderWidth
+    );
+  }
+
+  &.columnLast {
+    background: linear-gradient(
+      90deg,
+      $selectionInner 0px,
+      $selectionInner $selectionBorderWidth2,
+      $selectionBorder 100%
+    );
+  }
+
+  &.columnFirst.columnLast {
+    background: linear-gradient(
+      90deg,
+      $selectionBorder 0px,
+      $selectionInner $selectionBorderWidth,
+      $selectionInner $selectionBorderWidth2,
+      $selectionBorder 100%
+    );
+  }
+
+  &.rowFirst {
+    background: linear-gradient(
+      180deg,
+      $selectionBorder 0px,
+      $selectionInner $selectionBorderWidth
+    );
+  }
+
+  &.rowLast {
+    background: linear-gradient(
+      180deg,
+      $selectionInner 0px,
+      $selectionInner $selectionBorderWidth2,
+      $selectionBorder 100%
+    );
+  }
+
+  &.rowFirst.rowLast {
+    background: linear-gradient(
+      180deg,
+      $selectionBorder 0px,
+      $selectionInner $selectionBorderWidth,
+      $selectionInner $selectionBorderWidth2,
+      $selectionBorder 100%
+    );
+  }
 }
 
+@mixin selectionAware($color) {
+  background-color: $color;
+
+  &.active,
+  &.active.columnFirst,
+  &.active.columnLast,
+  &.active.columnFirst.columnLast,
+  &.active.rowFirst,
+  &.active.rowLast,
+  &.active.rowFirst.rowLast {
+    background-color: $color;
+  }
+}
+
+// column
+.type-key {
+  @include selectionAware(var(--v-primary-lighten3));
+}
+// column, row
 .type-metadata {
+  @include selectionAware(var(--v-accent2-lighten3));
   background-color: var(--v-accent2-lighten3);
 }
-
+// column
 .type-group {
+  @include selectionAware(var(--v-accent3-lighten3));
   background-color: var(--v-accent3-lighten3);
 }
-
+// row
 .type-header {
-  background-color: var(--v-accent-lighten1);
+  @include selectionAware(var(--v-accent-lighten1));
+  color: white;
+  font-weight: 700;
 }
-
-.cell {
-
-}
-
-.row-header-cell,
-.column-header-cell,
-.cell {
-  height: 25px;
-  padding: 2px 7px;
-  white-space: nowrap;
+// column, row
+.type-masked {
+  @include selectionAware(var(--v-secondary-lighten2));
+  font-weight: 300;
+  color: var(--v-secondary-base);
 }
 
 </style>
