@@ -1,7 +1,9 @@
 import WilcoxonPlotTile from './WilcoxonPlotTile.vue';
 import AnovaTableTile from './AnovaTableTile.vue';
 import HeatmapTile from './HeatmapTile.vue';
+import CorrelationTile from './CorrelationTile.vue';
 import { plot_types } from '../../utils/constants';
+import { correlation_methods } from './constants';
 
 export default [
   {
@@ -29,6 +31,18 @@ export default [
     description: 'cool stuff',
     component: HeatmapTile,
     args: {},
+    type: plot_types.ANALYSIS,
+  },
+  {
+    path: 'correlation',
+    name: 'Correlation Network',
+    shortName: 'Correlation Network',
+    description: 'TODO',
+    component: CorrelationTile,
+    args: {
+      min_correlation: 0.6,
+      method: correlation_methods[0].value,
+    },
     type: plot_types.ANALYSIS,
   },
 ];

@@ -1,4 +1,5 @@
-from typing import Any, Dict
+from itertools import combinations
+from typing import Any, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -74,3 +75,19 @@ def hierarchical_clustering(measurements: pd.DataFrame) -> Dict[str, Any]:
     column = _do_clustering(measurements.to_numpy().T, list(measurements))
     row = _do_clustering(measurements.to_numpy(), list(measurements.index))
     return dict(column=column, row=row)
+
+
+def pairwise_correlation(measurements: pd.DataFrame, min_correlation: float = 0,
+                         method: Optional[str] = None) -> Dict[str, Any]:
+
+    corr = measurements.corr(method=method)
+
+    r = []
+
+    columns = list(corr)
+    for (i, j) in combinations(range(0, len(corr)), 2):
+        value = corr.iloc[i, j]
+        if abs(value) > min_correlation:
+            r.append(dict(x=columns[i], y=columns[j], value=value))
+
+    return dict(columns=columns, correlations=r)

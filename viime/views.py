@@ -13,7 +13,7 @@ from webargs.flaskparser import use_kwargs
 from werkzeug import FileStorage
 
 from viime import opencpu
-from viime.analyses import anova_test, hierarchical_clustering, wilcoxon_test
+from viime.analyses import anova_test, hierarchical_clustering, pairwise_correlation, wilcoxon_test
 from viime.cache import csv_file_cache
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
@@ -614,3 +614,19 @@ def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Opti
 @load_validated_csv_file
 def get_hierarchical_clustering_heatmap(validated_table: ValidatedMetaboliteTable):
     return hierarchical_clustering(validated_table.measurements)
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/correlation', methods=['GET'])
+@use_kwargs({
+    'min_correlation': fields.Float(missing=0.05, validate=validate.Range(0, 1)),
+    'method': fields.Str(missing='pearson',
+                         validate=validate.OneOf(['pearson', 'kendall', 'spearman']))
+})
+@load_validated_csv_file
+def get_correlation(validated_table: ValidatedMetaboliteTable,
+                    min_correlation: float, method: str):
+    table = validated_table.measurements
+
+    data = pairwise_correlation(table, min_correlation, method)
+
+    return jsonify(data), 200
