@@ -45,7 +45,7 @@ function convertCsvToRows(csvstring) {
   return { data: data.slice(0, data.length - 1) };
 }
 
-function parsePandasDataFrame(toSplitDictResult) {
+function parsePandasDataFrame(toSplitDictResult, baseDataFrame) {
   if (!toSplitDictResult) {
     return {
       columnNames: [],
@@ -54,9 +54,9 @@ function parsePandasDataFrame(toSplitDictResult) {
     };
   }
   return {
-    columnNames: toSplitDictResult.columns,
+    columnNames: toSplitDictResult.columns || baseDataFrame.columnNames,
     data: toSplitDictResult.data,
-    rowNames: toSplitDictResult.index,
+    rowNames: toSplitDictResult.index || baseDataFrame.rowNames,
   };
 }
 

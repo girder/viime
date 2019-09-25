@@ -152,6 +152,7 @@ const mutations = {
       id, name, size, created, description,
     } = data;
     const { data: sourcerows } = convertCsvToRows(data.table);
+    const measurement_table = parsePandasDataFrame(data.measurement_table);
     const oldData = state.datasets[id];
     Vue.set(state.datasets, id, {
       ...oldData,
@@ -171,6 +172,15 @@ const mutations = {
         normalization_argument: data.normalization_argument,
         transformation: data.transformation,
         scaling: data.scaling,
+
+        // imputed measurements
+        measurement_table,
+
+        // reset
+        validatedMeasurements: null,
+        validatedGroups: null,
+        validatedMeasurementsMetaData: null,
+        validatedSampleMetaData: null,
       },
     });
   },
@@ -179,9 +189,11 @@ const mutations = {
    */
   [SET_VALIDATED_DATASET_DATA](state, { data }) {
     const validatedMeasurements = parsePandasDataFrame(data.measurements);
-    const validatedGroups = parsePandasDataFrame(data.groups);
-    const validatedMeasurementsMetaData = parsePandasDataFrame(data.measurement_metadata);
-    const validatedSampleMetaData = parsePandasDataFrame(data.sample_metadata);
+    const validatedGroups = parsePandasDataFrame(data.groups, validatedMeasurements);
+    const validatedMeasurementsMetaData = parsePandasDataFrame(data.measurement_metadata,
+      validatedMeasurements);
+    const validatedSampleMetaData = parsePandasDataFrame(data.sample_metadata,
+      validatedMeasurements);
     const ds = state.datasets[data.csv_file_id];
 
     const delta = {
