@@ -609,8 +609,8 @@ def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Opti
     return _group_test(anova_test, validated_table, group_column)
 
 
-@csv_bp.route('/csv/<uuid:csv_id>/analyses/hierarchicalClustering', methods=['GET'])
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/heatmap', methods=['GET'])
 @use_kwargs({})
 @load_validated_csv_file
-def get_hierarchical_clustering(validated_table: ValidatedMetaboliteTable):
+def get_hierarchical_clustering_heatmap(validated_table: ValidatedMetaboliteTable):
     return hierarchical_clustering(validated_table.measurements)

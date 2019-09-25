@@ -40,8 +40,8 @@ def anova_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, Any]:
     }
 
 
-def hierarchical_clustering(measurements: pd.DataFrame) -> Dict[str, Any]:
-    r = linkage(measurements.to_numpy().T, optimal_ordering=True)
+def _do_clustering(arr: np.ndarray, columns) -> Dict[str, Any]:
+    r = linkage(arr, optimal_ordering=True)
     df = pd.DataFrame(r.astype(np.int))
     df = df.rename(columns={
         0: 'a',
@@ -50,13 +50,10 @@ def hierarchical_clustering(measurements: pd.DataFrame) -> Dict[str, Any]:
         3: 'elements'
     })
 
-    # number of metabolites
-    columns = list(measurements)
     num_leaves = len(columns)
     tuples = list(df.itertuples())
 
     def create_node(index):
-        print(index)
         if index < num_leaves:
             return dict(name=columns[index])
         # cluster
@@ -71,3 +68,9 @@ def hierarchical_clustering(measurements: pd.DataFrame) -> Dict[str, Any]:
         )
 
     return create_node(num_leaves + len(tuples) - 1)  # last is root
+
+
+def hierarchical_clustering(measurements: pd.DataFrame) -> Dict[str, Any]:
+    column = _do_clustering(measurements.to_numpy().T, list(measurements))
+    row = _do_clustering(measurements.to_numpy(), list(measurements.index))
+    return dict(column=column, row=row)

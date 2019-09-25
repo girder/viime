@@ -1,5 +1,6 @@
 import WilcoxonPlotTile from './WilcoxonPlotTile.vue';
 import AnovaTableTile from './AnovaTableTile.vue';
+import HeatmapTile from './HeatmapTile.vue';
 import { plot_types } from '../../utils/constants';
 
 export default [
@@ -18,6 +19,15 @@ export default [
     shortName: 'ANOVA',
     description: 'TODO R custom code',
     component: AnovaTableTile,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
+  {
+    path: 'heatmap',
+    name: 'Heatmap',
+    shortName: 'Heatmap',
+    description: 'cool stuff',
+    component: HeatmapTile,
     args: {},
     type: plot_types.ANALYSIS,
   },
