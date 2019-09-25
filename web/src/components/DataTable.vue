@@ -18,10 +18,7 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import { RecycleScroller } from 'vue-virtual-scroller';
 
 import { base26Converter } from '../utils';
-import {
-  defaultRowOption,
-  defaultColOption,
-} from '../utils/constants';
+import { defaultRowOption, defaultColOption } from '../utils/constants';
 
 export default {
   components: {
@@ -44,14 +41,8 @@ export default {
   computed: {
     rowHeaders() {
       return this.dataset.row.labels.map(
-        (rowType, i) => this.createHeader(rowType, defaultRowOption, i + 1)
+        (rowType, i) => this.createHeader(rowType, defaultRowOption, i + 1),
       );
-    },
-    selectedRanges() {
-      return this.selected.ranges;
-    },
-    selectedType() {
-      return this.selected.type;
     },
     columns() {
       const rows = this.dataset.sourcerows;
@@ -78,24 +69,6 @@ export default {
         header.clazz.push('mdi', this.$vuetify.icons[type]);
       }
       return header;
-    },
-    activeClasses(index, axisName) {
-      if (axisName === this.selected.type) {
-        const ranges = this.selectedRanges;
-        const includes = ranges.includes(index);
-        const classList = [];
-        if (includes.member) {
-          classList.push('active');
-        }
-        if (includes.first) {
-          classList.push('first');
-        }
-        if (includes.last) {
-          classList.push('last');
-        }
-        return classList;
-      }
-      return [];
     },
     cellClasses(row, column, columnIndex, rowIndex) {
       const rowType = this.dataset.row.labels[rowIndex];
