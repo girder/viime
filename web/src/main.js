@@ -2,6 +2,7 @@ import '@mdi/font/css/materialdesignicons.min.css';
 
 import Vue from 'vue';
 import Vuetify from 'vuetify';
+import './stylus/main.styl';
 import { init as SentryInit } from '@sentry/browser';
 import { Vue as SentryVue } from '@sentry/integrations';
 
@@ -10,7 +11,6 @@ import App from './App.vue';
 import router from './router';
 import store from './store';
 import { LOAD_SESSION } from './store/actions.type';
-import './stylus/main.styl';
 import vuetifyConfig from './utils/vuetifyConfig';
 import { SessionStore } from './utils';
 
