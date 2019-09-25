@@ -1,158 +1,31 @@
 <template lang="pug">
-table.cleanup-table(v-data-table="bind", :key="id")
+.data-table
+  recycle-scroller.scroller(:items="columns", :item-size="80",
+      key-field="index", direction="horizontal")
+    template(#before)
+      .column-header
+        .column-header-cell
+        .row-header-cell(v-for="(r,i) in rows", :key="i",
+            :class="r.clazz") {{r.text}}
+    template(#default="{ item, index }")
+      .column(:class="item.clazz")
+        .column-header-cell(:class="item.header.clazz") {{item.header.text}}
+        .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(r, item, index, i)") {{r}}
 </template>
 
 <script>
-import { base26Converter } from '@/utils';
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
+import { RecycleScroller } from 'vue-virtual-scroller';
+
+import { base26Converter } from '../utils';
 import {
   defaultRowOption,
   defaultColOption,
-} from '@/utils/constants';
-
-function getIcon(iconType, icons) {
-  const el = document.createElement('i');
-  el.classList.add(...['v-icon', 'small', 'mdi', 'theme--light', icons[iconType]]);
-  el.style.fontSize = '16px';
-  return el;
-}
-
-function updateTable(el, binding) {
-  const {
-    dataset, activeClasses, icons,
-  } = binding.value;
-  const colgroup = el.getElementsByTagName('colgroup')[0];
-  const body = el.getElementsByTagName('tbody')[0];
-  const headrow = el.getElementsByTagName('thead')[0].children[0];
-  const columns = colgroup.children;
-  const rows = body.children;
-  for (let index = 0; index < columns.length - 1; index += 1) {
-    const col = columns[index + 1]; // Account for 0th being empty
-    col.classList.remove(
-      'first',
-      'last',
-      'active',
-      'key',
-      'group',
-      'metadata',
-      'masked',
-      'measurement',
-    );
-    col.classList.add(...activeClasses(index, 'column'));
-    const colType = dataset.column.labels[index];
-    col.classList.add(colType);
-
-    const colHeader = headrow.children[index + 1];
-    colHeader.removeChild(colHeader.firstChild);
-    if (colType !== defaultColOption) {
-      colHeader.appendChild(getIcon(colType, icons));
-    } else {
-      colHeader.innerText = base26Converter(index + 1);
-    }
-  }
-
-  for (let index = 0; index < rows.length; index += 1) {
-    const row = rows[index];
-    row.classList.remove(
-      'first',
-      'last',
-      'active',
-      'header',
-      'metadata',
-      'masked',
-      'sample',
-    );
-    row.classList.add(...activeClasses(index, 'row'));
-    const rowType = dataset.row.labels[index];
-    row.classList.add(rowType);
-
-    const rowHeader = row.children[0];
-    rowHeader.removeChild(rowHeader.firstChild);
-    if (rowType !== defaultRowOption) {
-      rowHeader.appendChild(getIcon(rowType, icons));
-    } else {
-      rowHeader.innerText = index + 1;
-    }
-  }
-}
-
-function renderTable(el, binding) {
-  while (el.firstChild) {
-    el.removeChild(el.firstChild);
-  }
-  const {
-    dataset, id, activeClasses, setSelection, icons,
-  } = binding.value;
-  const thead = document.createElement('thead');
-  const colgroup = document.createElement('colgroup');
-  const tr0 = document.createElement('tr');
-  const th0 = document.createElement('th');
-  const col0 = document.createElement('col');
-  tr0.appendChild(th0);
-  colgroup.appendChild(col0);
-
-  dataset.column.labels.forEach((col, index) => {
-    const coln = document.createElement('col');
-    const thn = document.createElement('th');
-    const span = document.createElement('span');
-    const colType = dataset.column.labels[index];
-    thn.onclick = (event) => {
-      setSelection({
-        key: id, event, axis: 'column', idx: index,
-      });
-    };
-    if (colType !== defaultColOption) {
-      span.appendChild(getIcon(colType, icons));
-    } else {
-      span.innerText = base26Converter(index + 1);
-    }
-    thn.classList.add('control', 'px-2');
-    coln.classList.add(...activeClasses(index, 'column'));
-    coln.classList.add(colType);
-    thn.appendChild(span);
-    tr0.appendChild(thn);
-    colgroup.appendChild(coln);
-  });
-  thead.appendChild(tr0);
-
-  const tbody = document.createElement('tbody');
-  dataset.sourcerows.forEach((row, index) => {
-    const trn = document.createElement('tr');
-    const rowType = dataset.row.labels[index];
-    trn.classList.add(...['datarow'].concat(activeClasses(index, 'row')));
-    trn.classList.add(rowType);
-    tbody.appendChild(trn);
-    const td = document.createElement('td');
-    if (rowType !== defaultRowOption) {
-      td.appendChild(getIcon(rowType, icons));
-    } else {
-      td.innerText = index + 1;
-    }
-    td.classList.add('control');
-    td.onclick = (event) => {
-      setSelection({
-        key: id, event, axis: 'row', idx: index,
-      });
-    };
-    trn.appendChild(td);
-    row.forEach((col) => {
-      const tdn = document.createElement('td');
-      tdn.innerText = col;
-      trn.appendChild(tdn);
-      tdn.classList.add('row');
-    });
-  });
-
-  el.appendChild(colgroup);
-  el.appendChild(thead);
-  el.appendChild(tbody);
-}
+} from '../utils/constants';
 
 export default {
-  directives: {
-    dataTable: {
-      inserted: renderTable,
-      update: updateTable,
-    },
+  components: {
+    RecycleScroller,
   },
   props: {
     dataset: {
@@ -169,20 +42,40 @@ export default {
     },
   },
   computed: {
+    rows() {
+      return this.dataset.row.labels.map((rowType, i) => {
+        if (rowType === defaultRowOption) {
+          return { text: i + 1, clazz: [] };
+        }
+        // icon
+        return {
+          text: '',
+          clazz: ['mdi', this.$vuetify.icons[rowType]],
+        };
+      });
+    },
     selectedRanges() {
       return this.selected.ranges;
     },
     selectedType() {
       return this.selected.type;
     },
-    bind() {
-      const {
-        dataset, id, activeClasses, setSelection, selectedRanges,
-      } = this;
-      const { icons } = this.$vuetify;
-      return {
-        dataset, id, activeClasses, setSelection, selectedRanges, icons,
-      };
+    columns() {
+      return this.dataset.column.labels.map((colType, i) => {
+        const column = {
+          index: i,
+          header: {
+            text: base26Converter(i + 1),
+            clazz: [],
+          },
+          values: [],
+        };
+        if (colType !== defaultColOption) {
+          column.header.text = '';
+          column.header.clazz.push('mdi', this.$vuetify.icons[colType]);
+        }
+        return column;
+      });
     },
   },
   methods: {
@@ -204,6 +97,15 @@ export default {
       }
       return [];
     },
+    columnClasses(column, index) {
+      return [];
+    },
+    columnHeaderClasses(column, index) {
+      return [];
+    },
+    cellClasses(row, column, columnIndex, rowIndex) {
+      return [];
+    },
     setSelection(selection) {
       this.$emit('setselection', selection);
     },
@@ -211,170 +113,67 @@ export default {
 };
 </script>
 
-<style lang="scss">
-@mixin masked() {
-  background-color: var(--v-secondary-lighten2);
-  font-weight: 300;
-  color: var(--v-secondary-base);
+<style scoped lang="scss">
+$background: #fafafa;
+
+.data-table {
+  position: relative;
+  background: $background;
 }
 
-.cleanup-table {
-  border-spacing: 0px;
-  user-select: none;
-  table-layout: fixed;
-  border-collapse: collapse;
+.scroller {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+}
 
-  .key,
-  .metadata,
-  .header,
-  .group {
-    color: white;
-    font-weight: 700;
-    text-align: left;
-  }
+.column {
+  width: 80px;
+}
 
-  colgroup {
-    col {
-      &.active {
-        background: linear-gradient(
-          0deg,
-          rgba(161, 213, 255, 0.4),
-          rgba(161, 213, 255, 0.4)
-        );
+.column-header {
 
-        &.first {
-          background: linear-gradient(
-            90deg,
-            rgb(23, 147, 248) 0px,
-            rgba(161, 213, 255, 0.4) 2px
-          );
-        }
+}
 
-        &.last {
-          background: linear-gradient(
-            90deg,
-            rgba(161, 213, 255, 0.4) 0px,
-            rgba(161, 213, 255, 0.4) calc(100% - 2px),
-            rgb(23, 147, 248) 100%
-          );
-        }
+.column-header-cell {
+  text-align: center;
+  background: $background;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  cursor: pointer;
+}
 
-        &.first.last {
-          background: linear-gradient(
-            90deg,
-            rgb(23, 147, 248) 0px,
-            rgba(161, 213, 255, 0.4) 2px,
-            rgba(161, 213, 255, 0.4) calc(100% - 2px),
-            rgb(23, 147, 248) 100%
-          );
-        }
-      }
+.row-header-cell {
+  background: $background;
+  cursor: pointer;
+}
 
-      &.active.key,
-      &.key,
-      &.active.first.key,
-      &.active.last.key {
-        background-color: var(--v-primary-lighten3);
-      }
+.cell {
 
-      &.active.metadata,
-      &.metadata,
-      &.active.first.metadata,
-      &.active.last.metadata {
-        background-color: var(--v-accent2-lighten3);
-      }
+}
 
-      &.active.group,
-      &.group,
-      &.active.first.group,
-      &.active.last.group {
-        background-color: var(--v-accent3-lighten3);
-      }
+.row-header-cell,
+.column-header-cell,
+.cell {
+  height: 25px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
 
-      &.masked,
-      &.masked.active,
-      &.masked.active.first,
-      &.masked.active.last {
-        @include masked();
-      }
-    }
-  }
-
-  tr {
-    th,
-    td {
-      padding: 2px 7px;
-      white-space: nowrap;
-
-      &.control {
-        cursor: pointer;
-        font-weight: 300;
-      }
-    }
-
-    &.active {
-      &.metadata {
-        td {
-          box-shadow: inset 0 0 0 0.5px rgba(161, 213, 255, 0.15) !important;
-        }
-      }
-    }
-
-    &.active {
-      background: linear-gradient(
-        0deg,
-        rgba(161, 213, 255, 0.4),
-        rgba(161, 213, 255, 0.4)
-      );
-
-      &.first {
-        background: linear-gradient(
-          180deg,
-          rgb(23, 147, 248) 0px,
-          rgba(161, 213, 255, 0.4) 2px
-        );
-      }
-
-      &.last {
-        background: linear-gradient(
-          180deg,
-          rgba(161, 213, 255, 0.4) 0px,
-          rgba(161, 213, 255, 0.4) calc(100% - 2px),
-          rgb(23, 147, 248) 100%
-        );
-      }
-
-      &.first.last {
-        background: linear-gradient(
-          180deg,
-          rgb(23, 147, 248) 0px,
-          rgba(161, 213, 255, 0.4) 2px,
-          rgba(161, 213, 255, 0.4) calc(100% - 2px),
-          rgb(23, 147, 248) 100%
-        );
-      }
-    }
-  }
-
-  tr.datarow {
-    text-align: left;
-
-    &.header,
-    &.header.active {
-      background-color: var(--v-accent-lighten1);
-    }
-
-    &.metadata,
-    &.metadata.active {
-      background-color: var(--v-accent2-lighten2);
-    }
-  }
-
-  tr.datarow {
-    &.masked,
-    &.masked.active {
-      @include masked();
-    }
-  }
+</style>
+<style scoped>
+.scroller >>> .vue-recycle-scroller__slot {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+.scroller >>> .vue-recycle-scroller__item-wrapper {
+  overflow: unset;
+}
+.scroller >>> .vue-recycle-scroller__item-view {
+  overflow: unset;
 }
 </style>
