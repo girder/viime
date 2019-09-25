@@ -1,19 +1,23 @@
 <script>
-import { format } from 'd3-format';
+import MetaboliteTable from './MetaboliteTable.vue';
 
 export default {
 
+  components: {
+    MetaboliteTable,
+  },
+
   props: {
     data: {
+      type: Object,
       validator: prop => !prop || ('data' in prop && 'pairs' in prop),
       required: true,
     },
-  },
-
-  data() {
-    return {
-      format: format('.2e'),
-    };
+    threshold: {
+      type: Number,
+      required: false,
+      default: 0.05,
+    },
   },
 
   computed: {
@@ -31,21 +35,10 @@ export default {
           value: 'Metabolite',
         },
         {
-          text: 'Intercept',
-          align: 'right',
-          value: 'Intercept',
-        },
-        {
           text: 'Group',
-          align: 'right',
           value: 'Group',
         },
-        {
-          text: 'Residuals',
-          align: 'right',
-          value: 'Residuals',
-        },
-        ...this.pairs.map(text => ({ text, value: text, align: 'right' })),
+        ...this.pairs.map(text => ({ text, value: text })),
       ];
     },
   },
@@ -53,12 +46,5 @@ export default {
 </script>
 
 <template lang="pug">
-v-data-table.elevation-1(:headers="headers", :items="items", disable-initial-sort,
-    item-key="Metabolite")
-  template(v-slot:items="props")
-    td {{ props.item.Metabolite }}
-    td.text-xs-right {{ format(props.item.Intercept) }}
-    td.text-xs-right {{ format(props.item.Group) }}
-    td.text-xs-right {{ format(props.item.Residuals) }}
-    td.text-xs-right(v-for="p in pairs", :key="p") {{ format(props.item[p]) }}
+metabolite-table(:headers="headers", :items="items", :threshold="threshold")
 </template>

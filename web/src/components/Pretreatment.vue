@@ -23,11 +23,8 @@ export default {
     },
     navigate(dataset) {
       const { id } = dataset;
-      const name = this.valid(dataset)
-        ? this.$router.currentRoute.name
-        : 'Cleanup Data';
       this.$router.push({
-        name,
+        name: 'Pretreat Data',
         params: { id },
       });
     },
@@ -72,7 +69,7 @@ v-layout.pretreatment-component(row, fill-height)
           v-list.view-list
 
             v-list-tile.ml-2(
-                :class="{ active: $router.currentRoute.name === 'Cleanup Data' }",
+                :class="{ active: $router.currentRoute.name === 'Clean Up Table' }",
                 @click="$router.push({ path: `/pretreatment/${dataset.id}/cleanup` })")
               v-list-tile-title.pl-2
                 v-icon.pr-1.middle {{ $vuetify.icons.tableEdit }}
@@ -94,7 +91,7 @@ v-layout.pretreatment-component(row, fill-height)
                   span {{ problemData.description }}
 
             v-list-tile.ml-2(
-                :class="{ active: $router.currentRoute.name === 'Transform Data' }",
+                :class="{ active: $router.currentRoute.name === 'Transform Table' }",
                 :disabled="!valid(dataset)",
                 @click="$router.push({ path: `/pretreatment/${dataset.id}/transform` })")
               v-list-tile-title.pl-2
