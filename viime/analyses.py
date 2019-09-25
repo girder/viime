@@ -1,33 +1,23 @@
-from itertools import combinations
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict
 
 import pandas as pd
-from scipy.stats import wilcoxon
 
 from .opencpu import opencpu_request
 
 
-def wilcoxon_test(measurements: pd.DataFrame, zero_method: Optional[str] = None,
-                  alternative: Optional[str] = None) -> Dict[str, Union[List[str], List[Dict]]]:
+def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, Any]:
 
-    if zero_method is None:
-        zero_method = 'wilcox'
-    if alternative is None:
-        alternative = 'two-sided'
+    files = {
+        'measurements': measurements.to_csv().encode(),
+        'groups': groups.to_csv(header=True).encode()
+    }
 
-    indices = list(measurements.index)
-    data = []
-
-    # test all possible combinations of rows
-    for (x, y) in combinations(measurements.iterrows(), 2):
-        x_index, x_data = x
-        y_index, y_data = y
-        (score, p) = wilcoxon(x_data, y_data, zero_method=zero_method, alternative=alternative)
-        data.append(dict(x=x_index, y=y_index, score=score, p=p))
+    data = opencpu_request('wilcoxon_test_z_scores', files, {})
 
     return {
-        'indices': indices,
-        'data': data
+        'groups': list(set(groups)),
+        'pairs': list(data)[1:],
+        'data': data.replace({pd.np.nan: None}).to_dict(orient='records')
     }
 
 

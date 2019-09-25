@@ -69,6 +69,14 @@ export const CSVService = {
     return ApiService.download('csv', slug);
   },
 
+  setName(slug, name) {
+    return ApiService.put(`csv/${slug}/name`, { name });
+  },
+
+  setDescription(slug, description) {
+    return ApiService.put(`csv/${slug}/description`, { description });
+  },
+
   setTransform(slug, category, transform_type, argument) {
     return ApiService.put(`csv/${slug}/${category}`, { method: transform_type, argument });
   },

@@ -3,7 +3,7 @@ from io import BytesIO
 import json
 import math
 from pathlib import PurePath
-from typing import cast, Dict, Optional
+from typing import Callable, cast, Dict, Optional
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
@@ -239,6 +239,38 @@ def set_csv_file_metadata(csv_id):
     try:
         csv_file = CSVFile.query.get_or_404(csv_id)
         csv_file.meta = request.json
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/name', methods=['PUT'])
+@use_kwargs({
+    'name': fields.Str(required=True)
+})
+def set_csv_file_name(csv_id, name):
+    try:
+        csv_file = CSVFile.query.get_or_404(csv_id)
+        csv_file.name = name
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/description', methods=['PUT'])
+@use_kwargs({
+    'description': fields.Str(required=True)
+})
+def set_csv_file_description(csv_id, description):
+    try:
+        csv_file = CSVFile.query.get_or_404(csv_id)
+        csv_file.description = description
         db.session.add(csv_file)
         db.session.commit()
         return jsonify(csv_file_schema.dump(csv_file))
@@ -543,29 +575,8 @@ def get_pca_overview(validated_table):
     return Response(png_content, mimetype='image/png')
 
 
-@csv_bp.route('/csv/<uuid:csv_id>/analyses/wilcoxon', methods=['GET'])
-@use_kwargs({
-    'zero_method': fields.Str(missing='wilcox',
-                              validate=validate.OneOf(['wilcox', 'pratt', 'zsplit'])),
-    'alternative': fields.Str(missing='two-sided',
-                              validate=validate.OneOf(['two-sided', 'greater', 'less']))
-})
-@load_validated_csv_file
-def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable,
-                      zero_method: str, alternative: str):
-    table = validated_table.measurements
-
-    data = wilcoxon_test(table, zero_method, alternative)
-
-    return jsonify(data), 200
-
-
-@csv_bp.route('/csv/<uuid:csv_id>/analyses/anova', methods=['GET'])
-@use_kwargs({
-    'group_column': fields.Str()
-})
-@load_validated_csv_file
-def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Optional[str] = None):
+def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,
+                group_column: Optional[str] = None):
     measurements = validated_table.measurements
     groups = validated_table.groups
 
@@ -574,9 +585,28 @@ def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Opti
         raise ValidationError(
             'invalid group column', field_name='group_column', data=group_column)
 
-    data = anova_test(measurements, group)
+    data = method(measurements, group)
 
     return jsonify(data), 200
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/wilcoxon', methods=['GET'])
+@use_kwargs({
+    'group_column': fields.Str(missing=None)
+})
+@load_validated_csv_file
+def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable,
+                      group_column: Optional[str] = None):
+    return _group_test(wilcoxon_test, validated_table, group_column)
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/anova', methods=['GET'])
+@use_kwargs({
+    'group_column': fields.Str()
+})
+@load_validated_csv_file
+def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Optional[str] = None):
+    return _group_test(anova_test, validated_table, group_column)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/correlation', methods=['GET'])

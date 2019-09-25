@@ -51,13 +51,14 @@ export default {
 
 <template lang="pug">
 vis-tile(v-if="plot", title="PCA Loadings Plot", :loading="plot.loading")
-  loadings-plot(
-      :width="width",
-      :height="height",
-      :points="plot.data",
-      :pc-x="pcX",
-      :pc-y="pcY",
-      :show-crosshairs="showCrosshairs")
+  template(#default="wrapper")
+    loadings-plot(
+        :width="width * wrapper.scale",
+        :height="height * wrapper.scale",
+        :points="plot.data",
+        :pc-x="pcX",
+        :pc-y="pcY",
+        :show-crosshairs="showCrosshairs")
   template(v-slot:controls)
     v-menu(bottom, offset-y, left, :min-width="150", :close-on-content-click="false")
       template(v-slot:activator="{ on }")
