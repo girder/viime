@@ -254,12 +254,10 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
 // column, row
 .type-metadata {
   @include selectionAware(var(--v-accent2-lighten3));
-  background-color: var(--v-accent2-lighten3);
 }
 // column
 .type-group {
   @include selectionAware(var(--v-accent3-lighten3));
-  background-color: var(--v-accent3-lighten3);
 }
 // row
 .type-header {
