@@ -5,7 +5,7 @@
     template(#before)
       .column-header
         .column-header-cell
-        .row-header-cell(v-for="(r,i) in rows", :key="i",
+        .row-header-cell(v-for="(r,i) in rowHeaders", :key="i",
             :class="r.clazz") {{r.text}}
     template(#default="{ item, index }")
       .column(:class="item.clazz")
@@ -42,17 +42,10 @@ export default {
     },
   },
   computed: {
-    rows() {
-      return this.dataset.row.labels.map((rowType, i) => {
-        if (rowType === defaultRowOption) {
-          return { text: i + 1, clazz: [] };
-        }
-        // icon
-        return {
-          text: '',
-          clazz: ['mdi', this.$vuetify.icons[rowType]],
-        };
-      });
+    rowHeaders() {
+      return this.dataset.row.labels.map(
+        (rowType, i) => this.createHeader(rowType, defaultRowOption, i + 1)
+      );
     },
     selectedRanges() {
       return this.selected.ranges;
@@ -61,24 +54,31 @@ export default {
       return this.selected.type;
     },
     columns() {
+      const rows = this.dataset.sourcerows;
       return this.dataset.column.labels.map((colType, i) => {
         const column = {
           index: i,
-          header: {
-            text: base26Converter(i + 1),
-            clazz: [],
-          },
-          values: [],
+          header: this.createHeader(colType, defaultColOption, base26Converter(i + 1)),
+          clazz: [`type-${colType}`],
+          values: rows.map(row => row[i]),
         };
-        if (colType !== defaultColOption) {
-          column.header.text = '';
-          column.header.clazz.push('mdi', this.$vuetify.icons[colType]);
-        }
         return column;
       });
     },
   },
   methods: {
+    createHeader(type, defaultType, text) {
+      const header = {
+        text,
+        clazz: [`type-${type}`],
+      };
+      if (type !== defaultType) {
+        // icon
+        header.text = '';
+        header.clazz.push('mdi', this.$vuetify.icons[type]);
+      }
+      return header;
+    },
     activeClasses(index, axisName) {
       if (axisName === this.selected.type) {
         const ranges = this.selectedRanges;
@@ -97,14 +97,9 @@ export default {
       }
       return [];
     },
-    columnClasses(column, index) {
-      return [];
-    },
-    columnHeaderClasses(column, index) {
-      return [];
-    },
     cellClasses(row, column, columnIndex, rowIndex) {
-      return [];
+      const rowType = this.dataset.row.labels[rowIndex];
+      return [`type-${rowType}`];
     },
     setSelection(selection) {
       this.$emit('setselection', selection);
@@ -118,7 +113,7 @@ $background: #fafafa;
 
 .data-table {
   position: relative;
-  background: $background;
+  background-color: $background;
 }
 
 .scroller {
@@ -133,13 +128,14 @@ $background: #fafafa;
   width: 80px;
 }
 
+
 .column-header {
 
 }
 
 .column-header-cell {
   text-align: center;
-  background: $background;
+  background-color: $background;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -147,8 +143,24 @@ $background: #fafafa;
 }
 
 .row-header-cell {
-  background: $background;
+  background-color: $background;
   cursor: pointer;
+}
+
+.type-key {
+  background-color: var(--v-primary-lighten3);
+}
+
+.type-metadata {
+  background-color: var(--v-accent2-lighten3);
+}
+
+.type-group {
+  background-color: var(--v-accent3-lighten3);
+}
+
+.type-header {
+  background-color: var(--v-accent-lighten1);
 }
 
 .cell {
