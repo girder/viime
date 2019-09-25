@@ -741,14 +741,15 @@ class ValidatedMetaboliteTableSchema(BaseSchema):
     @post_dump
     def serialize_tables(self, data, **kwargs):
         # don't transfer columns or index depending on the type
-        def convert(attr, drop_column=None):
+        def convert(attr, *drop_columns):
             if attr in data:
                 converted = data[attr].to_dict(orient='split')
-                if drop_column in converted:
-                    del converted[drop_column]
+                for drop_column in drop_columns:
+                    if drop_column in converted:
+                        del converted[drop_column]
                 data[attr] = converted
 
-        convert('measurements')
+        convert('measurements', 'index', 'columns')
         convert('groups', 'index')
         convert('sample_metadata', 'index')
         convert('measurement_metadata', 'columns')

@@ -188,13 +188,13 @@ const mutations = {
    * @private
    */
   [SET_VALIDATED_DATASET_DATA](state, { data }) {
-    const validatedMeasurements = parsePandasDataFrame(data.measurements);
-    const validatedGroups = parsePandasDataFrame(data.groups, validatedMeasurements);
-    const validatedMeasurementsMetaData = parsePandasDataFrame(data.measurement_metadata,
-      validatedMeasurements);
-    const validatedSampleMetaData = parsePandasDataFrame(data.sample_metadata,
-      validatedMeasurements);
     const ds = state.datasets[data.csv_file_id];
+    // the imputed table index are column can be used for all the other ones
+    const base = ds.measurement_table;
+    const validatedMeasurements = parsePandasDataFrame(data.measurements, base);
+    const validatedGroups = parsePandasDataFrame(data.groups, base);
+    const validatedMeasurementsMetaData = parsePandasDataFrame(data.measurement_metadata, base);
+    const validatedSampleMetaData = parsePandasDataFrame(data.sample_metadata, base);
 
     const delta = {
       validatedMeasurements,
