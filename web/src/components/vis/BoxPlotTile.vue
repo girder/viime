@@ -1,5 +1,5 @@
 <script>
-import BoxplotPlot from './BoxplotPlot.vue';
+import BoxplotPlot from './BoxPlot.vue';
 import VisTile from './VisTile.vue';
 import plotData from './mixins/plotData';
 

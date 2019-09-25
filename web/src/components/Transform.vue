@@ -9,7 +9,7 @@ import {
 import ScorePlotTile from '@/components/vis/ScorePlotTile.vue';
 import ScreePlotTile from '@/components/vis/ScreePlotTile.vue';
 import LoadingsPlotTile from '@/components/vis/LoadingsPlotTile.vue';
-import BoxplotPlotTile from '@/components/vis/BoxplotPlotTile.vue';
+import BoxPlotTile from '@/components/vis/BoxPlotTile.vue';
 import LayoutGrid from './LayoutGrid.vue';
 
 export default {
@@ -17,7 +17,7 @@ export default {
     LoadingsPlotTile,
     ScorePlotTile,
     ScreePlotTile,
-    BoxplotPlotTile,
+    BoxPlotTile,
     LayoutGrid,
   },
   props: {
@@ -158,7 +158,7 @@ v-layout.transform-component(row, fill-height)
             :width="plotWidth",
             :height="plotHeight",
             :id="id")
-        boxplot-plot-tile(
+        box-plot-tile(
             v-show="visiblePlots.boxplot",
             :width="plotWidth",
             :height="plotHeight",

@@ -36,16 +36,16 @@ export default {
       duration: 200,
       ylabel: 'Metabolite',
       xlabel: 'Measurement',
-      initialRun: false,
+      refsMounted: false,
     };
   },
   computed: {
     reactiveUpdate() {
-      if (!this.initialRun) {
+      if (!this.refsMounted) {
         return '';
       }
       this.update();
-      return Math.random().toString();
+      return '';
     },
     scaleY() {
       const { rows, dheight } = this;
@@ -71,7 +71,7 @@ export default {
   },
 
   mounted() {
-    this.initialRun = true;
+    this.refsMounted = true;
   },
 
   methods: {
@@ -106,17 +106,15 @@ export default {
 </script>
 
 <template lang="pug">
-div
-  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
-    g.master
-      g.axes
-      g.plot
-    text.x.label(:transform="`translate(${margin.left + dwidth / 2},${height - 10})`")
-      | {{xlabel}}
-    text.y.label(:transform="`translate(${10},${margin.top + dheight / 2})rotate(-90)`")
-      | {{ylabel}}
-
-  span(style="display: none") {{ reactiveUpdate }}
+svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
+    :data-update="reactiveUpdate")
+  g.master
+    g.axes
+    g.plot
+  text.x.label(:transform="`translate(${margin.left + dwidth / 2},${height - 10})`")
+    | {{xlabel}}
+  text.y.label(:transform="`translate(${10},${margin.top + dheight / 2})rotate(-90)`")
+    | {{ylabel}}
 </template>
 
 <style scoped>
