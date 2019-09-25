@@ -52,12 +52,14 @@ export default {
     },
     columns() {
       const rows = this.dataset.sourcerows;
+      const f = v => (typeof v === 'number' ? v.toFixed(3) : v);
+
       return this.dataset.column.labels.map((colType, i) => {
         const column = {
           index: i,
           header: this.createHeader(colType, defaultColOption, base26Converter(i + 1)),
           clazz: [`type-${colType}`],
-          values: rows.map(row => row[i]),
+          values: rows.map(row => f(row[i])),
         };
         const selected = this.getSelectionClasses('column', i);
         column.clazz.push(...selected);
@@ -154,6 +156,8 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
   height: 25px;
   padding: 2px 7px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .column-header-cell {
