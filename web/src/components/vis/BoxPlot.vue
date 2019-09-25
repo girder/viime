@@ -112,18 +112,18 @@ export default {
 
         // outliers: show the value
         boxplots.select('g.point').selectAll('.outlier').html(d => `<title>${f(d.value)}</title>`);
-        // boxes: show the median and upper/lower quartile values, along with item count
-        const box = boxplots.select('g.box');
-        if (box.select('title').empty()) {
-          box.append('title');
-        }
-        box.select('title').text(d => `${d.name} (Median: ${f(d.fiveNums[2])}, Q1: ${f(d.fiveNums[1])}, Q3: ${f(d.fiveNums[2])}, Items: ${d.values.length})`);
-        // whiskers: show the upper/lower quartile value and the extreme value
-        // (along with item count)
+
+        const count = (values, min, max) => values
+          .reduce((acc, v) => acc + (v >= min && v < max ? 1 : 0), 0);
+
         boxplots.select('.whisker path')
-          .html(d => `<title>${d.name} (Min: ${f(d.fiveNums[0])}, Q1: ${f(d.fiveNums[1])}, Q3: ${f(d.fiveNums[3])}, Items: ${d.values.length})</title>`);
+          .html(d => `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`);
+        boxplots.select('.box line')
+          .html(d => `<title>${d.name}: ${f(d.fiveNums[1])} (q1) - ${f(d.fiveNums[2])} (median) = ${count(d.values, d.fiveNums[1], d.fiveNums[2])} Items</title>`);
+        boxplots.select('.box line:last-of-type')
+          .html(d => `<title>${d.name}: ${f(d.fiveNums[2])} (median) - ${f(d.fiveNums[3])} (q3) = ${count(d.values, d.fiveNums[2], d.fiveNums[3])} Items</title>`);
         boxplots.select('.whisker path:last-of-type')
-          .html(d => `<title>${d.name} (Max: ${f(d.fiveNums[4])}, Q1: ${f(d.fiveNums[1])}, Q3: ${f(d.fiveNums[3])}, Items: ${d.values.length})</title>`);
+          .html(d => `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`);
       });
     },
   },
