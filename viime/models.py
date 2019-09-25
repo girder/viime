@@ -298,10 +298,8 @@ class CSVFileSchema(BaseSchema):
     rows = fields.List(fields.Nested('TableRowSchema', exclude=['csv_file']))
 
     table_validation = fields.Nested('ValidationSchema', many=True, dump_only=True)
+    # imputed measurements
     measurement_table = fields.Raw(dump_only=True, allow_none=True)
-    measurement_metadata = fields.Raw(dump_only=True, allow_none=True)
-    sample_metadata = fields.Raw(dump_only=True, allow_none=True)
-    groups = fields.Raw(dump_only=True, allow_none=True)
     size = fields.Int(dump_only=True)
 
     @post_load
@@ -311,18 +309,13 @@ class CSVFileSchema(BaseSchema):
 
     @post_dump
     def read_csv_file(self, data, **kwargs):
-        def get_csv(key):
-            if data.get(key) is not None:
-                return data[key].to_csv()
-
         if 'table' not in data:
             return data
 
         data['table'] = data['table'].to_csv(header=False, index=False)
-        data['measurement_table'] = get_csv('measurement_table')
-        data['measurement_metadata'] = get_csv('measurement_metadata')
-        data['sample_metadata'] = get_csv('sample_metadata')
-        data['groups'] = get_csv('groups')
+        if 'measurement_table' in data:
+            data['measurement_table'] = data['measurement_table'].to_dict(
+                orient='split')
         return data
 
     @post_load
@@ -747,7 +740,17 @@ class ValidatedMetaboliteTableSchema(BaseSchema):
 
     @post_dump
     def serialize_tables(self, data, **kwargs):
-        for attr in ['measurements', 'measurement_metadata', 'sample_metadata', 'groups']:
+        # don't transfer columns or index depending on the type
+        def convert(attr, drop_column=None):
             if attr in data:
-                data[attr] = data[attr].to_dict(orient='split')
+                converted = data[attr].to_dict(orient='split')
+                if drop_column in converted:
+                    del converted[drop_column]
+                data[attr] = converted
+
+        convert('measurements')
+        convert('groups', 'index')
+        convert('sample_metadata', 'index')
+        convert('measurement_metadata', 'columns')
+
         return data
