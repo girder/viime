@@ -19,6 +19,8 @@ function extent(arr) {
   return [min, max];
 }
 
+const DENDOGRAM_RATIO = 0.2;
+
 export default {
   directives: {
     resize,
@@ -44,6 +46,7 @@ export default {
       refsMounted: false,
       hoveredRow: new Set(),
       hoveredColumn: new Set(),
+      DENDOGRAM_RATIO,
     };
   },
   computed: {
@@ -74,7 +77,8 @@ export default {
         .count()
         .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
 
-      return cluster().size([this.width * 0.8, this.height * 0.2])(root);
+      return cluster().size([this.width * (1 - DENDOGRAM_RATIO), this.height * DENDOGRAM_RATIO])
+        .separation(() => 1)(root);
     },
 
     rowHierarchy() {
@@ -82,7 +86,8 @@ export default {
         .count()
         .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
 
-      return cluster().size([this.height * 0.8, this.width * 0.2])(root);
+      return cluster().size([this.height * (1 - DENDOGRAM_RATIO), this.width * DENDOGRAM_RATIO])
+        .separation(() => 1)(root);
     },
     valueScale() {
       return scaleSequential(interpolateBlues).domain(extent(this.values.data));
@@ -111,8 +116,8 @@ export default {
 
       edges.attr('d', d => `
         M${d.target.x},${d.target.y}
-        C${d.target.x},${d.target.y - 10}
-         ${d.source.x},${d.source.y + 10}
+        C${d.target.x},${(d.target.y + d.source.y) * 0.5}
+         ${d.source.x},${(d.target.y + d.source.y) * 0.5}
          ${d.source.x},${d.source.y}
       `).on('mouseenter', (d) => {
         this.hoveredColumn = new Set(d.target.leaves().map(l => l.data.index));
@@ -130,8 +135,8 @@ export default {
       const hovered = this.hoveredRow;
       edges.attr('d', d => `
         M${d.target.y},${d.target.x}
-        C${d.target.y - 10},${d.target.x}
-         ${d.source.y + 10},${d.source.x}
+        C${(d.target.y + d.source.y) * 0.5},${d.target.x}
+         ${(d.target.y + d.source.y) * 0.5},${d.source.x}
          ${d.source.y},${d.source.x}
       `).on('mouseenter', (d) => {
         this.hoveredRow = new Set(d.target.leaves().map(l => l.data.index));
@@ -167,19 +172,9 @@ export default {
       rows.forEach((rnode, i) => {
         const rowSelected = hoveredRow.has(rnode.data.index);
         columns.forEach((cnode, j) => {
-          const columnSelected = hoveredColumn.has(cnode.data.index);
           const v = data[rnode.data.index][cnode.data.index];
           ctx.fillStyle = valueScale(v);
           ctx.fillRect(j * w, i * h, w, h);
-
-          if (columnSelected) {
-            ctx.beginPath();
-            ctx.moveTo(j * w, i * h);
-            ctx.lineTo(j * w, i * h + h);
-            ctx.moveTo(j * w + w, i * h);
-            ctx.lineTo(j * w + w, i * h + h);
-            ctx.stroke();
-          }
         });
 
         if (rowSelected) {
@@ -188,6 +183,18 @@ export default {
           ctx.lineTo(ctx.canvas.width, i * h);
           ctx.moveTo(0, i * h + h);
           ctx.lineTo(ctx.canvas.width, i * h + h);
+          ctx.stroke();
+        }
+      });
+
+      columns.forEach((cnode, j) => {
+        const columnSelected = hoveredColumn.has(cnode.data.index);
+        if (columnSelected) {
+          ctx.beginPath();
+          ctx.moveTo(j * w, 0);
+          ctx.lineTo(j * w, ctx.canvas.width);
+          ctx.moveTo(j * w + w, 0);
+          ctx.lineTo(j * w + w, ctx.canvas.width);
           ctx.stroke();
         }
       });
@@ -204,8 +211,11 @@ export default {
 
       const j = Math.floor(evt.offsetX / w);
       const i = Math.floor(evt.offsetY / h);
-      this.hoveredRow = new Set([this.rowLeaves[i].data.index]);
-      this.hoveredColumn = new Set([this.columnLeaves[j].data.index]);
+      const rnode = this.rowLeaves[i].data;
+      const cnode = this.columnLeaves[j].data;
+      this.hoveredRow = new Set([rnode.index]);
+      this.hoveredColumn = new Set([cnode.index]);
+      canvas.title = `${rnode.name} x ${cnode.name} = ${this.values.data[rnode.index][cnode.index]}`;
     },
     canvasMouseLeave() {
       this.hoveredRow = new Set();
@@ -217,13 +227,13 @@ export default {
 
 <template lang="pug">
 .grid(v-resize:throttle="onResize")
-  svg.column(ref="column", :width="width * 0.8", :height="height * 0.2", xmlns="http://www.w3.org/2000/svg",
+  svg.column(ref="column", :width="width * (1 - DENDOGRAM_RATIO)", :height="height * DENDOGRAM_RATIO", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveColumnUpdate")
     g.edges
-  svg.row(ref="row", :width="width * 0.2", :height="height * 0.8", xmlns="http://www.w3.org/2000/svg",
+  svg.row(ref="row", :width="width * DENDOGRAM_RATIO", :height="height * (1 - DENDOGRAM_RATIO)", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveRowUpdate")
     g.edges
-  canvas.matrix(ref="matrix", :width="width * 0.8", :height="height * 0.8",
+  canvas.matrix(ref="matrix", :width="width * (1 - DENDOGRAM_RATIO)", :height="height * (1 - DENDOGRAM_RATIO)",
       :data-update="reactiveMatrixUpdate",
       @mousemove="canvasMouseMove($event)", @mouseleave="canvasMouseLeave()")
 </template>

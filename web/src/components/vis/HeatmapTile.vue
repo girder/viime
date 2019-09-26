@@ -17,16 +17,23 @@ export default {
       required: true,
     },
   },
+
+  computed: {
+    values() {
+      return this.dataset.validatedMeasurements;
+    },
+  },
 };
 
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="plot", title="Heatmap", :loading="plot.loading", expanded)
+vis-tile-large(v-if="plot", title="Heatmap", expanded
+    :loading="plot.loading || !dataset.ready || !values || values.data.length === 0")
   template(#default="wrapper")
     heatmap(
-        v-if="plot && dataset.ready",
-        :values="dataset.validatedMeasurements",
+        v-if="plot && dataset.ready && values",
+        :values="values",
         :column-clustering="plot.data.column",
         :row-clustering="plot.data.row")
 </template>
