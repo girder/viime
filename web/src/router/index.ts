@@ -23,7 +23,7 @@ export const routes = [
     component: Pretreatment,
     props: true,
     meta: {
-      breadcrumb(params, store) {
+      breadcrumb(params: {id: string}, store: any) {
         const ds = store.getters.dataset(params.id);
         return {
           text: ds ? ds.name : params.id,
@@ -62,7 +62,7 @@ export const routes = [
         component: AnalyzeData,
         props: true,
       },
-      ...analyses.map(({ path, shortName: name, component }) => ({
+      ...analyses.map(({ path, shortName: name, component }: { path: string, shortName: string, component: any }) => ({
         path: `analyze/${path}`, name, component, props: true,
       })),
     ],

@@ -14,6 +14,8 @@ import { LOAD_SESSION } from './store/actions.type';
 import vuetifyConfig from './utils/vuetifyConfig';
 import { SessionStore } from './utils';
 
+declare var COMMITHASH: string;
+
 Vue.use(Vuetify, vuetifyConfig);
 Vue.config.productionTip = false;
 

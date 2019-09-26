@@ -1,6 +1,15 @@
 import { cloneDeep } from 'lodash';
 import Vue from 'vue';
-import Vuex from 'vuex';
+import Vuex, { StoreOptions } from 'vuex';
+import { RootState } from '@/types';
+
+interface RowIndex {
+  row_index: number;
+};
+
+interface ColumnIndex {
+  column_index: number;
+};
 
 import {
   convertCsvToRows, RangeList, mapValidationErrors,
@@ -78,7 +87,7 @@ analyses.forEach(({
   args,
   path,
   type,
-}) => {
+}: { args: any, path: 'pca' | 'loadings', type: any }) => {
   plotDefaults[path] = {
     data: null,
     valid: false,
@@ -99,14 +108,14 @@ const appstate = {
 };
 
 const getters = {
-  dataset: state => id => state.datasets[id],
-  ready: state => id => state.datasets[id] && state.datasets[id].ready,
+  dataset: (state: any) => (id: string) => state.datasets[id],
+  ready: (state: any) => (id: string) => state.datasets[id] && state.datasets[id].ready,
   // valid indicates fatal errors, and will be true even if there are warnings
-  valid: state => id => getters.ready(state)(id)
-    && state.datasets[id].validation.filter(v => v.severity === 'error').length === 0,
-  txType: state => (id, category) => getters.ready(state)(id)
+  valid: (state: any) => (id: string) => getters.ready(state)(id)
+    && state.datasets[id].validation.filter((v: { severity: string }) => v.severity === 'error').length === 0,
+  txType: (state: any) => (id: string, category: string) => getters.ready(state)(id)
     && state.datasets[id][category],
-  plot: state => (id, name) => getters.ready(state)(id) && state.plots[id][name],
+  plot: (state: any) => (id: string, name: string) => getters.ready(state)(id) && state.plots[id][name],
 };
 
 
@@ -114,7 +123,7 @@ const mutations = {
   /**
    * @private
    */
-  [INVALIDATE_PLOTS](state, { dataset_id }) {
+  [INVALIDATE_PLOTS](state: any, { dataset_id }: any) {
     const plots = Object.keys(plotDefaults);
     plots.forEach(name => Vue.set(state.plots[dataset_id][name], 'valid', false));
   },
@@ -122,7 +131,7 @@ const mutations = {
   /**
    * @private
    */
-  [INITIALIZE_DATASET](state, { dataset_id, name }) {
+  [INITIALIZE_DATASET](state: any, { dataset_id, name }: any) {
     Vue.set(state.plots, dataset_id, cloneDeep(plotDefaults));
     Vue.set(state.datasets, dataset_id, {
       ...datasetDefaults,
@@ -139,7 +148,7 @@ const mutations = {
   /**
    * @private
    */
-  [SET_DATASET_DATA](state, { data }) {
+  [SET_DATASET_DATA](state: any, { data }: any) {
     const {
       id, name, size, created, description,
     } = data;
@@ -169,7 +178,7 @@ const mutations = {
   /**
    * @private
    */
-  [MERGE_INTO_DATASET](state, { dataset_id, data }) {
+  [MERGE_INTO_DATASET](state: any, { dataset_id, data }: any) {
     const ds = state.datasets[dataset_id];
     Object.entries(data).forEach(([k, v]) => {
       Vue.set(ds, k, v);
@@ -180,20 +189,20 @@ const mutations = {
    * Set labels from server
    * @private
    */
-  [SET_LABELS](state, { dataset_id, rows, columns }) {
-    const rowsSorted = rows.sort((a, b) => a.row_index - b.row_index);
-    const colsSorted = columns.sort((a, b) => a.column_index - b.column_index);
+  [SET_LABELS](state: any, { dataset_id, rows, columns }: any) {
+    const rowsSorted = rows.sort((a: RowIndex, b: RowIndex) => a.row_index - b.row_index);
+    const colsSorted = columns.sort((a: ColumnIndex, b: ColumnIndex) => a.column_index - b.column_index);
     Vue.set(state.datasets[dataset_id], 'row', {
-      labels: rowsSorted.map(r => r.row_type),
+      labels: rowsSorted.map((r: { row_type: string }) => r.row_type),
       data: rowsSorted,
     });
     Vue.set(state.datasets[dataset_id], 'column', {
-      labels: colsSorted.map(c => c.column_type),
+      labels: colsSorted.map((c: { column_type: string }) => c.column_type),
       data: colsSorted,
     });
   },
 
-  [REMOVE_DATASET](state, { dataset_id }) {
+  [REMOVE_DATASET](state: any, { dataset_id }: any) {
     Vue.delete(state.datasets, dataset_id);
     state.store.save(state, state.session_id);
   },
@@ -201,25 +210,25 @@ const mutations = {
   /**
    * @private
    */
-  [SET_LAST_ERROR](state, { err }) {
+  [SET_LAST_ERROR](state: any, { err }: { err: string }) {
     Vue.set(state, 'lasterror', err);
   },
 
   /**
    * @private
    */
-  [SET_LOADING](state, loading) {
+  [SET_LOADING](state: any, loading: boolean) {
     Vue.set(state, 'loading', loading);
   },
 
-  [SET_PLOT](state, { dataset_id, name, obj }) {
+  [SET_PLOT](state: any, { dataset_id, name, obj }: any) {
     const plot = state.plots[dataset_id][name];
     Vue.set(state.plots[dataset_id], name, { ...plot, ...obj });
   },
 
-  [SET_SELECTION](state, {
+  [SET_SELECTION](state: any, {
     key, event, axis, idx,
-  }) {
+  }: any) {
     const { last, ranges, type } = state.datasets[key].selected;
     state.datasets[key].selected.last = idx;
     if (event.shiftKey && axis === type) {
@@ -235,7 +244,7 @@ const mutations = {
   /**
    * @private
    */
-  [SET_SESSION_STORE](state, { store, session_id }) {
+  [SET_SESSION_STORE](state: any, { store, session_id }: any) {
     Vue.set(state, 'store', store);
     Vue.set(state, 'session_id', session_id);
   },
@@ -243,9 +252,9 @@ const mutations = {
   /**
    * @private
    */
-  [SET_TRANSFORMATION](state, {
+  [SET_TRANSFORMATION](state: any, {
     dataset_id, transform_type, category, argument,
-  }) {
+  }: any) {
     Vue.set(state.datasets[dataset_id], category, transform_type);
     Vue.set(state.datasets[dataset_id], `${category}_argument`, argument);
   },
@@ -253,7 +262,7 @@ const mutations = {
 
 const actions = {
 
-  async [UPLOAD_CSV]({ state, commit }, { file }) {
+  async [UPLOAD_CSV]({ state, commit }: any, { file }: any) {
     commit(SET_LOADING, true);
     try {
       const { data } = await CSVService.upload(file);
@@ -269,11 +278,11 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [UPLOAD_EXCEL]({ state, commit }, { file }) {
+  async [UPLOAD_EXCEL]({ state, commit }: any, { file }: any) {
     commit(SET_LOADING, true);
     try {
       const { data } = await ExcelService.upload(file);
-      data.forEach((dataFile) => {
+      data.forEach((dataFile: any) => {
         commit(INITIALIZE_DATASET, { dataset_id: dataFile.id, name: data.name });
         commit(SET_LABELS, {
           dataset_id: dataFile.id,
@@ -295,7 +304,7 @@ const actions = {
    * reload dataset from server and checkpoint if the dataset is valid
    * @private
    */
-  async [LOAD_DATASET]({ getters: _getters, commit }, { dataset_id }) {
+  async [LOAD_DATASET]({ getters: _getters, commit }: any, { dataset_id }: { dataset_id: string}) {
     try {
       const dataset = _getters.dataset(dataset_id);
       if (!dataset) {
@@ -318,7 +327,7 @@ const actions = {
    * if the plot is out of date and another request is not outstanding,
    * load the requested plot data from server.
    */
-  async [LOAD_PLOT]({ getters: _getters, commit }, { dataset_id, name }) {
+  async [LOAD_PLOT]({ getters: _getters, commit }: any, { dataset_id, name }: any) {
     const plot = _getters.plot(dataset_id, name);
     if (plot) {
       const {
@@ -336,7 +345,7 @@ const actions = {
               ({ data: d } = await CSVService.getAnalysis(dataset_id, name, args));
               break;
             default:
-              throw new Error('Plot type unknown:', plotType);
+              throw new Error(`Plot type unknown: ${plotType}`);
           }
           commit(SET_PLOT, { dataset_id, name, obj: { loading: false, data: d, valid: true } });
         } catch (err) {
@@ -352,7 +361,7 @@ const actions = {
    * @param {Object} vuex
    * @param {import('../utils').SessionStore} sessionStore Store
    */
-  async [LOAD_SESSION]({ commit, dispatch }, store, session_id = 'default') {
+  async [LOAD_SESSION]({ commit, dispatch }: any, store: any, session_id: string = 'default') {
     commit(SET_LOADING, true);
     commit(SET_SESSION_STORE, { store, session_id });
     try {
@@ -375,9 +384,9 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [MUTEX_TRANSFORM_TABLE]({ commit }, {
+  async [MUTEX_TRANSFORM_TABLE]({ commit }: any, {
     category, dataset_id, transform_type, argument,
-  }) {
+  }: any) {
     const key = dataset_id;
     commit(SET_LOADING, true);
     try {
@@ -394,7 +403,7 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [CHANGE_AXIS_LABEL]({ dispatch, commit }, { dataset_id, changes }) {
+  async [CHANGE_AXIS_LABEL]({ dispatch, commit }: any, { dataset_id, changes }: any) {
     commit(SET_LOADING, true);
     try {
       const { data } = await CSVService.updateLabel(dataset_id, changes);
@@ -412,7 +421,7 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [CHANGE_IMPUTATION_OPTIONS]({ dispatch, commit }, { dataset_id, options }) {
+  async [CHANGE_IMPUTATION_OPTIONS]({ dispatch, commit }: any, { dataset_id, options }: { dataset_id: string, options: any }) {
     commit(SET_LOADING, true);
     await CSVService.setImputation(dataset_id, options);
     await dispatch(LOAD_DATASET, { dataset_id });
@@ -420,7 +429,7 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [SET_DATASET_NAME]({ commit }, { dataset_id, name }) {
+  async [SET_DATASET_NAME]({ commit }: { commit: any}, { dataset_id, name }: { dataset_id: string, name: string }) {
     commit(SET_LOADING, true);
     try {
       await CSVService.setName(dataset_id, name);
@@ -433,7 +442,7 @@ const actions = {
     }
   },
 
-  async [SET_DATASET_DESCRIPTION]({ commit }, { dataset_id, description }) {
+  async [SET_DATASET_DESCRIPTION]({ commit }: { commit: any }, {dataset_id, description}: { dataset_id: string, description: string }) {
     commit(SET_LOADING, true);
     try {
       await CSVService.setDescription(dataset_id, description);
@@ -448,9 +457,11 @@ const actions = {
 
 };
 
-export default new Vuex.Store({
+const store: StoreOptions<RootState> = {
   state: appstate,
   getters,
   mutations,
   actions,
-});
+};
+
+export default new Vuex.Store(store);
