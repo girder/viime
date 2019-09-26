@@ -3,7 +3,9 @@
  * because there shouldn't be a large fragmented list of ranges.
  */
 export default class RangeList {
-  constructor(initial = []) {
+  members: Array<number>;
+
+  constructor(initial: Array<number> = []) {
     this.members = initial;
   }
 
@@ -11,7 +13,7 @@ export default class RangeList {
    * Binary search for el
    * @param {Number} el element to find
    */
-  _find(el) {
+  _find(el: number) {
     let lowIndex = 0;
     let highIndex = this.members.length - 1;
     while (lowIndex <= highIndex) {
@@ -31,7 +33,7 @@ export default class RangeList {
    * @param {Number} a first index
    * @param {Number} b optional last index
    */
-  add(a, b = null) {
+  add(a: number, b: number | null = null) {
     let nin = a;
     let nout = b !== null ? b : a;
     if (nout < nin) {
@@ -52,7 +54,7 @@ export default class RangeList {
    * @param {Number} a
    * @returns Object<{member: Boolean, first: Boolean, last:Boolean}>
    */
-  includes(a) {
+  includes(a: number): {member: boolean, first?: boolean, last?: boolean} {
     const foundIndex = this._find(a);
     if (foundIndex !== null) {
       const first = (foundIndex === 0)
