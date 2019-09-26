@@ -69,19 +69,27 @@ export default {
   },
   methods: {
     async onFileChange(targetFiles) {
-      this.pendingFiles = this.pendingFiles.concat([...targetFiles].map(file => ({
-        file,
-        status: 'pending',
-        progress: {},
-        meta: {},
-      })));
-
       const excelMimeTypes = [
         'application/vnd.ms-excel',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       ];
 
       const isExcelFile = file => excelMimeTypes.includes(file.type) || file.name.match(/\.xlsx?$/i);
+      const isCSVFile = file => file.type === 'text/csv' || file.name.match(/\.csv$/i);
+      const isTextFile = file => file.type === 'text/plain' || file.name.match(/\.txt$/i);
+
+      // filter to valid types only
+      const filteredFiles = targetFiles.filter(
+        f => isExcelFile(f) || isCSVFile(f) || isTextFile(f),
+      );
+
+      this.pendingFiles = this.pendingFiles.concat([...filteredFiles].map(file => ({
+        file,
+        status: 'pending',
+        progress: {},
+        meta: {},
+      })));
+
 
       const promises = this.pendingFiles
         .filter(f => f.status === 'pending')
@@ -188,7 +196,8 @@ v-layout.upload-component(column, fill-height)
                   :items="dataTypes", label="Type of data",
                   item-text="name", item-value="value")
           v-divider(v-if="idx + 1 < files.length", :key="idx")
-    dropzone.filezone.mx-4.mb-4(:multiple="true", :message="message", @change="onFileChange")
+    dropzone.filezone.mx-4.mb-4(:multiple="true", :message="message", @change="onFileChange",
+        accept=".csv,.xlsx,.txt")
 
   v-toolbar(flat, dense)
     v-spacer
