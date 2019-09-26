@@ -42,6 +42,8 @@ export default {
       width: 100,
       height: 100,
       refsMounted: false,
+      hoveredRow: new Set(),
+      hoveredColumn: new Set(),
     };
   },
   computed: {
@@ -85,6 +87,12 @@ export default {
     valueScale() {
       return scaleSequential(interpolateBlues).domain(extent(this.values.data));
     },
+    columnLeaves() {
+      return this.columnHierarchy.leaves();
+    },
+    rowLeaves() {
+      return this.rowHierarchy.leaves();
+    },
   },
   mounted() {
     this.onResize();
@@ -99,12 +107,18 @@ export default {
       const svg = select(this.$refs.column);
       const root = this.columnHierarchy;
       const edges = svg.select('g.edges').selectAll('path').data(root.links()).join('path');
+      const hovered = this.hoveredColumn;
+
       edges.attr('d', d => `
         M${d.target.x},${d.target.y}
         C${d.target.x},${d.target.y - 10}
          ${d.source.x},${d.source.y + 10}
          ${d.source.x},${d.source.y}
-      `);
+      `).on('mouseenter', (d) => {
+        this.hoveredColumn = new Set(d.target.leaves().map(l => l.data.index));
+      }).on('mouseleave', () => {
+        this.hoveredColumn = new Set();
+      }).classed('selected', d => d.target.leaves().some(l => hovered.has(l.data.index)));
     },
     updateRow() {
       if (!this.$refs.row) {
@@ -113,12 +127,17 @@ export default {
       const svg = select(this.$refs.row);
       const root = this.rowHierarchy;
       const edges = svg.select('g.edges').selectAll('path').data(root.links()).join('path');
+      const hovered = this.hoveredRow;
       edges.attr('d', d => `
         M${d.target.y},${d.target.x}
         C${d.target.y - 10},${d.target.x}
          ${d.source.y + 10},${d.source.x}
          ${d.source.y},${d.source.x}
-      `);
+      `).on('mouseenter', (d) => {
+        this.hoveredRow = new Set(d.target.leaves().map(l => l.data.index));
+      }).on('mouseleave', () => {
+        this.hoveredRow = new Set();
+      }).classed('selected', d => d.target.leaves().some(l => hovered.has(l.data.index)));
     },
     updateMatrix() {
       if (!this.$refs.matrix || !this.values) {
@@ -130,23 +149,67 @@ export default {
       const w = ctx.canvas.width / this.values.columnNames.length;
       const h = ctx.canvas.height / this.values.rowNames.length;
 
-      const rows = this.rowHierarchy.leaves();
-      const columns = this.columnHierarchy.leaves();
+      const rows = this.rowLeaves;
+      const columns = this.columnLeaves;
 
-      rows.forEach((rnode) => {
-        const i = rnode.data.index;
-        columns.forEach((cnode) => {
-          const j = cnode.data.index;
-          const v = this.values.data[i][j];
-          ctx.fillStyle = this.valueScale(v);
+      ctx.strokeStyle = 'orange';
+
+      const {
+        valueScale,
+        hoveredRow,
+        hoveredColumn,
+        values,
+      } = this;
+
+      // work on copy for speed
+      const data = values.data.map(r => r.slice());
+
+      rows.forEach((rnode, i) => {
+        const rowSelected = hoveredRow.has(rnode.data.index);
+        columns.forEach((cnode, j) => {
+          const columnSelected = hoveredColumn.has(cnode.data.index);
+          const v = data[rnode.data.index][cnode.data.index];
+          ctx.fillStyle = valueScale(v);
           ctx.fillRect(j * w, i * h, w, h);
+
+          if (columnSelected) {
+            ctx.beginPath();
+            ctx.moveTo(j * w, i * h);
+            ctx.lineTo(j * w, i * h + h);
+            ctx.moveTo(j * w + w, i * h);
+            ctx.lineTo(j * w + w, i * h + h);
+            ctx.stroke();
+          }
         });
+
+        if (rowSelected) {
+          ctx.beginPath();
+          ctx.moveTo(0, i * h);
+          ctx.lineTo(ctx.canvas.width, i * h);
+          ctx.moveTo(0, i * h + h);
+          ctx.lineTo(ctx.canvas.width, i * h + h);
+          ctx.stroke();
+        }
       });
     },
     onResize() {
       const bb = this.$el.getBoundingClientRect();
       this.width = bb.width;
       this.height = bb.height;
+    },
+    canvasMouseMove(evt) {
+      const canvas = evt.currentTarget;
+      const w = canvas.width / this.values.columnNames.length;
+      const h = canvas.height / this.values.rowNames.length;
+
+      const j = Math.floor(evt.offsetX / w);
+      const i = Math.floor(evt.offsetY / h);
+      this.hoveredRow = new Set([this.rowLeaves[i].data.index]);
+      this.hoveredColumn = new Set([this.columnLeaves[j].data.index]);
+    },
+    canvasMouseLeave() {
+      this.hoveredRow = new Set();
+      this.hoveredColumn = new Set();
     },
   },
 };
@@ -156,14 +219,13 @@ export default {
 .grid(v-resize:throttle="onResize")
   svg.column(ref="column", :width="width * 0.8", :height="height * 0.2", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveColumnUpdate")
-    g.nodes
     g.edges
   svg.row(ref="row", :width="width * 0.2", :height="height * 0.8", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveRowUpdate")
-    g.nodes
     g.edges
   canvas.matrix(ref="matrix", :width="width * 0.8", :height="height * 0.8",
-      :data-update="reactiveMatrixUpdate")
+      :data-update="reactiveMatrixUpdate",
+      @mousemove="canvasMouseMove($event)", @mouseleave="canvasMouseLeave()")
 </template>
 
 <style scoped>
@@ -188,12 +250,14 @@ export default {
   grid-area: matrix;
 }
 
-.nodes >>> circle {
-  fill: steelblue;
-}
-
 .edges >>> path {
   fill: none;
+  stroke-width: 2;
   stroke: black;
 }
+
+.edges >>> path.selected {
+  stroke: orange;
+}
+
 </style>
