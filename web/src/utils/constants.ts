@@ -108,6 +108,7 @@ const transform_methods = [
   { label: 'Cube Root', value: 'cuberoot' },
 ];
 
+export type ValidationErrorType = 'group-missing' | 'primary-key-missing' | 'header-missing' | 'invalid-primary-key' | 'invalid-group' | 'invalid-header' | 'low-variance' | 'missing-data' | 'non-numeric-data';
 const validationMeta = {
   'group-missing': {
     // A static description string

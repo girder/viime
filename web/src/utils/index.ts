@@ -1,5 +1,5 @@
 import papa from 'papaparse';
-import { validationMeta } from './constants';
+import { validationMeta, ValidationErrorType } from './constants';
 import RangeList from './rangelist';
 import SessionStore from './sessionStore';
 
@@ -8,8 +8,8 @@ import SessionStore from './sessionStore';
  * by a given key
  * https://stackoverflow.com/questions/14446511/most-efficient-method-to-groupby-on-a-array-of-objects
  */
-function groupBy(xs, key) {
-  return xs.reduce((rv, x) => {
+function groupBy(xs: any[], key: string) {
+  return xs.reduce((rv: any, x: any) => {
     (rv[x[key]] = rv[x[key]] || []).push(x);
     return rv;
   }, {});
@@ -20,7 +20,7 @@ function groupBy(xs, key) {
  * where A = 1, Z = 26, AA = 27, and 0 cannot be encoded.
  * @param {Number} dec a decimal number to convert
  */
-function base26Converter(dec) {
+function base26Converter(dec: number) {
   if (dec < 1) {
     throw new Error('Numbers below 1 cannot be encoded.');
   }
@@ -37,7 +37,7 @@ function base26Converter(dec) {
   return str;
 }
 
-function convertCsvToRows(csvstring) {
+function convertCsvToRows(csvstring: string) {
   const { data } = papa.parse(csvstring);
   return { data: data.slice(0, data.length - 1) };
 }
@@ -48,7 +48,7 @@ function convertCsvToRows(csvstring) {
  * @param {Array<Object>} errors raw response from api
  * @param {Array<Object} columns sorted response from api
  */
-function mapValidationErrors(errors, columns) {
+function mapValidationErrors(errors: any[], columns: any) {
   const grouped = groupBy(errors, 'type');
   const keys = Object.keys(grouped);
   return keys.map((errorType) => {
@@ -65,6 +65,7 @@ function mapValidationErrors(errors, columns) {
     const error = {
       severity,
       type,
+      data: null,
       context,
       title,
       column_index,
@@ -72,7 +73,7 @@ function mapValidationErrors(errors, columns) {
     };
     if (errorMeta.multi === true) {
       error.description = errorMeta.description;
-      error.data = errorsOfType.map(e => ({
+      error.data = errorsOfType.map((e: any) => ({
         index: e.column_index,
         info: e.data,
         name: columns[e.column_index].column_header,
