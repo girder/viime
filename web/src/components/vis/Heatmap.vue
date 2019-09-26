@@ -3,6 +3,7 @@ import resize from 'vue-resize-directive';
 import { hierarchy, cluster } from 'd3-hierarchy';
 import { scaleSequential } from 'd3-scale';
 import { interpolateBlues } from 'd3-scale-chromatic';
+import { select } from 'd3-selection';
 
 function extent(arr) {
   let min = Number.POSITIVE_INFINITY;
@@ -67,15 +68,19 @@ export default {
     },
 
     columnHierarchy() {
-      const root = hierarchy(this.columnClustering);
+      const root = hierarchy(this.columnClustering)
+        .count()
+        .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
 
-      return root;
+      return cluster().size([this.width * 0.8, this.height * 0.2])(root);
     },
 
     rowHierarchy() {
-      const root = hierarchy(this.rowClustering);
+      const root = hierarchy(this.rowClustering)
+        .count()
+        .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
 
-      return root;
+      return cluster().size([this.height * 0.8, this.width * 0.2])(root);
     },
     valueScale() {
       return scaleSequential(interpolateBlues).domain(extent(this.values.data));
@@ -91,13 +96,29 @@ export default {
       if (!this.$refs.column) {
         return;
       }
-      // TODO
+      const svg = select(this.$refs.column);
+      const root = this.columnHierarchy;
+      const edges = svg.select('g.edges').selectAll('path').data(root.links()).join('path');
+      edges.attr('d', d => `
+        M${d.target.x},${d.target.y}
+        C${d.target.x},${d.target.y - 10}
+         ${d.source.x},${d.source.y + 10}
+         ${d.source.x},${d.source.y}
+      `);
     },
     updateRow() {
       if (!this.$refs.row) {
         return;
       }
-      // TODO
+      const svg = select(this.$refs.row);
+      const root = this.rowHierarchy;
+      const edges = svg.select('g.edges').selectAll('path').data(root.links()).join('path');
+      edges.attr('d', d => `
+        M${d.target.y},${d.target.x}
+        C${d.target.y - 10},${d.target.x}
+         ${d.source.y + 10},${d.source.x}
+         ${d.source.y},${d.source.x}
+      `);
     },
     updateMatrix() {
       if (!this.$refs.matrix || !this.values) {
@@ -109,8 +130,14 @@ export default {
       const w = ctx.canvas.width / this.values.columnNames.length;
       const h = ctx.canvas.height / this.values.rowNames.length;
 
-      this.values.data.forEach((row, i) => {
-        row.forEach((v, j) => {
+      const rows = this.rowHierarchy.leaves();
+      const columns = this.columnHierarchy.leaves();
+
+      rows.forEach((rnode) => {
+        const i = rnode.data.index;
+        columns.forEach((cnode) => {
+          const j = cnode.data.index;
+          const v = this.values.data[i][j];
           ctx.fillStyle = this.valueScale(v);
           ctx.fillRect(j * w, i * h, w, h);
         });
@@ -129,8 +156,12 @@ export default {
 .grid(v-resize:throttle="onResize")
   svg.column(ref="column", :width="width * 0.8", :height="height * 0.2", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveColumnUpdate")
+    g.nodes
+    g.edges
   svg.row(ref="row", :width="width * 0.2", :height="height * 0.8", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveRowUpdate")
+    g.nodes
+    g.edges
   canvas.matrix(ref="matrix", :width="width * 0.8", :height="height * 0.8",
       :data-update="reactiveMatrixUpdate")
 </template>
@@ -155,5 +186,14 @@ export default {
 }
 .matrix {
   grid-area: matrix;
+}
+
+.nodes >>> circle {
+  fill: steelblue;
+}
+
+.edges >>> path {
+  fill: none;
+  stroke: black;
 }
 </style>

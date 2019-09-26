@@ -56,7 +56,7 @@ def _do_clustering(arr: np.ndarray, columns) -> Dict[str, Any]:
 
     def create_node(index):
         if index < num_leaves:
-            return dict(name=columns[index])
+            return dict(name=columns[index], index=index)
         # cluster
         entry = tuples[index - num_leaves]
         return dict(
