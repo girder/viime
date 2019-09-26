@@ -13,10 +13,10 @@ interface ColumnIndex {
 
 import {
   convertCsvToRows, RangeList, mapValidationErrors,
-} from '../utils';
-import analyses from '../components/vis/analyses';
-import { plot_types } from '../utils/constants';
-import { CSVService, ExcelService } from '../common/api.service';
+} from '@/utils';
+import analyses from '@/components/vis/analyses';
+import { plot_types } from '@/utils/constants';
+import { CSVService, ExcelService } from '@/common/api.service';
 
 import {
   CHANGE_AXIS_LABEL,
