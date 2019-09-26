@@ -14,6 +14,7 @@
     "@mdi/font": "^3.5.95",
     "@sentry/browser": "^5.0.7",
     "@sentry/integrations": "^5.0.7",
+    "@types/lodash": "^4.14.139",
     "axios": "^0.18.0",
     "core-js": "^2.6.5",
     "d3-axis": "^1.0.12",
