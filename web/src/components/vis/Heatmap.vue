@@ -116,9 +116,8 @@ export default {
 
       edges.attr('d', d => `
         M${d.target.x},${d.target.y}
-        C${d.target.x},${(d.target.y + d.source.y) * 0.5}
-         ${d.source.x},${(d.target.y + d.source.y) * 0.5}
-         ${d.source.x},${d.source.y}
+        L${d.target.x},${d.source.y}
+        L${d.source.x},${d.source.y}
       `).on('mouseenter', (d) => {
         this.hoveredColumn = new Set(d.target.leaves().map(l => l.data.index));
       }).on('mouseleave', () => {
@@ -135,9 +134,8 @@ export default {
       const hovered = this.hoveredRow;
       edges.attr('d', d => `
         M${d.target.y},${d.target.x}
-        C${(d.target.y + d.source.y) * 0.5},${d.target.x}
-         ${(d.target.y + d.source.y) * 0.5},${d.source.x}
-         ${d.source.y},${d.source.x}
+        L${d.source.y},${d.target.x}
+        L${d.source.y},${d.source.x}
       `).on('mouseenter', (d) => {
         this.hoveredRow = new Set(d.target.leaves().map(l => l.data.index));
       }).on('mouseleave', () => {
