@@ -4,6 +4,7 @@ import { hierarchy, cluster } from 'd3-hierarchy';
 import { scaleSequential } from 'd3-scale';
 import { interpolateBlues } from 'd3-scale-chromatic';
 import { select } from 'd3-selection';
+import 'd3-transition';
 
 function extent(arr) {
   let min = Number.POSITIVE_INFINITY;
@@ -17,6 +18,16 @@ function extent(arr) {
     }
   }));
   return [min, max];
+}
+
+function aggregate(arr, is, js) {
+  if (is.length === 1 && js.length === 1) {
+    return arr[is[0]][js[0]];
+  }
+  // average
+  const l = is.length * js.length;
+  const sum = is.reduce((acc, i) => acc + js.reduce((acc2, j) => acc2 + arr[i][j], 0), 0);
+  return sum / l;
 }
 
 const DENDOGRAM_RATIO = 0.2;
@@ -41,15 +52,26 @@ export default {
   },
   data() {
     return {
+      padding: 8,
       width: 100,
       height: 100,
       refsMounted: false,
-      hoveredRow: new Set(),
-      hoveredColumn: new Set(),
+      duration: 500,
+      column: {
+        hovered: new Set(),
+        collapsed: new Set(),
+      },
+      row: {
+        hovered: new Set(),
+        collapsed: new Set(),
+      },
       DENDOGRAM_RATIO,
     };
   },
   computed: {
+    padding2() {
+      return this.padding * 2;
+    },
     reactiveColumnUpdate() {
       if (!this.refsMounted) {
         return '';
@@ -73,21 +95,19 @@ export default {
     },
 
     columnHierarchy() {
-      const root = hierarchy(this.columnClustering)
-        .count()
-        .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
-
-      return cluster().size([this.width * (1 - DENDOGRAM_RATIO), this.height * DENDOGRAM_RATIO])
-        .separation(() => 1)(root);
+      return this.computeHierarchy(this.columnClustering, this.column.collapsed,
+        this.width, this.height);
     },
 
     rowHierarchy() {
-      const root = hierarchy(this.rowClustering)
-        .count()
-        .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
-
-      return cluster().size([this.height * (1 - DENDOGRAM_RATIO), this.width * DENDOGRAM_RATIO])
-        .separation(() => 1)(root);
+      const root = this.computeHierarchy(this.rowClustering, this.row.collapsed,
+        this.height, this.width);
+      root.each((node) => {
+        const t = node.x;
+        node.x = node.y;
+        node.y = t;
+      });
+      return root;
     },
     valueScale() {
       return scaleSequential(interpolateBlues).domain(extent(this.values.data));
@@ -105,42 +125,87 @@ export default {
   },
 
   methods: {
-    updateColumn() {
-      if (!this.$refs.column) {
+    computeHierarchy(node, collapsed, layoutWidth, layoutHeight) {
+      const injectIndices = (s) => {
+        if (typeof s.index === 'number') {
+          s.indices = [s.index];
+        } else {
+          s.indices = [].concat(...s.children.map(injectIndices));
+          s.name = s.children.map(d => d.name).join(',');
+        }
+        return s.indices;
+      };
+
+      injectIndices(node);
+
+      const root = hierarchy(node,
+        d => (collapsed.has(d) ? [] : (d.children || [])))
+        .count()
+        .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
+
+      return cluster().size([layoutWidth * (1 - DENDOGRAM_RATIO) - this.padding2,
+        layoutHeight * DENDOGRAM_RATIO - this.padding2])
+        .separation(() => 1)(root);
+    },
+    updateTree(ref, root, wrapper) {
+      if (!ref) {
         return;
       }
-      const svg = select(this.$refs.column);
-      const root = this.columnHierarchy;
-      const edges = svg.select('g.edges').selectAll('path').data(root.links()).join('path');
-      const hovered = this.hoveredColumn;
+      const svg = select(ref);
+      const edges = svg.select('g.edges').selectAll('path').data(root.links(), d => `${d.source.data.name}-${d.target.data.name}`).join((enter) => {
+        const r = enter.append('path');
+        r.on('mouseenter', (d) => {
+          wrapper.hovered = new Set(d.target.data.indices);
+        }).on('mouseleave', () => {
+          wrapper.hovered = new Set();
+        }).style('opacity', 0);
+        return r;
+      });
+      const { hovered, collapsed } = wrapper;
+      const { padding } = this;
 
-      edges.attr('d', d => `
-        M${d.target.x},${d.target.y}
+      edges.classed('selected', d => d.target.data.indices.some(l => hovered.has(l)));
+
+      edges.transition('move').duration(this.duration).attr('d', d => `
+        M${d.target.x},${d.target.y + (d.target.children ? 0 : padding)}
         L${d.target.x},${d.source.y}
         L${d.source.x},${d.source.y}
-      `).on('mouseenter', (d) => {
-        this.hoveredColumn = new Set(d.target.leaves().map(l => l.data.index));
-      }).on('mouseleave', () => {
-        this.hoveredColumn = new Set();
-      }).classed('selected', d => d.target.leaves().some(l => hovered.has(l.data.index)));
+      `).transition('fadeIn')
+        .style('opacity', 1);
+
+      const innerNodes = root.descendants().filter(d => d.data.indices.length > 1);
+      const inner = svg.select('g.nodes').selectAll('g').data(innerNodes, d => d.data.name).join((enter) => {
+        const r = enter.append('g').html(`<circle r="${padding}"></circle><text>+</text><title></title>`)
+          .attr('transform', d => `translate(${d.x},${d.y})`).style('opacity', 0);
+        r.on('click', (d) => {
+          if (wrapper.collapsed.has(d.data)) {
+            wrapper.collapsed.delete(d.data);
+          } else {
+            wrapper.collapsed.add(d.data);
+          }
+          wrapper.collapsed = new Set(wrapper.collapsed);
+        }).on('mouseenter', (d) => {
+          wrapper.hovered = new Set(d.data.indices);
+        }).on('mouseleave', () => {
+          wrapper.hovered = new Set();
+        });
+        return r;
+      });
+
+      inner.select('text').text(d => (collapsed.has(d.data) ? '-' : '+'));
+      inner.select('title').text(d => d.data.name);
+      inner.classed('collapsed', d => collapsed.has(d.data));
+
+      inner.transition('move').duration(this.duration)
+        .attr('transform', d => `translate(${d.x},${d.y})`)
+        .transition('fadeIn')
+        .style('opacity', 1);
+    },
+    updateColumn() {
+      this.updateTree(this.$refs.column, this.columnHierarchy, this.column);
     },
     updateRow() {
-      if (!this.$refs.row) {
-        return;
-      }
-      const svg = select(this.$refs.row);
-      const root = this.rowHierarchy;
-      const edges = svg.select('g.edges').selectAll('path').data(root.links()).join('path');
-      const hovered = this.hoveredRow;
-      edges.attr('d', d => `
-        M${d.target.y},${d.target.x}
-        L${d.source.y},${d.target.x}
-        L${d.source.y},${d.source.x}
-      `).on('mouseenter', (d) => {
-        this.hoveredRow = new Set(d.target.leaves().map(l => l.data.index));
-      }).on('mouseleave', () => {
-        this.hoveredRow = new Set();
-      }).classed('selected', d => d.target.leaves().some(l => hovered.has(l.data.index)));
+      this.updateTree(this.$refs.row, this.rowHierarchy, this.row);
     },
     updateMatrix() {
       if (!this.$refs.matrix || !this.values) {
@@ -148,29 +213,28 @@ export default {
       }
       const ctx = this.$refs.matrix.getContext('2d');
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-      const w = ctx.canvas.width / this.values.columnNames.length;
-      const h = ctx.canvas.height / this.values.rowNames.length;
-
       const rows = this.rowLeaves;
       const columns = this.columnLeaves;
+      const {
+        valueScale,
+        values,
+      } = this;
+      const hoveredRow = this.row.hovered;
+      const hoveredColumn = this.column.hovered;
+
+      const w = ctx.canvas.width / columns.length;
+      const h = ctx.canvas.height / rows.length;
 
       ctx.strokeStyle = 'orange';
 
-      const {
-        valueScale,
-        hoveredRow,
-        hoveredColumn,
-        values,
-      } = this;
 
       // work on copy for speed
       const data = values.data.map(r => r.slice());
 
       rows.forEach((rnode, i) => {
-        const rowSelected = hoveredRow.has(rnode.data.index);
+        const rowSelected = rnode.data.indices.some(s => hoveredRow.has(s));
         columns.forEach((cnode, j) => {
-          const v = data[rnode.data.index][cnode.data.index];
+          const v = aggregate(data, rnode.data.indices, cnode.data.indices);
           ctx.fillStyle = valueScale(v);
           ctx.fillRect(j * w, i * h, w, h);
         });
@@ -186,7 +250,7 @@ export default {
       });
 
       columns.forEach((cnode, j) => {
-        const columnSelected = hoveredColumn.has(cnode.data.index);
+        const columnSelected = cnode.data.indices.some(s => hoveredColumn.has(s));
         if (columnSelected) {
           ctx.beginPath();
           ctx.moveTo(j * w, 0);
@@ -204,20 +268,20 @@ export default {
     },
     canvasMouseMove(evt) {
       const canvas = evt.currentTarget;
-      const w = canvas.width / this.values.columnNames.length;
-      const h = canvas.height / this.values.rowNames.length;
+      const w = canvas.width / this.columnLeaves.length;
+      const h = canvas.height / this.rowLeaves.length;
 
       const j = Math.floor(evt.offsetX / w);
       const i = Math.floor(evt.offsetY / h);
       const rnode = this.rowLeaves[i].data;
       const cnode = this.columnLeaves[j].data;
-      this.hoveredRow = new Set([rnode.index]);
-      this.hoveredColumn = new Set([cnode.index]);
-      canvas.title = `${rnode.name} x ${cnode.name} = ${this.values.data[rnode.index][cnode.index]}`;
+      this.row.hovered = new Set(rnode.indices);
+      this.column.hovered = new Set(cnode.indices);
+      canvas.title = `${rnode.name} x ${cnode.name} = ${aggregate(this.values.data, rnode.indices, cnode.indices)}`;
     },
     canvasMouseLeave() {
-      this.hoveredRow = new Set();
-      this.hoveredColumn = new Set();
+      this.row.hovered = new Set();
+      this.column.hovered = new Set();
     },
   },
 };
@@ -228,11 +292,13 @@ export default {
   svg.column(ref="column", :width="width * (1 - DENDOGRAM_RATIO)",
       :height="height * DENDOGRAM_RATIO", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveColumnUpdate")
-    g.edges
+    g.edges(:transform="`translate(${padding},${padding})`")
+    g.nodes(:transform="`translate(${padding},${padding})`")
   svg.row(ref="row", :width="width * DENDOGRAM_RATIO",
       :height="height * (1 - DENDOGRAM_RATIO)", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveRowUpdate")
-    g.edges
+    g.edges(:transform="`translate(${padding},${padding})`")
+    g.nodes(:transform="`translate(${padding},${padding})`")
   canvas.matrix(ref="matrix", :width="width * (1 - DENDOGRAM_RATIO)",
       :height="height * (1 - DENDOGRAM_RATIO)",
       :data-update="reactiveMatrixUpdate",
@@ -269,6 +335,28 @@ export default {
 
 .edges >>> path.selected {
   stroke: orange;
+}
+
+.nodes >>> circle {
+  fill: black;
+  cursor: pointer;
+}
+
+.nodes >>> circle:hover {
+  fill: orange;
+}
+
+.nodes >>> .collapsed > circle {
+  fill: steelblue;
+}
+
+.nodes >>> text {
+  user-select: none;
+  pointer-events: none;
+  fill: white;
+  font-size: 150%;
+  text-anchor: middle;
+  dominant-baseline: central;
 }
 
 </style>
