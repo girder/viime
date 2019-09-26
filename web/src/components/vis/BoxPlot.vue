@@ -5,6 +5,7 @@ import { boxplot, boxplotStats } from 'd3-boxplot';
 import 'd3-transition';
 
 import { axisPlot } from './mixins/axisPlot';
+import { measurementColumnName, measurementValueName } from '../../utils/constants';
 
 
 export default {
@@ -34,8 +35,8 @@ export default {
         left: 120,
       },
       duration: 200,
-      ylabel: 'Metabolite',
-      xlabel: 'Measurement',
+      ylabel: measurementColumnName,
+      xlabel: measurementValueName,
       refsMounted: false,
     };
   },
