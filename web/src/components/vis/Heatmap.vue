@@ -227,13 +227,16 @@ export default {
 
 <template lang="pug">
 .grid(v-resize:throttle="onResize")
-  svg.column(ref="column", :width="width * (1 - DENDOGRAM_RATIO)", :height="height * DENDOGRAM_RATIO", xmlns="http://www.w3.org/2000/svg",
+  svg.column(ref="column", :width="width * (1 - DENDOGRAM_RATIO)",
+      :height="height * DENDOGRAM_RATIO", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveColumnUpdate")
     g.edges
-  svg.row(ref="row", :width="width * DENDOGRAM_RATIO", :height="height * (1 - DENDOGRAM_RATIO)", xmlns="http://www.w3.org/2000/svg",
+  svg.row(ref="row", :width="width * DENDOGRAM_RATIO",
+      :height="height * (1 - DENDOGRAM_RATIO)", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveRowUpdate")
     g.edges
-  canvas.matrix(ref="matrix", :width="width * (1 - DENDOGRAM_RATIO)", :height="height * (1 - DENDOGRAM_RATIO)",
+  canvas.matrix(ref="matrix", :width="width * (1 - DENDOGRAM_RATIO)",
+      :height="height * (1 - DENDOGRAM_RATIO)",
       :data-update="reactiveMatrixUpdate",
       @mousemove="canvasMouseMove($event)", @mouseleave="canvasMouseLeave()")
 </template>

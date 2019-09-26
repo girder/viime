@@ -28,7 +28,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="plot", title="Heatmap", expanded
+vis-tile-large(v-if="plot", title="Heatmap", expanded,
     :loading="plot.loading || !dataset.ready || !values || values.data.length === 0")
   template(#default="wrapper")
     heatmap(
