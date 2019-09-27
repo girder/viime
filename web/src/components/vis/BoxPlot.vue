@@ -117,6 +117,9 @@ export default {
         const count = (values, min, max) => values
           .reduce((acc, v) => acc + (v >= min && v < max ? 1 : 0), 0);
 
+        // inject rect backgrounds for whiskers
+        const base = boxplots.select('.whisker');
+
         boxplots.select('.whisker path')
           .html(d => `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`);
         boxplots.select('.box line')
@@ -125,6 +128,18 @@ export default {
           .html(d => `<title>${d.name}: ${f(d.fiveNums[2])} (median) - ${f(d.fiveNums[3])} (q3) = ${count(d.values, d.fiveNums[2], d.fiveNums[3])} Items</title>`);
         boxplots.select('.whisker path:last-of-type')
           .html(d => `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`);
+
+        const bandwidth = this.scaleY.bandwidth();
+        const bgs = base.selectAll('rect').data(d => [d, d]).join('rect');
+        bgs
+          .attr('x', (d, i) => this.scaleX(Math.min(d.whiskers[i].start, d.whiskers[i].end)))
+          .attr('y', bandwidth * -0.5)
+          .attr('width', (d, i) => this.scaleX(Math.abs(d.whiskers[i].start - d.whiskers[i].end)))
+          .attr('height', bandwidth)
+          .style('fill', 'transparent')
+          .html((d, i) => (i === 0
+            ? `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`
+            : `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`));
       });
     },
   },
