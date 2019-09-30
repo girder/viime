@@ -5,6 +5,7 @@ import { boxplot, boxplotStats } from 'd3-boxplot';
 import 'd3-transition';
 
 import { axisPlot } from './mixins/axisPlot';
+import { measurementColumnName, measurementValueName } from '../../utils/constants';
 
 
 export default {
@@ -34,8 +35,8 @@ export default {
         left: 120,
       },
       duration: 200,
-      ylabel: 'Metabolite',
-      xlabel: 'Measurement',
+      ylabel: measurementColumnName,
+      xlabel: measurementValueName,
       refsMounted: false,
     };
   },
@@ -112,18 +113,33 @@ export default {
 
         // outliers: show the value
         boxplots.select('g.point').selectAll('.outlier').html(d => `<title>${f(d.value)}</title>`);
-        // boxes: show the median and upper/lower quartile values, along with item count
-        const box = boxplots.select('g.box');
-        if (box.select('title').empty()) {
-          box.append('title');
-        }
-        box.select('title').text(d => `${d.name} (Median: ${f(d.fiveNums[2])}, Q1: ${f(d.fiveNums[1])}, Q3: ${f(d.fiveNums[2])}, Items: ${d.values.length})`);
-        // whiskers: show the upper/lower quartile value and the extreme value
-        // (along with item count)
+
+        const count = (values, min, max) => values
+          .reduce((acc, v) => acc + (v >= min && v < max ? 1 : 0), 0);
+
+        // inject rect backgrounds for whiskers
+        const base = boxplots.select('.whisker');
+
         boxplots.select('.whisker path')
-          .html(d => `<title>${d.name} (Min: ${f(d.fiveNums[0])}, Q1: ${f(d.fiveNums[1])}, Q3: ${f(d.fiveNums[3])}, Items: ${d.values.length})</title>`);
+          .html(d => `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`);
+        boxplots.select('.box line')
+          .html(d => `<title>${d.name}: ${f(d.fiveNums[1])} (q1) - ${f(d.fiveNums[2])} (median) = ${count(d.values, d.fiveNums[1], d.fiveNums[2])} Items</title>`);
+        boxplots.select('.box line:last-of-type')
+          .html(d => `<title>${d.name}: ${f(d.fiveNums[2])} (median) - ${f(d.fiveNums[3])} (q3) = ${count(d.values, d.fiveNums[2], d.fiveNums[3])} Items</title>`);
         boxplots.select('.whisker path:last-of-type')
-          .html(d => `<title>${d.name} (Max: ${f(d.fiveNums[4])}, Q1: ${f(d.fiveNums[1])}, Q3: ${f(d.fiveNums[3])}, Items: ${d.values.length})</title>`);
+          .html(d => `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`);
+
+        const bandwidth = this.scaleY.bandwidth();
+        const bgs = base.selectAll('rect').data(d => [d, d]).join('rect');
+        bgs
+          .attr('x', (d, i) => this.scaleX(Math.min(d.whiskers[i].start, d.whiskers[i].end)))
+          .attr('y', bandwidth * -0.5)
+          .attr('width', (d, i) => this.scaleX(Math.abs(d.whiskers[i].start - d.whiskers[i].end)))
+          .attr('height', bandwidth)
+          .style('fill', 'transparent')
+          .html((d, i) => (i === 0
+            ? `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`
+            : `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`));
       });
     },
   },
