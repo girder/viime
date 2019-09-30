@@ -32,6 +32,10 @@ function aggregate(arr, is, js) {
 
 const DENDOGRAM_RATIO = 0.2;
 
+const MDI_PLUS_CIRCLE = '&#xF417;';
+const MDI_MINUS_CIRCLE = '&#xF376;';
+
+
 export default {
   directives: {
     resize,
@@ -143,11 +147,13 @@ export default {
         .count()
         .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
 
-      return cluster().size([layoutWidth * (1 - DENDOGRAM_RATIO) - this.padding2,
+      const l = cluster().size([layoutWidth * (1 - DENDOGRAM_RATIO) - this.padding2,
         layoutHeight * DENDOGRAM_RATIO - this.padding2])
-        .separation(() => 1)(root);
+        .separation(() => 1);
+
+      return l(root);
     },
-    updateTree(ref, root, wrapper) {
+    updateTree(ref, root, wrapper, horizontalLayout) {
       if (!ref) {
         return;
       }
@@ -166,17 +172,24 @@ export default {
 
       edges.classed('selected', d => d.target.data.indices.some(l => hovered.has(l)));
 
-      edges.transition('move').duration(this.duration).attr('d', d => `
+      const renderVerticalLinks = d => `
         M${d.target.x},${d.target.y + (d.target.children ? 0 : padding)}
         L${d.target.x},${d.source.y}
         L${d.source.x},${d.source.y}
-      `).transition('fadeIn')
+      `;
+      const renderHorizontalLinks = d => `
+        M${d.target.x + (d.target.children ? 0 : padding)},${d.target.y}
+        L${d.source.x},${d.target.y}
+        L${d.source.x},${d.source.y}
+      `;
+
+      edges.transition('move').duration(this.duration).attr('d', horizontalLayout ? renderVerticalLinks : renderHorizontalLinks).transition('fadeIn')
         .style('opacity', 1);
 
       const innerNodes = root.descendants().filter(d => d.data.indices.length > 1);
-      const inner = svg.select('g.nodes').selectAll('g').data(innerNodes, d => d.data.name).join((enter) => {
-        const r = enter.append('g').html(`<circle r="${padding}"></circle><text>+</text><title></title>`)
-          .attr('transform', d => `translate(${d.x},${d.y})`).style('opacity', 0);
+      const inner = svg.select('g.nodes').selectAll('text').data(innerNodes, d => d.data.name).join((enter) => {
+        const r = enter.append('text')
+          .attr('transform', d => `translate(${d.x},${d.y})`);
         r.on('click', (d) => {
           if (wrapper.collapsed.has(d.data)) {
             wrapper.collapsed.delete(d.data);
@@ -192,20 +205,17 @@ export default {
         return r;
       });
 
-      inner.select('text').text(d => (collapsed.has(d.data) ? '-' : '+'));
-      inner.select('title').text(d => d.data.name);
+      inner.html(d => (collapsed.has(d.data) ? MDI_MINUS_CIRCLE : MDI_PLUS_CIRCLE));
       inner.classed('collapsed', d => collapsed.has(d.data));
 
       inner.transition('move').duration(this.duration)
-        .attr('transform', d => `translate(${d.x},${d.y})`)
-        .transition('fadeIn')
-        .style('opacity', 1);
+        .attr('transform', d => `translate(${d.x},${d.y})`);
     },
     updateColumn() {
-      this.updateTree(this.$refs.column, this.columnHierarchy, this.column);
+      this.updateTree(this.$refs.column, this.columnHierarchy, this.column, true);
     },
     updateRow() {
-      this.updateTree(this.$refs.row, this.rowHierarchy, this.row);
+      this.updateTree(this.$refs.row, this.rowHierarchy, this.row, false);
     },
     updateMatrix() {
       if (!this.$refs.matrix || !this.values) {
@@ -310,8 +320,8 @@ export default {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  right: 8px;
+  bottom: 8px;
   display: grid;
   grid-template-areas: "d column"
     "row matrix";
@@ -337,26 +347,25 @@ export default {
   stroke: orange;
 }
 
-.nodes >>> circle {
+.nodes >>> text {
+  opacity: 0;
+  font: normal normal normal 24px/1 "Material Design Icons";
   fill: black;
   cursor: pointer;
-}
-
-.nodes >>> circle:hover {
-  fill: orange;
-}
-
-.nodes >>> .collapsed > circle {
-  fill: steelblue;
-}
-
-.nodes >>> text {
-  user-select: none;
-  pointer-events: none;
-  fill: white;
   font-size: 150%;
+  user-select: none;
   text-anchor: middle;
   dominant-baseline: central;
 }
+
+.nodes >>> text:hover {
+  opacity: 1;
+  fill: orange;
+}
+
+.nodes >>> .collapsed {
+  opacity: 1;
+}
+
 
 </style>
