@@ -43,6 +43,8 @@ const SET_TRANSFORMATION = 'set_transformation';
 Vue.use(Vuex);
 
 const datasetDefaults = {
+  description: '',
+  created: new Date(),
   ready: false,
   validation: [],
   sourcerows: [],
@@ -56,6 +58,10 @@ const datasetDefaults = {
   transformation_argument: null,
   scaling: null,
   scaling_argument: null,
+  validatedMeasurements: null,
+  validatedGroups: null,
+  validatedMeasurementsMetaData: null,
+  validatedSampleMetaData: null,
 };
 
 const plotDefaults = {
