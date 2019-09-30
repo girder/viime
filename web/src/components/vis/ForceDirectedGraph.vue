@@ -3,8 +3,9 @@ import resize from 'vue-resize-directive';
 import {
   forceSimulation, forceManyBody, forceCollide, forceLink, forceCenter,
 } from 'd3-force';
-import { select } from 'd3-selection';
+import { select, event } from 'd3-selection';
 import { scalePow, scaleLinear } from 'd3-scale';
+import { zoom } from 'd3-zoom';
 
 
 function extent(arr) {
@@ -59,6 +60,7 @@ export default {
       width: 0,
       height: 0,
       simulation: this.initSimulation(),
+      zoom: zoom(),
       refsMounted: false, // to force an rendering after mounting
     };
   },
@@ -95,6 +97,16 @@ export default {
       this.simulation.stop();
       const svg = select(this.$refs.svg);
       svg.attr('width', this.width).attr('height', this.height);
+
+      function zoomed() {
+        const { transform } = event;
+        svg.select('g.zoom').attr('transform', transform);
+      }
+
+      svg.call(this.zoom
+        .extent([[0, 0], [this.width, this.height]])
+        .scaleExtent([1, 8])
+        .on('zoom', zoomed));
 
       // work on local copy since D3 manipulates the data structure
       const localNodes = this.nodes.map(d => Object.assign({}, d));
@@ -154,8 +166,9 @@ export default {
 .main(v-resize:throttle="onResize")
   svg.svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactivePlotUpdate")
-    g.edges(:class="{ hideLabels: !this.showLabels }")
-    g.nodes(:class="{ hideLabels: !this.showLabels }")
+    g.zoom
+      g.edges(:class="{ hideLabels: !this.showLabels }")
+      g.nodes(:class="{ hideLabels: !this.showLabels }")
 </template>
 
 <style scoped>
