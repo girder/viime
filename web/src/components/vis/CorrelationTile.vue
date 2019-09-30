@@ -73,7 +73,7 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     v-card.mx-3(flat)
       v-card-actions
         v-layout(column)
-          v-switch(v-model="showLabels", label="Node Labels")
+          v-switch(v-model="showLabels", label="Node Labels", hide-details)
           v-text-field(v-model="linkDistance", label="Link Distance",
               hide-details, min="0", step="10", type="number")
 
