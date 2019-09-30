@@ -187,8 +187,9 @@ export default {
         .style('opacity', 1);
 
       const innerNodes = root.descendants().filter(d => d.data.indices.length > 1);
-      const inner = svg.select('g.nodes').selectAll('text').data(innerNodes, d => d.data.name).join((enter) => {
-        const r = enter.append('text')
+      const inner = svg.select('g.nodes').selectAll('g').data(innerNodes, d => d.data.name).join((enter) => {
+        const r = enter.append('g')
+          .html(`<circle r="${padding}"></circle><text><text><title></title>`)
           .attr('transform', d => `translate(${d.x},${d.y})`);
         r.on('click', (d) => {
           if (wrapper.collapsed.has(d.data)) {
@@ -205,7 +206,8 @@ export default {
         return r;
       });
 
-      inner.html(d => (collapsed.has(d.data) ? MDI_MINUS_CIRCLE : MDI_PLUS_CIRCLE));
+      inner.select('text').html(d => (collapsed.has(d.data) ? MDI_MINUS_CIRCLE : MDI_PLUS_CIRCLE));
+      inner.select('title').text(d => d.data.name);
       inner.classed('collapsed', d => collapsed.has(d.data));
 
       inner.transition('move').duration(this.duration)
@@ -347,7 +349,7 @@ export default {
   stroke: orange;
 }
 
-.nodes >>> text {
+.nodes >>> g {
   opacity: 0;
   font: normal normal normal 24px/1 "Material Design Icons";
   fill: black;
@@ -358,8 +360,16 @@ export default {
   dominant-baseline: central;
 }
 
-.nodes >>> text:hover {
+.nodes >>> g > circle {
+  fill: white;
+}
+
+.nodes >>> g:hover {
   opacity: 1;
+  fill: orange;
+}
+
+.nodes >>> g:hover > text {
   fill: orange;
 }
 
