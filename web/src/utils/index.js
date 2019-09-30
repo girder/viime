@@ -38,8 +38,26 @@ function base26Converter(dec) {
 }
 
 function convertCsvToRows(csvstring) {
+  if (!csvstring) {
+    return { data: [] };
+  }
   const { data } = papa.parse(csvstring);
   return { data: data.slice(0, data.length - 1) };
+}
+
+function parsePandasDataFrame(toSplitDictResult, baseDataFrame) {
+  if (!toSplitDictResult) {
+    return {
+      columnNames: [],
+      rowNames: [],
+      data: [],
+    };
+  }
+  return {
+    columnNames: toSplitDictResult.columns || baseDataFrame.columnNames,
+    data: toSplitDictResult.data,
+    rowNames: toSplitDictResult.index || baseDataFrame.rowNames,
+  };
 }
 
 /**
@@ -89,6 +107,7 @@ function mapValidationErrors(errors, columns) {
 export {
   base26Converter,
   convertCsvToRows,
+  parsePandasDataFrame,
   mapValidationErrors,
   RangeList,
   SessionStore,
