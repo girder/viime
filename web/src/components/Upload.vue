@@ -35,6 +35,8 @@ export default {
       pendingFiles: [],
       dataTypes,
       sampleTypes,
+      snackbar: false,
+      snackbarContent: '',
     };
   },
   computed: {
@@ -82,6 +84,14 @@ export default {
       const filteredFiles = targetFiles.filter(
         f => isExcelFile(f) || isCSVFile(f) || isTextFile(f),
       );
+      const invalidFiles = targetFiles.filter(
+        f => !(isExcelFile(f) || isCSVFile(f) || isTextFile(f)),
+      );
+
+      if (invalidFiles.length > 0) {
+        this.snackbarContent = `invalid file extension for: ${invalidFiles.map(d => d.name).join(', ')}`;
+        this.snackbar = true;
+      }
 
       this.pendingFiles = this.pendingFiles.concat([...filteredFiles].map(file => ({
         file,
@@ -128,6 +138,10 @@ export default {
 
 <template lang="pug">
 v-layout.upload-component(column, fill-height)
+
+  v-snackbar(v-model="snackbar", top, color="error", :timeout="5000")
+    | {{snackbarContent}}
+    v-btn(dark, flat, @click="snackbar = false") Close
 
   v-dialog(v-model="deleteDialog", persistent, width="600")
     v-card
