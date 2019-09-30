@@ -712,6 +712,78 @@ class ValidatedMetaboliteTable(db.Model):
         table = scale(self.scaling, table)
         return table
 
+    @property
+    def table(self):
+        """
+        mimics the .table from the CSVFile but with validated data
+        """
+        return _generate_validated_table(self)
+
+
+def _generate_validated_table(valdidated_table):
+    base = CSVFile.query.get_or_404(valdidated_table.csv_file_id)
+
+    measurements = valdidated_table.measurements
+    mm = valdidated_table.measurement_metadata
+    sm = valdidated_table.sample_metadata
+    groups = valdidated_table.groups
+    sample_header = pandas.DataFrame(list(measurements), index=list(measurements),
+                                     columns=['Header']).T
+    measurement_header = pandas.DataFrame(measurements.index, index=measurements.index,
+                                          columns=['Header'])
+
+    # inject rows
+
+    measurements_i = 0
+    sm_i = 0
+    sample_header_i = 0
+
+    rows = []
+    for row in base.rows:
+        if row.row_type == TABLE_ROW_TYPES.INDEX and sample_header_i < sample_header.shape[0]:
+            rows.append(sample_header.iloc[sample_header_i, :])
+            sample_header_i += 1
+        elif row.row_type == TABLE_ROW_TYPES.METADATA and sm_i < sm.shape[0]:
+            rows.append(sm.iloc[sm_i, :])
+            sm_i += 1
+        elif row.row_type == TABLE_ROW_TYPES.DATA and measurements_i < measurements.shape[0]:
+            rows.append(measurements.iloc[measurements_i, :])
+            measurements_i += 1
+        else:  # masked
+            rows.append([])
+
+    table = pandas.DataFrame(rows)
+
+    # inject columns
+    columns = []
+    table_j = 0
+    mm_j = 0
+    measurement_header_j = 0
+    groups_j = 0
+
+    for column in base.columns:
+        if column.column_type == TABLE_COLUMN_TYPES.INDEX \
+           and measurement_header_j < measurement_header.shape[1]:
+            columns.append(measurement_header.iloc[:, measurement_header_j])
+            measurement_header_j += 1
+        elif column.column_type == TABLE_COLUMN_TYPES.METADATA and mm_j < mm.shape[1]:
+            columns.append(mm.iloc[:, mm_j])
+            mm_j += 1
+        elif column.column_type == TABLE_COLUMN_TYPES.DATA and table_j < table.shape[1]:
+            columns.append(table.iloc[:, table_j])
+            table_j += 1
+        elif column.column_type == TABLE_COLUMN_TYPES.GROUP and groups_j < groups.shape[1]:
+            columns.append(groups.iloc[:, groups_j])
+            groups_j += 1
+        else:  # masked
+            columns.append(pandas.DataFrame([[None] for _ in range(table.shape[0])]))
+
+    # enforce the index
+    table = pandas.DataFrame(index=table.index)
+    table = table.join(columns)
+
+    return table
+
 
 class ValidatedMetaboliteTableSchema(BaseSchema):
     id = fields.UUID(missing=uuid4)

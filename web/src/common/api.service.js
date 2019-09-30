@@ -69,6 +69,14 @@ export const CSVService = {
     return ApiService.download('csv', slug);
   },
 
+  downloadUrl(slug) {
+    return ApiService.buildUrl(`csv/${slug}/download`);
+  },
+
+  validatedDownloadUrl(slug) {
+    return ApiService.buildUrl(`csv/${slug}/validate/download`);
+  },
+
   setName(slug, name) {
     return ApiService.put(`csv/${slug}/name`, { name });
   },
