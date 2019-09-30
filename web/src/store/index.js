@@ -58,6 +58,9 @@ const datasetDefaults = {
   transformation_argument: null,
   scaling: null,
   scaling_argument: null,
+
+  measurement_table: null,
+
   validatedMeasurements: null,
   validatedGroups: null,
   validatedMeasurementsMetaData: null,
@@ -151,6 +154,7 @@ const mutations = {
       id, name, size, created, description,
     } = data;
     const { data: sourcerows } = convertCsvToRows(data.table);
+    const measurement_table = parsePandasDataFrame(data.measurement_table);
     const oldData = state.datasets[id];
     Vue.set(state.datasets, id, {
       ...oldData,
@@ -170,6 +174,15 @@ const mutations = {
         normalization_argument: data.normalization_argument,
         transformation: data.transformation,
         scaling: data.scaling,
+
+        // imputed measurements
+        measurement_table,
+
+        // reset
+        validatedMeasurements: null,
+        validatedGroups: null,
+        validatedMeasurementsMetaData: null,
+        validatedSampleMetaData: null,
       },
     });
   },
@@ -177,11 +190,13 @@ const mutations = {
    * @private
    */
   [SET_VALIDATED_DATASET_DATA](state, { data }) {
-    const validatedMeasurements = parsePandasDataFrame(data.measurements);
-    const validatedGroups = parsePandasDataFrame(data.groups);
-    const validatedMeasurementsMetaData = parsePandasDataFrame(data.measurement_metadata);
-    const validatedSampleMetaData = parsePandasDataFrame(data.sample_metadata);
     const ds = state.datasets[data.csv_file_id];
+    // the imputed table index are column can be used for all the other ones
+    const base = ds.measurement_table;
+    const validatedMeasurements = parsePandasDataFrame(data.measurements, base);
+    const validatedGroups = parsePandasDataFrame(data.groups, base);
+    const validatedMeasurementsMetaData = parsePandasDataFrame(data.measurement_metadata, base);
+    const validatedSampleMetaData = parsePandasDataFrame(data.sample_metadata, base);
 
     const delta = {
       validatedMeasurements,
