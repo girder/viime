@@ -58,6 +58,9 @@ const datasetDefaults = {
   transformation_argument: null,
   scaling: null,
   scaling_argument: null,
+
+  measurement_table: null,
+
   validatedMeasurements: null,
   validatedGroups: null,
   validatedMeasurementsMetaData: null,
