@@ -12,16 +12,6 @@ export default {
   mixins: [plotData('pca')],
 
   props: {
-    width: {
-      required: true,
-      type: Number,
-      validator: Number.isInteger,
-    },
-    height: {
-      required: true,
-      type: Number,
-      validator: Number.isInteger,
-    },
     id: {
       type: String,
       required: true,
@@ -71,19 +61,16 @@ export default {
 
 <template lang="pug">
 vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading")
-  template(#default="wrapper")
-    score-plot(
-        v-if="plot && dataset.ready",
-        :width="width * wrapper.scale",
-        :height="height * wrapper.scale",
-        :pc-coords="pcCoords",
-        :row-labels="rowLabels",
-        :group-labels="groupLabels",
-        :eigenvalues="eigenvalues",
-        :columns="columns",
-        :pc-x="pcX",
-        :pc-y="pcY",
-        :show-ellipses="showEllipses")
+  score-plot(
+      v-if="plot && dataset.ready",
+      :pc-coords="pcCoords",
+      :row-labels="rowLabels",
+      :group-labels="groupLabels",
+      :eigenvalues="eigenvalues",
+      :columns="columns",
+      :pc-x="pcX",
+      :pc-y="pcY",
+      :show-ellipses="showEllipses")
   template(v-slot:controls)
     v-menu(bottom, offset-y, left, :min-width="150", :close-on-content-click="false")
       template(v-slot:activator="{ on }")

@@ -12,14 +12,6 @@ export default {
   mixins: [plotData('pca')],
 
   props: {
-    width: {
-      required: true,
-      type: Number,
-    },
-    height: {
-      required: true,
-      type: Number,
-    },
     id: {
       required: true,
       type: String,
@@ -43,13 +35,10 @@ export default {
 
 <template lang="pug">
 vis-tile(v-if="plot", title="PCA Scree Plot", :loading="plot.loading")
-  template(#default="wrapper")
-    scree-plot(
-        :width="width * wrapper.scale",
-        :height="height * wrapper.scale",
-        :eigenvalues="getPlotDataProperty('sdev')",
-        :num-components="numComponents",
-        :show-cutoffs="showCutoffs")
+  scree-plot(
+      :eigenvalues="getPlotDataProperty('sdev')",
+      :num-components="numComponents",
+      :show-cutoffs="showCutoffs")
   template(v-slot:controls)
     v-menu(bottom, offset-y, left, :min-width="150", :close-on-content-click="false")
       template(v-slot:activator="{ on }")

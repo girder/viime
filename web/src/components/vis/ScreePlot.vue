@@ -1,6 +1,7 @@
 <template lang="pug">
-div
-  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
+.main(v-resize:throttle="onResize")
+  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
+      :data-update="reactiveUpdate")
     g.master
       g.axes
       g.label.x
@@ -15,7 +16,6 @@ div
           line.cutoff.cutoff80
           line.cutoff.cutoff90
   .tooltip(ref="tooltip")
-  span(style="display: none") {{ update }}
 </template>
 
 <style scoped>
@@ -66,14 +66,6 @@ export default {
   ],
 
   props: {
-    width: {
-      type: Number,
-      default: 400,
-    },
-    height: {
-      type: Number,
-      default: 300,
-    },
     eigenvalues: {
       required: true,
       validator: prop => !prop || prop.every(v => Number.isFinite(v) && v > 0.0),
@@ -166,6 +158,8 @@ export default {
       return result;
     },
 
+  },
+  methods: {
     update() {
       const {
         eigenvaluesInternal,
@@ -179,13 +173,13 @@ export default {
       } = this;
 
       if (this.eigenvaluesInternal.length === 0) {
-        return '';
+        return;
       }
 
       const radius = 4;
 
       if (!this.$refs.svg) {
-        return '';
+        return;
       }
 
       const svg = select(this.$refs.svg);
@@ -311,13 +305,7 @@ export default {
       drawCutoff('50', cutoffs[0]);
       drawCutoff('80', cutoffs[1]);
       drawCutoff('90', cutoffs[2]);
-
-      return '';
     },
-  },
-
-  mounted() {
-    this.$forceUpdate();
   },
 };
 </script>
