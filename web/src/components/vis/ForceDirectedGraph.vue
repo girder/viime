@@ -43,7 +43,12 @@ export default {
       type: Number,
       required: true,
     },
-    showLabels: {
+    showNodeLabels: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    showEdgeLabels: {
       type: Boolean,
       default: false,
       required: false,
@@ -154,8 +159,8 @@ export default {
 .main(v-resize:throttle="onResize")
   svg.svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactivePlotUpdate")
-    g.edges(:class="{ hideLabels: !this.showLabels }")
-    g.nodes(:class="{ hideLabels: !this.showLabels }")
+    g.edges(:class="{ hideLabels: !this.showEdgeLabels }")
+    g.nodes(:class="{ hideLabels: !this.showNodeLabels }")
 </template>
 
 <style scoped>
