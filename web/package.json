@@ -16,6 +16,7 @@
     "@sentry/integrations": "^5.0.7",
     "axios": "^0.18.0",
     "d3-axis": "^1.0.12",
+    "d3-boxplot": "^0.7.5",
     "d3-force": "^2.0.1",
     "d3-format": "^1.3.2",
     "d3-scale": "^2.2.2",

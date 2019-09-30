@@ -3116,6 +3116,11 @@ cyclist@~0.2.2:
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/cyclist/-/cyclist-0.2.2.tgz#1b33792e11e914a2fd6d6ed6447464444e5fa640"
 
+d3-array@2:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/d3-array/-/d3-array-2.3.1.tgz#145cb03967578e675db8c62e41f3c406fa7acc73"
+  integrity sha512-YlOh8kwqIz0pDECEdCeqVNelaLQXznD0g6yidhhklMgKxKqbNDrYfoudLMkk9THlqvFll+pXMmXYAyN49yWsmg==
+
 d3-array@^1.2.0:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/d3-array/-/d3-array-1.2.4.tgz#635ce4d5eea759f6f605863dbcfc30edc737f71f"
@@ -3123,6 +3128,14 @@ d3-array@^1.2.0:
 d3-axis@^1.0.12:
   version "1.0.12"
   resolved "https://registry.yarnpkg.com/d3-axis/-/d3-axis-1.0.12.tgz#cdf20ba210cfbb43795af33756886fb3638daac9"
+
+d3-boxplot@^0.7.5:
+  version "0.7.5"
+  resolved "https://registry.yarnpkg.com/d3-boxplot/-/d3-boxplot-0.7.5.tgz#1d7a4ea702965e27ea1c27cea7e152f38c77566d"
+  integrity sha512-bH/L9oMU6YJYAS99ZYtVOLZOW7aYTor+3G7apW2MN4QaOaX0Cm+K6Jj1OybB+O5NHeNo3kctCapBwEitD8NOIg==
+  dependencies:
+    d3-array "2"
+    d3-scale "2"
 
 d3-collection@1:
   version "1.0.7"
@@ -3176,7 +3189,7 @@ d3-scale-chromatic@^1.3.3:
     d3-color "1"
     d3-interpolate "1"
 
-d3-scale@^2.2.2:
+d3-scale@2, d3-scale@^2.2.2:
   version "2.2.2"
   resolved "https://registry.yarnpkg.com/d3-scale/-/d3-scale-2.2.2.tgz#4e880e0b2745acaaddd3ede26a9e908a9e17b81f"
   dependencies:
