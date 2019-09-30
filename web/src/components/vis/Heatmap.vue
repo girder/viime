@@ -147,8 +147,9 @@ export default {
         .count()
         .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
 
-      const l = cluster().size([layoutWidth * (1 - DENDOGRAM_RATIO) - this.padding2,
-        layoutHeight * DENDOGRAM_RATIO - this.padding2])
+      const l = cluster()
+        .size([layoutWidth * (1 - DENDOGRAM_RATIO),
+          layoutHeight * DENDOGRAM_RATIO - this.padding2])
         .separation(() => 1);
 
       return l(root);
@@ -304,13 +305,13 @@ export default {
   svg.column(ref="column", :width="width * (1 - DENDOGRAM_RATIO)",
       :height="height * DENDOGRAM_RATIO", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveColumnUpdate")
-    g.edges(:transform="`translate(${padding},${padding})`")
-    g.nodes(:transform="`translate(${padding},${padding})`")
+    g.edges(:transform="`translate(0,${padding})`")
+    g.nodes(:transform="`translate(0,${padding})`")
   svg.row(ref="row", :width="width * DENDOGRAM_RATIO",
       :height="height * (1 - DENDOGRAM_RATIO)", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveRowUpdate")
-    g.edges(:transform="`translate(${padding},${padding})`")
-    g.nodes(:transform="`translate(${padding},${padding})`")
+    g.edges(:transform="`translate(${padding},0)`")
+    g.nodes(:transform="`translate(${padding},0)`")
   canvas.matrix(ref="matrix", :width="width * (1 - DENDOGRAM_RATIO)",
       :height="height * (1 - DENDOGRAM_RATIO)",
       :data-update="reactiveMatrixUpdate",
