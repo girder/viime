@@ -160,6 +160,7 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
   text-overflow: ellipsis;
 }
 
+
 .column-header-cell {
   text-align: center;
   background-color: $background;
@@ -274,6 +275,10 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
   @include selectionAware(var(--v-secondary-lighten2));
   font-weight: 300;
   color: var(--v-secondary-base);
+}
+// column, row
+.type-sample {
+  text-align: right;
 }
 
 </style>
