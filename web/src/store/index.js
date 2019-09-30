@@ -79,13 +79,6 @@ const plotDefaults = {
     args: {},
     type: plot_types.TRANSFORM,
   },
-  boxplot: {
-    data: null,
-    valid: false,
-    loading: false,
-    args: {},
-    type: plot_types.CLIENT_ONLY,
-  },
 };
 
 analyses.forEach(({
@@ -370,9 +363,6 @@ const actions = {
               break;
             case plot_types.ANALYSIS:
               ({ data: d } = await CSVService.getAnalysis(dataset_id, name, args));
-              break;
-            case plot_types.CLIENT_ONLY:
-              d = {}; // dummy data since locally computed
               break;
             default:
               throw new Error('Plot type unknown:', plotType);

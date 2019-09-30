@@ -165,7 +165,6 @@ const validationMeta = {
 const plot_types = {
   TRANSFORM: 'transform',
   ANALYSIS: 'analysis',
-  CLIENT_ONLY: 'clientOnly',
 };
 
 export {
