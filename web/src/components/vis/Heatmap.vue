@@ -31,6 +31,7 @@ function aggregate(arr, is, js) {
 }
 
 const DENDOGRAM_RATIO = 0.2;
+const LABEL_WIDTH = 150;
 
 const MDI_PLUS_CIRCLE = '&#xF417;';
 const MDI_MINUS_CIRCLE = '&#xF376;';
@@ -70,6 +71,7 @@ export default {
         collapsed: new Set(),
       },
       DENDOGRAM_RATIO,
+      LABEL_WIDTH,
     };
   },
   computed: {
@@ -95,6 +97,20 @@ export default {
         return '';
       }
       this.updateMatrix();
+      return '';
+    },
+    reactiveRowLabelUpdate() {
+      if (!this.refsMounted) {
+        return '';
+      }
+      this.updateRowLabel();
+      return '';
+    },
+    reactiveColumnLabelUpdate() {
+      if (!this.refsMounted) {
+        return '';
+      }
+      this.updateColumnLabel();
       return '';
     },
 
@@ -148,7 +164,7 @@ export default {
         .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
 
       const l = cluster()
-        .size([layoutWidth * (1 - DENDOGRAM_RATIO),
+        .size([layoutWidth * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH,
           layoutHeight * DENDOGRAM_RATIO - this.padding2])
         .separation(() => 1);
 
@@ -219,6 +235,37 @@ export default {
     },
     updateRow() {
       this.updateTree(this.$refs.row, this.rowHierarchy, this.row, false);
+    },
+    updateLabel(ref, wrapper, labels, horizontalLayout) {
+      if (!ref) {
+        return;
+      }
+      const svg = select(ref);
+      const text = svg.selectAll('text').data(labels, d => d.data.name).join((enter) => {
+        const r = enter.append('text')
+          .attr('transform', d => (horizontalLayout ? `translate(${d.x},0)rotate(-90)` : `translate(0,${d.y})`))
+          .style('opacity', 0);
+        return r;
+      });
+      const { hovered } = wrapper;
+
+      let bandwidth = 10;
+      if (labels.length >= 2) {
+        bandwidth = (horizontalLayout ? (labels[1].x - labels[0].x) : (labels[1].y - labels[0].y));
+      }
+      svg.style('font-size', `${bandwidth < 5 ? bandwidth : bandwidth - 2}px`);
+
+      text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
+      text.text(d => d.data.name);
+      text.transition('move').duration(this.duration)
+        .attr('transform', d => (horizontalLayout ? `translate(${d.x},0)rotate(-90)` : `translate(0,${d.y})`)).transition('fadeIn')
+        .style('opacity', 1);
+    },
+    updateColumnLabel() {
+      this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves, true);
+    },
+    updateRowLabel() {
+      this.updateLabel(this.$refs.rowlabel, this.row, this.rowLeaves, false);
     },
     updateMatrix() {
       if (!this.$refs.matrix || !this.values) {
@@ -302,20 +349,26 @@ export default {
 
 <template lang="pug">
 .grid(v-resize:throttle="onResize")
-  svg.column(ref="column", :width="width * (1 - DENDOGRAM_RATIO)",
+  svg.column(ref="column", :width="width * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH",
       :height="height * DENDOGRAM_RATIO", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveColumnUpdate")
     g.edges(:transform="`translate(0,${padding})`")
     g.nodes(:transform="`translate(0,${padding})`")
   svg.row(ref="row", :width="width * DENDOGRAM_RATIO",
-      :height="height * (1 - DENDOGRAM_RATIO)", xmlns="http://www.w3.org/2000/svg",
+      :height="height * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveRowUpdate")
     g.edges(:transform="`translate(${padding},0)`")
     g.nodes(:transform="`translate(${padding},0)`")
-  canvas.matrix(ref="matrix", :width="width * (1 - DENDOGRAM_RATIO)",
-      :height="height * (1 - DENDOGRAM_RATIO)",
+  canvas.matrix(ref="matrix", :width="width * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH",
+      :height="height * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH",
       :data-update="reactiveMatrixUpdate",
       @mousemove="canvasMouseMove($event)", @mouseleave="canvasMouseLeave()")
+  svg.collabel(ref="collabel", :width="width * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH",
+      :height="LABEL_WIDTH", xmlns="http://www.w3.org/2000/svg",
+      :data-update="reactiveColumnLabelUpdate")
+  svg.rowlabel(ref="rowlabel", :width="LABEL_WIDTH",
+      :height="height * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH",
+      :data-update="reactiveRowLabelUpdate")
 </template>
 
 <style scoped>
@@ -326,8 +379,9 @@ export default {
   right: 8px;
   bottom: 8px;
   display: grid;
-  grid-template-areas: "d column"
-    "row matrix";
+  grid-template-areas: "d column dl"
+    "row matrix rlabel"
+    "rc clabel ll";
 }
 
 .column {
@@ -338,6 +392,28 @@ export default {
 }
 .matrix {
   grid-area: matrix;
+}
+.collabel {
+  grid-area: clabel;
+}
+
+.collabel >>> text {
+  dominant-baseline: central;
+  text-anchor: end;
+}
+
+.rowlabel {
+  grid-area: rlabel;
+}
+
+.rowlabel >>> text {
+  dominant-baseline: central;
+}
+
+.rowlabel >>> text.selected,
+.collabel >>> text.selected {
+  font-size: 150%;
+  fill: orange;
 }
 
 .edges >>> path {
