@@ -1,3 +1,6 @@
+const measurementColumnName = 'Metabolite';
+const measurementValueName = 'Measurement';
+
 const rowMenuOptions = [
   {
     value: 'header',
@@ -162,7 +165,6 @@ const validationMeta = {
 const plot_types = {
   TRANSFORM: 'transform',
   ANALYSIS: 'analysis',
-  CLIENT_ONLY: 'clientOnly',
 };
 
 export {
@@ -186,4 +188,7 @@ export {
   validationMeta,
 
   plot_types,
+
+  measurementColumnName,
+  measurementValueName,
 };

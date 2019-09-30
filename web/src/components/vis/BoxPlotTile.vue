@@ -1,15 +1,12 @@
 <script>
 import BoxplotPlot from './BoxPlot.vue';
 import VisTile from './VisTile.vue';
-import plotData from './mixins/plotData';
 
 export default {
   components: {
     BoxplotPlot,
     VisTile,
   },
-
-  mixins: [plotData('boxplot')],
 
   props: {
     width: {
@@ -28,12 +25,9 @@ export default {
     },
   },
 
-  data() {
-    return {
-    };
-  },
-
   computed: {
+    dataset() { return this.$store.getters.dataset(this.id); },
+
     chartData() {
       const df = this.dataset.validatedMeasurements;
       if (!df) {
@@ -50,10 +44,10 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(v-if="plot", title="Boxplot Plot", :loading="plot.loading")
+vis-tile(title="Boxplot Plot", :loading="false")
   template(#default="wrapper")
     boxplot-plot(
-        v-if="plot && dataset.ready",
+        v-if="dataset.ready",
         :width="width * wrapper.scale",
         :height="height * wrapper.scale",
         :rows="chartData")
