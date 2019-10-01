@@ -770,6 +770,11 @@
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.3.tgz#2b5a3ab3f918cca48a8c754c08168e3f03eba61b"
 
+"@openfonts/barlow-condensed_all@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@openfonts/barlow-condensed_all/-/barlow-condensed_all-0.1.1.tgz#e31e86274da623d3e80b686eb768e28a7bc9e1a1"
+  integrity sha512-7Ojnu2xVMN8tjI2wwEVuG4xs7x8qmWmBgMk8OeU9JxLgz+rxR7TaiVuuCtmWIwZzBUvGUhkFmve6S4PEC6ThZg==
+
 "@sentry/browser@^5.0.7":
   version "5.0.7"
   resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-5.0.7.tgz#50932313e5949d086c5537663390fe7d84588edd"

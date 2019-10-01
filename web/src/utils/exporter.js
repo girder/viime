@@ -1,3 +1,6 @@
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import font from '!url-loader?limit=undefined!@openfonts/barlow-condensed_all/files/barlow-condensed-all-400.woff2';
+
 
 export function svg2png(svgElement, options = {}) {
   const findStyles = options.styles !== false;
@@ -10,7 +13,17 @@ export function svg2png(svgElement, options = {}) {
   // inject font
   copy.style.fontFamily = 'Barlow Condensed, sans-serif';
   copy.insertAdjacentHTML('afterbegin', `<style>
-  @import url("https://fonts.googleapis.com/css?family=Barlow+Condensed");
+    /* barlow-condensed-400normal - all */
+    @font-face {
+      font-family: 'Barlow Condensed';
+      font-style: normal;
+      font-display: swap;
+      font-weight: 400;
+      src:
+        local('Barlow Condensed Regular'),
+        local('BarlowCondensed-Regular'),
+        url('${font}') format('woff2')
+    }
   </style>`);
 
   // find related style sheets
