@@ -269,6 +269,8 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
   @include selectionAware(var(--v-accent-lighten1));
   color: white;
   font-weight: 700;
+  position: sticky;
+  top: 25px;
 }
 // column, row
 .type-masked {
