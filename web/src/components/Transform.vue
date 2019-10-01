@@ -9,6 +9,7 @@ import {
 import ScorePlotTile from '@/components/vis/ScorePlotTile.vue';
 import ScreePlotTile from '@/components/vis/ScreePlotTile.vue';
 import LoadingsPlotTile from '@/components/vis/LoadingsPlotTile.vue';
+import BoxPlotTile from '@/components/vis/BoxPlotTile.vue';
 import LayoutGrid from './LayoutGrid.vue';
 
 export default {
@@ -16,6 +17,7 @@ export default {
     LoadingsPlotTile,
     ScorePlotTile,
     ScreePlotTile,
+    BoxPlotTile,
     LayoutGrid,
   },
   props: {
@@ -33,6 +35,7 @@ export default {
         score: true,
         scree: true,
         loadings: true,
+        boxplot: true,
       },
       cellSize: 300,
       // size of the header since the vis tiles
@@ -131,6 +134,7 @@ v-layout.transform-component(row, fill-height)
           v-checkbox.my-0(v-model="visiblePlots.score", label="PCA Score Plot", hide-details)
           v-checkbox.my-0(v-model="visiblePlots.loadings", label="PCA Loadings Plot", hide-details)
           v-checkbox.my-0(v-model="visiblePlots.scree", label="PCA Scree Plot", hide-details)
+          v-checkbox.my-0(v-model="visiblePlots.boxplot", label="Boxplot Plot", hide-details)
 
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
@@ -151,6 +155,11 @@ v-layout.transform-component(row, fill-height)
             :id="id")
         scree-plot-tile(
             v-show="visiblePlots.scree",
+            :width="plotWidth",
+            :height="plotHeight",
+            :id="id")
+        box-plot-tile(
+            v-show="visiblePlots.boxplot",
             :width="plotWidth",
             :height="plotHeight",
             :id="id")
