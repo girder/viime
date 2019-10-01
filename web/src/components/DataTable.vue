@@ -1,158 +1,30 @@
 <template lang="pug">
-table.cleanup-table(v-data-table="bind", :key="id")
+.data-table
+  recycle-scroller.scroller(:items="columns", :item-size="80",
+      key-field="index", direction="horizontal")
+    template(#before)
+      .column-header
+        .column-header-cell
+        .row-header-cell(v-for="(r,i) in rowHeaders", :key="i",
+            :class="r.clazz", @click="onRowClick($event, i)")
+          | {{r.text}}
+    template(#default="{ item, index }")
+      .column(:class="item.clazz")
+        .column-header-cell(:class="item.header.clazz", @click="onColumnClick($event, index)")
+          | {{item.header.text}}
+        .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(i)") {{r}}
 </template>
 
 <script>
-import { base26Converter } from '@/utils';
-import {
-  defaultRowOption,
-  defaultColOption,
-} from '@/utils/constants';
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
+import { RecycleScroller } from 'vue-virtual-scroller';
 
-function getIcon(iconType, icons) {
-  const el = document.createElement('i');
-  el.classList.add(...['v-icon', 'small', 'mdi', 'theme--light', icons[iconType]]);
-  el.style.fontSize = '16px';
-  return el;
-}
-
-function updateTable(el, binding) {
-  const {
-    dataset, activeClasses, icons,
-  } = binding.value;
-  const colgroup = el.getElementsByTagName('colgroup')[0];
-  const body = el.getElementsByTagName('tbody')[0];
-  const headrow = el.getElementsByTagName('thead')[0].children[0];
-  const columns = colgroup.children;
-  const rows = body.children;
-  for (let index = 0; index < columns.length - 1; index += 1) {
-    const col = columns[index + 1]; // Account for 0th being empty
-    col.classList.remove(
-      'first',
-      'last',
-      'active',
-      'key',
-      'group',
-      'metadata',
-      'masked',
-      'measurement',
-    );
-    col.classList.add(...activeClasses(index, 'column'));
-    const colType = dataset.column.labels[index];
-    col.classList.add(colType);
-
-    const colHeader = headrow.children[index + 1];
-    colHeader.removeChild(colHeader.firstChild);
-    if (colType !== defaultColOption) {
-      colHeader.appendChild(getIcon(colType, icons));
-    } else {
-      colHeader.innerText = base26Converter(index + 1);
-    }
-  }
-
-  for (let index = 0; index < rows.length; index += 1) {
-    const row = rows[index];
-    row.classList.remove(
-      'first',
-      'last',
-      'active',
-      'header',
-      'metadata',
-      'masked',
-      'sample',
-    );
-    row.classList.add(...activeClasses(index, 'row'));
-    const rowType = dataset.row.labels[index];
-    row.classList.add(rowType);
-
-    const rowHeader = row.children[0];
-    rowHeader.removeChild(rowHeader.firstChild);
-    if (rowType !== defaultRowOption) {
-      rowHeader.appendChild(getIcon(rowType, icons));
-    } else {
-      rowHeader.innerText = index + 1;
-    }
-  }
-}
-
-function renderTable(el, binding) {
-  while (el.firstChild) {
-    el.removeChild(el.firstChild);
-  }
-  const {
-    dataset, id, activeClasses, setSelection, icons,
-  } = binding.value;
-  const thead = document.createElement('thead');
-  const colgroup = document.createElement('colgroup');
-  const tr0 = document.createElement('tr');
-  const th0 = document.createElement('th');
-  const col0 = document.createElement('col');
-  tr0.appendChild(th0);
-  colgroup.appendChild(col0);
-
-  dataset.column.labels.forEach((col, index) => {
-    const coln = document.createElement('col');
-    const thn = document.createElement('th');
-    const span = document.createElement('span');
-    const colType = dataset.column.labels[index];
-    thn.onclick = (event) => {
-      setSelection({
-        key: id, event, axis: 'column', idx: index,
-      });
-    };
-    if (colType !== defaultColOption) {
-      span.appendChild(getIcon(colType, icons));
-    } else {
-      span.innerText = base26Converter(index + 1);
-    }
-    thn.classList.add('control', 'px-2');
-    coln.classList.add(...activeClasses(index, 'column'));
-    coln.classList.add(colType);
-    thn.appendChild(span);
-    tr0.appendChild(thn);
-    colgroup.appendChild(coln);
-  });
-  thead.appendChild(tr0);
-
-  const tbody = document.createElement('tbody');
-  dataset.sourcerows.forEach((row, index) => {
-    const trn = document.createElement('tr');
-    const rowType = dataset.row.labels[index];
-    trn.classList.add(...['datarow'].concat(activeClasses(index, 'row')));
-    trn.classList.add(rowType);
-    tbody.appendChild(trn);
-    const td = document.createElement('td');
-    if (rowType !== defaultRowOption) {
-      td.appendChild(getIcon(rowType, icons));
-    } else {
-      td.innerText = index + 1;
-    }
-    td.classList.add('control');
-    td.onclick = (event) => {
-      setSelection({
-        key: id, event, axis: 'row', idx: index,
-      });
-    };
-    trn.appendChild(td);
-    row.forEach((col) => {
-      const tdn = document.createElement('td');
-      tdn.innerText = col;
-      trn.appendChild(tdn);
-      tdn.classList.add('row');
-    });
-  });
-
-  el.appendChild(colgroup);
-  el.appendChild(thead);
-  el.appendChild(tbody);
-}
+import { base26Converter } from '../utils';
+import { defaultRowOption, defaultColOption } from '../utils/constants';
 
 export default {
-  directives: {
-    dataTable: {
-      inserted: renderTable,
-      update: updateTable,
-    },
+  components: {
+    RecycleScroller,
   },
   props: {
     dataset: {
@@ -169,212 +41,257 @@ export default {
     },
   },
   computed: {
-    selectedRanges() {
-      return this.selected.ranges;
+    rowHeaders() {
+      return this.dataset.row.labels.map(
+        (rowType, i) => {
+          const header = this.createHeader(rowType, defaultRowOption, i + 1);
+          header.clazz.push(...this.getSelectionClasses('row', i));
+          return header;
+        },
+      );
     },
-    selectedType() {
-      return this.selected.type;
-    },
-    bind() {
-      const {
-        dataset, id, activeClasses, setSelection, selectedRanges,
-      } = this;
-      const { icons } = this.$vuetify;
-      return {
-        dataset, id, activeClasses, setSelection, selectedRanges, icons,
-      };
+    columns() {
+      const rows = this.dataset.sourcerows;
+      const f = v => (typeof v === 'number' ? v.toFixed(3) : v);
+
+      return this.dataset.column.labels.map((colType, i) => {
+        const column = {
+          index: i,
+          header: this.createHeader(colType, defaultColOption, base26Converter(i + 1)),
+          clazz: [`type-${colType}`],
+          values: rows.map(row => f(row[i])),
+        };
+        const selected = this.getSelectionClasses('column', i);
+        column.clazz.push(...selected);
+        column.header.clazz.push(...selected);
+        return column;
+      });
     },
   },
   methods: {
-    activeClasses(index, axisName) {
-      if (axisName === this.selected.type) {
-        const ranges = this.selectedRanges;
-        const includes = ranges.includes(index);
-        const classList = [];
-        if (includes.member) {
-          classList.push('active');
-        }
-        if (includes.first) {
-          classList.push('first');
-        }
-        if (includes.last) {
-          classList.push('last');
-        }
-        return classList;
+    createHeader(type, defaultType, text) {
+      const header = {
+        text,
+        clazz: [`type-${type}`],
+      };
+      if (type !== defaultType) {
+        // icon
+        header.text = '';
+        header.clazz.push('mdi', this.$vuetify.icons[type]);
       }
-      return [];
+      return header;
+    },
+    cellClasses(rowIndex) {
+      const rowType = this.dataset.row.labels[rowIndex];
+      return [`type-${rowType}`, ...this.getSelectionClasses('row', rowIndex)];
     },
     setSelection(selection) {
       this.$emit('setselection', selection);
+    },
+    getSelectionClasses(axis, index) {
+      if (this.selected.type !== axis) {
+        return [];
+      }
+      const includes = this.selected.ranges.includes(index);
+      const classList = [];
+      if (includes.member) {
+        classList.push('active');
+      }
+      if (includes.first) {
+        classList.push(`${axis}First`);
+      }
+      if (includes.last) {
+        classList.push(`${axis}Last`);
+      }
+      return classList;
+    },
+    onRowClick(event, rowIndex) {
+      this.setSelection({
+        key: this.id,
+        event,
+        axis: 'row',
+        idx: rowIndex,
+      });
+    },
+    onColumnClick(event, columnIndex) {
+      this.setSelection({
+        key: this.id,
+        event,
+        axis: 'column',
+        idx: columnIndex,
+      });
     },
   },
 };
 </script>
 
-<style lang="scss">
-@mixin masked() {
-  background-color: var(--v-secondary-lighten2);
+<style scoped lang="scss">
+$background: #fafafa;
+$selectionInner: rgba(161, 213, 255, 0.4);
+$selectionBorder: rgb(23, 147, 248);
+$selectionBorderWidth: 2px;
+$selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
+
+.data-table {
+  position: relative;
+  background-color: $background;
+  user-select: none !important;
+}
+
+.scroller {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+}
+
+.column {
+  width: 80px;
+}
+
+.row-header-cell,
+.column-header-cell,
+.cell {
+  height: 25px;
+  padding: 2px 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+.column-header-cell {
+  text-align: center;
+  background-color: $background;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.row-header-cell {
+  background-color: $background;
+  cursor: pointer;
+}
+
+// selection highlights
+.active {
+  background: linear-gradient(
+    0deg,
+    $selectionInner,
+    $selectionInner
+  );
+
+  &.columnFirst {
+    background: linear-gradient(
+      90deg,
+      $selectionBorder 0px,
+      $selectionInner $selectionBorderWidth
+    );
+  }
+
+  &.columnLast {
+    background: linear-gradient(
+      90deg,
+      $selectionInner 0px,
+      $selectionInner $selectionBorderWidth2,
+      $selectionBorder 100%
+    );
+  }
+
+  &.columnFirst.columnLast {
+    background: linear-gradient(
+      90deg,
+      $selectionBorder 0px,
+      $selectionInner $selectionBorderWidth,
+      $selectionInner $selectionBorderWidth2,
+      $selectionBorder 100%
+    );
+  }
+
+  &.rowFirst {
+    background: linear-gradient(
+      180deg,
+      $selectionBorder 0px,
+      $selectionInner $selectionBorderWidth
+    );
+  }
+
+  &.rowLast {
+    background: linear-gradient(
+      180deg,
+      $selectionInner 0px,
+      $selectionInner $selectionBorderWidth2,
+      $selectionBorder 100%
+    );
+  }
+
+  &.rowFirst.rowLast {
+    background: linear-gradient(
+      180deg,
+      $selectionBorder 0px,
+      $selectionInner $selectionBorderWidth,
+      $selectionInner $selectionBorderWidth2,
+      $selectionBorder 100%
+    );
+  }
+}
+
+@mixin selectionAware($color) {
+  background-color: $color;
+
+  &.active,
+  &.active.columnFirst,
+  &.active.columnLast,
+  &.active.columnFirst.columnLast,
+  &.active.rowFirst,
+  &.active.rowLast,
+  &.active.rowFirst.rowLast {
+    background-color: $color;
+  }
+}
+
+// column
+.type-key {
+  @include selectionAware(var(--v-primary-lighten3));
+}
+// column, row
+.type-metadata {
+  @include selectionAware(var(--v-accent2-lighten3));
+}
+// column
+.type-group {
+  @include selectionAware(var(--v-accent3-lighten3));
+}
+// row
+.type-header {
+  @include selectionAware(var(--v-accent-lighten1));
+  color: white;
+  font-weight: 700;
+}
+// column, row
+.type-masked {
+  @include selectionAware(var(--v-secondary-lighten2));
   font-weight: 300;
   color: var(--v-secondary-base);
 }
+// column, row
+.type-sample {
+  text-align: right;
+}
 
-.cleanup-table {
-  border-spacing: 0px;
-  user-select: none;
-  table-layout: fixed;
-  border-collapse: collapse;
-
-  .key,
-  .metadata,
-  .header,
-  .group {
-    color: white;
-    font-weight: 700;
-    text-align: left;
-  }
-
-  colgroup {
-    col {
-      &.active {
-        background: linear-gradient(
-          0deg,
-          rgba(161, 213, 255, 0.4),
-          rgba(161, 213, 255, 0.4)
-        );
-
-        &.first {
-          background: linear-gradient(
-            90deg,
-            rgb(23, 147, 248) 0px,
-            rgba(161, 213, 255, 0.4) 2px
-          );
-        }
-
-        &.last {
-          background: linear-gradient(
-            90deg,
-            rgba(161, 213, 255, 0.4) 0px,
-            rgba(161, 213, 255, 0.4) calc(100% - 2px),
-            rgb(23, 147, 248) 100%
-          );
-        }
-
-        &.first.last {
-          background: linear-gradient(
-            90deg,
-            rgb(23, 147, 248) 0px,
-            rgba(161, 213, 255, 0.4) 2px,
-            rgba(161, 213, 255, 0.4) calc(100% - 2px),
-            rgb(23, 147, 248) 100%
-          );
-        }
-      }
-
-      &.active.key,
-      &.key,
-      &.active.first.key,
-      &.active.last.key {
-        background-color: var(--v-primary-lighten3);
-      }
-
-      &.active.metadata,
-      &.metadata,
-      &.active.first.metadata,
-      &.active.last.metadata {
-        background-color: var(--v-accent2-lighten3);
-      }
-
-      &.active.group,
-      &.group,
-      &.active.first.group,
-      &.active.last.group {
-        background-color: var(--v-accent3-lighten3);
-      }
-
-      &.masked,
-      &.masked.active,
-      &.masked.active.first,
-      &.masked.active.last {
-        @include masked();
-      }
-    }
-  }
-
-  tr {
-    th,
-    td {
-      padding: 2px 7px;
-      white-space: nowrap;
-
-      &.control {
-        cursor: pointer;
-        font-weight: 300;
-      }
-    }
-
-    &.active {
-      &.metadata {
-        td {
-          box-shadow: inset 0 0 0 0.5px rgba(161, 213, 255, 0.15) !important;
-        }
-      }
-    }
-
-    &.active {
-      background: linear-gradient(
-        0deg,
-        rgba(161, 213, 255, 0.4),
-        rgba(161, 213, 255, 0.4)
-      );
-
-      &.first {
-        background: linear-gradient(
-          180deg,
-          rgb(23, 147, 248) 0px,
-          rgba(161, 213, 255, 0.4) 2px
-        );
-      }
-
-      &.last {
-        background: linear-gradient(
-          180deg,
-          rgba(161, 213, 255, 0.4) 0px,
-          rgba(161, 213, 255, 0.4) calc(100% - 2px),
-          rgb(23, 147, 248) 100%
-        );
-      }
-
-      &.first.last {
-        background: linear-gradient(
-          180deg,
-          rgb(23, 147, 248) 0px,
-          rgba(161, 213, 255, 0.4) 2px,
-          rgba(161, 213, 255, 0.4) calc(100% - 2px),
-          rgb(23, 147, 248) 100%
-        );
-      }
-    }
-  }
-
-  tr.datarow {
-    text-align: left;
-
-    &.header,
-    &.header.active {
-      background-color: var(--v-accent-lighten1);
-    }
-
-    &.metadata,
-    &.metadata.active {
-      background-color: var(--v-accent2-lighten2);
-    }
-  }
-
-  tr.datarow {
-    &.masked,
-    &.masked.active {
-      @include masked();
-    }
-  }
+</style>
+<style scoped>
+.scroller >>> .vue-recycle-scroller__slot {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+.scroller >>> .vue-recycle-scroller__item-wrapper {
+  overflow: unset;
+}
+.scroller >>> .vue-recycle-scroller__item-view {
+  overflow: unset;
 }
 </style>
