@@ -253,7 +253,7 @@ export default {
       if (labels.length >= 2) {
         bandwidth = (horizontalLayout ? (labels[1].x - labels[0].x) : (labels[1].y - labels[0].y));
       }
-      svg.style('font-size', `${bandwidth < 5 ? bandwidth : bandwidth - 2}px`);
+      svg.style('font-size', `${bandwidth < 5 ? bandwidth : Math.min(bandwidth - 2, 12)}px`);
 
       text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
       text.text(d => d.data.name);
