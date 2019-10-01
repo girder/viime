@@ -22,6 +22,23 @@ const dataTypes = [
   { name: 'Other', value: 'other' },
 ];
 
+const excelMimeTypes = [
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+];
+
+function isExcelFile(file) {
+  return excelMimeTypes.includes(file.type) || file.name.match(/\.xlsx$/i);
+}
+
+function isCSVFile(file) {
+  return file.type === 'text/csv' || file.name.match(/\.csv$/i);
+}
+
+function isTextFile(file) {
+  return file.type === 'text/plain' || file.name.match(/\.txt$/i);
+}
+
 export default {
   components: {
     FileList,
@@ -71,15 +88,6 @@ export default {
   },
   methods: {
     async onFileChange(targetFiles) {
-      const excelMimeTypes = [
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      ];
-
-      const isExcelFile = file => excelMimeTypes.includes(file.type) || file.name.match(/\.xlsx?$/i);
-      const isCSVFile = file => file.type === 'text/csv' || file.name.match(/\.csv$/i);
-      const isTextFile = file => file.type === 'text/plain' || file.name.match(/\.txt$/i);
-
       // filter to valid types only
       const filteredFiles = targetFiles.filter(
         f => isExcelFile(f) || isCSVFile(f) || isTextFile(f),
