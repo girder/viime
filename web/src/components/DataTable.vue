@@ -12,7 +12,8 @@
       .column(:class="item.clazz")
         .column-header-cell(:class="item.header.clazz", @click="onColumnClick($event, index)")
           | {{item.header.text}}
-        .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(i)") {{r}}
+        .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(i)",
+            @click="onCellClick($event, i, index)") {{r}}
 </template>
 
 <script>
@@ -120,6 +121,15 @@ export default {
         axis: 'column',
         idx: columnIndex,
       });
+    },
+    onCellClick(event, rowIndex, columnIndex) {
+      const columnType = this.dataset.column.labels[columnIndex];
+      const rowType = this.dataset.row.labels[rowIndex];
+      if (rowType === 'header') {
+        this.onColumnClick(event, columnIndex);
+      } else if (columnType === 'key') {
+        this.onRowClick(event, rowIndex);
+      }
     },
   },
 };
@@ -255,6 +265,7 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
 // column
 .type-key {
   @include selectionAware(var(--v-primary-lighten3));
+  cursor: pointer;
 }
 // column, row
 .type-metadata {
@@ -269,6 +280,9 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
   @include selectionAware(var(--v-accent-lighten1));
   color: white;
   font-weight: 700;
+  position: sticky;
+  top: 25px;
+  cursor: pointer;
 }
 // column, row
 .type-masked {
