@@ -282,8 +282,9 @@ def set_csv_file_description(csv_id, description):
 @csv_bp.route('/csv/<uuid:csv_id>/download', methods=['GET'])
 def download_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
+    name = PurePath(csv_file.name).with_suffix('csv').name
     fp = BytesIO(csv_file.table.to_csv(header=False, index=False).encode())
-    return send_file(fp, mimetype='text/csv', as_attachment=True, attachment_filename=csv_file.name)
+    return send_file(fp, mimetype='text/csv', as_attachment=True, attachment_filename=name)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>', methods=['DELETE'])
