@@ -8,6 +8,7 @@ import Transform from '../components/Transform.vue';
 import AnalyzeData from '../components/AnalyzeData.vue';
 import ProblemBar from '../components/ProblemBar.vue';
 import DataSource from '../components/DataSource.vue';
+import Impute from '../components/Impute.vue';
 import analyses from '../components/vis/analyses';
 
 Vue.use(Router);
@@ -35,6 +36,12 @@ export const routes = [
         path: '',
         name: 'Pretreat Data',
         component: DataSource,
+        props: true,
+      },
+      {
+        path: 'cleanup/impute',
+        name: 'Impute Table',
+        component: Impute,
         props: true,
       },
       {

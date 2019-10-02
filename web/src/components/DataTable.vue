@@ -12,7 +12,7 @@
       .column(:class="item.clazz")
         .column-header-cell(:class="item.header.clazz", @click="onColumnClick($event, index)")
           | {{item.header.text}}
-        .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(i)",
+        .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(i, index)",
             @click="onCellClick($event, i, index)") {{r}}
 </template>
 
@@ -25,15 +25,15 @@ export default {
     RecycleScroller,
   },
   props: {
-    rowHeaders: { // {text: string, clazz: string[]}[]
+    rowHeaders: { // {text: string, clazz?: string[]}[]
       type: Array,
       required: true,
     },
-    columns: { // {index: number, header: ..., clazz: string[], values: string[]}[]
+    columns: { // {index: number, header: ..., clazz?: string[], values: string[]}[]
       type: Array,
       required: true,
     },
-    cellClasses: { // (rowIndex: number) => string[]
+    cellClasses: { // (rowIndex: number, columnIndex: number) => string[]
       type: Function,
       required: true,
     },
@@ -203,6 +203,10 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
   position: sticky;
   top: 25px;
   cursor: pointer;
+
+  &.column-header-cell {
+    top: 0;
+  }
 }
 // column, row
 .type-masked {
