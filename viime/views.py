@@ -286,9 +286,10 @@ def set_csv_file_description(csv_id, description):
 def set_csv_file_column_selection(csv_id, columns):
     try:
         csv_file = CSVFile.query.get_or_404(csv_id)
-        csv_file.column_selection = columns
+        csv_file.selected_columns = columns
         db.session.add(csv_file)
         db.session.commit()
+
         return jsonify(csv_file_schema.dump(csv_file))
     except Exception:
         db.session.rollback()
