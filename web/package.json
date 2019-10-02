@@ -12,6 +12,7 @@
   "dependencies": {
     "@girder/components": "v3.0.0-alpha.3",
     "@mdi/font": "^3.5.95",
+    "@openfonts/barlow-condensed_all": "^0.1.1",
     "@sentry/browser": "^5.0.7",
     "@sentry/integrations": "^5.0.7",
     "axios": "^0.18.0",
