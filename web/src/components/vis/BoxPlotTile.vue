@@ -51,4 +51,6 @@ vis-tile(title="Boxplot Plot", :loading="false")
         :width="width * wrapper.scale",
         :height="height * wrapper.scale",
         :rows="chartData")
+  template(#help)
+    | TODO write help text
 </template>

@@ -23,6 +23,7 @@ export default {
         { scaleFactor: 2.5, cssClass: 'span5' },
       ],
       scaleIndex: 1,
+      showHelp: false,
     };
   },
 
@@ -43,6 +44,9 @@ export default {
     setScaleIndex(value) {
       this.scaleIndex = Math.max(Math.min(Number.parseInt(value, 10), this.scales.length - 1), 0);
     },
+    hasHelp() {
+      return this.$slots.help != null;
+    },
   },
 };
 </script>
@@ -52,6 +56,18 @@ v-flex(shrink=1, :class="scaleClass")
   .white.rounded.relative
     v-toolbar.primary.darken-3.top-rounded(dark, flat, dense)
       v-toolbar-title {{ title }}
+      v-toolbar-items(v-if="hasHelp()")
+        v-dialog(v-model="showHelp", max-width="33vw")
+          template(v-slot:activator="{ on }")
+            v-btn(v-on="on", icon)
+              v-icon {{ $vuetify.icons.help }}
+          v-card
+            v-card-title {{ title }}
+            v-card-text
+              slot(name="help")
+            v-card-actions
+              v-spacer
+              v-btn(@click="showHelp = false") Close
       v-spacer
       v-toolbar-items
         v-btn(@click="setScaleIndex(scaleIndex - 1)", :disabled="scaleIndex === 0", icon)
