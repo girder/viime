@@ -18,14 +18,15 @@ import {
   UPLOAD_CSV,
   UPLOAD_EXCEL,
   CHANGE_IMPUTATION_OPTIONS,
+  SET_DATASET_NAME,
+  SET_DATASET_DESCRIPTION,
+  SET_DATASET_SELECTED_COLUMNS,
 } from './actions.type';
 
 import {
   REMOVE_DATASET,
   SET_PLOT,
   SET_SELECTION,
-  SET_DATASET_DESCRIPTION,
-  SET_DATASET_NAME,
 } from './mutations.type';
 
 // private mutations
@@ -58,6 +59,7 @@ const datasetDefaults = {
   transformation_argument: null,
   scaling: null,
   scaling_argument: null,
+  selectedColumns: [],
 
   measurement_table: null,
 
@@ -162,6 +164,7 @@ const mutations = {
         name,
         description,
         created: new Date(created),
+        selectedColumns: data.selected_columns || [],
         size,
         ready: true,
         width: sourcerows[0].length,
@@ -483,6 +486,19 @@ const actions = {
     try {
       await CSVService.setDescription(dataset_id, description);
       commit(MERGE_INTO_DATASET, { dataset_id, data: { description } });
+      commit(SET_LOADING, false);
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
+  },
+
+  async [SET_DATASET_SELECTED_COLUMNS]({ commit }, { dataset_id, columns }) {
+    commit(SET_LOADING, true);
+    try {
+      await CSVService.setSelectedColumns(dataset_id, columns);
+      commit(MERGE_INTO_DATASET, { dataset_id, data: { selectedColumns: columns } });
       commit(SET_LOADING, false);
     } catch (err) {
       commit(SET_LAST_ERROR, err);

@@ -279,6 +279,23 @@ def set_csv_file_description(csv_id, description):
         raise
 
 
+@csv_bp.route('/csv/<uuid:csv_id>/selected-columns', methods=['PUT'])
+@use_kwargs({
+    'columns': fields.List(fields.Str, required=True)
+})
+def set_csv_file_selected_columns(csv_id, columns):
+    try:
+        csv_file = CSVFile.query.get_or_404(csv_id)
+        csv_file.selected_columns = columns
+        db.session.add(csv_file)
+        db.session.commit()
+
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
+
+
 @csv_bp.route('/csv/<uuid:csv_id>/download', methods=['GET'])
 def download_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)

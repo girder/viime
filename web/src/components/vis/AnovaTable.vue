@@ -18,6 +18,10 @@ export default {
       required: false,
       default: 0.05,
     },
+    value: { // string[]
+      type: Array,
+      required: true,
+    },
   },
 
   computed: {
@@ -46,5 +50,6 @@ export default {
 </script>
 
 <template lang="pug">
-metabolite-table(:headers="headers", :items="items", :threshold="threshold")
+metabolite-table(:headers="headers", :items="items", :threshold="threshold",
+    :value="value", @input="$emit('input', $event)")
 </template>

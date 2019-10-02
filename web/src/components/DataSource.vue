@@ -1,6 +1,6 @@
 <script>
 import { sizeFormatter } from '@girder/components/src/utils/mixins';
-import { SET_DATASET_NAME, SET_DATASET_DESCRIPTION } from '../store/mutations.type';
+import { SET_DATASET_NAME, SET_DATASET_DESCRIPTION } from '../store/actions.type';
 import { loadDataset } from '../utils/mixins';
 
 export default {
