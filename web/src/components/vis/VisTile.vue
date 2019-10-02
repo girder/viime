@@ -62,7 +62,8 @@ v-flex(shrink=1, :class="scaleClass")
             v-btn(v-on="on", icon)
               v-icon {{ $vuetify.icons.help }}
           v-card
-            v-card-title {{ title }}
+            v-card-title
+              h3.headline {{ title }}
             v-card-text
               slot(name="help")
             v-card-actions

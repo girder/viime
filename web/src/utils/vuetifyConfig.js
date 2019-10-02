@@ -42,7 +42,7 @@ export default {
     eyedropper: 'mdi-eyedropper',
     group: 'mdi-group',
     header: 'mdi-key-variant',
-    help: 'mdi-help',
+    help: 'mdi-help-circle',
     info: 'mdi-information',
     magnifyMinus: 'mdi-magnify-minus',
     magnifyPlus: 'mdi-magnify-plus',
