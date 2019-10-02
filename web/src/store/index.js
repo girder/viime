@@ -153,7 +153,7 @@ const mutations = {
    */
   [SET_DATASET_DATA](state, { data }) {
     const {
-      id, name, size, created, description, selected_columns: selectedColumns,
+      id, name, size, created, description,
     } = data;
     const { data: sourcerows } = convertCsvToRows(data.table);
     const measurement_table = parsePandasDataFrame(data.measurement_table);
@@ -164,7 +164,7 @@ const mutations = {
         name,
         description,
         created: new Date(created),
-        selectedColumns: selectedColumns || [],
+        selectedColumns: data.selected_columns || [],
         size,
         ready: true,
         width: sourcerows[0].length,
