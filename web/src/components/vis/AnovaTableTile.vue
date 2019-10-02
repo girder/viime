@@ -36,7 +36,7 @@ vis-tile-large(v-if="plot", title="Anova Table", :loading="plot.loading", expand
     v-card.mx-3(flat)
       v-card-actions
         v-layout(column)
-          v-slider.minCorrelation(v-model="threshold", label="0", thumb-label,
+          v-slider.my-1.minCorrelation(v-model="threshold", label="0", thumb-label,
               hide-details, min="0", max="0.1", step="0.001")
   anova-table(:data="plot.data", :threshold="threshold")
 </template>
