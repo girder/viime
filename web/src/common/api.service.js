@@ -77,6 +77,10 @@ export const CSVService = {
     return ApiService.put(`csv/${slug}/description`, { description });
   },
 
+  setSelectedColumns(slug, columns) {
+    return ApiService.put(`csv/${slug}/selected-columns`, { columns });
+  },
+
   setTransform(slug, category, transform_type, argument) {
     return ApiService.put(`csv/${slug}/${category}`, { method: transform_type, argument });
   },
