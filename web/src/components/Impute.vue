@@ -44,10 +44,22 @@ export default {
         values: rowNames.map((_, i) => f(data[i][j])),
       }));
     },
+
+    missingLookup() {
+      const cells = this.dataset.missing_cells;
+      const r = new Set();
+      cells.forEach(([i, j]) => {
+        r.add(`${i}x${j}`);
+      });
+      return r;
+    },
   },
   methods: {
-    cellClasses() { // rowIndex, columnIndex) {
-      // TODO compute if missing
+    cellClasses(rowIndex, columnIndex) {
+      const missing = this.missingLookup.has(`${rowIndex}x${columnIndex}`);
+      if (missing) {
+        return ['type-missing'];
+      }
       return ['type-sample'];
     },
 
@@ -76,13 +88,12 @@ v-layout.impute-component(row, fill-height)
           @change="changeImputationSettings({mcar: $event})",
           :options="mcar_imputation_methods")
 
-
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
 
   data-table.impute_table(v-else-if="ready", :row-headers="rowHeaders",
-      :columns="columns", :cellClasses="cellClasses")
+      :columns="columns", :cell-classes="cellClasses")
 </template>
 
 <style scoped lang="scss">

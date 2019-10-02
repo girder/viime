@@ -191,7 +191,7 @@ v-layout.cleanup-wrapper(row)
       save-status
 
     data-table.cleanup-table(:row-headers="rowHeaders", :columns="columns",
-        :cellClasses="cellClasses", @row-click="onRowClick($event)",
+        :cell-classes="cellClasses", @row-click="onRowClick($event)",
         @column-click="onColumnClick($event)", @cell-click="onCellClick($event)")
 </template>
 

@@ -65,6 +65,7 @@ const datasetDefaults = {
   selectedColumns: [],
 
   measurement_table: null,
+  missing_cells: [],
 
   validatedMeasurements: null,
   validatedGroups: null,
@@ -183,6 +184,7 @@ const mutations = {
 
         // imputed measurements
         measurement_table,
+        missing_cells: data.missing_cells || [],
 
         // reset
         validatedMeasurements: null,

@@ -10,6 +10,7 @@ from flask_sqlalchemy import SQLAlchemy
 from marshmallow import fields, post_dump, post_load, \
     Schema, validate, validates_schema
 from marshmallow.exceptions import ValidationError
+import numpy
 import pandas
 from sqlalchemy import MetaData
 from sqlalchemy.event import listen
@@ -219,6 +220,12 @@ class CSVFile(db.Model):
     def filter_table_by_types(self, row_type, column_type):
         return _filter_table_by_types(self, row_type, column_type)
 
+    @property
+    def missing_cells(self):
+        table = _coerce_numeric(self.raw_measurement_table)
+        col, row = numpy.nonzero(table.isna().to_numpy())
+        return numpy.column_stack((row, col)).astype(int).tolist()
+
     def apply_transforms(self):
         table = self.raw_measurement_table
         table = _coerce_numeric(table)
@@ -303,6 +310,7 @@ class CSVFileSchema(BaseSchema):
     table_validation = fields.Nested('ValidationSchema', many=True, dump_only=True)
     # imputed measurements
     measurement_table = fields.Raw(dump_only=True, allow_none=True)
+    missing_cells = fields.Raw(dump_only=True, allow_none=True)
     size = fields.Int(dump_only=True)
 
     @post_load

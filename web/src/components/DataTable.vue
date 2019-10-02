@@ -218,6 +218,11 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
 .type-sample {
   text-align: right;
 }
+// column, row
+.type-missing {
+  @include selectionAware(var(--v-secondary-lighten2));
+  text-align: right;
+}
 
 </style>
 <style scoped>
