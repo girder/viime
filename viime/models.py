@@ -298,7 +298,7 @@ class CSVFileSchema(BaseSchema):
     columns = fields.List(fields.Nested('TableColumnSchema', exclude=['csv_file']))
     rows = fields.List(fields.Nested('TableRowSchema', exclude=['csv_file']))
 
-    selected_columns = fields.List(fields.Str())
+    selected_columns = fields.List(fields.Str(), missing=[], dump_only=True, allow_none=True)
 
     table_validation = fields.Nested('ValidationSchema', many=True, dump_only=True)
     # imputed measurements

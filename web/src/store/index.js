@@ -18,15 +18,15 @@ import {
   UPLOAD_CSV,
   UPLOAD_EXCEL,
   CHANGE_IMPUTATION_OPTIONS,
+  SET_DATASET_NAME,
+  SET_DATASET_DESCRIPTION,
+  SET_DATASET_SELECTED_COLUMNS,
 } from './actions.type';
 
 import {
   REMOVE_DATASET,
   SET_PLOT,
   SET_SELECTION,
-  SET_DATASET_DESCRIPTION,
-  SET_DATASET_NAME,
-  SET_DATASET_SELECTED_COLUMNS,
 } from './mutations.type';
 
 // private mutations
@@ -164,7 +164,7 @@ const mutations = {
         name,
         description,
         created: new Date(created),
-        selectedColumns,
+        selectedColumns: selectedColumns || [],
         size,
         ready: true,
         width: sourcerows[0].length,
