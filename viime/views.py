@@ -502,7 +502,7 @@ def set_scaling_method(validated_table):
 @csv_bp.route('/csv/<uuid:csv_id>/validate/download', methods=['GET'])
 @load_validated_csv_file
 def download_validated_csv_file(validated_table):
-    fp = BytesIO(validated_table.table.to_csv(header=False, index=False).encode())
+    fp = BytesIO(validated_table.table.to_csv().encode())
     return send_file(fp, mimetype='text/csv', as_attachment=True,
                      attachment_filename=validated_table.name)
 
