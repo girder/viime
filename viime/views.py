@@ -282,7 +282,7 @@ def set_csv_file_description(csv_id, description):
 @csv_bp.route('/csv/<uuid:csv_id>/download', methods=['GET'])
 def download_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
-    name = PurePath(csv_file.name).with_suffix('csv').name
+    name = PurePath(csv_file.name).with_suffix('.csv').name
     fp = BytesIO(csv_file.table.to_csv(header=False, index=False).encode())
     return send_file(fp, mimetype='text/csv', as_attachment=True, attachment_filename=name)
 
@@ -502,10 +502,12 @@ def set_scaling_method(validated_table):
 
 @csv_bp.route('/csv/<uuid:csv_id>/validate/download', methods=['GET'])
 @load_validated_csv_file
-def download_validated_csv_file(validated_table):
+def download_validated_csv_file(validated_table: ValidatedMetaboliteTable):
     fp = BytesIO(validated_table.table.to_csv().encode())
+    csv_file: CSVFile = CSVFile.query.get_or_404(validated_table.csv_file_id)
+    name = PurePath(csv_file.name).with_suffix('.csv').name
     return send_file(fp, mimetype='text/csv', as_attachment=True,
-                     attachment_filename=validated_table.name)
+                     attachment_filename=name)
 
 
 def _get_pca_data(validated_table):
