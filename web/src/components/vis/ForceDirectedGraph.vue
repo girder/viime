@@ -3,24 +3,11 @@ import resize from 'vue-resize-directive';
 import {
   forceSimulation, forceManyBody, forceCollide, forceLink, forceCenter,
 } from 'd3-force';
-import { select, event } from 'd3-selection';
-import { scalePow, scaleLinear } from 'd3-scale';
+import { select, event as d3Event } from 'd3-selection';
+import { scalePow } from 'd3-scale';
 import { zoom } from 'd3-zoom';
+import { drag } from 'd3-drag';
 
-
-function extent(arr) {
-  return arr.reduce((acc, d) => ({
-    xMin: Math.min(acc.xMin, d.x),
-    xMax: Math.max(acc.xMax, d.x),
-    yMin: Math.min(acc.yMin, d.y),
-    yMax: Math.max(acc.yMax, d.y),
-  }), {
-    xMin: Number.POSITIVE_INFINITY,
-    xMax: Number.NEGATIVE_INFINITY,
-    yMin: Number.POSITIVE_INFINITY,
-    yMax: Number.NEGATIVE_INFINITY,
-  });
-}
 
 export default {
   directives: {
@@ -91,30 +78,84 @@ export default {
       f.force('center', forceCenter());
       f.force('collide', forceCollide());
       f.force('link', forceLink().id(d => d.id).strength(d => d.value));
+      f.on('tick', () => this.tick());
       return f;
     },
-    async update() {
-      this.simulation.stop();
+    stopTicker() {
+      // not a observed data element
+      if (this.simulationTicker != null && this.simulationTicker >= 0) {
+        this.simulationTicker = window.clearTimeout(this.simulationTicker);
+        this.simulationTicker = -1;
+      }
+    },
+    startTicker() {
+      const ticker = (remaining) => {
+        this.simulation.tick();
+        this.tick();
+        if (remaining > 0) {
+          this.simulationTicker = window.setTimeout(ticker, 20, remaining - 1);
+        }
+      };
+      ticker(50);
+    },
+    tick() {
+      const svg = select(this.$refs.svg);
+      const nodes = svg.select('g.nodes').selectAll('g');
+      const edges = svg.select('g.edges').selectAll('g');
+
+      nodes
+        .attr('transform', d => `translate(${d.x},${d.y})`);
+
+      edges.select('line')
+        .attr('x1', d => d.source.x)
+        .attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x)
+        .attr('y2', d => d.target.y);
+      edges.select('text')
+        .attr('transform', d => `translate(${(d.source.x + d.target.x) / 2},${(d.source.y + d.target.y) / 2})`);
+    },
+    update() {
+      const { simulation, stopTicker } = this;
+
+      simulation.stop();
+      this.stopTicker();
+
       const svg = select(this.$refs.svg);
       svg.attr('width', this.width).attr('height', this.height);
 
       function zoomed() {
-        const { transform } = event;
-        svg.select('g.zoom').attr('transform', transform);
+        svg.select('g.zoom').attr('transform', d3Event.transform);
       }
 
       svg.call(this.zoom
         .extent([[0, 0], [this.width, this.height]])
-        .scaleExtent([1, 8])
         .on('zoom', zoomed));
 
       // work on local copy since D3 manipulates the data structure
       const localNodes = this.nodes.map(d => Object.assign({}, d));
       const nodes = svg.select('g.nodes').selectAll('g').data(localNodes)
         .join(enter => enter.append('g').html('<title></title><circle></circle><text></text>'));
+
+
+      function dragged() {
+        const node = d3Event.subject;
+        node.fx = d3Event.x;
+        node.fy = d3Event.y;
+      }
+
+      function dragstarted() {
+        select(this).raise();
+        stopTicker();
+        simulation.alpha(1).restart();
+        dragged();
+      }
+
       nodes.select('circle')
         .attr('r', this.radius)
-        .style('fill', d => d.color);
+        .style('fill', d => d.color)
+        .call(drag()
+          .on('start', dragstarted)
+          .on('drag', dragged));
       nodes.select('title').text(d => d.id);
       nodes.select('text').text(d => d.id);
 
@@ -126,32 +167,14 @@ export default {
       edges.select('text').text(d => d.value.toFixed(3));
 
       // towards center of screen
-      this.simulation.nodes(localNodes);
-      this.simulation.force('link').distance(this.linkDistance).links(localEdges);
-      this.simulation.force('center').x(this.width / 2).y(this.height / 2);
-      this.simulation.force('collide').radius(this.radius);
-      this.simulation.alpha(1).restart();
-      this.simulation.tick(250);
-      for (let i = 0; i < 50; i += 1) {
-        this.simulation.tick();
-        const simNodes = this.simulation.nodes();
-        const domain = extent(simNodes);
-        const xScale = scaleLinear().domain([domain.xMin, domain.xMax])
-          .range([this.radius, this.width - this.radius]);
-        const yScale = scaleLinear().domain([domain.yMin, domain.yMax])
-          .range([this.radius, this.height - this.radius]);
-        nodes
-          .attr('transform', d => `translate(${xScale(d.x)},${yScale(d.y)})`);
-        edges.select('line')
-          .attr('x1', d => xScale(d.source.x))
-          .attr('y1', d => yScale(d.source.y))
-          .attr('x2', d => xScale(d.target.x))
-          .attr('y2', d => yScale(d.target.y));
-        edges.select('text')
-          .attr('transform', d => `translate(${xScale((d.source.x + d.target.x) / 2)},${yScale((d.source.y + d.target.y) / 2)})`);
-        /* eslint-disable-next-line no-await-in-loop */
-        await new Promise(resolve => window.setTimeout(resolve, 20));
-      }
+      simulation.nodes(localNodes);
+      simulation.force('link').distance(this.linkDistance).links(localEdges);
+      simulation.force('center').x(this.width / 2).y(this.height / 2);
+      simulation.force('collide').radius(this.radius);
+
+      simulation.alpha(1).restart().stop().tick(250); // forward 250 ticks
+      this.tick();
+      this.startTicker();
     },
     onResize() {
       const bb = this.$el.getBoundingClientRect();
@@ -189,6 +212,7 @@ export default {
 
 .nodes >>> circle {
   fill: steelblue;
+  cursor: grab;
 }
 
 .nodes >>> text {
