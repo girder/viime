@@ -1,7 +1,7 @@
 <script>
 import resize from 'vue-resize-directive';
 import {
-  forceSimulation, forceManyBody, forceCollide, forceLink, forceCenter,
+  forceSimulation, forceManyBody, forceCollide, forceLink, forceX, forceY, forceCenter,
 } from 'd3-force';
 import { select, event as d3Event } from 'd3-selection';
 import { scalePow } from 'd3-scale';
@@ -75,6 +75,8 @@ export default {
     initSimulation() {
       const f = forceSimulation();
       f.force('many', forceManyBody());
+      f.force('x', forceX().strength(0.01));
+      f.force('y', forceY().strength(0.01));
       f.force('center', forceCenter());
       f.force('collide', forceCollide());
       f.force('link', forceLink().id(d => d.id).strength(d => d.value));
@@ -146,16 +148,24 @@ export default {
       function dragstarted() {
         select(this).raise();
         stopTicker();
-        simulation.alpha(1).restart();
+        simulation.alphaTarget(0.3).restart();
         dragged();
+      }
+
+      function dragended() {
+        simulation.alphaTarget(0);
       }
 
       nodes.select('circle')
         .attr('r', this.radius)
         .style('fill', d => d.color)
         .call(drag()
+          .container(function container() {
+            return this.parentNode.parentNode;
+          })
           .on('start', dragstarted)
-          .on('drag', dragged));
+          .on('drag', dragged)
+          .on('end', dragended));
       nodes.select('title').text(d => d.id);
       nodes.select('text').text(d => d.id);
 
@@ -169,6 +179,8 @@ export default {
       // towards center of screen
       simulation.nodes(localNodes);
       simulation.force('link').distance(this.linkDistance).links(localEdges);
+      simulation.force('x').x(this.width / 2);
+      simulation.force('y').y(this.height / 2);
       simulation.force('center').x(this.width / 2).y(this.height / 2);
       simulation.force('collide').radius(this.radius);
 
