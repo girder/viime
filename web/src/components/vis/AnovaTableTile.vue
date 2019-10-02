@@ -3,6 +3,7 @@ import AnovaTable from '@/components/vis/AnovaTable.vue';
 import VisTileLarge from '@/components/vis/VisTileLarge.vue';
 import ToolbarOption from '../ToolbarOption.vue';
 import plotData from './mixins/plotData';
+import { SET_DATASET_SELECTED_COLUMNS } from '../../store/actions.type';
 
 export default {
   components: {
@@ -25,6 +26,17 @@ export default {
       threshold: 0.05,
     };
   },
+
+  computed: {
+    selected: {
+      get() {
+        return (this.dataset.selectedColumns || []).slice();
+      },
+      set(columns) {
+        this.$store.dispatch(SET_DATASET_SELECTED_COLUMNS, { dataset_id: this.id, columns });
+      },
+    },
+  },
 };
 </script>
 
@@ -38,7 +50,7 @@ vis-tile-large(v-if="plot", title="Anova Table", :loading="plot.loading", expand
         v-layout(column)
           v-slider.minCorrelation(v-model="threshold", label="0", thumb-label,
               hide-details, min="0", max="0.1", step="0.001")
-  anova-table(:data="plot.data", :threshold="threshold")
+  anova-table(:data="plot.data", :threshold="threshold", v-model="selected")
 </template>
 
 <style scoped>
