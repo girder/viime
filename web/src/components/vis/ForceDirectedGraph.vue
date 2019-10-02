@@ -120,7 +120,7 @@ export default {
       this.simulation.force('collide').radius(this.radius);
       this.simulation.alpha(1).restart();
       this.simulation.tick(250);
-      for(let i = 0; i < 50; i += 1) {
+      for (let i = 0; i < 50; i += 1) {
         this.simulation.tick();
         const simNodes = this.simulation.nodes();
         const domain = extent(simNodes);
@@ -137,7 +137,8 @@ export default {
           .attr('y2', d => yScale(d.target.y));
         edges.select('text')
           .attr('transform', d => `translate(${xScale((d.source.x + d.target.x) / 2)},${yScale((d.source.y + d.target.y) / 2)})`);
-        await new Promise((resolve) => window.setTimeout(resolve, 20));
+        /* eslint-disable-next-line no-await-in-loop */
+        await new Promise(resolve => window.setTimeout(resolve, 20));
       }
     },
     onResize() {
