@@ -70,7 +70,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading")
+vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading", svg-download)
   template(#default="wrapper")
     score-plot(
         v-if="plot && dataset.ready",
