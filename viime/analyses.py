@@ -1,5 +1,5 @@
 from itertools import combinations
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import pandas as pd
 
@@ -40,7 +40,7 @@ def anova_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, Any]:
 
 
 def pairwise_correlation(measurements: pd.DataFrame, min_correlation: float = 0,
-                         method: Optional[str] = None) -> List[Dict]:
+                         method: Optional[str] = None) -> Dict[str,  Any]:
 
     corr = measurements.corr(method=method)
 
