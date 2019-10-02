@@ -279,11 +279,11 @@ def set_csv_file_description(csv_id, description):
         raise
 
 
-@csv_bp.route('/csv/<uuid:csv_id>/column-selection', methods=['PUT'])
+@csv_bp.route('/csv/<uuid:csv_id>/selected-columns', methods=['PUT'])
 @use_kwargs({
     'columns': fields.List(fields.Str, required=True)
 })
-def set_csv_file_column_selection(csv_id, columns):
+def set_csv_file_selected_columns(csv_id, columns):
     try:
         csv_file = CSVFile.query.get_or_404(csv_id)
         csv_file.selected_columns = columns
