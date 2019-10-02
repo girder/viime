@@ -164,7 +164,7 @@ const mutations = {
         name,
         description,
         created: new Date(created),
-        selectedColumns: selectedColumns || [],
+        selectedColumns: dataset.selected_columns || [],
         size,
         ready: true,
         width: sourcerows[0].length,
