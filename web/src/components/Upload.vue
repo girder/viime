@@ -22,6 +22,23 @@ const dataTypes = [
   { name: 'Other', value: 'other' },
 ];
 
+const excelMimeTypes = [
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+];
+
+function isExcelFile(file) {
+  return excelMimeTypes.includes(file.type) || file.name.match(/\.xlsx$/i);
+}
+
+function isCSVFile(file) {
+  return file.type === 'text/csv' || file.name.match(/\.csv$/i);
+}
+
+function isTextFile(file) {
+  return file.type === 'text/plain' || file.name.match(/\.txt$/i);
+}
+
 export default {
   components: {
     FileList,
@@ -35,6 +52,8 @@ export default {
       pendingFiles: [],
       dataTypes,
       sampleTypes,
+      snackbar: false,
+      snackbarContent: '',
     };
   },
   computed: {
@@ -69,19 +88,26 @@ export default {
   },
   methods: {
     async onFileChange(targetFiles) {
-      this.pendingFiles = this.pendingFiles.concat([...targetFiles].map(file => ({
+      // filter to valid types only
+      const filteredFiles = targetFiles.filter(
+        f => isExcelFile(f) || isCSVFile(f) || isTextFile(f),
+      );
+      const invalidFiles = targetFiles.filter(
+        f => !(isExcelFile(f) || isCSVFile(f) || isTextFile(f)),
+      );
+
+      if (invalidFiles.length > 0) {
+        this.snackbarContent = `invalid file extension for: ${invalidFiles.map(d => d.name).join(', ')}`;
+        this.snackbar = true;
+      }
+
+      this.pendingFiles = this.pendingFiles.concat([...filteredFiles].map(file => ({
         file,
         status: 'pending',
         progress: {},
         meta: {},
       })));
 
-      const excelMimeTypes = [
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      ];
-
-      const isExcelFile = file => excelMimeTypes.includes(file.type) || file.name.match(/\.xlsx?$/i);
 
       const promises = this.pendingFiles
         .filter(f => f.status === 'pending')
@@ -120,6 +146,10 @@ export default {
 
 <template lang="pug">
 v-layout.upload-component(column, fill-height)
+
+  v-snackbar(v-model="snackbar", top, color="error", :timeout="5000")
+    | {{snackbarContent}}
+    v-btn(dark, flat, @click="snackbar = false") Close
 
   v-dialog(v-model="deleteDialog", persistent, width="600")
     v-card
@@ -188,7 +218,8 @@ v-layout.upload-component(column, fill-height)
                   :items="dataTypes", label="Type of data",
                   item-text="name", item-value="value")
           v-divider(v-if="idx + 1 < files.length", :key="idx")
-    dropzone.filezone.mx-4.mb-4(:multiple="true", :message="message", @change="onFileChange")
+    dropzone.filezone.mx-4.mb-4(:multiple="true", :message="message", @change="onFileChange",
+        accept=".csv,.xlsx,.txt")
 
   v-toolbar(flat, dense)
     v-spacer
