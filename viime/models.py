@@ -74,6 +74,7 @@ class CSVFile(db.Model):
     imputation_mnar = db.Column(db.String, nullable=False)
     imputation_mcar = db.Column(db.String, nullable=False)
     meta = db.Column(JSONType, nullable=False)
+    selected_columns = db.Column(db.ARRAY(db.String), nullable=True)
 
     @property
     def table_validation(self):
@@ -296,6 +297,8 @@ class CSVFileSchema(BaseSchema):
 
     columns = fields.List(fields.Nested('TableColumnSchema', exclude=['csv_file']))
     rows = fields.List(fields.Nested('TableRowSchema', exclude=['csv_file']))
+
+    selected_columns = fields.List(fields.Str())
 
     table_validation = fields.Nested('ValidationSchema', many=True, dump_only=True)
     # imputed measurements
