@@ -720,19 +720,19 @@ class ValidatedMetaboliteTable(db.Model):
         return _generate_validated_table(self)
 
 
-def _generate_validated_table(valdidated_table):
+def _generate_validated_table(validated_table):
     # concat rows
-    if not valdidated_table.measurement_metadata.empty:
-        table = valdidated_table.measurement_metadata.copy()
+    if not validated_table.measurement_metadata.empty:
+        table = validated_table.measurement_metadata.copy()
         # normalize column names since R might have changed them
-        table.columns = list(valdidated_table.measurements)
-        table = table.append(valdidated_table.measurements, sort=False)
+        table.columns = list(validated_table.measurements)
+        table = table.append(validated_table.measurements, sort=False)
     else:
-        table = valdidated_table.measurements.copy()
+        table = validated_table.measurements.copy()
 
     # concat columns
-    table = valdidated_table.groups.join(table, how='right')
-    table = valdidated_table.sample_metadata.join(table, how='right')
+    table = validated_table.groups.join(table, how='right')
+    table = validated_table.sample_metadata.join(table, how='right')
 
     return table
 
