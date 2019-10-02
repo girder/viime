@@ -74,7 +74,7 @@ class CSVFile(db.Model):
     imputation_mnar = db.Column(db.String, nullable=False)
     imputation_mcar = db.Column(db.String, nullable=False)
     meta = db.Column(JSONType, nullable=False)
-    selected_columns = db.Column(db.ARRAY(db.String), nullable=True)
+    selected_columns = db.Column(db.PickleType, nullable=True)
 
     @property
     def table_validation(self):
