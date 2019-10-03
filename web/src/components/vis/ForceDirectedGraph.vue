@@ -217,10 +217,10 @@ export default {
 <style scoped>
 .main {
   position: absolute;
-  top: 20px;
-  left: 20px;
-  right: 20px;
-  bottom: 20px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
 }
 
