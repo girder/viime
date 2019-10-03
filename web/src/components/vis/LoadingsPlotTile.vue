@@ -40,7 +40,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(v-if="plot", title="PCA Loadings Plot", :loading="plot.loading")
+vis-tile(v-if="plot", title="PCA Loadings Plot", :loading="plot.loading", svg-download)
   loadings-plot(
       :points="plot.data",
       :pc-x="pcX",

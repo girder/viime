@@ -34,7 +34,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(v-if="plot", title="PCA Scree Plot", :loading="plot.loading")
+vis-tile(v-if="plot", title="PCA Scree Plot", :loading="plot.loading", svg-download)
   scree-plot(
       :eigenvalues="getPlotDataProperty('sdev')",
       :num-components="numComponents",

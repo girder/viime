@@ -148,8 +148,8 @@ v-layout.cleanup-wrapper(row)
             v-btn(flat, @click="saveImputationSettings") Save
       v-icon {{ $vuetify.icons.download }}
 
-    .grow-overflow
-      data-table(v-bind="{ id, dataset, selected }", @setselection="setSelection")
+    data-table.cleanup-table(v-bind="{ id, dataset, selected }",
+        @setselection="setSelection")
 </template>
 
 <style lang="scss">
@@ -157,6 +157,8 @@ v-layout.cleanup-wrapper(row)
   width: 100%;
 
   .radio-toolbar {
+    z-index: 2;
+
     .v-toolbar__content {
       height: inherit !important;
       padding: 0px;
@@ -193,6 +195,10 @@ v-layout.cleanup-wrapper(row)
       border-radius: 3px;
       margin: 4px;
     }
+  }
+
+  .cleanup-table {
+    flex: 1 1 0;
   }
 }
 </style>

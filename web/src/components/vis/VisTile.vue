@@ -1,5 +1,6 @@
 <script>
 import { format } from 'd3-format';
+import { downloadSVG } from '../../utils/exporter';
 
 export default {
   props: {
@@ -8,6 +9,10 @@ export default {
       default: '',
     },
     loading: {
+      default: false,
+      type: Boolean,
+    },
+    svgDownload: {
       default: false,
       type: Boolean,
     },
@@ -43,6 +48,12 @@ export default {
     setScaleIndex(value) {
       this.scaleIndex = Math.max(Math.min(Number.parseInt(value, 10), this.scales.length - 1), 0);
     },
+    downloadSVG() {
+      const svg = this.$el.querySelector('svg');
+      if (svg) {
+        downloadSVG(svg, this.title);
+      }
+    },
   },
 };
 </script>
@@ -60,6 +71,8 @@ v-flex.white.rounded.main(shrink=1, :class="scaleClass")
       v-btn(@click="setScaleIndex(scaleIndex + 1)",
           :disabled="scaleIndex === scales.length - 1", icon)
         v-icon {{ $vuetify.icons.magnifyPlus }}
+      v-btn(v-if="svgDownload", @click="downloadSVG", icon)
+        v-icon {{ $vuetify.icons.save }}
       slot(name="controls")
   v-progress-linear.ma-0.progress(v-if="loading", indeterminate, height=4)
   v-card.bottom-rounded.content(flat)
