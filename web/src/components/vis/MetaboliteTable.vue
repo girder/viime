@@ -8,6 +8,10 @@ export default {
       type: Array,
       required: true,
     },
+    value: {
+      type: Array,
+      required: true,
+    },
     headers: {
       type: Array,
       required: true,
@@ -28,6 +32,19 @@ export default {
     };
   },
 
+  computed: {
+    selectedItems: {
+      get() {
+        const s = new Set(this.value);
+        return this.items.filter(d => s.has(d.Metabolite));
+      },
+      set(newValue) {
+        const s = newValue.map(d => d.Metabolite);
+        this.$emit('input', s);
+      },
+    },
+  },
+
   methods: {
     isInteresting(value) {
       return value < this.threshold;
@@ -38,8 +55,11 @@ export default {
 
 <template lang="pug">
 v-data-table.elevation-1.main(:headers="headers", :items="items", disable-initial-sort,
-    item-key="Metabolite", :pagination.sync="pagination")
+    item-key="Metabolite", :pagination.sync="pagination",
+    v-model="selectedItems", select-all)
   template(v-slot:items="props")
+    td.cell
+      v-checkbox(v-model="props.selected", hide-details)
     td.cell {{ props.item.Metabolite }}
     td.cell.text-xs-right(v-for="c in headers.slice(1)",
         :class="isInteresting(props.item[c.value]) ? 'highlight' : ''")
@@ -55,10 +75,15 @@ v-data-table.elevation-1.main(:headers="headers", :items="items", disable-initia
   height: 0;
 }
 
+.main >>> table {
+  width: unset;
+}
+
 .main >>> tr {
   height: 25px;
 }
-.main >>> td.cell {
+.main >>> td.cell,
+.main >>> thead > tr > th {
   height: 25px;
   padding: 2px 7px;
 }

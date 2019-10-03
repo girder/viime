@@ -9,16 +9,6 @@ export default {
   },
 
   props: {
-    width: {
-      required: true,
-      type: Number,
-      validator: Number.isInteger,
-    },
-    height: {
-      required: true,
-      type: Number,
-      validator: Number.isInteger,
-    },
     id: {
       type: String,
       required: true,
@@ -45,12 +35,9 @@ export default {
 
 <template lang="pug">
 vis-tile(title="Boxplot Plot", :loading="false", svg-download)
-  template(#default="wrapper")
-    boxplot-plot(
-        v-if="dataset.ready",
-        :width="width * wrapper.scale",
-        :height="height * wrapper.scale",
-        :rows="chartData")
+  boxplot-plot(
+      v-if="dataset.ready",
+      :rows="chartData")
   template(#help)
     | TODO write help text
 </template>

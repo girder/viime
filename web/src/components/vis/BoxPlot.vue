@@ -13,14 +13,6 @@ export default {
     axisPlot,
   ],
   props: {
-    width: {
-      type: Number,
-      default: 400,
-    },
-    height: {
-      type: Number,
-      default: 300,
-    },
     rows: { // {name: string, values: number[]}[]
       type: Array,
       default: () => [],
@@ -37,17 +29,9 @@ export default {
       duration: 200,
       ylabel: measurementColumnName,
       xlabel: measurementValueName,
-      refsMounted: false,
     };
   },
   computed: {
-    reactiveUpdate() {
-      if (!this.refsMounted) {
-        return '';
-      }
-      this.update();
-      return '';
-    },
     scaleY() {
       const { rows, dheight } = this;
       return scaleBand()
@@ -71,15 +55,8 @@ export default {
     },
   },
 
-  mounted() {
-    this.refsMounted = true;
-  },
-
   methods: {
     update() {
-      if (!this.$refs.svg) {
-        return;
-      }
       //
       // Compute the total variance in all the PCs.
       const svg = select(this.$refs.svg);
@@ -147,15 +124,16 @@ export default {
 </script>
 
 <template lang="pug">
-svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
-    :data-update="reactiveUpdate")
-  g.master
-    g.axes
-    g.plot
-  text.x.label(:transform="`translate(${margin.left + dwidth / 2},${height - 10})`")
-    | {{xlabel}}
-  text.y.label(:transform="`translate(${10},${margin.top + dheight / 2})rotate(-90)`")
-    | {{ylabel}}
+.main(v-resize:throttle="onResize")
+  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
+      :data-update="reactiveUpdate")
+    g.master
+      g.axes
+      g.plot
+    text.x.label(:transform="`translate(${margin.left + dwidth / 2},${height - 10})`")
+      | {{xlabel}}
+    text.y.label(:transform="`translate(${10},${margin.top + dheight / 2})rotate(-90)`")
+      | {{ylabel}}
 </template>
 
 <style scoped>

@@ -63,38 +63,37 @@ export default {
 </script>
 
 <template lang="pug">
-v-flex(shrink=1, :class="scaleClass")
-  .white.rounded.relative
-    v-toolbar.primary.darken-3.top-rounded(dark, flat, dense)
-      v-toolbar-title {{ title }}
-      v-toolbar-items(v-if="hasHelp()")
-        v-dialog(v-model="showHelp", max-width="33vw")
-          template(v-slot:activator="{ on }")
-            v-btn(v-on="on", icon)
-              v-icon {{ $vuetify.icons.help }}
-          v-card
-            v-card-title
-              h3.headline {{ title }}
-            v-card-text
-              slot(name="help")
-            v-card-actions
-              v-spacer
-              v-btn(@click="showHelp = false") Close
-      v-spacer
-      v-toolbar-items
-        v-btn(@click="setScaleIndex(scaleIndex - 1)", :disabled="scaleIndex === 0", icon)
-          v-icon {{ $vuetify.icons.magnifyMinus }}
-        v-select.scaleFactor(:value="scaleIndex", @change="setScaleIndex($event)",
-            :items="scaleOptions", hide-details, item-text="text", item-value="value")
-        v-btn(@click="setScaleIndex(scaleIndex + 1)",
-            :disabled="scaleIndex === scales.length - 1", icon)
-          v-icon {{ $vuetify.icons.magnifyPlus }}
-        v-btn(v-if="svgDownload", @click="downloadSVG", icon)
-          v-icon {{ $vuetify.icons.save }}
-        slot(name="controls")
-    v-progress-linear.ma-0.progress(v-if="loading", indeterminate, height=4)
-    v-card.bottom-rounded(flat)
-      slot(:scale="scaleFactor")
+v-flex.white.rounded.main(shrink=1, :class="scaleClass")
+  v-toolbar.primary.darken-3.top-rounded(dark, flat, dense)
+    v-toolbar-title {{ title }}
+    v-toolbar-items(v-if="hasHelp()")
+      v-dialog(v-model="showHelp", max-width="33vw")
+        template(v-slot:activator="{ on }")
+          v-btn(v-on="on", icon)
+            v-icon {{ $vuetify.icons.help }}
+        v-card
+          v-card-title
+            h3.headline {{ title }}
+          v-card-text
+            slot(name="help")
+          v-card-actions
+            v-spacer
+            v-btn(@click="showHelp = false") Close
+    v-spacer
+    v-toolbar-items
+      v-btn(@click="setScaleIndex(scaleIndex - 1)", :disabled="scaleIndex === 0", icon)
+        v-icon {{ $vuetify.icons.magnifyMinus }}
+      v-select.scaleFactor(:value="scaleIndex", @change="setScaleIndex($event)",
+          :items="scaleOptions", hide-details, item-text="text", item-value="value")
+      v-btn(@click="setScaleIndex(scaleIndex + 1)",
+          :disabled="scaleIndex === scales.length - 1", icon)
+        v-icon {{ $vuetify.icons.magnifyPlus }}
+      v-btn(v-if="svgDownload", @click="downloadSVG", icon)
+        v-icon {{ $vuetify.icons.save }}
+      slot(name="controls")
+  v-progress-linear.ma-0.progress(v-if="loading", indeterminate, height=4)
+  v-card.bottom-rounded.content(flat)
+    slot
 </template>
 
 <style scoped lang="scss">
@@ -135,8 +134,10 @@ v-flex(shrink=1, :class="scaleClass")
   max-width: 4em;
 }
 
-.relative {
+.main {
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 .rounded {
   border-radius: 5px;
@@ -150,14 +151,22 @@ v-flex(shrink=1, :class="scaleClass")
   border-radius: 0 0 5px 5px;
 }
 
-.vis-tile {
-  width: 600px;
-  max-width: 600px;
-  height: 648px;
-  max-height: 648px;
-}
 
 .progress {
   position: absolute;
+}
+</style>
+
+<style scoped>
+
+.content {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column
+}
+
+.content >>> > * {
+  flex: 1 1 0;
+  overflow: hidden;
 }
 </style>
