@@ -311,9 +311,9 @@ export default {
         if (columnSelected) {
           ctx.beginPath();
           ctx.moveTo(j * w, 0);
-          ctx.lineTo(j * w, ctx.canvas.width);
+          ctx.lineTo(j * w, ctx.canvas.height);
           ctx.moveTo(j * w + w, 0);
-          ctx.lineTo(j * w + w, ctx.canvas.width);
+          ctx.lineTo(j * w + w, ctx.canvas.height);
           ctx.stroke();
         }
       });
