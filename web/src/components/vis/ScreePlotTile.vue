@@ -42,7 +42,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(v-if="plot", title="PCA Scree Plot", :loading="plot.loading")
+vis-tile(v-if="plot", title="PCA Scree Plot", :loading="plot.loading", svg-download)
   template(#default="wrapper")
     scree-plot(
         :width="width * wrapper.scale",

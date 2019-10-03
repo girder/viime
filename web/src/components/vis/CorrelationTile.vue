@@ -65,7 +65,7 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     v-card.mx-3(flat)
       v-card-actions
         v-layout(column)
-          v-slider.minCorrelation(:value="min_correlation", label="0", thumb-label,
+          v-slider.my-1.minCorrelation(:value="min_correlation", label="0", thumb-label,
               hide-details, min="0", max="1", step="0.01",
               @change="changePlotArgs({min_correlation: $event})")
 
@@ -74,9 +74,9 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     v-card.mx-3(flat)
       v-card-actions
         v-layout(column)
-          v-switch(v-model="showNodeLabels", label="Node Labels", hide-details)
-          v-switch(v-model="showEdgeLabels", label="Edge Labels", hide-details)
-          v-text-field(v-model="linkDistance", label="Link Distance",
+          v-switch.my-1(v-model="showNodeLabels", label="Node Labels", hide-details)
+          v-switch.my-1(v-model="showEdgeLabels", label="Edge Labels", hide-details)
+          v-text-field.my-1(v-model="linkDistance", label="Link Distance",
               hide-details, min="0", step="10", type="number")
 
   template(#default)
