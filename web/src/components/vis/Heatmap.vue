@@ -4,7 +4,6 @@ import { hierarchy, cluster } from 'd3-hierarchy';
 import { scaleSequential } from 'd3-scale';
 import { interpolateBlues } from 'd3-scale-chromatic';
 import { select } from 'd3-selection';
-import 'd3-transition';
 
 function extent(arr) {
   let min = Number.POSITIVE_INFINITY;
@@ -58,10 +57,9 @@ export default {
   data() {
     return {
       padding: 8,
-      width: 100,
-      height: 100,
+      width: 0,
+      height: 0,
       refsMounted: false,
-      duration: 500,
       column: {
         hovered: new Set(),
         collapsed: new Set(),
@@ -175,13 +173,13 @@ export default {
         return;
       }
       const svg = select(ref);
-      const edges = svg.select('g.edges').selectAll('path').data(root.links(), d => `${d.source.data.name}-${d.target.data.name}`).join((enter) => {
+      const edges = svg.select('g.edges').selectAll('path').data(root.links()).join((enter) => {
         const r = enter.append('path');
         r.on('mouseenter', (d) => {
           wrapper.hovered = new Set(d.target.data.indices);
         }).on('mouseleave', () => {
           wrapper.hovered = new Set();
-        }).style('opacity', 0);
+        });
         return r;
       });
       const { hovered, collapsed } = wrapper;
@@ -200,11 +198,10 @@ export default {
         L${d.source.x},${d.source.y}
       `;
 
-      edges.transition('move').duration(this.duration).attr('d', horizontalLayout ? renderVerticalLinks : renderHorizontalLinks).transition('fadeIn')
-        .style('opacity', 1);
+      edges.attr('d', horizontalLayout ? renderVerticalLinks : renderHorizontalLinks);
 
       const innerNodes = root.descendants().filter(d => d.data.indices.length > 1);
-      const inner = svg.select('g.nodes').selectAll('g').data(innerNodes, d => d.data.name).join((enter) => {
+      const inner = svg.select('g.nodes').selectAll('g').data(innerNodes).join((enter) => {
         const r = enter.append('g')
           .html(`<circle r="${padding}"></circle><text><text><title></title>`)
           .attr('transform', d => `translate(${d.x},${d.y})`);
@@ -223,12 +220,11 @@ export default {
         return r;
       });
 
-      inner.select('text').html(d => (collapsed.has(d.data) ? MDI_MINUS_CIRCLE : MDI_PLUS_CIRCLE));
+      inner.select('text').html(d => (collapsed.has(d.data) ? MDI_PLUS_CIRCLE : MDI_MINUS_CIRCLE));
       inner.select('title').text(d => d.data.name);
       inner.classed('collapsed', d => collapsed.has(d.data));
 
-      inner.transition('move').duration(this.duration)
-        .attr('transform', d => `translate(${d.x},${d.y})`);
+      inner.attr('transform', d => `translate(${d.x},${d.y})`);
     },
     updateColumn() {
       this.updateTree(this.$refs.column, this.columnHierarchy, this.column, true);
@@ -243,8 +239,7 @@ export default {
       const svg = select(ref);
       const text = svg.selectAll('text').data(labels, d => d.data.name).join((enter) => {
         const r = enter.append('text')
-          .attr('transform', d => (horizontalLayout ? `translate(${d.x},0)rotate(-90)` : `translate(0,${d.y})`))
-          .style('opacity', 0);
+          .attr('transform', d => (horizontalLayout ? `translate(${d.x},0)rotate(-90)` : `translate(0,${d.y})`));
         return r;
       });
       const { hovered } = wrapper;
@@ -257,9 +252,7 @@ export default {
 
       text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
       text.text(d => d.data.name);
-      text.transition('move').duration(this.duration)
-        .attr('transform', d => (horizontalLayout ? `translate(${d.x},0)rotate(-90)` : `translate(0,${d.y})`)).transition('fadeIn')
-        .style('opacity', 1);
+      text.attr('transform', d => (horizontalLayout ? `translate(${d.x},0)rotate(-90)` : `translate(0,${d.y})`));
     },
     updateColumnLabel() {
       this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves, true);
@@ -271,8 +264,12 @@ export default {
       if (!this.$refs.matrix || !this.values) {
         return;
       }
+      const width = this.width * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH;
+      const height = this.height * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH;
       const ctx = this.$refs.matrix.getContext('2d');
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.canvas.width = width;
+      ctx.canvas.height = height;
+      ctx.clearRect(0, 0, width, height);
       const rows = this.rowLeaves;
       const columns = this.columnLeaves;
       const {
@@ -282,8 +279,8 @@ export default {
       const hoveredRow = this.row.hovered;
       const hoveredColumn = this.column.hovered;
 
-      const w = ctx.canvas.width / columns.length;
-      const h = ctx.canvas.height / rows.length;
+      const w = width / columns.length;
+      const h = height / rows.length;
 
       ctx.strokeStyle = 'orange';
 
@@ -359,9 +356,7 @@ export default {
       :data-update="reactiveRowUpdate")
     g.edges(:transform="`translate(${padding},0)`")
     g.nodes(:transform="`translate(${padding},0)`")
-  canvas.matrix(ref="matrix", :width="width * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH",
-      :height="height * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH",
-      :data-update="reactiveMatrixUpdate",
+  canvas.matrix(ref="matrix", :data-update="reactiveMatrixUpdate",
       @mousemove="canvasMouseMove($event)", @mouseleave="canvasMouseLeave()")
   svg.collabel(ref="collabel", :width="width * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH",
       :height="LABEL_WIDTH", xmlns="http://www.w3.org/2000/svg",
