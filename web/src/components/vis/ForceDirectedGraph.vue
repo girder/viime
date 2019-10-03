@@ -145,7 +145,7 @@ export default {
 
 
       function dragged() {
-        const node = d3Event.subject;
+        const node = d3Event.subject.data;
         const t = zoomTransform(svg.node());
         node.fx = t.invertX(d3Event.x);
         node.fy = t.invertY(d3Event.y);
@@ -177,6 +177,7 @@ export default {
           .container(function container() {
             return this.parentNode.parentNode;
           })
+          .subject(data => ({ x: d3Event.x, y: d3Event.y, data }))
           .on('start', dragstarted)
           .on('drag', dragged)
           .on('end', dragended));
