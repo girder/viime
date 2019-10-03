@@ -146,8 +146,9 @@ export default {
 
       function dragged() {
         const node = d3Event.subject;
-        node.fx = d3Event.x;
-        node.fy = d3Event.y;
+        const t = zoomTransform(svg.node());
+        node.fx = t.invertX(d3Event.x);
+        node.fy = t.invertY(d3Event.y);
       }
 
       function dragstarted() {
