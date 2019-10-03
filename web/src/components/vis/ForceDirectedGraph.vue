@@ -5,7 +5,7 @@ import {
 } from 'd3-force';
 import { select, event as d3Event } from 'd3-selection';
 import { scalePow } from 'd3-scale';
-import { zoom } from 'd3-zoom';
+import { zoom, zoomTransform } from 'd3-zoom';
 import { drag } from 'd3-drag';
 
 
@@ -105,16 +105,20 @@ export default {
       const nodes = svg.select('g.nodes').selectAll('g');
       const edges = svg.select('g.edges').selectAll('g');
 
-      nodes
-        .attr('transform', d => `translate(${d.x},${d.y})`);
+      const t = zoomTransform(svg.node());
+
+      nodes.select('circle')
+        .attr('transform', d => `translate(${t.applyX(d.x)},${t.applyY(d.y)})`);
+      nodes.select('text')
+        .attr('transform', d => `translate(${t.applyX(d.x)},${t.applyY(d.y)})`);
 
       edges.select('line')
-        .attr('x1', d => d.source.x)
-        .attr('y1', d => d.source.y)
-        .attr('x2', d => d.target.x)
-        .attr('y2', d => d.target.y);
+        .attr('x1', d => t.applyX(d.source.x))
+        .attr('y1', d => t.applyY(d.source.y))
+        .attr('x2', d => t.applyX(d.target.x))
+        .attr('y2', d => t.applyY(d.target.y));
       edges.select('text')
-        .attr('transform', d => `translate(${(d.source.x + d.target.x) / 2},${(d.source.y + d.target.y) / 2})`);
+        .attr('transform', d => `translate(${t.applyX((d.source.x + d.target.x) / 2)},${t.applyY((d.source.y + d.target.y) / 2)})`);
     },
     update() {
       const { simulation, stopTicker } = this;
@@ -125,18 +129,14 @@ export default {
       const svg = select(this.$refs.svg);
       svg.attr('width', this.width).attr('height', this.height);
 
-      function zoomed() {
-        svg.select('g.zoom').attr('transform', d3Event.transform);
-      }
-
       svg.call(this.zoom
         .extent([[0, 0], [this.width, this.height]])
-        .on('zoom', zoomed));
+        .on('zoom', () => this.tick()));
 
       // work on local copy since D3 manipulates the data structure
       const localNodes = this.nodes.map(d => Object.assign({}, d));
       const nodes = svg.select('g.nodes').selectAll('g').data(localNodes)
-        .join(enter => enter.append('g').html('<title></title><circle></circle><text></text>'));
+        .join(enter => enter.append('g').html('<title></title><circle></circle><text dx="12"></text>'));
 
 
       function dragged() {
@@ -228,7 +228,6 @@ export default {
 }
 
 .nodes >>> text {
-  transform: translate(12px,0);
   dominant-baseline: central;
 }
 
