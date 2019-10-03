@@ -152,6 +152,13 @@ export default {
         dragged();
       }
 
+      function resetPinned(d) {
+        delete d.fx;
+        delete d.fy;
+        stopTicker();
+        simulation.restart();
+      }
+
       function dragended() {
         simulation.alphaTarget(0);
       }
@@ -159,6 +166,7 @@ export default {
       nodes.select('circle')
         .attr('r', this.radius)
         .style('fill', d => d.color)
+        .on('click', resetPinned)
         .call(drag()
           .container(function container() {
             return this.parentNode.parentNode;
