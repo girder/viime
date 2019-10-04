@@ -18,14 +18,15 @@ import {
   UPLOAD_CSV,
   UPLOAD_EXCEL,
   CHANGE_IMPUTATION_OPTIONS,
+  SET_DATASET_NAME,
+  SET_DATASET_DESCRIPTION,
+  SET_DATASET_SELECTED_COLUMNS,
 } from './actions.type';
 
 import {
   REMOVE_DATASET,
   SET_PLOT,
   SET_SELECTION,
-  SET_DATASET_DESCRIPTION,
-  SET_DATASET_NAME,
 } from './mutations.type';
 
 // private mutations
@@ -39,6 +40,9 @@ const SET_LAST_ERROR = 'set_last_error';
 const SET_LOADING = 'set_loading';
 const SET_SESSION_STORE = 'set_session_store';
 const SET_TRANSFORMATION = 'set_transformation';
+
+// private actions
+const VALIDATE_TABLE = 'validate_table';
 
 Vue.use(Vuex);
 
@@ -58,6 +62,7 @@ const datasetDefaults = {
   transformation_argument: null,
   scaling: null,
   scaling_argument: null,
+  selectedColumns: [],
 
   measurement_table: null,
 
@@ -162,6 +167,7 @@ const mutations = {
         name,
         description,
         created: new Date(created),
+        selectedColumns: data.selected_columns || [],
         size,
         ready: true,
         width: sourcerows[0].length,
@@ -296,13 +302,25 @@ const mutations = {
 
 const actions = {
 
-  async [UPLOAD_CSV]({ state, commit }, { file }) {
+  /**
+   * @private
+   */
+  async [VALIDATE_TABLE]({ commit, getters: _getters }, { dataset_id }) {
+    const valid = _getters.valid(dataset_id);
+    if (valid) {
+      const { data: validatedData } = await CSVService.validateTable(dataset_id);
+      commit(SET_VALIDATED_DATASET_DATA, { data: validatedData });
+    }
+  },
+
+  async [UPLOAD_CSV]({ state, commit, dispatch }, { file }) {
     commit(SET_LOADING, true);
     try {
       const { data } = await CSVService.upload(file);
       commit(INITIALIZE_DATASET, { dataset_id: data.id, name: data.name });
       commit(SET_LABELS, { dataset_id: data.id, rows: data.rows, columns: data.columns });
       commit(SET_DATASET_DATA, { data });
+      await dispatch(VALIDATE_TABLE, { dataset_id: data.id });
       state.store.save(state, state.session_id);
     } catch (err) {
       commit(SET_LAST_ERROR, err);
@@ -312,11 +330,11 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [UPLOAD_EXCEL]({ state, commit }, { file }) {
+  async [UPLOAD_EXCEL]({ state, commit, dispatch }, { file }) {
     commit(SET_LOADING, true);
     try {
       const { data } = await ExcelService.upload(file);
-      data.forEach((dataFile) => {
+      const promiseList = data.map((dataFile) => {
         commit(INITIALIZE_DATASET, { dataset_id: dataFile.id, name: data.name });
         commit(SET_LABELS, {
           dataset_id: dataFile.id,
@@ -324,7 +342,9 @@ const actions = {
           columns: dataFile.columns,
         });
         commit(SET_DATASET_DATA, { data: dataFile });
+        return dispatch(VALIDATE_TABLE, { dataset_id: dataFile.id });
       });
+      await Promise.all(promiseList);
       state.store.save(state, state.session_id);
     } catch (err) {
       commit(SET_LAST_ERROR, err);
@@ -338,7 +358,7 @@ const actions = {
    * reload dataset from server and checkpoint if the dataset is valid
    * @private
    */
-  async [LOAD_DATASET]({ getters: _getters, commit }, { dataset_id }) {
+  async [LOAD_DATASET]({ getters: _getters, commit, dispatch }, { dataset_id }) {
     try {
       const dataset = _getters.dataset(dataset_id);
       if (!dataset) {
@@ -347,11 +367,7 @@ const actions = {
       const { data } = await CSVService.get(dataset_id);
       commit(SET_LABELS, { dataset_id, rows: data.rows, columns: data.columns });
       commit(SET_DATASET_DATA, { data });
-      const valid = _getters.valid(dataset_id);
-      if (valid) {
-        const { data: validatedData } = await CSVService.validateTable(dataset_id);
-        commit(SET_VALIDATED_DATASET_DATA, { data: validatedData });
-      }
+      await dispatch(VALIDATE_TABLE, { dataset_id: data.id });
     } catch (err) {
       commit(SET_LAST_ERROR, err);
       throw err;
@@ -483,6 +499,19 @@ const actions = {
     try {
       await CSVService.setDescription(dataset_id, description);
       commit(MERGE_INTO_DATASET, { dataset_id, data: { description } });
+      commit(SET_LOADING, false);
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
+  },
+
+  async [SET_DATASET_SELECTED_COLUMNS]({ commit }, { dataset_id, columns }) {
+    commit(SET_LOADING, true);
+    try {
+      await CSVService.setSelectedColumns(dataset_id, columns);
+      commit(MERGE_INTO_DATASET, { dataset_id, data: { selectedColumns: columns } });
       commit(SET_LOADING, false);
     } catch (err) {
       commit(SET_LAST_ERROR, err);

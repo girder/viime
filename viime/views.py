@@ -13,7 +13,7 @@ from webargs.flaskparser import use_kwargs
 from werkzeug import FileStorage
 
 from viime import opencpu
-from viime.analyses import anova_test, pairwise_correlation, wilcoxon_test
+from viime.analyses import anova_test, hierarchical_clustering, pairwise_correlation, wilcoxon_test
 from viime.cache import csv_file_cache
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
@@ -273,6 +273,23 @@ def set_csv_file_description(csv_id, description):
         csv_file.description = description
         db.session.add(csv_file)
         db.session.commit()
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/selected-columns', methods=['PUT'])
+@use_kwargs({
+    'columns': fields.List(fields.Str, required=True)
+})
+def set_csv_file_selected_columns(csv_id, columns):
+    try:
+        csv_file = CSVFile.query.get_or_404(csv_id)
+        csv_file.selected_columns = columns
+        db.session.add(csv_file)
+        db.session.commit()
+
         return jsonify(csv_file_schema.dump(csv_file))
     except Exception:
         db.session.rollback()
@@ -618,6 +635,13 @@ def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable,
 @load_validated_csv_file
 def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Optional[str] = None):
     return _group_test(anova_test, validated_table, group_column)
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/heatmap', methods=['GET'])
+@use_kwargs({})
+@load_validated_csv_file
+def get_hierarchical_clustering_heatmap(validated_table: ValidatedMetaboliteTable):
+    return hierarchical_clustering(validated_table.measurements)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/correlation', methods=['GET'])

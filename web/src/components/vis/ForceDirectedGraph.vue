@@ -43,7 +43,12 @@ export default {
       type: Number,
       required: true,
     },
-    showLabels: {
+    showNodeLabels: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    showEdgeLabels: {
       type: Boolean,
       default: false,
       required: false,
@@ -91,7 +96,7 @@ export default {
       f.force('link', forceLink().id(d => d.id).strength(d => d.value));
       return f;
     },
-    update() {
+    async update() {
       this.simulation.stop();
       const svg = select(this.$refs.svg);
       svg.attr('width', this.width).attr('height', this.height);
@@ -118,9 +123,10 @@ export default {
       this.simulation.force('link').distance(this.linkDistance).links(localEdges);
       this.simulation.force('center').x(this.width / 2).y(this.height / 2);
       this.simulation.force('collide').radius(this.radius);
-
-
-      this.simulation.on('tick', () => {
+      this.simulation.alpha(1).restart();
+      this.simulation.tick(250);
+      for (let i = 0; i < 50; i += 1) {
+        this.simulation.tick();
         const simNodes = this.simulation.nodes();
         const domain = extent(simNodes);
         const xScale = scaleLinear().domain([domain.xMin, domain.xMax])
@@ -136,10 +142,9 @@ export default {
           .attr('y2', d => yScale(d.target.y));
         edges.select('text')
           .attr('transform', d => `translate(${xScale((d.source.x + d.target.x) / 2)},${yScale((d.source.y + d.target.y) / 2)})`);
-      });
-
-
-      this.simulation.alpha(1).restart();
+        /* eslint-disable-next-line no-await-in-loop */
+        await new Promise(resolve => window.setTimeout(resolve, 20));
+      }
     },
     onResize() {
       const bb = this.$el.getBoundingClientRect();
@@ -154,17 +159,17 @@ export default {
 .main(v-resize:throttle="onResize")
   svg.svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactivePlotUpdate")
-    g.edges(:class="{ hideLabels: !this.showLabels }")
-    g.nodes(:class="{ hideLabels: !this.showLabels }")
+    g.edges(:class="{ hideLabels: !this.showEdgeLabels }")
+    g.nodes(:class="{ hideLabels: !this.showNodeLabels }")
 </template>
 
 <style scoped>
 .main {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
   display: flex;
 }
 

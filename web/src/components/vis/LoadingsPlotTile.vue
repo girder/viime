@@ -12,16 +12,6 @@ export default {
   mixins: [plotData('loadings')],
 
   props: {
-    width: {
-      required: true,
-      type: Number,
-      validator: Number.isInteger,
-    },
-    height: {
-      required: true,
-      type: Number,
-      validator: Number.isInteger,
-    },
     id: {
       type: String,
       required: true,
@@ -50,15 +40,12 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(v-if="plot", title="PCA Loadings Plot", :loading="plot.loading")
-  template(#default="wrapper")
-    loadings-plot(
-        :width="width * wrapper.scale",
-        :height="height * wrapper.scale",
-        :points="plot.data",
-        :pc-x="pcX",
-        :pc-y="pcY",
-        :show-crosshairs="showCrosshairs")
+vis-tile(v-if="plot", title="PCA Loadings Plot", :loading="plot.loading", svg-download)
+  loadings-plot(
+      :points="plot.data",
+      :pc-x="pcX",
+      :pc-y="pcY",
+      :show-crosshairs="showCrosshairs")
   template(v-slot:controls)
     v-menu(bottom, offset-y, left, :min-width="150", :close-on-content-click="false")
       template(v-slot:activator="{ on }")

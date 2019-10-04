@@ -39,10 +39,6 @@ export default {
         boxplot: true,
       },
       cellSize: 300,
-      // size of the header since the vis tiles
-      // don't consider the header (48) and padding (5) when setting the size
-      // but since we are in a grid we have to stick to the grid cells
-      plotHeader: 48 + 5,
     };
   },
   computed: {
@@ -55,9 +51,6 @@ export default {
     norm_arg() { return this.$store.getters.txType(this.id, 'normalization_argument'); },
     trans() { return this.$store.getters.txType(this.id, 'transformation'); },
     scaling() { return this.$store.getters.txType(this.id, 'scaling'); },
-    plotWidth() { return this.cellSize * 2; },
-    plotHeight() { return this.cellSize * 2 - this.plotHeader; },
-
     downloadLink() {
       return CSVService.validatedDownloadUrl(this.id);
     },
@@ -150,25 +143,17 @@ v-layout.transform-component(row, fill-height)
     v-container.grow-overflow.ma-0(grid-list-lg, fluid)
       layout-grid(:cell-size="cellSize")
         score-plot-tile(
-            v-show="visiblePlots.score",
-            :width="plotWidth",
-            :height="plotHeight",
+            v-if="visiblePlots.score",
             :columns="dataset.column.data",
             :id="id")
         loadings-plot-tile(
-            v-show="visiblePlots.loadings",
-            :width="plotWidth",
-            :height="plotHeight",
+            v-if="visiblePlots.loadings",
             :id="id")
         scree-plot-tile(
-            v-show="visiblePlots.scree",
-            :width="plotWidth",
-            :height="plotHeight",
+            v-if="visiblePlots.scree",
             :id="id")
         box-plot-tile(
-            v-show="visiblePlots.boxplot",
-            :width="plotWidth",
-            :height="plotHeight",
+            v-if="visiblePlots.boxplot",
             :id="id")
   v-container(v-else-if="ready", fill-height)
     v-layout(column)
