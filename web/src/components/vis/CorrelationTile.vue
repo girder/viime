@@ -23,7 +23,8 @@ export default {
 
   data() {
     return {
-      showLabels: false,
+      showNodeLabels: false,
+      showEdgeLabels: false,
       linkDistance: 50,
       correlation_methods,
     };
@@ -73,13 +74,15 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     v-card.mx-3(flat)
       v-card-actions
         v-layout(column)
-          v-switch.my-1(v-model="showLabels", label="Node Labels", hide-details)
+          v-switch.my-1(v-model="showNodeLabels", label="Node Labels", hide-details)
+          v-switch.my-1(v-model="showEdgeLabels", label="Edge Labels", hide-details)
           v-text-field.my-1(v-model="linkDistance", label="Link Distance",
               hide-details, min="0", step="10", type="number")
 
   template(#default)
     force-directed-graph(:edges="edges", :nodes="nodes",
-        :link-distance="linkDistanceAsNumber", :show-labels="showLabels",
+        :link-distance="linkDistanceAsNumber", :show-node-labels="showNodeLabels",
+        :show-edge-labels="showEdgeLabels",
         :min-stroke-value="min_correlation")
 </template>
 
