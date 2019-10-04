@@ -58,7 +58,7 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded,
   heatmap(
       v-if="plot && dataset.ready && values",
       :values="values",
-      :column-config="column", :row-config="row", :layout="layout"
+      :column-config="column", :row-config="row", :layout="layout",
       :column-clustering="plot.data.column",
       :row-clustering="plot.data.row")
 </template>
