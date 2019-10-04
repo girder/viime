@@ -245,6 +245,7 @@ export default {
       });
       inner.select('title').text(d => d.data.name);
       inner.classed('collapsed', d => collapsed.has(d.data));
+      inner.classed('focussed', d => wrapper.focus === d.data);
 
       inner.attr('transform', d => `translate(${d.x},${d.y})`);
     },
@@ -467,7 +468,8 @@ export default {
   fill: orange;
 }
 
-.nodes >>> .collapsed {
+.nodes >>> .collapsed,
+.nodes >>> .focussed {
   opacity: 1;
 }
 
