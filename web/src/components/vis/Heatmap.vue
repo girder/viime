@@ -35,6 +35,12 @@ const LABEL_WIDTH = 150;
 const MDI_PLUS_CIRCLE = '&#xF417;';
 const MDI_MINUS_CIRCLE = '&#xF376;';
 
+export const heatmapLayouts = [
+  { label: 'Auto', value: 'auto' },
+  { label: 'Square Cells', value: 'squareCells' },
+  { label: 'Square Matrix', value: 'squareMatrix' },
+];
+
 
 export default {
   directives: {
@@ -60,6 +66,11 @@ export default {
     columnConfig: { // { dendogram: boolean }
       type: Object,
       default: () => ({ dendogram: true }),
+    },
+    layout: { // { dendogram: boolean }
+      type: String,
+      validate: v => heatmapLayouts.find(d => d.value === v),
+      default: heatmapLayouts[0].value,
     },
   },
   data() {
@@ -120,14 +131,20 @@ export default {
       return '';
     },
 
+    columnTree() {
+      return this.computeTree(this.columnClustering, this.column.collapsed);
+    },
+
     columnHierarchy() {
-      return this.computeHierarchy(this.columnClustering, this.column.collapsed,
-        this.width, this.height, this.rowDendogramWidth);
+      return this.computeHierarchy(this.columnTree, this.matrixWidth, this.height);
+    },
+
+    rowTree() {
+      return this.computeTree(this.rowClustering, this.row.collapsed);
     },
 
     rowHierarchy() {
-      const root = this.computeHierarchy(this.rowClustering, this.row.collapsed,
-        this.height, this.width, this.columnDendogramHeight);
+      const root = this.computeHierarchy(this.rowTree, this.matrixHeight, this.width);
       root.each((node) => {
         const t = node.x;
         node.x = node.y;
@@ -139,32 +156,43 @@ export default {
       return scaleSequential(interpolateBlues).domain(extent(this.values.data));
     },
     columnLeaves() {
-      return this.columnHierarchy.leaves();
+      return this.columnTree.leaves();
     },
     rowLeaves() {
-      return this.rowHierarchy.leaves();
-    },
-    fontSize() {
-      const colLabels = this.columnLeaves;
-      const rowLabels = this.rowLeaves;
-
-      let bandwidth = Number.POSITIVE_INFINITY;
-      if (colLabels.length >= 2) {
-        bandwidth = Math.min(bandwidth, colLabels[1].x - colLabels[0].x);
-      }
-      if (rowLabels.length >= 2) {
-        bandwidth = Math.min(bandwidth, rowLabels[1].y - rowLabels[0].y);
-      }
-      if (bandwidth === Number.POSITIVE_INFINITY) {
-        return 12;
-      }
-      return bandwidth < 5 ? bandwidth : Math.min(bandwidth - 2, 12);
+      return this.rowTree.leaves();
     },
     columnDendogramHeight() {
       return this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
     },
     rowDendogramWidth() {
       return this.rowConfig.dendogram ? this.width * DENDOGRAM_RATIO : 0;
+    },
+    matrixDimensions() {
+      let width = this.width - this.rowDendogramWidth - LABEL_WIDTH;
+      let height = this.height - this.columnDendogramHeight - LABEL_WIDTH;
+      if (this.layout === 'squareCells') {
+        const wx = width / this.columnLeaves.length;
+        const hy = height / this.rowLeaves.length;
+        const ci = Math.min(wx, hy);
+        width = ci * this.columnLeaves.length;
+        height = ci * this.rowLeaves.length;
+      } else if (this.layout === 'squareMatrix') {
+        width = Math.min(width, height);
+        height = width;
+      }
+      return { width, height };
+    },
+    matrixWidth() {
+      return this.matrixDimensions.width;
+    },
+    matrixHeight() {
+      return this.matrixDimensions.height;
+    },
+    fontSize() {
+      const wx = this.matrixWidth / this.columnLeaves.length - 2;
+      const hy = this.matrixHeight / this.rowLeaves.length - 2;
+
+      return Math.min(wx, hy, 12);
     },
   },
   mounted() {
@@ -173,7 +201,7 @@ export default {
   },
 
   methods: {
-    computeHierarchy(node, collapsed, layoutWidth, layoutHeight, widthOffset) {
+    computeTree(node, collapsed) {
       const injectIndices = (s) => {
         if (typeof s.index === 'number') {
           s.indices = [s.index];
@@ -186,16 +214,15 @@ export default {
 
       injectIndices(node);
 
-      const root = hierarchy(node,
+      return hierarchy(node,
         d => (collapsed.has(d) ? [] : (d.children || [])))
         .count()
         .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
-
+    },
+    computeHierarchy(root, layoutWidth, layoutHeight) {
       const l = cluster()
-        .size([layoutWidth - widthOffset - LABEL_WIDTH,
-          layoutHeight * DENDOGRAM_RATIO - this.padding2])
+        .size([layoutWidth, layoutHeight * DENDOGRAM_RATIO - this.padding2])
         .separation(() => 1);
-
       return l(root);
     },
     updateTree(ref, root, wrapper, config, horizontalLayout) {
@@ -269,21 +296,16 @@ export default {
       }
       this.updateTree(this.$refs.row, this.rowHierarchy, this.row, this.rowConfig, false);
     },
-    updateLabel(ref, wrapper, labels, horizontalLayout) {
+    updateLabel(ref, wrapper, labels) {
       if (!ref) {
         return;
       }
-      const svg = select(ref);
-      const text = svg.selectAll('text').data(labels, d => d.data.name).join((enter) => {
-        const r = enter.append('text')
-          .attr('transform', d => (horizontalLayout ? `translate(${d.x},0)rotate(-90)` : `translate(0,${d.y})`));
-        return r;
-      });
+      const div = select(ref);
+      const text = div.selectAll('div').data(labels).join('div');
       const { hovered } = wrapper;
 
       text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
       text.text(d => d.data.name);
-      text.attr('transform', d => (horizontalLayout ? `translate(${d.x},0)rotate(-90)` : `translate(0,${d.y})`));
     },
     updateColumnLabel() {
       this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves, true);
@@ -295,12 +317,10 @@ export default {
       if (!this.$refs.matrix || !this.values) {
         return;
       }
-      const width = this.width - this.rowDendogramWidth - LABEL_WIDTH;
-      const height = this.height - this.columnDendogramHeight - LABEL_WIDTH;
       const ctx = this.$refs.matrix.getContext('2d');
-      ctx.canvas.width = width;
-      ctx.canvas.height = height;
-      ctx.clearRect(0, 0, width, height);
+      ctx.canvas.width = this.matrixWidth;
+      ctx.canvas.height = this.matrixHeight;
+      ctx.clearRect(0, 0, this.matrixWidth, this.matrixHeight);
       const rows = this.rowLeaves;
       const columns = this.columnLeaves;
       const {
@@ -310,8 +330,8 @@ export default {
       const hoveredRow = this.row.hovered;
       const hoveredColumn = this.column.hovered;
 
-      const w = width / columns.length;
-      const h = height / rows.length;
+      const w = this.matrixWidth / columns.length;
+      const h = this.matrixHeight / rows.length;
 
       ctx.strokeStyle = 'orange';
 
@@ -378,28 +398,25 @@ export default {
 <template lang="pug">
 .grid(v-resize:throttle="onResize")
   svg.column(ref="column", v-show="columnConfig.dendogram",
-      :width="width - rowDendogramWidth - LABEL_WIDTH",
+      :width="matrixWidth",
       :height="height * DENDOGRAM_RATIO", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveColumnUpdate")
     g.edges(:transform="`translate(0,${padding})`")
     g.nodes(:transform="`translate(0,${padding})`")
   svg.row(ref="row", v-show="rowConfig.dendogram",
       :width="width * DENDOGRAM_RATIO",
-      :height="height - columnDendogramHeight - LABEL_WIDTH", xmlns="http://www.w3.org/2000/svg",
+      :height="matrixHeight", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveRowUpdate")
     g.edges(:transform="`translate(${padding},0)`")
     g.nodes(:transform="`translate(${padding},0)`")
   canvas.matrix(ref="matrix", :data-update="reactiveMatrixUpdate",
       @mousemove="canvasMouseMove($event)", @mouseleave="canvasMouseLeave()")
-  svg.collabel(ref="collabel",
-      :width="width - rowDendogramWidth - LABEL_WIDTH",
-      :height="LABEL_WIDTH", xmlns="http://www.w3.org/2000/svg",
-      :data-update="reactiveColumnLabelUpdate",
-      :style="{fontSize: fontSize + 'px'}")
-  svg.rowlabel(ref="rowlabel", :width="LABEL_WIDTH",
-      :height="height - columnDendogramHeight - LABEL_WIDTH",
-      :data-update="reactiveRowLabelUpdate",
-      :style="{fontSize: fontSize + 'px'}")
+  .collabel(ref="collabel",
+      :style="{fontSize: fontSize+'px', width: this.matrixWidth+'px', height: LABEL_WIDTH+'px'}",
+      :data-update="reactiveColumnLabelUpdate")
+  .rowlabel(ref="rowlabel",
+      :style="{fontSize: fontSize+'px', width: LABEL_WIDTH+'px', height: this.matrixHeight+'px'}",
+      :data-update="reactiveRowLabelUpdate")
 </template>
 
 <style scoped>
@@ -413,38 +430,52 @@ export default {
   grid-template-areas: "d column dl"
     "row matrix rlabel"
     "rc clabel ll";
+  justify-content: center;
+  align-content: center;
 }
 
 .column {
   grid-area: column;
 }
 .row {
-  grid-area: row
+  grid-area: row;
 }
 .matrix {
   grid-area: matrix;
 }
 .collabel {
   grid-area: clabel;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.collabel >>> text {
-  dominant-baseline: central;
-  text-anchor: end;
+.collabel >>> div {
+  writing-mode: tb;
+  transform: rotate(-180deg);
+  justify-content: center;
 }
 
 .rowlabel {
   grid-area: rlabel;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.rowlabel >>> text {
-  dominant-baseline: central;
+.collabel >>> div,
+.rowlabel >>> div {
+  flex: 1 1 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
 }
 
-.rowlabel >>> text.selected,
-.collabel >>> text.selected {
-  font-size: 150%;
-  fill: orange;
+.rowlabel >>> .selected,
+.collabel >>> .selected {
+  color: orange;
 }
 
 .edges >>> path {

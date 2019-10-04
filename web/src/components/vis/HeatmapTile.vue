@@ -1,12 +1,14 @@
 <script>
-import Heatmap from './Heatmap.vue';
+import Heatmap, { heatmapLayouts } from './Heatmap.vue';
 import VisTileLarge from './VisTileLarge.vue';
 import plotData from './mixins/plotData';
+import ToolbarOption from '../ToolbarOption.vue';
 
 export default {
   components: {
     Heatmap,
     VisTileLarge,
+    ToolbarOption,
   },
 
   mixins: [plotData('heatmap')],
@@ -26,6 +28,8 @@ export default {
       row: {
         dendogram: true,
       },
+      layout: 'auto',
+      layouts: heatmapLayouts,
     };
   },
 
@@ -48,10 +52,13 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded,
       v-card-actions(:style="{display: 'block'}")
         v-checkbox.my-0(v-model="column.dendogram", label="Metabolite", hide-details)
         v-checkbox.my-0(v-model="row.dendogram", label="Sample", hide-details)
+    toolbar-option(title="Layout", :value="layout",
+        :options="layouts",
+        @change="layout = $event")
   heatmap(
       v-if="plot && dataset.ready && values",
       :values="values",
-      :column-config="column", :row-config="row"
+      :column-config="column", :row-config="row", :layout="layout"
       :column-clustering="plot.data.column",
       :row-clustering="plot.data.row")
 </template>
