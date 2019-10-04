@@ -136,6 +136,22 @@ export default {
     rowLeaves() {
       return this.rowHierarchy.leaves();
     },
+    fontSize() {
+      const colLabels = this.columnLeaves;
+      const rowLabels = this.rowLeaves;
+
+      let bandwidth = Number.POSITIVE_INFINITY;
+      if (colLabels.length >= 2) {
+        bandwidth = Math.min(bandwidth, colLabels[1].x - colLabels[0].x);
+      }
+      if (rowLabels.length >= 2) {
+        bandwidth = Math.min(bandwidth, rowLabels[1].y - rowLabels[0].y);
+      }
+      if (bandwidth === Number.POSITIVE_INFINITY) {
+        return 12;
+      }
+      return bandwidth < 5 ? bandwidth : Math.min(bandwidth - 2, 12);
+    },
   },
   mounted() {
     this.onResize();
@@ -243,12 +259,6 @@ export default {
         return r;
       });
       const { hovered } = wrapper;
-
-      let bandwidth = 10;
-      if (labels.length >= 2) {
-        bandwidth = (horizontalLayout ? (labels[1].x - labels[0].x) : (labels[1].y - labels[0].y));
-      }
-      svg.style('font-size', `${bandwidth < 5 ? bandwidth : Math.min(bandwidth - 2, 12)}px`);
 
       text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
       text.text(d => d.data.name);
@@ -360,10 +370,12 @@ export default {
       @mousemove="canvasMouseMove($event)", @mouseleave="canvasMouseLeave()")
   svg.collabel(ref="collabel", :width="width * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH",
       :height="LABEL_WIDTH", xmlns="http://www.w3.org/2000/svg",
-      :data-update="reactiveColumnLabelUpdate")
+      :data-update="reactiveColumnLabelUpdate",
+      :style="{fontSize: fontSize + 'px'}")
   svg.rowlabel(ref="rowlabel", :width="LABEL_WIDTH",
       :height="height * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH",
-      :data-update="reactiveRowLabelUpdate")
+      :data-update="reactiveRowLabelUpdate",
+      :style="{fontSize: fontSize + 'px'}")
 </template>
 
 <style scoped>
@@ -413,7 +425,7 @@ export default {
 
 .edges >>> path {
   fill: none;
-  stroke-width: 2;
+  stroke-width: 1;
   stroke: black;
 }
 
