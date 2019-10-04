@@ -53,6 +53,14 @@ export default {
       type: Object,
       default: null,
     },
+    rowConfig: { // { dendogram: boolean }
+      type: Object,
+      default: () => ({ dendogram: true }),
+    },
+    columnConfig: { // { dendogram: boolean }
+      type: Object,
+      default: () => ({ dendogram: true }),
+    },
   },
   data() {
     return {
@@ -114,12 +122,12 @@ export default {
 
     columnHierarchy() {
       return this.computeHierarchy(this.columnClustering, this.column.collapsed,
-        this.width, this.height);
+        this.width, this.height, this.rowDendogramWidth);
     },
 
     rowHierarchy() {
       const root = this.computeHierarchy(this.rowClustering, this.row.collapsed,
-        this.height, this.width);
+        this.height, this.width, this.columnDendogramHeight);
       root.each((node) => {
         const t = node.x;
         node.x = node.y;
@@ -152,6 +160,12 @@ export default {
       }
       return bandwidth < 5 ? bandwidth : Math.min(bandwidth - 2, 12);
     },
+    columnDendogramHeight() {
+      return this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
+    },
+    rowDendogramWidth() {
+      return this.rowConfig.dendogram ? this.width * DENDOGRAM_RATIO : 0;
+    },
   },
   mounted() {
     this.onResize();
@@ -159,7 +173,7 @@ export default {
   },
 
   methods: {
-    computeHierarchy(node, collapsed, layoutWidth, layoutHeight) {
+    computeHierarchy(node, collapsed, layoutWidth, layoutHeight, widthOffset) {
       const injectIndices = (s) => {
         if (typeof s.index === 'number') {
           s.indices = [s.index];
@@ -178,14 +192,14 @@ export default {
         .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
 
       const l = cluster()
-        .size([layoutWidth * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH,
+        .size([layoutWidth - widthOffset - LABEL_WIDTH,
           layoutHeight * DENDOGRAM_RATIO - this.padding2])
         .separation(() => 1);
 
       return l(root);
     },
-    updateTree(ref, root, wrapper, horizontalLayout) {
-      if (!ref) {
+    updateTree(ref, root, wrapper, config, horizontalLayout) {
+      if (!ref || !config.dendogram) {
         return;
       }
       const svg = select(ref);
@@ -243,10 +257,17 @@ export default {
       inner.attr('transform', d => `translate(${d.x},${d.y})`);
     },
     updateColumn() {
-      this.updateTree(this.$refs.column, this.columnHierarchy, this.column, true);
+      if (this.columnDendogramHeight === 0) {
+        return;
+      }
+      this.updateTree(this.$refs.column, this.columnHierarchy, this.column,
+        this.columnConfig, true);
     },
     updateRow() {
-      this.updateTree(this.$refs.row, this.rowHierarchy, this.row, false);
+      if (this.rowDendogramWidth === 0) {
+        return;
+      }
+      this.updateTree(this.$refs.row, this.rowHierarchy, this.row, this.rowConfig, false);
     },
     updateLabel(ref, wrapper, labels, horizontalLayout) {
       if (!ref) {
@@ -274,8 +295,8 @@ export default {
       if (!this.$refs.matrix || !this.values) {
         return;
       }
-      const width = this.width * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH;
-      const height = this.height * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH;
+      const width = this.width - this.rowDendogramWidth - LABEL_WIDTH;
+      const height = this.height - this.columnDendogramHeight - LABEL_WIDTH;
       const ctx = this.$refs.matrix.getContext('2d');
       ctx.canvas.width = width;
       ctx.canvas.height = height;
@@ -356,24 +377,27 @@ export default {
 
 <template lang="pug">
 .grid(v-resize:throttle="onResize")
-  svg.column(ref="column", :width="width * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH",
+  svg.column(ref="column", v-show="columnConfig.dendogram",
+      :width="width - rowDendogramWidth - LABEL_WIDTH",
       :height="height * DENDOGRAM_RATIO", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveColumnUpdate")
     g.edges(:transform="`translate(0,${padding})`")
     g.nodes(:transform="`translate(0,${padding})`")
-  svg.row(ref="row", :width="width * DENDOGRAM_RATIO",
-      :height="height * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH", xmlns="http://www.w3.org/2000/svg",
+  svg.row(ref="row", v-show="rowConfig.dendogram",
+      :width="width * DENDOGRAM_RATIO",
+      :height="height - columnDendogramHeight - LABEL_WIDTH", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveRowUpdate")
     g.edges(:transform="`translate(${padding},0)`")
     g.nodes(:transform="`translate(${padding},0)`")
   canvas.matrix(ref="matrix", :data-update="reactiveMatrixUpdate",
       @mousemove="canvasMouseMove($event)", @mouseleave="canvasMouseLeave()")
-  svg.collabel(ref="collabel", :width="width * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH",
+  svg.collabel(ref="collabel",
+      :width="width - rowDendogramWidth - LABEL_WIDTH",
       :height="LABEL_WIDTH", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveColumnLabelUpdate",
       :style="{fontSize: fontSize + 'px'}")
   svg.rowlabel(ref="rowlabel", :width="LABEL_WIDTH",
-      :height="height * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH",
+      :height="height - columnDendogramHeight - LABEL_WIDTH",
       :data-update="reactiveRowLabelUpdate",
       :style="{fontSize: fontSize + 'px'}")
 </template>
@@ -381,8 +405,8 @@ export default {
 <style scoped>
 .grid {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 4px;
+  left: 4px;
   right: 8px;
   bottom: 8px;
   display: grid;
