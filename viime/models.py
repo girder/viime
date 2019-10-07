@@ -14,6 +14,7 @@ import pandas
 from sqlalchemy import MetaData
 from sqlalchemy.event import listen
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import relationship
 from sqlalchemy_utils.types.json import JSONType
 from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
@@ -66,6 +67,23 @@ class BaseSchema(Schema):
         return data
 
 
+class GroupLevel(db.Model):
+    csv_file_id = db.Column(
+        UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
+    name = db.Column(db.String, primary_key=True)
+    color = db.Column(db.String, nullable=False)
+    label = db.Column(db.String)
+    description = db.Column(db.String)
+
+
+class GroupLevelSchema(BaseSchema):
+    __model__ = GroupLevel
+
+    csv_file_id = fields.UUID(required=True, load_only=True)
+    name = fields.Str(required=True)
+    color = fields.Str(required=True)
+
+
 class CSVFile(db.Model):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -75,6 +93,7 @@ class CSVFile(db.Model):
     imputation_mcar = db.Column(db.String, nullable=False)
     meta = db.Column(JSONType, nullable=False)
     selected_columns = db.Column(db.PickleType, nullable=True)
+    group_levels = relationship('GroupLevel')
 
     @property
     def table_validation(self):
@@ -299,6 +318,7 @@ class CSVFileSchema(BaseSchema):
     rows = fields.List(fields.Nested('TableRowSchema', exclude=['csv_file']))
 
     selected_columns = fields.List(fields.Str(), dump_only=True, missing=list)
+    group_levels = fields.List(fields.Nested('GroupLevelSchema'))
 
     table_validation = fields.Nested('ValidationSchema', many=True, dump_only=True)
     # imputed measurements

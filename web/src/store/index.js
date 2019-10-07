@@ -63,6 +63,7 @@ const datasetDefaults = {
   scaling: null,
   scaling_argument: null,
   selectedColumns: [],
+  groupLevels: [], // {name: string, label: string, description: string, color: string}[]
 
   measurement_table: null,
 
@@ -168,6 +169,7 @@ const mutations = {
         description,
         created: new Date(created),
         selectedColumns: data.selected_columns || [],
+        groupLevels: data.group_levels || [],
         size,
         ready: true,
         width: sourcerows[0].length,
