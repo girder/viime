@@ -330,14 +330,14 @@ export default {
           .attr('cy', 0)
           .attr('r', 1)
           .attr('style', 'fill: none; stroke: black;')
-          .attr('vector-effect', 'non-scaling-stroke')
-          .style('stroke', d => groupToColor(d.category));
+          .attr('vector-effect', 'non-scaling-stroke');
 
         svg.select('g.ellipses')
           .selectAll('g.ellipse')
           .data(ellipses)
           .transition()
           .duration(this.duration)
+          .style('stroke', d => groupToColor(d.category))
           .attr('transform', (d) => {
             const xMean = this.scaleX(d.xMean);
             const yMean = this.scaleY(d.yMean);
