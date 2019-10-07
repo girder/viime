@@ -16,10 +16,6 @@ export default {
       type: String,
       required: true,
     },
-    columns: {
-      required: true,
-      type: Array,
-    },
   },
 
   data() {
@@ -47,8 +43,19 @@ export default {
       return this.getPlotDataProperty('rows', []);
     },
 
-    groupLabels() {
-      return this.getPlotDataProperty('labels', {});
+    groups() {
+      const base = this.getPlotDataProperty('labels', {});
+      const groups = Object.keys(base);
+      if (groups.length === 0) {
+        return [];
+      }
+      return base[groups[0]];
+    },
+
+    groupToColor() {
+      const levels = this.dataset.groupLevels;
+      const lookup = new Map(levels.map(({ name, color }) => [name, color]));
+      return group => lookup.get(group) || null;
     },
 
     eigenvalues() {
@@ -65,9 +72,9 @@ vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading", svg-downl
       v-if="plot && dataset.ready",
       :pc-coords="pcCoords",
       :row-labels="rowLabels",
-      :group-labels="groupLabels",
+      :groups="groups",
+      :group-to-color="groupToColor",
       :eigenvalues="eigenvalues",
-      :columns="columns",
       :pc-x="pcX",
       :pc-y="pcY",
       :show-ellipses="showEllipses")

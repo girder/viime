@@ -30,8 +30,6 @@ div.tooltip {
 <script>
 import { select, event } from 'd3-selection';
 import { format } from 'd3-format';
-import { scaleOrdinal } from 'd3-scale';
-import { schemeCategory10 } from 'd3-scale-chromatic';
 import 'd3-transition';
 
 import { axisPlot } from './mixins/axisPlot';
@@ -94,19 +92,18 @@ export default {
       type: Array,
       validator: prop => prop.every(val => typeof val === 'string'),
     },
-    groupLabels: {
+    groups: { // string[]
       required: true,
-      type: Object,
+      type: Array,
+    },
+    groupToColor: { // (group:string) => string
+      required: true,
+      type: Function,
     },
     eigenvalues: {
       required: true,
       type: Array,
       validator: prop => prop.every(Number.isFinite),
-    },
-    columns: {
-      required: true,
-      type: Array,
-      validator: prop => prop.every(column => ['column_header', 'column_type'].every(key => Object.prototype.hasOwnProperty.call(column, key))),
     },
   },
   data() {
@@ -151,24 +148,17 @@ export default {
       return minmax(this.xyPoints.map(p => p.y), 0.1);
     },
 
-    group() {
-      const { columns } = this;
-      const column = columns.find(elem => elem.column_type === 'group');
-
-      return column.column_header;
-    },
-
     valid() {
       const {
         pcCoords,
         rowLabels,
-        groupLabels,
+        groups,
         eigenvalues,
       } = this;
 
       return pcCoords.length > 0
         && rowLabels.length > 0
-        && Object.keys(groupLabels).length > 0
+        && groups.length > 0
         && eigenvalues.length > 0;
     },
 
@@ -179,8 +169,8 @@ export default {
       const {
         eigenvalues,
         xyPoints,
-        group,
-        groupLabels,
+        groups,
+        groupToColor,
         rowLabels,
         duration,
         xlabel,
@@ -207,8 +197,6 @@ export default {
 
       // Draw the data.
       //
-      // Set up a colormap and select an arbitrary label to color the nodes.
-      const cmap = scaleOrdinal(schemeCategory10);
 
       // Plot the points in the scatter plot.
       const tooltip = select(this.$refs.tooltip);
@@ -221,7 +209,6 @@ export default {
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
-          .style('stroke', (d, i) => (group ? cmap(groupLabels[group][i]) : null))
           .style('fill-opacity', 0.001)
           .on('mouseover', function mouseover(d, i) {
             select(this)
@@ -248,6 +235,7 @@ export default {
           }))
         .transition()
         .duration(this.fadeInDuration)
+        .style('stroke', (d, i) => groupToColor(groups[i]))
         .attr('r', radius)
         .attr('cx', d => this.scaleX(d.x))
         .attr('cy', d => this.scaleY(d.y));
@@ -255,7 +243,7 @@ export default {
       // Decompose the data into its label categories.
       const streams = {};
       xyPoints.forEach((p, i) => {
-        const category = groupLabels[group][i];
+        const category = groups[i];
         if (!streams[category]) {
           streams[category] = [];
         }
@@ -343,7 +331,7 @@ export default {
           .attr('r', 1)
           .attr('style', 'fill: none; stroke: black;')
           .attr('vector-effect', 'non-scaling-stroke')
-          .style('stroke', d => cmap(d.category));
+          .style('stroke', d => groupToColor(d.category));
 
         svg.select('g.ellipses')
           .selectAll('g.ellipse')
