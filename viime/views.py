@@ -401,7 +401,7 @@ def get_column(csv_id, column_index):
 def batch_modify_label(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
     args = modify_label_list_schema.load(request.json or {})
-    row_column_dump_schema = CSVFileSchema(only=['rows', 'columns'])
+    row_column_dump_schema = CSVFileSchema(only=['rows', 'columns', 'group_levels'])
 
     for change in args['changes']:
         index = change['index']

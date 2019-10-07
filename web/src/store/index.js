@@ -232,7 +232,10 @@ const mutations = {
    * Set labels from server
    * @private
    */
-  [SET_LABELS](state, { dataset_id, rows, columns }) {
+  [SET_LABELS](state, {
+    dataset_id, rows, columns,
+    group_levels,
+  }) {
     const rowsSorted = rows.sort((a, b) => a.row_index - b.row_index);
     const colsSorted = columns.sort((a, b) => a.column_index - b.column_index);
     Vue.set(state.datasets[dataset_id], 'row', {
@@ -243,6 +246,7 @@ const mutations = {
       labels: colsSorted.map(c => c.column_type),
       data: colsSorted,
     });
+    Vue.set(state.datasets[dataset_id], 'groupLevels', group_levels);
   },
 
   [REMOVE_DATASET](state, { dataset_id }) {
@@ -462,8 +466,10 @@ const actions = {
     commit(SET_LOADING, true);
     try {
       const { data } = await CSVService.updateLabel(dataset_id, changes);
-      const { rows, columns } = data;
-      commit(SET_LABELS, { dataset_id, rows, columns });
+      const { rows, columns, group_levels } = data;
+      commit(SET_LABELS, {
+        dataset_id, rows, columns, group_levels,
+      });
       await dispatch(LOAD_DATASET, { dataset_id });
       // must await before plot invalidation because a new checkpoint
       // needs to be created before plots can be refreshed
