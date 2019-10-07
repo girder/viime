@@ -715,6 +715,30 @@ class ValidatedMetaboliteTable(db.Model):
         table = scale(self.scaling, table)
         return table
 
+    @property
+    def table(self):
+        """
+        mimics the .table from the CSVFile but with validated data
+        """
+        return _generate_validated_table(self)
+
+
+def _generate_validated_table(validated_table):
+    # concat rows
+    if not validated_table.measurement_metadata.empty:
+        table = validated_table.measurement_metadata.copy()
+        # normalize column names since R might have changed them
+        table.columns = list(validated_table.measurements)
+        table = table.append(validated_table.measurements, sort=False)
+    else:
+        table = validated_table.measurements.copy()
+
+    # concat columns
+    table = validated_table.groups.join(table, how='right')
+    table = validated_table.sample_metadata.join(table, how='right')
+
+    return table
+
 
 class ValidatedMetaboliteTableSchema(BaseSchema):
     id = fields.UUID(missing=uuid4)
