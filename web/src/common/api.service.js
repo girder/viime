@@ -81,6 +81,10 @@ export const CSVService = {
     return ApiService.put(`csv/${slug}/description`, { description });
   },
 
+  setGroupLevels(slug, groupLevels) {
+    return ApiService.put(`csv/${slug}/group-levels`, { group_levels: groupLevels });
+  },
+
   setSelectedColumns(slug, columns) {
     return ApiService.put(`csv/${slug}/selected-columns`, { columns });
   },

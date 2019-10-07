@@ -21,6 +21,7 @@ import {
   SET_DATASET_NAME,
   SET_DATASET_DESCRIPTION,
   SET_DATASET_SELECTED_COLUMNS,
+  SET_DATASET_GROUP_LEVELS,
 } from './actions.type';
 
 import {
@@ -501,6 +502,19 @@ const actions = {
     try {
       await CSVService.setDescription(dataset_id, description);
       commit(MERGE_INTO_DATASET, { dataset_id, data: { description } });
+      commit(SET_LOADING, false);
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
+  },
+
+  async [SET_DATASET_GROUP_LEVELS]({ commit }, { dataset_id, groupLevels }) {
+    commit(SET_LOADING, true);
+    try {
+      await CSVService.setGroupLevels(dataset_id, groupLevels);
+      commit(MERGE_INTO_DATASET, { dataset_id, data: { groupLevels } });
       commit(SET_LOADING, false);
     } catch (err) {
       commit(SET_LAST_ERROR, err);
