@@ -20,7 +20,7 @@
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import { RecycleScroller } from 'vue-virtual-scroller';
 
-import { base26Converter } from '../utils';
+import { base26Converter, textColor } from '../utils';
 import { defaultRowOption, defaultColOption } from '../utils/constants';
 
 export default {
@@ -91,13 +91,17 @@ export default {
       const rowType = this.dataset.row.labels[rowIndex];
       return [`type-${rowType}`, ...this.getSelectionClasses('row', rowIndex)];
     },
-    cellStyles(_rowIndex, columnIndex, value) {
+    cellStyles(rowIndex, columnIndex, value) {
       const columnType = this.dataset.column.labels[columnIndex];
-      if (columnType !== 'group') {
+      const rowType = this.dataset.row.labels[rowIndex];
+      if (columnType !== 'group' || rowType !== 'sample') {
         return null;
       }
+      const color = this.groupToColor(value);
+      const tColor = textColor(color);
       return {
-        backgroundColor: this.groupToColor(value),
+        backgroundColor: color,
+        color: tColor === 'black' ? null : tColor, // avoid setting default color
       };
     },
     setSelection(selection) {

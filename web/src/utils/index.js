@@ -1,4 +1,5 @@
 import papa from 'papaparse';
+import { hsl } from 'd3-color';
 import { validationMeta } from './constants';
 import RangeList from './rangelist';
 import SessionStore from './sessionStore';
@@ -104,11 +105,20 @@ function mapValidationErrors(errors, columns) {
   });
 }
 
+function textColor(backgroundColor) {
+  if (!backgroundColor) {
+    return 'black';
+  }
+  const c = hsl(backgroundColor);
+  return c.l < 0.5 ? 'white' : 'black';
+}
+
 export {
   base26Converter,
   convertCsvToRows,
   parsePandasDataFrame,
   mapValidationErrors,
+  textColor,
   RangeList,
   SessionStore,
 };
