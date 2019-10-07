@@ -82,6 +82,8 @@ class GroupLevelSchema(BaseSchema):
     csv_file_id = fields.UUID(required=True, load_only=True)
     name = fields.Str(required=True)
     color = fields.Str(required=True)
+    label = fields.Str()
+    description = fields.Str()
 
 
 class CSVFile(db.Model):
@@ -93,7 +95,7 @@ class CSVFile(db.Model):
     imputation_mcar = db.Column(db.String, nullable=False)
     meta = db.Column(JSONType, nullable=False)
     selected_columns = db.Column(db.PickleType, nullable=True)
-    group_levels = relationship('GroupLevel')
+    group_levels = relationship('GroupLevel', cascade='all, delete, delete-orphan')
 
     @property
     def table_validation(self):
@@ -224,12 +226,25 @@ class CSVFile(db.Model):
             old_column.column_type = TABLE_COLUMN_TYPES.METADATA
             db.session.add(old_column)
             clear_cache()
+            self.group_levels = []
 
         if value is not None:
             new_column = self.columns[value]
             new_column.column_type = TABLE_COLUMN_TYPES.GROUP
             db.session.add(new_column)
+            self.group_levels = self._derive_group_levels()
             clear_cache()
+
+    def _derive_group_levels(self):
+        groups = self.groups
+        if groups.empty:
+            return []
+        levels = sorted(groups.iloc[:, 0].unique())
+        # d3 scheme category 10
+        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
+                  '#7f7f7f', '#bcbd22', '#17becf']
+        return [GroupLevel(name=l, label=l, color=colors[i % len(colors)])
+                for i, l in enumerate(levels)]
 
     @property
     def keys(self):
