@@ -220,7 +220,7 @@ export default {
         r.on('click', (d) => {
           if (wrapper.focus === d.data) {
             wrapper.focus = null;
-          } else if (event.ctrlKey) {
+          } else if (event.ctrlKey || event.shiftKey) {
             wrapper.focus = d.data;
           } else if (wrapper.collapsed.has(d.data)) {
             wrapper.collapsed.delete(d.data);
