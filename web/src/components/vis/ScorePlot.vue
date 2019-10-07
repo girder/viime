@@ -13,7 +13,7 @@
   .tooltip(ref="tooltip")
 </template>
 
-<style scoped lang="scss">
+<style scoped>
 div.tooltip {
   position: fixed;
   text-align: center;
@@ -25,6 +25,12 @@ div.tooltip {
   z-index: 20;
   opacity: 0;
 }
+
+.ellipses >>> circle {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
 </style>
 
 <script>
@@ -251,8 +257,9 @@ export default {
       });
 
       // Compute the ellipse data for each subset.
+
+      const ellipses = [];
       if (showEllipses) {
-        const ellipses = [];
         Object.keys(streams).forEach((category) => {
           const data = streams[category];
 
@@ -316,43 +323,36 @@ export default {
             category,
           });
         });
-
-        // Draw the ellipses.
-        svg.select('g.ellipses')
-          .selectAll('g.ellipse')
-          .data(ellipses)
-          .enter()
-          .append('g')
-          .classed('ellipse', true)
-          .attr('transform', d => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`)
-          .append('circle')
-          .attr('cx', 0)
-          .attr('cy', 0)
-          .attr('r', 1)
-          .attr('style', 'fill: none; stroke: black;')
-          .attr('vector-effect', 'non-scaling-stroke');
-
-        svg.select('g.ellipses')
-          .selectAll('g.ellipse')
-          .data(ellipses)
-          .transition()
-          .duration(this.duration)
-          .style('stroke', d => groupToColor(d.category))
-          .attr('transform', (d) => {
-            const xMean = this.scaleX(d.xMean);
-            const yMean = this.scaleY(d.yMean);
-            const rotation = -180 * d.rotation / Math.PI;
-
-            return `translate(${xMean}, ${yMean}) rotate(${rotation}) scale(${d.axes[0]}, ${d.axes[1]})`;
-          });
-      } else {
-        svg.select('g.ellipses')
-          .selectAll('*')
-          .transition()
+      }
+      // Draw the ellipses.
+      svg.select('g.ellipses')
+        .selectAll('g.ellipse')
+        .data(ellipses, d => d.category)
+        .join((enter) => {
+          const entered = enter.append('g')
+            .classed('ellipse', true)
+            .style('opacity', 1)
+            .attr('transform', d => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`);
+          entered.append('circle').attr('r', 1);
+          return entered;
+        },
+        null,
+        exit => exit.transition()
           .duration(this.duration)
           .style('opacity', 0.0)
-          .remove();
-      }
+          .attr('transform', d => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`)
+          .remove())
+        .transition()
+        .duration(this.duration)
+        .attr('transform', (d) => {
+          const xMean = this.scaleX(d.xMean);
+          const yMean = this.scaleY(d.yMean);
+          const rotation = -180 * d.rotation / Math.PI;
+
+          return `translate(${xMean}, ${yMean}) rotate(${rotation}) scale(${d.axes[0]}, ${d.axes[1]})`;
+        })
+        .select('circle')
+        .style('stroke', d => groupToColor(d.category));
     },
     setRanges(xyPoints) {
       this.xrange = minmax(xyPoints.map(p => p.x), 0.1);
