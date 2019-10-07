@@ -17,10 +17,10 @@ from viime import opencpu
 from viime.analyses import anova_test, hierarchical_clustering, pairwise_correlation, wilcoxon_test
 from viime.cache import csv_file_cache
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
-from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
+from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, GroupLevel, \
     ModifyLabelListSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
-    TableColumn, TableColumnSchema, TableRow, GroupLevel, \
+    TableColumn, TableColumnSchema, TableRow, \
     TableRowSchema, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
 from viime.normalization import validate_normalization_method
 from viime.plot import pca

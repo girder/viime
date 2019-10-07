@@ -87,14 +87,13 @@ v-layout.data-source(row, fill-height)
               v-text-field(placeholder="Name", :value="props.item.name", required, readonly)
             td
               v-text-field(placeholder="Label", :value="props.item.label", required,
-              @change="changeGroupLevel(props.item, {label: $event})")
+                  @change="changeGroupLevel(props.item, {label: $event})")
             td
               v-text-field(placeholder="Description", :value="props.item.description",
-              @change="changeGroupLevel(props.item, {description: $event})")
+                  @change="changeGroupLevel(props.item, {description: $event})")
             td
               input(placeholder="Color", :value="props.item.color", type="color", required,
-              @change="changeGroupLevel(props.item, {color: $event.currentTarget.value})")
-
+                  @change="changeGroupLevel(props.item, {color: $event.currentTarget.value})")
 
   v-layout(v-else, justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
