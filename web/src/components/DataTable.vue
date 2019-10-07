@@ -13,7 +13,7 @@
         .column-header-cell(:class="item.header.clazz", @click="onColumnClick($event, index)")
           | {{item.header.text}}
         .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(i)",
-            @click="onCellClick($event, i, index)") {{r}}
+            :style="cellStyles(i, index, r)", @click="onCellClick($event, i, index)") {{r}}
 </template>
 
 <script>
@@ -68,6 +68,11 @@ export default {
         return column;
       });
     },
+    groupToColor() {
+      const levels = this.dataset.groupLevels;
+      const lookup = new Map(levels.map(({ name, color }) => [name, color]));
+      return group => lookup.get(group) || null;
+    },
   },
   methods: {
     createHeader(type, defaultType, text) {
@@ -85,6 +90,15 @@ export default {
     cellClasses(rowIndex) {
       const rowType = this.dataset.row.labels[rowIndex];
       return [`type-${rowType}`, ...this.getSelectionClasses('row', rowIndex)];
+    },
+    cellStyles(_rowIndex, columnIndex, value) {
+      const columnType = this.dataset.column.labels[columnIndex];
+      if (columnType !== 'group') {
+        return null;
+      }
+      return {
+        backgroundColor: this.groupToColor(value),
+      };
     },
     setSelection(selection) {
       this.$emit('setselection', selection);
