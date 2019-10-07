@@ -49,7 +49,13 @@ export default {
       if (groups.length === 0) {
         return [];
       }
-      return base[groups[0]];
+      if (groups.length === 1) {
+        return base[groups[0]];
+      }
+      // find the right one, since it is a mix of group and column
+      const group = this.dataset.validatedGroups
+        ? this.dataset.validatedGroups.columnNames[0] : groups[0];
+      return base[group] || [];
     },
 
     groupToColor() {
