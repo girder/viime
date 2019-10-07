@@ -11,6 +11,7 @@ import ScreePlotTile from '@/components/vis/ScreePlotTile.vue';
 import LoadingsPlotTile from '@/components/vis/LoadingsPlotTile.vue';
 import BoxPlotTile from '@/components/vis/BoxPlotTile.vue';
 import LayoutGrid from './LayoutGrid.vue';
+import { CSVService } from '../common/api.service';
 
 export default {
   components: {
@@ -50,6 +51,9 @@ export default {
     norm_arg() { return this.$store.getters.txType(this.id, 'normalization_argument'); },
     trans() { return this.$store.getters.txType(this.id, 'transformation'); },
     scaling() { return this.$store.getters.txType(this.id, 'scaling'); },
+    downloadLink() {
+      return CSVService.validatedDownloadUrl(this.id);
+    },
   },
   methods: {
     async transformTable(value, category, argument, methods) {
@@ -129,6 +133,8 @@ v-layout.transform-component(row, fill-height)
           v-checkbox.my-0(v-model="visiblePlots.loadings", label="PCA Loadings Plot", hide-details)
           v-checkbox.my-0(v-model="visiblePlots.scree", label="PCA Scree Plot", hide-details)
           v-checkbox.my-0(v-model="visiblePlots.boxplot", label="Boxplot Plot", hide-details)
+
+      v-btn.mx-3(flat, dark, :href="downloadLink", :disabled="!valid") Download CSV
 
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
