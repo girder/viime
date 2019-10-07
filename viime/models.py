@@ -237,7 +237,7 @@ class CSVFile(db.Model):
 
     def _derive_group_levels(self):
         groups = self.groups
-        if groups.empty:
+        if groups is None or groups.empty:
             return []
         levels = sorted(groups.iloc[:, 0].unique())
         # d3 scheme category 10
@@ -283,12 +283,17 @@ class CSVFile(db.Model):
                 'csv_file_id': id, 'row_index': index, 'row_type': row_type
             }))
 
+        csv_file.rows = rows
+
         columns = []
         table_column_schema = TableColumnSchema()
         for index, column_type in enumerate(column_types):
             columns.append(table_column_schema.load({
                 'csv_file_id': id, 'column_index': index, 'column_type': column_type
             }))
+
+        csv_file.columns = columns
+        csv_file.group_levels = csv_file._derive_group_levels()
 
         return csv_file, rows, columns
 
