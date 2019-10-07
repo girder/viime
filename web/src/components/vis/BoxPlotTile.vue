@@ -38,4 +38,6 @@ vis-tile(title="Boxplot Plot", :loading="false", svg-download)
   boxplot-plot(
       v-if="dataset.ready",
       :rows="chartData")
+  template(#help)
+    | TODO write help text
 </template>
