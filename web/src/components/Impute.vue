@@ -47,11 +47,11 @@ export default {
 
     missingLookup() {
       const cells = this.dataset.missing_cells;
-      const r = new Set();
-      cells.forEach(([i, j]) => {
-        r.add(`${i}x${j}`);
+      const lookup = new Set();
+      cells.forEach(([c, r]) => {
+        lookup.add(`${r}x${c}`);
       });
-      return r;
+      return lookup;
     },
   },
   methods: {
