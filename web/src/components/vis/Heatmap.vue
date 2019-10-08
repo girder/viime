@@ -87,6 +87,8 @@ export default {
         hovered: new Set(),
         collapsed: new Set(),
       },
+      rnode: null,
+      cnode: null,
       DENDOGRAM_RATIO,
       LABEL_WIDTH,
     };
@@ -383,9 +385,13 @@ export default {
       const i = Math.floor(evt.offsetY / h);
       const rnode = this.rowLeaves[i].data;
       const cnode = this.columnLeaves[j].data;
-      this.row.hovered = new Set(rnode.indices);
-      this.column.hovered = new Set(cnode.indices);
-      canvas.title = `${rnode.name} x ${cnode.name} = ${aggregate(this.values.data, rnode.indices, cnode.indices)}`;
+      if (rnode !== this.rnode || cnode !== this.cnode) {
+        this.rnode = rnode;
+        this.cnode = cnode;
+        this.row.hovered = new Set(rnode.indices);
+        this.column.hovered = new Set(cnode.indices);
+        canvas.title = `${rnode.name} x ${cnode.name} = ${aggregate(this.values.data, rnode.indices, cnode.indices)}`;
+      }
     },
     canvasMouseLeave() {
       this.row.hovered = new Set();
