@@ -9,7 +9,6 @@ from uuid import uuid4
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
 import pandas
-import webargs.fields
 from webargs.flaskparser import use_kwargs
 from werkzeug import FileStorage
 
@@ -17,8 +16,8 @@ from viime import opencpu
 from viime.analyses import anova_test, hierarchical_clustering, pairwise_correlation, wilcoxon_test
 from viime.cache import csv_file_cache
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
-from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, GroupLevel, \
-    ModifyLabelListSchema, \
+from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
+    GroupLevelSchema, ModifyLabelListSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     TableColumn, TableColumnSchema, TableRow, \
     TableRowSchema, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
@@ -282,17 +281,13 @@ def set_csv_file_description(csv_id, description):
 
 @csv_bp.route('/csv/<uuid:csv_id>/group-levels', methods=['PUT'])
 @use_kwargs({
-    'group_levels': fields.List(webargs.fields.Nested({
-        'name': fields.Str(required=True),
-        'label': fields.Str(required=True),
-        'description': fields.Str(missing=None),
-        'color': fields.Str(required=True),
-    }), required=True)
+    'group_levels': fields.List(fields.Nested(GroupLevelSchema(exclude=['csv_file_id'])),
+                                required=True)
 })
 def set_csv_file_group_levels(csv_id, group_levels):
     try:
         csv_file = CSVFile.query.get_or_404(csv_id)
-        csv_file.group_levels = [GroupLevel(**l) for l in group_levels]
+        csv_file.group_levels = group_levels
         db.session.add(csv_file)
         db.session.commit()
         return jsonify(csv_file_schema.dump(csv_file))

@@ -83,7 +83,7 @@ class GroupLevelSchema(BaseSchema):
     name = fields.Str(required=True)
     color = fields.Str(required=True)
     label = fields.Str()
-    description = fields.Str()
+    description = fields.Str(allow_none=True)
 
 
 class CSVFile(db.Model):
