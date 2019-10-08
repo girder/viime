@@ -11,6 +11,7 @@ import ScreePlotTile from '@/components/vis/ScreePlotTile.vue';
 import LoadingsPlotTile from '@/components/vis/LoadingsPlotTile.vue';
 import BoxPlotTile from '@/components/vis/BoxPlotTile.vue';
 import LayoutGrid from './LayoutGrid.vue';
+import { CSVService } from '../common/api.service';
 
 export default {
   components: {
@@ -38,10 +39,6 @@ export default {
         boxplot: true,
       },
       cellSize: 300,
-      // size of the header since the vis tiles
-      // don't consider the header (48) and padding (5) when setting the size
-      // but since we are in a grid we have to stick to the grid cells
-      plotHeader: 48 + 5,
     };
   },
   computed: {
@@ -54,8 +51,9 @@ export default {
     norm_arg() { return this.$store.getters.txType(this.id, 'normalization_argument'); },
     trans() { return this.$store.getters.txType(this.id, 'transformation'); },
     scaling() { return this.$store.getters.txType(this.id, 'scaling'); },
-    plotWidth() { return this.cellSize * 2; },
-    plotHeight() { return this.cellSize * 2 - this.plotHeader; },
+    downloadLink() {
+      return CSVService.validatedDownloadUrl(this.id);
+    },
   },
   methods: {
     async transformTable(value, category, argument, methods) {
@@ -136,6 +134,8 @@ v-layout.transform-component(row, fill-height)
           v-checkbox.my-0(v-model="visiblePlots.scree", label="PCA Scree Plot", hide-details)
           v-checkbox.my-0(v-model="visiblePlots.boxplot", label="Boxplot Plot", hide-details)
 
+      v-btn.mx-3(flat, dark, :href="downloadLink", :disabled="!valid") Download CSV
+
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
@@ -143,25 +143,17 @@ v-layout.transform-component(row, fill-height)
     v-container.grow-overflow.ma-0(grid-list-lg, fluid)
       layout-grid(:cell-size="cellSize")
         score-plot-tile(
-            v-show="visiblePlots.score",
-            :width="plotWidth",
-            :height="plotHeight",
+            v-if="visiblePlots.score",
             :columns="dataset.column.data",
             :id="id")
         loadings-plot-tile(
-            v-show="visiblePlots.loadings",
-            :width="plotWidth",
-            :height="plotHeight",
+            v-if="visiblePlots.loadings",
             :id="id")
         scree-plot-tile(
-            v-show="visiblePlots.scree",
-            :width="plotWidth",
-            :height="plotHeight",
+            v-if="visiblePlots.scree",
             :id="id")
         box-plot-tile(
-            v-show="visiblePlots.boxplot",
-            :width="plotWidth",
-            :height="plotHeight",
+            v-if="visiblePlots.boxplot",
             :id="id")
   v-container(v-else-if="ready", fill-height)
     v-layout(column)

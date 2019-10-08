@@ -43,7 +43,12 @@ export default {
       type: Number,
       required: true,
     },
-    showLabels: {
+    showNodeLabels: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    showEdgeLabels: {
       type: Boolean,
       default: false,
       required: false,
@@ -51,6 +56,16 @@ export default {
     minStrokeValue: {
       type: Number,
       default: 0,
+      required: false,
+    },
+    color: {
+      type: String,
+      default: 'steelblue',
+      required: false,
+    },
+    highlightColor: {
+      type: String,
+      default: 'orange',
       required: false,
     },
   },
@@ -100,9 +115,11 @@ export default {
       const localNodes = this.nodes.map(d => Object.assign({}, d));
       const nodes = svg.select('g.nodes').selectAll('g').data(localNodes)
         .join(enter => enter.append('g').html('<title></title><circle></circle><text></text>'));
+
+      const { color, highlightColor } = this;
       nodes.select('circle')
         .attr('r', this.radius)
-        .style('fill', d => d.color);
+        .style('fill', d => (d.highlighted ? highlightColor : color));
       nodes.select('title').text(d => d.id);
       nodes.select('text').text(d => d.id);
 
@@ -154,8 +171,8 @@ export default {
 .main(v-resize:throttle="onResize")
   svg.svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactivePlotUpdate")
-    g.edges(:class="{ hideLabels: !this.showLabels }")
-    g.nodes(:class="{ hideLabels: !this.showLabels }")
+    g.edges(:class="{ hideLabels: !this.showEdgeLabels }")
+    g.nodes(:class="{ hideLabels: !this.showNodeLabels }")
 </template>
 
 <style scoped>
@@ -172,10 +189,6 @@ export default {
 .edges >>> g > line {
   fill-opacity: 0.6;
   stroke-opacity: 0.6;
-}
-
-.nodes >>> circle {
-  fill: steelblue;
 }
 
 .nodes >>> text {
