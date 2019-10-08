@@ -83,7 +83,7 @@ export default {
     this.onResize();
     this.refsMounted = true;
   },
-  unmounted() {
+  beforeDestroy() {
     this.simulation.stop();
   },
   methods: {
@@ -107,6 +107,9 @@ export default {
     },
     startTicker() {
       const ticker = (remaining) => {
+        if (!this.$refs.svg) {
+          return;
+        }
         this.simulation.tick();
         this.tick();
         if (remaining > 0) {
@@ -116,6 +119,9 @@ export default {
       ticker(50);
     },
     tick() {
+      if (!this.$refs.svg) {
+        return;
+      }
       const svg = select(this.$refs.svg);
       const nodes = svg.select('g.nodes').selectAll('g');
       const edges = svg.select('g.edges').selectAll('g');
@@ -140,6 +146,10 @@ export default {
 
       simulation.stop();
       this.stopTicker();
+
+      if (!this.$refs.svg) {
+        return;
+      }
 
       const svg = select(this.$refs.svg);
       svg.attr('width', this.width).attr('height', this.height);
