@@ -299,8 +299,9 @@ def set_csv_file_selected_columns(csv_id, columns):
 @csv_bp.route('/csv/<uuid:csv_id>/download', methods=['GET'])
 def download_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
+    name = PurePath(csv_file.name).with_suffix('.csv').name
     fp = BytesIO(csv_file.table.to_csv(header=False, index=False).encode())
-    return send_file(fp, mimetype='text/csv', as_attachment=True, attachment_filename=csv_file.name)
+    return send_file(fp, mimetype='text/csv', as_attachment=True, attachment_filename=name)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>', methods=['DELETE'])
@@ -514,6 +515,16 @@ def set_scaling_method(validated_table):
     except Exception:
         db.session.rollback()
         raise
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/validate/download', methods=['GET'])
+@load_validated_csv_file
+def download_validated_csv_file(validated_table: ValidatedMetaboliteTable):
+    fp = BytesIO(validated_table.table.to_csv().encode())
+    csv_file: CSVFile = CSVFile.query.get_or_404(validated_table.csv_file_id)
+    name = PurePath(csv_file.name).with_suffix('.csv').name
+    return send_file(fp, mimetype='text/csv', as_attachment=True,
+                     attachment_filename=name)
 
 
 def _get_pca_data(validated_table):

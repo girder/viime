@@ -5,7 +5,7 @@ in the CSVFile model.
 from collections import namedtuple
 
 from marshmallow import fields, post_dump, Schema, validate
-from pandas import Index
+from pandas import Index, to_numeric
 
 from viime.cache import region
 
@@ -22,6 +22,7 @@ _ValidationTuple = namedtuple(
 
 GROUP_MISSING_THRESHOLD = 0.25
 LOW_VARIANCE_THRESHOLD = 1e-8
+MAX_NAN_THRESHOLD = 0.95
 
 
 class ValidationTuple(_ValidationTuple):
@@ -92,6 +93,24 @@ class InvalidGroup(ValidationTuple):
     }
 
 
+class NonNumericRow(ValidationTuple):
+    defaults = {
+        'title': 'Non-numeric row',
+        'type_': 'non-numeric-row',
+        'severity': 'error',
+        'context': 'row'
+    }
+
+
+class NonNumericColumn(ValidationTuple):
+    defaults = {
+        'title': 'Non-numeric column',
+        'type_': 'non-numeric-column',
+        'severity': 'error',
+        'context': 'column'
+    }
+
+
 class NonNumericData(ValidationTuple):
     defaults = {
         'title': 'Non-numeric data',
@@ -157,6 +176,8 @@ def get_fatal_index_errors(csv_file):
     errors = get_missing_index_errors(csv_file)
     if not errors:
         errors = get_invalid_index_errors(csv_file)
+    if not errors:
+        errors = get_non_numeric_errors(csv_file)
     return errors
 
 
@@ -195,6 +216,32 @@ def get_invalid_index_errors(csv_file):
     if error_data:
         errors.append(InvalidGroup(column_index=csv_file.group_column_index, data=error_data))
 
+    return errors
+
+
+def get_non_numeric_errors(csv_file):
+    errors = []
+    raw_table = csv_file.raw_measurement_table
+
+    for index in range(raw_table.shape[0]):
+        row = to_numeric(raw_table.iloc[index, :], errors='coerce')
+        nans = (row != row).sum()
+        if nans / raw_table.shape[1] > MAX_NAN_THRESHOLD:
+            row = csv_file.get_row_by_name(raw_table.index[index])
+            errors.append(
+                NonNumericRow(row_index=row.row_index,
+                              data=f'Contains {nans} non-numeric values')
+            )
+
+    for index in range(raw_table.shape[1]):
+        column = to_numeric(raw_table.iloc[:, index], errors='coerce')
+        nans = (column != column).sum()
+        if nans / raw_table.shape[0] > MAX_NAN_THRESHOLD:
+            column = csv_file.get_column_by_name(raw_table.columns[index])
+            errors.append(
+                NonNumericColumn(column_index=column.column_index,
+                                 data=f'Contains {nans} non-numeric values')
+            )
     return errors
 
 
