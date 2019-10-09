@@ -435,13 +435,21 @@ def save_validated_csv_file(csv_id):
     if fatal_errors:
         return jsonify(validation_schema.dump(fatal_errors, many=True)), 400
 
-    old_table = ValidatedMetaboliteTable.query.filter_by(csv_file_id=csv_id)
+    old_table = ValidatedMetaboliteTable.query.filter_by(csv_file_id=csv_id).first()
     try:
+        old = {}
         if old_table is not None:
-            old_table.delete()
+            transformation_schema = ValidatedMetaboliteTableSchema(
+                only=['normalization', 'normalization_argument',
+                      'scaling', 'transformation']
+            )
+            # copy some values
+            old = transformation_schema.dump(old_table)
+
+            db.session.delete(old_table)
             db.session.commit()  # we actually want to persist to invalidate the old table
 
-        validated_table = ValidatedMetaboliteTable.create_from_csv_file(csv_file)
+        validated_table = ValidatedMetaboliteTable.create_from_csv_file(csv_file, **old)
         db.session.add(validated_table)
         db.session.commit()
         return jsonify(validated_metabolite_table_schema.dump(validated_table)), 201
