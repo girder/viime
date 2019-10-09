@@ -57,7 +57,7 @@ export default {
 v-data-table.elevation-1.main(:headers="headers", :items="items", disable-initial-sort,
     item-key="Metabolite", :pagination.sync="pagination",
     v-model="selectedItems", select-all)
-  template(v-slot:items="props")
+  template(#items="props")
     td.cell
       v-checkbox(v-model="props.selected", hide-details)
     td.cell {{ props.item.Metabolite }}
