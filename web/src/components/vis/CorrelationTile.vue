@@ -87,7 +87,7 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     v-card.mx-3(flat)
       v-card-actions
         v-layout(column)
-          v-slider.my-1.minCorrelation(:value="min_correlation", label="0", thumb-label,
+          v-slider.my-1.minCorrelation(:value="min_correlation", label="0", thumb-label="always",
               hide-details, min="0", max="1", step="0.01",
               @change="changePlotArgs({min_correlation: $event})")
     v-toolbar.darken-3(color="primary", dark, flat, dense)
@@ -117,13 +117,13 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
 </template>
 
 <style scoped>
+
+.minCorrelation {
+  padding-top: 16px;
+}
+
 .minCorrelation >>> .v-input__slot::after {
   content: "1";
-  color: rgba(0,0,0,0.54);
-  margin-left: 16px;
-}
-.minThreshold >>> .v-input__slot::after {
-  content: "0.1";
   color: rgba(0,0,0,0.54);
   margin-left: 16px;
 }
