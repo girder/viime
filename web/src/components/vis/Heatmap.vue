@@ -396,6 +396,8 @@ export default {
     canvasMouseLeave() {
       this.row.hovered = new Set();
       this.column.hovered = new Set();
+      this.rnode = null;
+      this.cnode = null;
     },
   },
 };
