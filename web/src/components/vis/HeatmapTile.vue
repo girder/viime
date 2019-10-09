@@ -28,6 +28,7 @@ export default {
       row: {
         dendogram: true,
       },
+      dummy: false,
       layout: 'auto',
       layouts: heatmapLayouts,
     };
@@ -36,6 +37,46 @@ export default {
   computed: {
     values() {
       return this.dataset.validatedMeasurements;
+    },
+    countSelected() {
+      return !this.dataset ? 0 : (this.dataset.selectedColumns || []).length;
+    },
+    countNotSelected() {
+      if (!this.dataset || !this.values) {
+        return 0;
+      }
+      return this.values.columnNames.length - this.countSelected;
+    },
+    showSetting() {
+      return this.plot.args.columns;
+    },
+    showSelected: {
+      get() {
+        return !this.showSetting || this.showSetting === 'selected';
+      },
+      set(value) {
+        let columns = '';
+        if (value) {
+          columns = this.showSetting === 'not-selected' ? null : 'selected';
+        } else {
+          columns = 'not-selected'; // always show at least one
+        }
+        this.changePlotArgs({ columns });
+      },
+    },
+    showNotSelected: {
+      get() {
+        return !this.showSetting || this.showSetting === 'not-selected';
+      },
+      set(value) {
+        let columns = '';
+        if (value) {
+          columns = this.showSetting === 'selected' ? null : 'not-selected';
+        } else {
+          columns = 'selected';
+        }
+        this.changePlotArgs({ columns });
+      },
     },
   },
 };
@@ -47,6 +88,14 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded,
     :loading="plot.loading || !dataset.ready || !values || values.data.length === 0")
   template(#controls)
     v-toolbar.darken-3(color="primary", dark, flat, dense)
+      v-toolbar-title Metabolite Filter
+    v-card.mx-3(flat)
+      v-card-actions(:style="{display: 'block'}")
+        v-checkbox.my-0(v-model="showSelected",
+            :label="`Selected (${countSelected})`", hide-details, color="#ffa500")
+        v-checkbox.my-0(v-model="showNotSelected",
+            :label="`Not Selected (${countNotSelected})`", hide-details, color="#4682b4")
+    v-toolbar.darken-3(color="primary", dark, flat, dense)
       v-toolbar-title Dendogram
     v-card.mx-3(flat)
       v-card-actions(:style="{display: 'block'}")
@@ -56,7 +105,7 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded,
         :options="layouts",
         @change="layout = $event")
   heatmap(
-      v-if="plot && dataset.ready && values",
+      v-if="plot && plot.data && dataset.ready && values",
       :values="values",
       :column-config="column", :row-config="row", :layout="layout",
       :column-clustering="plot.data.column",

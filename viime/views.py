@@ -640,7 +640,7 @@ def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Opti
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/heatmap', methods=['GET'])
 @use_kwargs({
     'columns': fields.Str(required=False, missing=None,
-                          validate=validate.OneOf(['all', 'selected', 'not-selected']))
+                          validate=validate.OneOf(['selected', 'not-selected']))
 })
 @load_validated_csv_file
 def get_hierarchical_clustering_heatmap(validated_table: ValidatedMetaboliteTable,
@@ -650,8 +650,8 @@ def get_hierarchical_clustering_heatmap(validated_table: ValidatedMetaboliteTabl
     if columns:
         csv_file: CSVFile = CSVFile.query.get_or_404(validated_table.csv_file_id)
         if columns == 'selected':
-            table = table.loc[:, csv_file.selected_columns]
-        elif columns == 'non-selected':
+            table = table.loc[:, csv_file.selected_columns or []]
+        elif columns == 'non-selected' and csv_file.selected_columns:
             table = table.loc[:, [c for c in table if c not in csv_file.selected_columns]]
 
     return hierarchical_clustering(table)

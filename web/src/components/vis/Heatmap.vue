@@ -145,6 +145,9 @@ export default {
 
     rowHierarchy() {
       const root = this.computeHierarchy(this.rowTree, this.matrixHeight, this.width);
+      if (!root) {
+        return root;
+      }
       root.each((node) => {
         const t = node.x;
         node.x = node.y;
@@ -156,10 +159,10 @@ export default {
       return scaleSequential(interpolateBlues).domain(extent(this.values.data));
     },
     columnLeaves() {
-      return this.columnTree.leaves();
+      return this.columnTree ? this.columnTree.leaves() : [];
     },
     rowLeaves() {
-      return this.rowTree.leaves();
+      return this.rowTree ? this.rowTree.leaves() : [];
     },
     columnDendogramHeight() {
       return this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
@@ -202,6 +205,9 @@ export default {
 
   methods: {
     computeTree(node, collapsed) {
+      if (!node) {
+        return null;
+      }
       const injectIndices = (s) => {
         if (typeof s.index === 'number') {
           s.indices = [s.index];
@@ -220,13 +226,16 @@ export default {
         .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
     },
     computeHierarchy(root, layoutWidth, layoutHeight) {
+      if (!root) {
+        return null;
+      }
       const l = cluster()
         .size([layoutWidth, layoutHeight * DENDOGRAM_RATIO - this.padding2])
         .separation(() => 1);
       return l(root);
     },
     updateTree(ref, root, wrapper, config, horizontalLayout) {
-      if (!ref || !config.dendogram) {
+      if (!ref || !config.dendogram || !root) {
         return;
       }
       const svg = select(ref);
