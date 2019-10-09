@@ -62,7 +62,7 @@ export const routes = [
         component: AnalyzeData,
         props: true,
       },
-      ...analyses.map(({ path, shortName: name, component }: { path: string, shortName: string, component: any }) => ({
+      ...analyses.map(({ path, shortName: name, component }: { path: string, shortName: string, component: Vue }) => ({
         path: `analyze/${path}`, name, component, props: true,
       })),
     ],
