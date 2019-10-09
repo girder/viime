@@ -26,7 +26,7 @@ export default {
   data() {
     const filters = {};
     this.headers.forEach((header) => {
-      filters[header.value] = 0;
+      filters[header.value] = Infinity;
     });
     return {
       format: format('.4e'),
@@ -52,17 +52,20 @@ export default {
       },
     },
     filteredItems() {
-      const filters = Object.entries(this.filters).filter(entry => entry[1] > 0);
+      const filters = Object.entries(this.filters).filter(entry => entry[1] < 0.1);
       if (filters.length === 0) {
         return this.items;
       }
-      return this.items.filter(item => filters.every(([k, v]) => item[k] >= v));
+      return this.items.filter(item => filters.every(([k, v]) => item[k] <= v));
     },
   },
 
   methods: {
     isInteresting(value) {
       return value < this.threshold;
+    },
+    setFilter(header, value) {
+      this.filters[header.value] = value === 0.1 ? Infinity : value;
     },
   },
 };
@@ -75,8 +78,9 @@ v-data-table.elevation-1.main(:headers="headers", :items="filteredItems", disabl
   template(v-slot:[headercell]="{header}")
     | {{header.text}}
     v-slider(v-if="header.filter", min="0", max="0.1", step="0.001", thumb-label,
-        :title="`Filter ${header.text} >= ${filters[header.value]}`",
-        v-model="filters[header.value]", hide-details, @click="$event.stopPropagation()")
+        :title="`Filter ${header.text} <= ${filters[header.value]}`",
+        :value="filters[header.value]", @input="setFilter(header, $event)",
+        hide-details, @click="$event.stopPropagation()")
   template(#items="props")
     td.cell
       v-checkbox(v-model="props.selected", hide-details)
