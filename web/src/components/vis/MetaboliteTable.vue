@@ -67,6 +67,9 @@ export default {
     setFilter(header, value) {
       this.filters[header.value] = value === 0.1 ? Infinity : value;
     },
+    filterText(header) {
+      return `Filter ${header.text} <= ${this.filters[header.value]}`;
+    },
   },
 };
 </script>
@@ -78,7 +81,7 @@ v-data-table.elevation-1.main(:headers="headers", :items="filteredItems", disabl
   template(v-slot:[headercell]="{header}")
     | {{header.text}}
     v-slider(v-if="header.filter", min="0", max="0.1", step="0.001", thumb-label,
-        :title="`Filter ${header.text} <= ${filters[header.value]}`",
+        :title="filterText(header)",
         :value="filters[header.value]", @input="setFilter(header, $event)",
         hide-details, @click="$event.stopPropagation()")
   template(#items="props")
