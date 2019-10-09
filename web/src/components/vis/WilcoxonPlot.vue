@@ -37,7 +37,7 @@ export default Vue.extend({
           text: 'Metabolite',
           value: 'Metabolite',
         },
-        ...this.pairs.map(text => ({ text, value: text })),
+        ...this.pairs.map(text => ({ text, value: text, filter: true })),
       ];
     },
   },

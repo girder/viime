@@ -42,7 +42,7 @@ export default {
           text: 'Group',
           value: 'Group',
         },
-        ...this.pairs.map(text => ({ text, value: text })),
+        ...this.pairs.map(text => ({ text, value: text, filter: true })),
       ];
     },
   },
