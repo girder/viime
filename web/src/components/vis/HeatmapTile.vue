@@ -24,9 +24,11 @@ export default {
     return {
       column: {
         dendogram: true,
+        colorer: this.isSelectedColor,
       },
       row: {
         dendogram: true,
+        colorer: this.groupColor,
       },
       dummy: false,
       layout: 'auto',
@@ -77,6 +79,25 @@ export default {
         }
         this.changePlotArgs({ columns });
       },
+    },
+    selectionLookup() {
+      return new Set((this.dataset && this.dataset.selectedColumns) || []);
+    },
+    groupLookup() {
+      if (!this.dataset.validatedGroups || !this.dataset.groupLevels) {
+        return [];
+      }
+      const levelLookup = new Map(this.dataset.groupLevels.map(({ name, color }) => [name, color]));
+      return this.dataset.validatedGroups.data.map(row => levelLookup.get(row[0]));
+    },
+  },
+  methods: {
+    isSelectedColor(index) {
+      const column = this.values.columnNames[index];
+      return this.selectionLookup.has(column) ? '#ffa500' : '#4682b4';
+    },
+    groupColor(index) {
+      return this.groupLookup[index];
     },
   },
 };

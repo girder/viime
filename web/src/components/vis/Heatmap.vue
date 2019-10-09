@@ -59,13 +59,13 @@ export default {
       type: Object,
       default: null,
     },
-    rowConfig: { // { dendogram: boolean }
+    rowConfig: { // { dendogram: boolean, colorer?: (index) => string }
       type: Object,
-      default: () => ({ dendogram: true }),
+      default: () => ({ dendogram: true, colorer: null }),
     },
-    columnConfig: { // { dendogram: boolean }
+    columnConfig: { // { dendogram: boolean, colorer?: (index) => string }
       type: Object,
-      default: () => ({ dendogram: true }),
+      default: () => ({ dendogram: true, colorer: null }),
     },
     layout: { // { dendogram: boolean }
       type: String,
@@ -305,7 +305,7 @@ export default {
       }
       this.updateTree(this.$refs.row, this.rowHierarchy, this.row, this.rowConfig, false);
     },
-    updateLabel(ref, wrapper, labels) {
+    updateLabel(ref, wrapper, labels, colorer, isColumn) {
       if (!ref) {
         return;
       }
@@ -315,12 +315,35 @@ export default {
 
       text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
       text.text(d => d.data.name);
+
+      const combineColor = (indices) => {
+        if (indices.length === 1) {
+          return colorer(indices[0]);
+        }
+        const frequencies = new Map();
+        indices.forEach((index) => {
+          const color = colorer(index);
+          frequencies.set(color, (frequencies.get(color) || 0) + 1);
+        });
+        // most frequent color
+        return Array.from(frequencies.entries()).sort((a, b) => b[1] - a[1])[0][0];
+      };
+
+      const toColor = (indices) => {
+        const color = combineColor(indices);
+        return `linear-gradient(${isColumn ? 'to top' : 'to right'}, ${color} 0, ${color} 5px, transparent 5px)`;
+      };
+
+      text.classed('color', colorer != null);
+      text.style('background', !colorer ? null : (d => toColor(d.data.indices)));
     },
     updateColumnLabel() {
-      this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves, true);
+      this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves,
+        this.columnConfig.colorer, true);
     },
     updateRowLabel() {
-      this.updateLabel(this.$refs.rowlabel, this.row, this.rowLeaves, false);
+      this.updateLabel(this.$refs.rowlabel, this.row, this.rowLeaves,
+        this.rowConfig.colorer, false);
     },
     updateMatrix() {
       if (!this.$refs.matrix || !this.values) {
@@ -466,11 +489,19 @@ export default {
   justify-content: center;
 }
 
+.collabel >>> div.color {
+  padding-bottom: 7px;
+}
+
 .rowlabel {
   grid-area: rlabel;
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+.rowlabel >>> div.color {
+  padding-left: 7px;
 }
 
 .collabel >>> div,
