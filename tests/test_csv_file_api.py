@@ -241,7 +241,7 @@ def test_merge_files(client):
         'row_type': 'header'
     }, {
         'row_index': 1,
-        'row_name': '0',
+        'row_name': 'Data Source',
         'row_type': 'metadata'
     }, {
         'row_index': 2,
