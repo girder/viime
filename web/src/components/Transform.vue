@@ -151,7 +151,7 @@ v-layout.transform-component(row, fill-height)
         score-plot-c3-tile(
             :width="600",
             :height="600",
-            :columns="dataset._source.columns",
+            :columns="dataset.column.data",
             :id="id")
         loadings-plot-tile(
             v-if="visiblePlots.loadings",
