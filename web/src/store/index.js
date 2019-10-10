@@ -44,6 +44,7 @@ const SET_TRANSFORMATION = 'set_transformation';
 
 // private actions
 const VALIDATE_TABLE = 'validate_table';
+const ADD_DATASET = 'add_dataset';
 
 Vue.use(Vuex);
 
@@ -314,14 +315,19 @@ const actions = {
     }
   },
 
+  async [ADD_DATASET]({ commit, dispatch }, data) {
+    commit(INITIALIZE_DATASET, { dataset_id: data.id, name: data.name });
+    commit(SET_LABELS, { dataset_id: data.id, rows: data.rows, columns: data.columns });
+    commit(SET_DATASET_DATA, { data });
+    await dispatch(VALIDATE_TABLE, { dataset_id: data.id });
+    return data;
+  },
+
   async [UPLOAD_CSV]({ state, commit, dispatch }, { file }) {
     commit(SET_LOADING, true);
     try {
       const { data } = await CSVService.upload(file);
-      commit(INITIALIZE_DATASET, { dataset_id: data.id, name: data.name });
-      commit(SET_LABELS, { dataset_id: data.id, rows: data.rows, columns: data.columns });
-      commit(SET_DATASET_DATA, { data });
-      await dispatch(VALIDATE_TABLE, { dataset_id: data.id });
+      await dispatch(ADD_DATASET, data);
       state.store.save(state, state.session_id);
     } catch (err) {
       commit(SET_LAST_ERROR, err);
@@ -335,16 +341,7 @@ const actions = {
     commit(SET_LOADING, true);
     try {
       const { data } = await ExcelService.upload(file);
-      const promiseList = data.map((dataFile) => {
-        commit(INITIALIZE_DATASET, { dataset_id: dataFile.id, name: data.name });
-        commit(SET_LABELS, {
-          dataset_id: dataFile.id,
-          rows: dataFile.rows,
-          columns: dataFile.columns,
-        });
-        commit(SET_DATASET_DATA, { data: dataFile });
-        return dispatch(VALIDATE_TABLE, { dataset_id: dataFile.id });
-      });
+      const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
       await Promise.all(promiseList);
       state.store.save(state, state.session_id);
       commit(SET_LOADING, false);
@@ -361,16 +358,15 @@ const actions = {
 
     try {
       const { data } = await ApiService.merge(params);
-      commit(INITIALIZE_DATASET, { dataset_id: data.id, name: data.name });
-      commit(SET_DATASET_DATA, { data });
-      await dispatch(VALIDATE_TABLE, { dataset_id: data.id });
+      const ds = await dispatch(ADD_DATASET, data);
       state.store.save(state, state.session_id);
+      commit(SET_LOADING, false);
+      return ds;
     } catch (err) {
       commit(SET_LAST_ERROR, err);
       commit(SET_LOADING, false);
       throw err;
     }
-    commit(SET_LOADING, false);
   },
 
   /**
