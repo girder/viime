@@ -166,8 +166,16 @@ imputation <- function(table, groups,
   new_metab_dat_mcar <- table[row.names(var_keep_mcar)]
 
   # imputation:
-  imp_mnar <- f_mnar(new_metab_dat_mnar)
-  imp_mcar <- f_mcar(new_metab_dat_mcar)
+  if (prod(dim(new_metab_dat_mnar)) > 0) {
+    imp_mnar <- f_mnar(new_metab_dat_mnar)
+  } else {
+    imp_mnar <- new_metab_dat_mnar
+  }
+  if (prod(dim(new_metab_dat_mcar)) > 0) {
+    imp_mcar <- f_mcar(new_metab_dat_mcar)
+  } else {
+    imp_mcar <- new_metab_dat_mcar
+  }
 
   # merge
   comp_imp <- cbind(imp_mnar, imp_mcar)

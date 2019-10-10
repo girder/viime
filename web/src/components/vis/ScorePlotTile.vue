@@ -12,16 +12,6 @@ export default {
   mixins: [plotData('pca')],
 
   props: {
-    width: {
-      required: true,
-      type: Number,
-      validator: Number.isInteger,
-    },
-    height: {
-      required: true,
-      type: Number,
-      validator: Number.isInteger,
-    },
     id: {
       type: String,
       required: true,
@@ -50,29 +40,19 @@ export default {
     },
 
     pcCoords() {
-      return this.maybeData('x', []);
+      return this.getPlotDataProperty('x', []);
     },
 
     rowLabels() {
-      return this.maybeData('rows', []);
+      return this.getPlotDataProperty('rows', []);
     },
 
     groupLabels() {
-      return this.maybeData('labels', {});
+      return this.getPlotDataProperty('labels', {});
     },
 
     eigenvalues() {
-      return this.maybeData('sdev', []);
-    },
-  },
-
-  methods: {
-    maybeData(key, dflt) {
-      const {
-        plot,
-      } = this;
-
-      return plot.data ? plot.data[key] : dflt;
+      return this.getPlotDataProperty('sdev', []);
     },
   },
 };
@@ -80,16 +60,14 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading")
+vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading", svg-download)
   score-plot(
-      :width="width",
-      :height="height",
+      v-if="plot && dataset.ready",
       :pc-coords="pcCoords",
       :row-labels="rowLabels",
       :group-labels="groupLabels",
       :eigenvalues="eigenvalues",
       :columns="columns",
-      :dataset="dataset",
       :pc-x="pcX",
       :pc-y="pcY",
       :show-ellipses="showEllipses")

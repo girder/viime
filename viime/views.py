@@ -3,7 +3,7 @@ from io import BytesIO
 import json
 import math
 from pathlib import PurePath
-from typing import cast, Dict, Optional
+from typing import Callable, cast, Dict, Optional
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
@@ -13,7 +13,7 @@ from webargs.flaskparser import use_kwargs
 from werkzeug import FileStorage
 
 from viime import opencpu
-from viime.analyses import anova_test, wilcoxon_test
+from viime.analyses import anova_test, hierarchical_clustering, pairwise_correlation, wilcoxon_test
 from viime.cache import csv_file_cache
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
@@ -213,8 +213,19 @@ def create_csv_file():
 
 @csv_bp.route('/csv/<uuid:csv_id>', methods=['GET'])
 def get_csv_file(csv_id):
-    csv_file = CSVFile.query.get_or_404(csv_id)
-    return jsonify(_serialize_csv_file(csv_file))
+    csv_file = _serialize_csv_file(CSVFile.query.get_or_404(csv_id))
+
+    # inject properties from the validated table model (normalization, transformation, etc.)
+    validated_table = ValidatedMetaboliteTable.query.filter_by(csv_file_id=csv_id).first()
+    if validated_table is not None:
+        transformation_schema = ValidatedMetaboliteTableSchema(
+            only=['normalization', 'normalization_argument', 'scaling',
+                  'scaling', 'transformation']
+        )
+        transformation = transformation_schema.dump(validated_table)
+        csv_file.update(transformation)
+
+    return jsonify(csv_file)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/validation', methods=['GET'])
@@ -236,11 +247,61 @@ def set_csv_file_metadata(csv_id):
         raise
 
 
+@csv_bp.route('/csv/<uuid:csv_id>/name', methods=['PUT'])
+@use_kwargs({
+    'name': fields.Str(required=True)
+})
+def set_csv_file_name(csv_id, name):
+    try:
+        csv_file = CSVFile.query.get_or_404(csv_id)
+        csv_file.name = name
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/description', methods=['PUT'])
+@use_kwargs({
+    'description': fields.Str(required=True)
+})
+def set_csv_file_description(csv_id, description):
+    try:
+        csv_file = CSVFile.query.get_or_404(csv_id)
+        csv_file.description = description
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/selected-columns', methods=['PUT'])
+@use_kwargs({
+    'columns': fields.List(fields.Str, required=True)
+})
+def set_csv_file_selected_columns(csv_id, columns):
+    try:
+        csv_file = CSVFile.query.get_or_404(csv_id)
+        csv_file.selected_columns = columns
+        db.session.add(csv_file)
+        db.session.commit()
+
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
+
+
 @csv_bp.route('/csv/<uuid:csv_id>/download', methods=['GET'])
 def download_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
+    name = PurePath(csv_file.name).with_suffix('.csv').name
     fp = BytesIO(csv_file.table.to_csv(header=False, index=False).encode())
-    return send_file(fp, mimetype='text/csv', as_attachment=True, attachment_filename=csv_file.name)
+    return send_file(fp, mimetype='text/csv', as_attachment=True, attachment_filename=name)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>', methods=['DELETE'])
@@ -456,6 +517,16 @@ def set_scaling_method(validated_table):
         raise
 
 
+@csv_bp.route('/csv/<uuid:csv_id>/validate/download', methods=['GET'])
+@load_validated_csv_file
+def download_validated_csv_file(validated_table: ValidatedMetaboliteTable):
+    fp = BytesIO(validated_table.table.to_csv().encode())
+    csv_file: CSVFile = CSVFile.query.get_or_404(validated_table.csv_file_id)
+    name = PurePath(csv_file.name).with_suffix('.csv').name
+    return send_file(fp, mimetype='text/csv', as_attachment=True,
+                     attachment_filename=name)
+
+
 def _get_pca_data(validated_table):
     table = validated_table.measurements
 
@@ -532,29 +603,8 @@ def get_pca_overview(validated_table):
     return Response(png_content, mimetype='image/png')
 
 
-@csv_bp.route('/csv/<uuid:csv_id>/analyses/wilcoxon', methods=['GET'])
-@use_kwargs({
-    'zero_method': fields.Str(missing='wilcox',
-                              validate=validate.OneOf(['wilcox', 'pratt', 'zsplit'])),
-    'alternative': fields.Str(missing='two-sided',
-                              validate=validate.OneOf(['two-sided', 'greater', 'less']))
-})
-@load_validated_csv_file
-def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable,
-                      zero_method: str, alternative: str):
-    table = validated_table.measurements
-
-    data = wilcoxon_test(table, zero_method, alternative)
-
-    return jsonify(data), 200
-
-
-@csv_bp.route('/csv/<uuid:csv_id>/analyses/anova', methods=['GET'])
-@use_kwargs({
-    'group_column': fields.Str()
-})
-@load_validated_csv_file
-def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Optional[str] = None):
+def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,
+                group_column: Optional[str] = None):
     measurements = validated_table.measurements
     groups = validated_table.groups
 
@@ -563,6 +613,48 @@ def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Opti
         raise ValidationError(
             'invalid group column', field_name='group_column', data=group_column)
 
-    data = anova_test(measurements, group)
+    data = method(measurements, group)
+
+    return jsonify(data), 200
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/wilcoxon', methods=['GET'])
+@use_kwargs({
+    'group_column': fields.Str(missing=None)
+})
+@load_validated_csv_file
+def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable,
+                      group_column: Optional[str] = None):
+    return _group_test(wilcoxon_test, validated_table, group_column)
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/anova', methods=['GET'])
+@use_kwargs({
+    'group_column': fields.Str()
+})
+@load_validated_csv_file
+def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Optional[str] = None):
+    return _group_test(anova_test, validated_table, group_column)
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/heatmap', methods=['GET'])
+@use_kwargs({})
+@load_validated_csv_file
+def get_hierarchical_clustering_heatmap(validated_table: ValidatedMetaboliteTable):
+    return hierarchical_clustering(validated_table.measurements)
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/correlation', methods=['GET'])
+@use_kwargs({
+    'min_correlation': fields.Float(missing=0.05, validate=validate.Range(0, 1)),
+    'method': fields.Str(missing='pearson',
+                         validate=validate.OneOf(['pearson', 'kendall', 'spearman']))
+})
+@load_validated_csv_file
+def get_correlation(validated_table: ValidatedMetaboliteTable,
+                    min_correlation: float, method: str):
+    table = validated_table.measurements
+
+    data = pairwise_correlation(table, min_correlation, method)
 
     return jsonify(data), 200

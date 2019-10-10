@@ -1,6 +1,7 @@
 <template lang="pug">
-div
-  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
+.main(v-resize:throttle="onResize")
+  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
+      :data-update="reactiveUpdate")
     g.master
       g.axes
       g.label.x(style="opacity: 0")
@@ -10,7 +11,6 @@ div
       g.ellipses
       g.plot
   .tooltip(ref="tooltip")
-  span(style="display: none") {{ update }}
 </template>
 
 <style scoped lang="scss">
@@ -70,14 +70,6 @@ export default {
     axisPlot,
   ],
   props: {
-    width: {
-      type: Number,
-      default: 400,
-    },
-    height: {
-      type: Number,
-      default: 300,
-    },
     pcX: {
       required: true,
       type: Number,
@@ -180,6 +172,8 @@ export default {
         && eigenvalues.length > 0;
     },
 
+  },
+  methods: {
     update() {
       // Grab the input props.
       const {
@@ -371,11 +365,7 @@ export default {
           .style('opacity', 0.0)
           .remove();
       }
-
-      return '';
     },
-  },
-  methods: {
     setRanges(xyPoints) {
       this.xrange = minmax(xyPoints.map(p => p.x), 0.1);
       this.yrange = minmax(xyPoints.map(p => p.y), 0.1);

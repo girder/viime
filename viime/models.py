@@ -1,7 +1,7 @@
 from collections import namedtuple
 from datetime import datetime
 from io import BytesIO
-from pathlib import Path, PurePath
+from pathlib import Path
 import pickle
 from uuid import uuid4
 
@@ -60,7 +60,7 @@ class BaseSchema(Schema):
     __model__ = None
 
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         if self.__model__ is not None:
             return self.__model__(**data)
         return data
@@ -70,9 +70,11 @@ class CSVFile(db.Model):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     name = db.Column(db.String, nullable=False)
+    description = db.Column(db.String, nullable=True)
     imputation_mnar = db.Column(db.String, nullable=False)
     imputation_mcar = db.Column(db.String, nullable=False)
     meta = db.Column(JSONType, nullable=False)
+    selected_columns = db.Column(db.PickleType, nullable=True)
 
     @property
     def table_validation(self):
@@ -282,15 +284,11 @@ def _validate_table_data(table):
         raise ValidationError(str(e).strip(), data=table, field_name='table') from None
 
 
-def _validate_name(name):
-    if PurePath(name).suffix != '.csv':
-        raise ValidationError('Only CSV files are allowed', data=name, field_name='name')
-
-
 class CSVFileSchema(BaseSchema):
     id = fields.UUID(missing=uuid4)
     created = fields.DateTime(dump_only=True)
-    name = fields.Str(required=True, validate=_validate_name)
+    name = fields.Str(required=True)
+    description = fields.Str()
     table = fields.Raw(required=True, validate=_validate_table_data)
     imputation_mnar = fields.Str(missing='zero', validate=validate.OneOf(IMPUTE_MNAR_METHODS))
     imputation_mcar = fields.Str(
@@ -300,36 +298,31 @@ class CSVFileSchema(BaseSchema):
     columns = fields.List(fields.Nested('TableColumnSchema', exclude=['csv_file']))
     rows = fields.List(fields.Nested('TableRowSchema', exclude=['csv_file']))
 
+    selected_columns = fields.List(fields.Str(), dump_only=True, missing=list)
+
     table_validation = fields.Nested('ValidationSchema', many=True, dump_only=True)
+    # imputed measurements
     measurement_table = fields.Raw(dump_only=True, allow_none=True)
-    measurement_metadata = fields.Raw(dump_only=True, allow_none=True)
-    sample_metadata = fields.Raw(dump_only=True, allow_none=True)
-    groups = fields.Raw(dump_only=True, allow_none=True)
     size = fields.Int(dump_only=True)
 
     @post_load
-    def fix_file_name(self, data):
+    def fix_file_name(self, data, **kwargs):
         data['name'] = secure_filename(data['name'])
         return data
 
     @post_dump
-    def read_csv_file(self, data):
-        def get_csv(key):
-            if data.get(key) is not None:
-                return data[key].to_csv()
-
+    def read_csv_file(self, data, **kwargs):
         if 'table' not in data:
             return data
 
         data['table'] = data['table'].to_csv(header=False, index=False)
-        data['measurement_table'] = get_csv('measurement_table')
-        data['measurement_metadata'] = get_csv('measurement_metadata')
-        data['sample_metadata'] = get_csv('sample_metadata')
-        data['groups'] = get_csv('groups')
+        if data.get('measurement_table') is not None:
+            data['measurement_table'] = data['measurement_table'].to_dict(
+                orient='split')
         return data
 
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         csv_file, rows, columns = CSVFile.create_csv_file(**data)
         db.session.add(csv_file)
         db.session.add_all(rows + columns)
@@ -423,7 +416,7 @@ class ModifyLabelChangesSchema(Schema):
     label = fields.Str(required=True)
 
     @validates_schema
-    def validate_label(self, data):
+    def validate_label(self, data, **kwargs):
         context = data['context']
         label = data['label']
         if context == AXIS_NAME_TYPES.COLUMN:
@@ -722,12 +715,36 @@ class ValidatedMetaboliteTable(db.Model):
         table = scale(self.scaling, table)
         return table
 
+    @property
+    def table(self):
+        """
+        mimics the .table from the CSVFile but with validated data
+        """
+        return _generate_validated_table(self)
+
+
+def _generate_validated_table(validated_table):
+    # concat rows
+    if not validated_table.measurement_metadata.empty:
+        table = validated_table.measurement_metadata.copy()
+        # normalize column names since R might have changed them
+        table.columns = list(validated_table.measurements)
+        table = table.append(validated_table.measurements, sort=False)
+    else:
+        table = validated_table.measurements.copy()
+
+    # concat columns
+    table = validated_table.groups.join(table, how='right')
+    table = validated_table.sample_metadata.join(table, how='right')
+
+    return table
+
 
 class ValidatedMetaboliteTableSchema(BaseSchema):
     id = fields.UUID(missing=uuid4)
     created = fields.DateTime(dump_only=True)
     csv_file_id = fields.UUID(required=True)
-    name = fields.Str(required=True, validate=_validate_name)
+    name = fields.Str(required=True)
     normalization = fields.Str(missing=None, validate=validate.OneOf(NORMALIZATION_METHODS))
     normalization_argument = fields.Str(missing=None)
     scaling = fields.Str(missing=None, validate=validate.OneOf(SCALING_METHODS))
@@ -749,7 +766,19 @@ class ValidatedMetaboliteTableSchema(BaseSchema):
     # raw_measurements = fields.Raw(required=True, load_only=True) if needed in the future
 
     @post_dump
-    def serialize_tables(self, data):
-        for attr in ['measurements', 'measurement_metadata', 'sample_metadata', 'groups']:
-            data[attr] = data[attr].to_csv()
+    def serialize_tables(self, data, **kwargs):
+        # don't transfer columns or index depending on the type
+        def convert(attr, *drop_columns):
+            if attr in data:
+                converted = data[attr].to_dict(orient='split')
+                for drop_column in drop_columns:
+                    if drop_column in converted:
+                        del converted[drop_column]
+                data[attr] = converted
+
+        convert('measurements', 'index', 'columns')
+        convert('groups', 'index')
+        convert('sample_metadata', 'index')
+        convert('measurement_metadata', 'columns')
+
         return data

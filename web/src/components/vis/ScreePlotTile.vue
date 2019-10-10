@@ -12,14 +12,6 @@ export default {
   mixins: [plotData('pca')],
 
   props: {
-    width: {
-      required: true,
-      type: Number,
-    },
-    height: {
-      required: true,
-      type: Number,
-    },
     id: {
       required: true,
       type: String,
@@ -42,10 +34,8 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(v-if="plot", title="PCA Scree Plot", :loading="plot.loading")
+vis-tile(v-if="plot", title="PCA Scree Plot", :loading="plot.loading", svg-download)
   scree-plot(
-      :width="width",
-      :height="height",
       :eigenvalues="getPlotDataProperty('sdev')",
       :num-components="numComponents",
       :show-cutoffs="showCutoffs")

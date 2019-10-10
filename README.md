@@ -83,3 +83,18 @@ should accept a path to a CSV file as an argument and return a data frame.  The
 handles the communication between pandas and R data frames.  To add additional
 methods exposed to the API server, add the function to the viime package and
 rebuild the docker image.
+
+Database migration
+------------------
+
+This application uses `flask-migrate` to manage database migrations. To create a migration after changing models, run:
+
+```sh
+flask db migrate
+```
+
+To migrate to the latest database schema, run:
+
+```sh
+flask db upgrade
+```

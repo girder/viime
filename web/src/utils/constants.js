@@ -1,3 +1,6 @@
+const measurementColumnName = 'Metabolite';
+const measurementValueName = 'Measurement';
+
 const rowMenuOptions = [
   {
     value: 'header',
@@ -157,36 +160,17 @@ const validationMeta = {
     clickable: false,
     multi: false,
   },
+  'non-numeric-column': {
+    description: 'A column contains non-numeric metabolite data',
+    clickable: true,
+    multi: true,
+  },
+  'non-numeric-row': {
+    description: 'A row contains non-numeric metabolite data',
+    clickable: true,
+    multi: true,
+  },
 };
-const wilcoxon_zero_methods = [
-  {
-    label: 'Wilcox',
-    value: 'wilcox',
-  },
-  {
-    label: 'Pratt',
-    value: 'pratt',
-  },
-  {
-    label: 'Z-Split',
-    value: 'zsplit',
-  },
-];
-
-const wilcoxon_alternatives = [
-  {
-    label: 'Two-Sided',
-    value: 'two-sided',
-  },
-  {
-    label: 'Greater',
-    value: 'greater',
-  },
-  {
-    label: 'Less',
-    value: 'less',
-  },
-];
 
 const plot_types = {
   TRANSFORM: 'transform',
@@ -214,6 +198,7 @@ export {
   validationMeta,
 
   plot_types,
-  wilcoxon_alternatives,
-  wilcoxon_zero_methods,
+
+  measurementColumnName,
+  measurementValueName,
 };

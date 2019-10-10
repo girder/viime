@@ -1,6 +1,7 @@
 <template lang="pug">
-div
-  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
+.main(v-resize:throttle="onResize")
+  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
+      :data-update="reactiveUpdate")
     g.master
       g.axes
       g.label.x(style="opacity: 0")
@@ -12,7 +13,6 @@ div
         line.vert
       g.plot
   .tooltip(ref="tooltip")
-  span(style="display: none", v-if="pointsInternal.length > 0") {{ update }}
 </template>
 
 <style scoped lang="scss">
@@ -41,14 +41,6 @@ export default {
     axisPlot,
   ],
   props: {
-    width: {
-      type: Number,
-      default: 400,
-    },
-    height: {
-      type: Number,
-      default: 300,
-    },
     points: {
       required: true,
       validator: prop => !prop
@@ -84,7 +76,8 @@ export default {
     pointsInternal() {
       return this.points || [];
     },
-
+  },
+  methods: {
     update() {
       // Grab the input props.
       const {
@@ -94,8 +87,15 @@ export default {
         showCrosshairs,
       } = this;
 
+      if (pointsInternal.length === 0) {
+        return;
+      }
+
       // Plot the vectors as a scatter plot.
       const svg = select(this.$refs.svg);
+      this.axisPlot(svg);
+      this.setXLabel('PC1 correlation');
+      this.setYLabel('PC2 correlation');
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
       const radius = 4;
@@ -171,16 +171,7 @@ export default {
         .attr('r', radius)
         .attr('cx', d => this.scaleX(d.cor[pcX - 1]))
         .attr('cy', d => this.scaleY(d.cor[pcY - 1]));
-
-      return '';
     },
-  },
-
-  mounted() {
-    const svg = select(this.$refs.svg);
-    this.axisPlot(svg);
-    this.setXLabel('PC1 correlation');
-    this.setYLabel('PC2 correlation');
   },
 };
 </script>

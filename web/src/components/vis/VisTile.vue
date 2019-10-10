@@ -1,4 +1,7 @@
 <script>
+import { format } from 'd3-format';
+import { downloadSVG } from '../../utils/exporter';
+
 export default {
   props: {
     title: {
@@ -9,32 +12,132 @@ export default {
       default: false,
       type: Boolean,
     },
+    svgDownload: {
+      default: false,
+      type: Boolean,
+    },
+  },
+
+  data() {
+    return {
+      scales: [
+        { scaleFactor: 0.5, cssClass: 'span1' },
+        { scaleFactor: 1, cssClass: 'span2' },
+        { scaleFactor: 1.5, cssClass: 'span3' },
+        { scaleFactor: 2, cssClass: 'span4' },
+        { scaleFactor: 2.5, cssClass: 'span5' },
+      ],
+      scaleIndex: 1,
+      showHelp: false,
+    };
   },
 
   computed: {
-    hasControls() {
-      return !!this.$slots.controls;
+    scaleClass() {
+      return this.scales[this.scaleIndex].cssClass;
+    },
+    scaleFactor() {
+      return this.scales[this.scaleIndex].scaleFactor;
+    },
+    scaleOptions() {
+      const f = format('.0%');
+      return this.scales.map((d, i) => ({ text: f(d.scaleFactor), value: i }));
+    },
+  },
+
+  methods: {
+    setScaleIndex(value) {
+      this.scaleIndex = Math.max(Math.min(Number.parseInt(value, 10), this.scales.length - 1), 0);
+    },
+    hasHelp() {
+      return this.$slots.help != null;
+    },
+    downloadSVG() {
+      const svg = this.$el.querySelector('svg');
+      if (svg) {
+        downloadSVG(svg, this.title);
+      }
     },
   },
 };
 </script>
 
 <template lang="pug">
-v-flex(shrink=1)
-  .white.rounded.relative
-    v-toolbar.primary.darken-3.top-rounded(dark, flat, dense)
-      v-toolbar-title {{ title }}
-      v-spacer
-      v-toolbar-items(v-if="hasControls")
-        slot(name="controls")
-    v-progress-linear.ma-0.progress(v-if="loading", indeterminate, height=4)
-    v-card.bottom-rounded(flat)
-      slot
+v-flex.white.rounded.main(shrink=1, :class="scaleClass")
+  v-toolbar.primary.darken-3.top-rounded(dark, flat, dense)
+    v-toolbar-title {{ title }}
+    v-toolbar-items(v-if="hasHelp()")
+      v-dialog(v-model="showHelp", max-width="33vw")
+        template(v-slot:activator="{ on }")
+          v-btn(v-on="on", icon)
+            v-icon {{ $vuetify.icons.help }}
+        v-card
+          v-card-title
+            h3.headline {{ title }}
+          v-card-text
+            slot(name="help")
+          v-card-actions
+            v-spacer
+            v-btn(@click="showHelp = false") Close
+    v-spacer
+    v-toolbar-items
+      v-btn(@click="setScaleIndex(scaleIndex - 1)", :disabled="scaleIndex === 0", icon)
+        v-icon {{ $vuetify.icons.magnifyMinus }}
+      v-select.scaleFactor(:value="scaleIndex", @change="setScaleIndex($event)",
+          :items="scaleOptions", hide-details, item-text="text", item-value="value")
+      v-btn(@click="setScaleIndex(scaleIndex + 1)",
+          :disabled="scaleIndex === scales.length - 1", icon)
+        v-icon {{ $vuetify.icons.magnifyPlus }}
+      v-btn(v-if="svgDownload", @click="downloadSVG", icon)
+        v-icon {{ $vuetify.icons.save }}
+      slot(name="controls")
+  v-progress-linear.ma-0.progress(v-if="loading", indeterminate, height=4)
+  v-card.bottom-rounded.content(flat)
+    slot
 </template>
 
 <style scoped lang="scss">
-.relative {
+.span1 {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+.span2 {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.span3 {
+  grid-column: span 3;
+  grid-row: span 3;
+}
+.span4 {
+  grid-column: span 4;
+  grid-row: span 4;
+}
+.span5 {
+  grid-column: span 5;
+  grid-row: span 5;
+}
+.span6 {
+  grid-column: span 6;
+  grid-row: span 6;
+}
+.span7 {
+  grid-column: span 7;
+  grid-row: span 7;
+}
+.span8 {
+  grid-column: span 8;
+  grid-row: span 8;
+}
+
+.scaleFactor {
+  max-width: 4em;
+}
+
+.main {
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 .rounded {
   border-radius: 5px;
@@ -48,14 +151,22 @@ v-flex(shrink=1)
   border-radius: 0 0 5px 5px;
 }
 
-.vis-tile {
-  width: 600px;
-  max-width: 600px;
-  height: 648px;
-  max-height: 648px;
-}
 
 .progress {
   position: absolute;
+}
+</style>
+
+<style scoped>
+
+.content {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column
+}
+
+.content >>> > * {
+  flex: 1 1 0;
+  overflow: hidden;
 }
 </style>

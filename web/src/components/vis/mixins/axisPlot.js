@@ -1,5 +1,6 @@
 import { scaleLinear } from 'd3-scale';
 import { axisBottom, axisLeft } from 'd3-axis';
+import resize from 'vue-resize-directive';
 
 function labelAxis(label, msg, xFunc, yFunc, rot) {
   const text = label.select('text')
@@ -10,15 +11,8 @@ function labelAxis(label, msg, xFunc, yFunc, rot) {
 }
 
 export const axisPlot = {
-  props: {
-    width: {
-      type: Number,
-      required: true,
-    },
-    height: {
-      type: Number,
-      required: true,
-    },
+  directives: {
+    resize,
   },
   data() {
     return {
@@ -31,9 +25,21 @@ export const axisPlot = {
       },
       duration: 500,
       svg: null,
+      width: 100,
+      height: 100,
+      refsMounted: false, // to force an rendering after mounting
     };
   },
   computed: {
+    reactiveUpdate() {
+      if (!this.refsMounted) {
+        return '';
+      }
+      if (this.$refs.svg) {
+        this.update();
+      }
+      return '';
+    },
     dwidth() {
       const { width, margin } = this;
       return width - margin.left - margin.right;
@@ -73,6 +79,10 @@ export const axisPlot = {
     },
 
   },
+  mounted() {
+    this.onResize();
+    this.refsMounted = true;
+  },
   methods: {
     axisPlot(svg) {
       const {
@@ -99,6 +109,7 @@ export const axisPlot = {
           .call(axisX);
       } else {
         axes.select('.x-axis')
+          .attr('transform', `translate(0,${dheight})`)
           .transition()
           .duration(duration)
           .call(axisX);
@@ -159,6 +170,11 @@ export const axisPlot = {
         bbox => -margin.left / 2 - bbox.height / 2,
         bbox => dheight / 2 + bbox.width / 2,
         -90);
+    },
+    onResize() {
+      const bb = this.$el.getBoundingClientRect();
+      this.width = bb.width;
+      this.height = bb.height;
     },
   },
 };
