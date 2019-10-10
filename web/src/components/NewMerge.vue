@@ -37,6 +37,9 @@ export default {
     },
   },
   methods: {
+    rank(dataset) {
+      return this.selected.includes(dataset.id) ? String(this.selected.indexOf(dataset.id) + 1) : ' ';
+    },
     async submit(evt) {
       evt.preventDefault();
       evt.stopPropagation();
@@ -83,8 +86,8 @@ v-form(v-model="valid", ref="form", @submit="submit")
       v-subheader Data Sources
       v-list-tile(v-for="(dataset, index) in datasets", :key="dataset.id")
         v-list-tile-action
-          v-checkbox(v-model="selected", :value="dataset.id", :rules="selectedRules",
-              :disabled="!dataset.valid")
+          v-checkbox.numbered(v-model="selected", :value="dataset.id", :rules="selectedRules",
+              :disabled="!dataset.valid", :prepend-icon="rank(dataset)")
         v-list-tile-content
           v-list-tile-title {{dataset.name}}
           v-list-tile-sub-title(v-if="!dataset.valid", color="error") Invalid Data source
@@ -97,3 +100,16 @@ v-form(v-model="valid", ref="form", @submit="submit")
         color="primary") create
     v-btn.right(to="/") cancel
 </template>
+
+<style scoped>
+.numbered >>> .v-input__prepend-outer {
+  margin-right: 0;
+  margin-left: -10px;
+}
+
+.numbered >>> .v-input__icon--prepend > .v-icon {
+  font-size: unset;
+  font-feature-settings: unset;
+  font-style: normal;
+}
+</style>
