@@ -161,7 +161,7 @@ def merge_csv_files(name: str, description: str, method: str, datasets: List[str
     try:
         csv_file = csv_file_schema.load(dict(
             name=name,
-            table=merged,
+            table=merged.to_csv(),
             meta={
                 'merged': [str(id) for id in datasets],
                 'merge_method': method
@@ -518,12 +518,14 @@ def remerge_csv_file(csv_id):
 
         merged, column_types, row_types = simple_merge(tables)
 
-        csv_file.table = merged
-        _update_column_types(column_types)
-        _update_row_types(row_types)
+        # doesn't work since readonly
+        csv_file.save_table(merged)
+
+        _update_column_types(csv_file, column_types)
+        _update_row_types(csv_file, row_types)
 
         db.session.add(csv_file)
-        db.session.flush()
+        db.session.commit()
         return jsonify(csv_file_schema.dump(csv_file))
     except Exception:
         db.session.rollback()

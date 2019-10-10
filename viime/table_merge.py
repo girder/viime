@@ -33,7 +33,6 @@ def simple_merge(validated_tables: List[ValidatedMetaboliteTable]):
         for table in validated_tables:
             df = getattr(table, attr)
             count = df.shape[1]
-            print(count, table.csv_file_id, column_type)
             tables.append(df)
             column_types.extend([column_type] * count)
             measurement_metadata.extend([str(table.csv_file_id)] * count)
@@ -52,4 +51,4 @@ def simple_merge(validated_tables: List[ValidatedMetaboliteTable]):
     # merge as str
     table = pandas.concat([metadata, merged.astype(str)])
 
-    return table.to_csv(), column_types, row_types
+    return table, column_types, row_types
