@@ -74,8 +74,15 @@ export default {
     dataset(newValue) {
       if (newValue && this.$store.getters.isMerged(newValue.id)) {
         this.method = newValue.meta.merge_method;
+      } else {
+        this.method = null;
       }
     },
+  },
+  created() {
+    if (this.dataset && this.$store.getters.isMerged(this.dataset.id)) {
+      this.method = this.dataset.meta.merge_method;
+    }
   },
   methods: {
     setName(name) {
