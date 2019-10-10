@@ -22,6 +22,7 @@ import {
   SET_DATASET_DESCRIPTION,
   SET_DATASET_SELECTED_COLUMNS,
   CREATE_MERGED_DATASET,
+  REMERGE_DATASET,
   SET_DATASET_GROUP_LEVELS,
 } from './actions.type';
 
@@ -52,6 +53,7 @@ Vue.use(Vuex);
 const datasetDefaults = {
   description: '',
   created: new Date(),
+  meta: {},
   ready: false,
   validation: [],
   sourcerows: [],
@@ -126,6 +128,7 @@ const getters = {
   txType: state => (id, category) => getters.ready(state)(id)
     && state.datasets[id][category],
   plot: state => (id, name) => getters.ready(state)(id) && state.plots[id][name],
+  isMerged: state => id => getters.ready(id) && Array.isArray(state.datasets[id].meta.merged),
 };
 
 
@@ -170,6 +173,7 @@ const mutations = {
       ...{
         name,
         description,
+        meta: data.meta || {},
         created: new Date(created),
         selectedColumns: data.selected_columns || [],
         groupLevels: data.group_levels || [],
@@ -455,6 +459,21 @@ const actions = {
       throw err;
     }
     commit(SET_LOADING, false);
+  },
+
+  async [REMERGE_DATASET]({ commit, dispatch }, { dataset_id }) {
+    commit(SET_LOADING, true);
+
+    try {
+      await CSVService.remerge(dataset_id);
+      await dispatch(LOAD_DATASET, { dataset_id });
+      commit(INVALIDATE_PLOTS, { dataset_id });
+      commit(SET_LOADING, false);
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
   },
 
   async [MUTEX_TRANSFORM_TABLE]({ commit }, {

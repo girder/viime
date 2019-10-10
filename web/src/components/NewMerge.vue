@@ -32,7 +32,7 @@ export default {
         id: d.id,
         name: d.name,
         description: d.description,
-        valid: this.$store.getters.valid(d.id)
+        valid: this.$store.getters.valid(d.id),
       }));
     },
   },
@@ -79,7 +79,7 @@ v-form(v-model="valid", ref="form", @submit="submit")
       v-radio(v-for="method in methods", :key="method.value",
           :label="method.label", :value="method.value")
 
-    v-list(subheader,two-line)
+    v-list(subheader, two-line)
       v-subheader Data Sources
       v-list-tile(v-for="(dataset, index) in datasets", :key="dataset.id")
         v-list-tile-action

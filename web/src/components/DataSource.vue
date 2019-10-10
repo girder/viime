@@ -1,6 +1,8 @@
 <script>
 import { sizeFormatter } from '@girder/components/src/utils/mixins';
-import { SET_DATASET_NAME, SET_DATASET_DESCRIPTION, SET_DATASET_GROUP_LEVELS } from '../store/actions.type';
+import {
+  SET_DATASET_NAME, SET_DATASET_DESCRIPTION, SET_DATASET_GROUP_LEVELS, REMERGE_DATASET,
+} from '../store/actions.type';
 import { loadDataset } from '../utils/mixins';
 
 export default {
@@ -39,6 +41,31 @@ export default {
     dataset() { return this.$store.getters.dataset(this.id); },
     ready() { return this.$store.getters.ready(this.id); },
     groupLevels() { return this.dataset.groupLevels; },
+    isMerged() { return this.$store.getters.isMerged(this.id); },
+    mergedDatasets() {
+      if (!this.isMerged) {
+        return [];
+      }
+      const merged = this.dataset.meta.merged || [];
+      return merged.map((d) => {
+        const ds = this.$store.getters.dataset(d);
+        if (!ds) {
+          return {
+            id: d,
+            name: 'Deleted Data Source',
+            valid: false,
+            description: '',
+          };
+        }
+        return {
+          id: ds.id,
+          name: ds.name,
+          description: ds.description,
+          valid: this.$store.getters.valid(ds.id),
+        };
+      });
+    },
+    allDatasetsValid() { return this.isMerged && this.mergedDatasets.every(d => d.valid); },
   },
   methods: {
     setName(name) {
@@ -59,6 +86,12 @@ export default {
       });
       this.$store.dispatch(SET_DATASET_GROUP_LEVELS, { dataset_id: this.id, groupLevels: levels });
     },
+    remerge() {
+      if (!this.allDatasetsValid) {
+        return;
+      }
+      this.$store.dispatch(REMERGE_DATASET, { dataset_id: this.id });
+    },
   },
 };
 </script>
@@ -78,6 +111,17 @@ v-layout.data-source(row, fill-height)
             readonly)
         v-text-field(label="File Dimensions", :value="`${dataset.width} x ${dataset.height}`",
             readonly)
+
+        v-list(subheader, two-line, v-if="isMerged")
+          v-subheader
+            .grow() Merged Data Sources
+            v-btn(:disabled="!allDatasetsValid", @click="remerge()") Remerge
+
+          v-list-tile(v-for="dataset in mergedDatasets", :key="dataset.id")
+            v-list-tile-content
+              v-list-tile-title {{dataset.name}}
+              v-list-tile-sub-title(v-if="!dataset.valid", color="error") Invalid Data source
+              v-list-tile-sub-title(v-else) {{dataset.description || 'No Description'}}
 
         v-subheader Groups
         v-data-table(:headers="groupLevelHeaders", :items="groupLevels", item-key="name",
