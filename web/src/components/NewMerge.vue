@@ -1,7 +1,7 @@
 <script>
 import { CREATE_MERGED_DATASET } from '../store/actions.type';
 
-const methods = [
+export const mergeMethods = [
   {
     value: 'simple',
     label: 'Simple',
@@ -21,8 +21,8 @@ export default {
       name: 'Unnamed Merged Dataset',
       description: '',
       selected: [],
-      methods,
-      method: methods[0].value,
+      mergeMethods,
+      method: mergeMethods[0].value,
       error: null,
     };
   },
@@ -76,7 +76,7 @@ v-form(v-model="valid", ref="form", @submit="submit")
         :rules="requiredRules")
     v-textarea(label="Description", v-model="description")
     v-radio-group(v-model="method", label="Merge Method")
-      v-radio(v-for="method in methods", :key="method.value",
+      v-radio(v-for="method in mergeMethods", :key="method.value",
           :label="method.label", :value="method.value")
 
     v-list(subheader, two-line)

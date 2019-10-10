@@ -461,11 +461,11 @@ const actions = {
     commit(SET_LOADING, false);
   },
 
-  async [REMERGE_DATASET]({ commit, dispatch }, { dataset_id }) {
+  async [REMERGE_DATASET]({ commit, dispatch }, { dataset_id, method }) {
     commit(SET_LOADING, true);
 
     try {
-      await CSVService.remerge(dataset_id);
+      await CSVService.remerge(dataset_id, { method });
       await dispatch(LOAD_DATASET, { dataset_id });
       commit(INVALIDATE_PLOTS, { dataset_id });
       commit(SET_LOADING, false);

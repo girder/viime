@@ -4,6 +4,7 @@ import {
   SET_DATASET_NAME, SET_DATASET_DESCRIPTION, SET_DATASET_GROUP_LEVELS, REMERGE_DATASET,
 } from '../store/actions.type';
 import { loadDataset } from '../utils/mixins';
+import { mergeMethods } from './NewMerge.vue';
 
 export default {
   mixins: [loadDataset, sizeFormatter],
@@ -35,6 +36,8 @@ export default {
           sortable: false,
         },
       ],
+      method: null,
+      mergeMethods,
     };
   },
   computed: {
@@ -67,6 +70,13 @@ export default {
     },
     allDatasetsValid() { return this.isMerged && this.mergedDatasets.every(d => d.valid); },
   },
+  watch: {
+    dataset(newValue) {
+      if (newValue && this.$store.getters.isMerged(newValue.id)) {
+        this.method = newValue.meta.merge_method;
+      }
+    },
+  },
   methods: {
     setName(name) {
       if (!name.trim()) {
@@ -90,7 +100,7 @@ export default {
       if (!this.allDatasetsValid) {
         return;
       }
-      this.$store.dispatch(REMERGE_DATASET, { dataset_id: this.id });
+      this.$store.dispatch(REMERGE_DATASET, { dataset_id: this.id, method: this.method });
     },
   },
 };
@@ -113,6 +123,9 @@ v-layout.data-source(row, fill-height)
             readonly)
 
         v-list(subheader, two-line, v-if="isMerged")
+          v-radio-group(v-model="method", label="Merge Method")
+            v-radio(v-for="method in mergeMethods", :key="method.value",
+                :label="method.label", :value="method.value")
           v-subheader
             .grow() Merged Data Sources
             v-btn(:disabled="!allDatasetsValid", @click="remerge()") Remerge

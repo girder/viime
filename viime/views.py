@@ -147,7 +147,7 @@ def upload_excel_file(file: FileStorage, meta: Dict):
 @csv_bp.route('/merge', methods=['POST'])
 @use_kwargs({
     'name': fields.Str(required=True),
-    'description': fields.Str(),
+    'description': fields.Str(missing=None),
     'method': fields.Str(required=True, validate=validate.OneOf(['simple'])),
     'datasets': fields.List(
         fields.UUID(), validate=validate.Length(min=2))
@@ -503,15 +503,18 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/remerge', methods=['POST'])
-@use_kwargs({})
-def remerge_csv_file(csv_id):
+@use_kwargs({
+    'method': fields.Str(missing=None)
+})
+def remerge_csv_file(csv_id, method):
     try:
         csv_file = CSVFile.query.get_or_404(csv_id)
         if 'merged' not in csv_file.meta:
             raise ValidationError('given file is not a merged one')
 
         datasets = csv_file.meta['merged']
-        # method = csv_file.meta['merge_method']
+        if not method:
+            method = csv_file.meta['merge_method']
 
         tables = [ValidatedMetaboliteTable.query.filter_by(csv_file_id=id).first_or_404()
                   for id in datasets]
@@ -523,6 +526,11 @@ def remerge_csv_file(csv_id):
 
         _update_column_types(csv_file, column_types)
         _update_row_types(csv_file, row_types)
+
+        csv_file.meta = {
+            'merged': [str(id) for id in datasets],
+            'merge_method': method
+        }
 
         db.session.add(csv_file)
         db.session.commit()

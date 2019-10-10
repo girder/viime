@@ -73,8 +73,8 @@ export const CSVService = {
     return ApiService.download('csv', slug);
   },
 
-  remerge(slug) {
-    return ApiService.post(`csv/${slug}/remerge`);
+  remerge(slug, params) {
+    return ApiService.post(`csv/${slug}/remerge`, params);
   },
 
   validatedDownloadUrl(slug) {
