@@ -1,5 +1,5 @@
 <template lang="pug">
-div
+div(v-resize:throttle="onResize")
   div(ref="chart")
   span(style="display: none") {{ update }}
 </template>
@@ -15,6 +15,7 @@ import c3 from 'c3';
 import { select } from 'd3-selection';
 import { deviation, mean } from 'd3-array';
 import { format } from 'd3-format';
+import resize from 'vue-resize-directive';
 
 import 'c3/c3.css';
 
@@ -76,15 +77,10 @@ function confidenceEllipse(x, y, std) {
 }
 
 export default {
+  directives: {
+    resize,
+  },
   props: {
-    width: {
-      type: Number,
-      default: 400,
-    },
-    height: {
-      type: Number,
-      default: 300,
-    },
     pcX: {
       required: true,
       type: Number,
@@ -129,6 +125,8 @@ export default {
     return {
       chart: null,
       duration: 500,
+      width: 100,
+      height: 100,
     };
   },
 
@@ -200,6 +198,8 @@ export default {
         duration,
         pcVariances,
         valid,
+        width,
+        height,
       } = this;
 
       if (!valid) {
@@ -213,6 +213,11 @@ export default {
       this.chart.axis.labels({
         x,
         y,
+      });
+
+      this.chart.resize({
+        width,
+        height,
       });
 
       const [xData, yData] = pcPoints;
@@ -285,17 +290,8 @@ export default {
   },
 
   mounted() {
-    const {
-      width,
-      height,
-    } = this;
-
     this.chart = c3.generate({
       bindto: this.$refs.chart,
-      size: {
-        width,
-        height,
-      },
       data: {
         columns: [],
         type: 'scatter',
@@ -407,6 +403,13 @@ export default {
             .style('opacity', 1.0);
         }
       });
+    },
+
+    onResize() {
+      const bb = this.$el.getBoundingClientRect();
+      this.width = bb.width;
+      this.height = bb.height;
+      console.log(this.width, this.height);
     },
   },
 };
