@@ -21,6 +21,7 @@ import {
   SET_DATASET_NAME,
   SET_DATASET_DESCRIPTION,
   SET_DATASET_SELECTED_COLUMNS,
+  SET_DATASET_GROUP_LEVELS,
 } from './actions.type';
 
 import {
@@ -63,6 +64,7 @@ const datasetDefaults = {
   scaling: null,
   scaling_argument: null,
   selectedColumns: [],
+  groupLevels: [], // {name: string, label: string, description: string, color: string}[]
 
   measurement_table: null,
   missing_cells: [],
@@ -169,6 +171,7 @@ const mutations = {
         description,
         created: new Date(created),
         selectedColumns: data.selected_columns || [],
+        groupLevels: data.group_levels || [],
         size,
         ready: true,
         width: sourcerows[0].length,
@@ -231,7 +234,10 @@ const mutations = {
    * Set labels from server
    * @private
    */
-  [SET_LABELS](state, { dataset_id, rows, columns }) {
+  [SET_LABELS](state, {
+    dataset_id, rows, columns,
+    group_levels,
+  }) {
     const rowsSorted = rows.sort((a, b) => a.row_index - b.row_index);
     const colsSorted = columns.sort((a, b) => a.column_index - b.column_index);
     Vue.set(state.datasets[dataset_id], 'row', {
@@ -242,6 +248,7 @@ const mutations = {
       labels: colsSorted.map(c => c.column_type),
       data: colsSorted,
     });
+    Vue.set(state.datasets[dataset_id], 'groupLevels', group_levels);
   },
 
   [REMOVE_DATASET](state, { dataset_id }) {
@@ -461,8 +468,10 @@ const actions = {
     commit(SET_LOADING, true);
     try {
       const { data } = await CSVService.updateLabel(dataset_id, changes);
-      const { rows, columns } = data;
-      commit(SET_LABELS, { dataset_id, rows, columns });
+      const { rows, columns, group_levels } = data;
+      commit(SET_LABELS, {
+        dataset_id, rows, columns, group_levels,
+      });
       await dispatch(LOAD_DATASET, { dataset_id });
       // must await before plot invalidation because a new checkpoint
       // needs to be created before plots can be refreshed
@@ -501,6 +510,19 @@ const actions = {
     try {
       await CSVService.setDescription(dataset_id, description);
       commit(MERGE_INTO_DATASET, { dataset_id, data: { description } });
+      commit(SET_LOADING, false);
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
+  },
+
+  async [SET_DATASET_GROUP_LEVELS]({ commit }, { dataset_id, groupLevels }) {
+    commit(SET_LOADING, true);
+    try {
+      await CSVService.setGroupLevels(dataset_id, groupLevels);
+      commit(MERGE_INTO_DATASET, { dataset_id, data: { groupLevels } });
       commit(SET_LOADING, false);
     } catch (err) {
       commit(SET_LAST_ERROR, err);
