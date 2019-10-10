@@ -3,7 +3,7 @@ import resize from 'vue-resize-directive';
 import { hierarchy, cluster } from 'd3-hierarchy';
 import { scaleSequential } from 'd3-scale';
 import { interpolateBlues } from 'd3-scale-chromatic';
-import { select } from 'd3-selection';
+import { select, event } from 'd3-selection';
 
 function extent(arr) {
   let min = Number.POSITIVE_INFINITY;
@@ -34,6 +34,7 @@ const LABEL_WIDTH = 150;
 
 const MDI_PLUS_CIRCLE = '&#xF417;';
 const MDI_MINUS_CIRCLE = '&#xF376;';
+const MDI_STAR_CIRCLE = '&#xF4CF;';
 
 
 export default {
@@ -63,10 +64,12 @@ export default {
       column: {
         hovered: new Set(),
         collapsed: new Set(),
+        focus: null,
       },
       row: {
         hovered: new Set(),
         collapsed: new Set(),
+        focus: null,
       },
       DENDOGRAM_RATIO,
       LABEL_WIDTH,
@@ -113,12 +116,12 @@ export default {
     },
 
     columnHierarchy() {
-      return this.computeHierarchy(this.columnClustering, this.column.collapsed,
+      return this.computeHierarchy(this.columnClustering, this.column,
         this.width, this.height);
     },
 
     rowHierarchy() {
-      const root = this.computeHierarchy(this.rowClustering, this.row.collapsed,
+      const root = this.computeHierarchy(this.rowClustering, this.row,
         this.height, this.width);
       root.each((node) => {
         const t = node.x;
@@ -143,7 +146,7 @@ export default {
   },
 
   methods: {
-    computeHierarchy(node, collapsed, layoutWidth, layoutHeight) {
+    computeHierarchy(node, { collapsed, focus }, layoutWidth, layoutHeight) {
       const injectIndices = (s) => {
         if (typeof s.index === 'number') {
           s.indices = [s.index];
@@ -156,10 +159,19 @@ export default {
 
       injectIndices(node);
 
-      const root = hierarchy(node,
+      let root = hierarchy(node,
         d => (collapsed.has(d) ? [] : (d.children || [])))
         .count()
         .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
+
+      if (focus) {
+        // find the focus node and it is the new root
+        root.each((n) => {
+          if (n.data === focus) {
+            root = n;
+          }
+        });
+      }
 
       const l = cluster()
         .size([layoutWidth * (1 - DENDOGRAM_RATIO) - LABEL_WIDTH,
@@ -206,12 +218,17 @@ export default {
           .html(`<circle r="${padding}"></circle><text><text><title></title>`)
           .attr('transform', d => `translate(${d.x},${d.y})`);
         r.on('click', (d) => {
-          if (wrapper.collapsed.has(d.data)) {
+          if (wrapper.focus === d.data) {
+            wrapper.focus = null;
+          } else if (event.ctrlKey || event.shiftKey) {
+            wrapper.focus = d.data;
+          } else if (wrapper.collapsed.has(d.data)) {
             wrapper.collapsed.delete(d.data);
+            wrapper.collapsed = new Set(wrapper.collapsed);
           } else {
             wrapper.collapsed.add(d.data);
+            wrapper.collapsed = new Set(wrapper.collapsed);
           }
-          wrapper.collapsed = new Set(wrapper.collapsed);
         }).on('mouseenter', (d) => {
           wrapper.hovered = new Set(d.data.indices);
         }).on('mouseleave', () => {
@@ -220,9 +237,15 @@ export default {
         return r;
       });
 
-      inner.select('text').html(d => (collapsed.has(d.data) ? MDI_PLUS_CIRCLE : MDI_MINUS_CIRCLE));
+      inner.select('text').html((d) => {
+        if (wrapper.focus === d.data) {
+          return MDI_STAR_CIRCLE;
+        }
+        return collapsed.has(d.data) ? MDI_PLUS_CIRCLE : MDI_MINUS_CIRCLE;
+      });
       inner.select('title').text(d => d.data.name);
       inner.classed('collapsed', d => collapsed.has(d.data));
+      inner.classed('focused', d => wrapper.focus === d.data);
 
       inner.attr('transform', d => `translate(${d.x},${d.y})`);
     },
@@ -445,7 +468,8 @@ export default {
   fill: orange;
 }
 
-.nodes >>> .collapsed {
+.nodes >>> .collapsed,
+.nodes >>> .focused {
   opacity: 1;
 }
 
