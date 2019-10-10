@@ -232,19 +232,19 @@ class CSVFile(db.Model):
             new_column = self.columns[value]
             new_column.column_type = TABLE_COLUMN_TYPES.GROUP
             db.session.add(new_column)
-            self.group_levels = self._derive_group_levels()
+            self.derive_group_levels()
             clear_cache()
 
-    def _derive_group_levels(self):
+    def derive_group_levels(self):
         groups = self.groups
         if groups is None or groups.empty:
-            return []
+            self.group_levels = []
         levels = sorted([str(v) for v in groups.iloc[:, 0].unique()])
         # d3 scheme category 10
         colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
                   '#7f7f7f', '#bcbd22', '#17becf']
-        return [GroupLevel(name=l, label=l, color=colors[i % len(colors)])
-                for i, l in enumerate(levels)]
+        self.group_levels = [GroupLevel(name=l, label=l, color=colors[i % len(colors)])
+                             for i, l in enumerate(levels)]
 
     @property
     def keys(self):
@@ -293,7 +293,7 @@ class CSVFile(db.Model):
             }))
 
         csv_file.columns = columns
-        csv_file.group_levels = csv_file._derive_group_levels()
+        csv_file.derive_group_levels()
 
         return csv_file, rows, columns
 

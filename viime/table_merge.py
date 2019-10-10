@@ -42,6 +42,7 @@ def simple_merge(validated_tables: List[ValidatedMetaboliteTable]):
     # create similar structure
     metadata = pandas.DataFrame(measurement_metadata).T
     metadata.columns = list(merged)
+    metadata.index = ['Data Source']
 
     row_types = [
         TABLE_ROW_TYPES.INDEX,

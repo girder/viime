@@ -182,6 +182,9 @@ def merge_csv_files(name: str, description: str, method: str, datasets: List[str
                 column.column_type = column_type
                 db.session.add(column)
 
+        # need to call it manually since we might have changed the column types
+        csv_file.derive_group_levels()
+
         db.session.add(csv_file)
         db.session.flush()
 
@@ -521,11 +524,13 @@ def remerge_csv_file(csv_id, method):
 
         merged, column_types, row_types = simple_merge(tables)
 
-        # doesn't work since readonly
         csv_file.save_table(merged)
 
         _update_column_types(csv_file, column_types)
         _update_row_types(csv_file, row_types)
+
+        # need to call it manually since we might have changed the column types
+        csv_file.derive_group_levels()
 
         csv_file.meta = {
             'merged': [str(id) for id in datasets],
