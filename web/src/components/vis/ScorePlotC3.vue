@@ -14,6 +14,7 @@ div
 import c3 from 'c3';
 import { select } from 'd3-selection';
 import { deviation, mean } from 'd3-array';
+import { format } from 'd3-format';
 
 import 'c3/c3.css';
 
@@ -145,6 +146,28 @@ export default {
       return [x, y];
     },
 
+    totalVariance() {
+      const {
+        eigenvalues,
+      } = this;
+
+      return eigenvalues.reduce((acc, x) => acc + x, 0);
+    },
+
+    pcVariances() {
+      const {
+        pcX,
+        pcY,
+        eigenvalues,
+        totalVariance,
+      } = this;
+
+      return [
+        eigenvalues[pcX - 1] / totalVariance,
+        eigenvalues[pcY - 1] / totalVariance,
+      ];
+    },
+
     group() {
       const { columns } = this;
       const column = columns.find(elem => elem.column_type === 'group');
@@ -175,6 +198,7 @@ export default {
         pcY,
         showEllipses,
         duration,
+        pcVariances,
         valid,
       } = this;
 
@@ -182,8 +206,14 @@ export default {
         return '';
       }
 
-      const x = `PC${pcX}`;
-      const y = `PC${pcY}`;
+      const fmt = format('.2%');
+      const x = `PC${pcX} (${fmt(pcVariances[0])})`;
+      const y = `PC${pcY} (${fmt(pcVariances[1])})`;
+
+      this.chart.axis.labels({
+        x,
+        y,
+      });
 
       const [xData, yData] = pcPoints;
 
