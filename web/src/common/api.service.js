@@ -37,6 +37,10 @@ const ApiService = {
   download(resource, slug) {
     return Vue.axios.get(`${resource}/${slug}/download`);
   },
+
+  merge(data) {
+    return Vue.axios.post('merge', data);
+  },
 };
 
 export default ApiService;

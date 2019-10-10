@@ -10,3 +10,4 @@ export const CHANGE_IMPUTATION_OPTIONS = 'change_imputation_options';
 export const SET_DATASET_NAME = 'set_dataset_name';
 export const SET_DATASET_DESCRIPTION = 'set_dataset_description';
 export const SET_DATASET_SELECTED_COLUMNS = 'set_dataset_selected_columns';
+export const CREATE_MERGED_DATASET = 'create_merged_dataset';

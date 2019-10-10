@@ -7,7 +7,7 @@ import {
 } from '../utils';
 import analyses from '../components/vis/analyses';
 import { plot_types } from '../utils/constants';
-import { CSVService, ExcelService } from '../common/api.service';
+import ApiService, { CSVService, ExcelService } from '../common/api.service';
 
 import {
   CHANGE_AXIS_LABEL,
@@ -21,6 +21,7 @@ import {
   SET_DATASET_NAME,
   SET_DATASET_DESCRIPTION,
   SET_DATASET_SELECTED_COLUMNS,
+  CREATE_MERGED_DATASET,
 } from './actions.type';
 
 import {
@@ -345,6 +346,23 @@ const actions = {
         return dispatch(VALIDATE_TABLE, { dataset_id: dataFile.id });
       });
       await Promise.all(promiseList);
+      state.store.save(state, state.session_id);
+      commit(SET_LOADING, false);
+      return data;
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
+  },
+
+  async [CREATE_MERGED_DATASET]({ state, commit }, params) {
+    commit(SET_LOADING, true);
+
+    try {
+      const { data } = await ApiService.merge(params);
+      commit(INITIALIZE_DATASET, { dataset_id: data.id, name: data.name });
+      commit(SET_DATASET_DATA, { data });
       state.store.save(state, state.session_id);
     } catch (err) {
       commit(SET_LAST_ERROR, err);
