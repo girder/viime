@@ -104,9 +104,9 @@ export default {
       const columnType = this.dataset.column.labels[columnIndex];
       const rowType = this.dataset.row.labels[rowIndex];
       if (rowType === 'header') {
-        this.onColumnClick(event, columnIndex);
+        this.onColumnClick({ event, columnIndex });
       } else if (columnType === 'key') {
-        this.onRowClick(event, rowIndex);
+        this.onRowClick({ event, rowIndex });
       }
     },
   },
