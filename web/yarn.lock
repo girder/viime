@@ -2234,9 +2234,9 @@ bytes@3.0.0:
   resolved "https://registry.yarnpkg.com/bytes/-/bytes-3.0.0.tgz#d32815404d689699f85a4ea4fa8755dd13a96048"
 
 c3@^0.7.8:
-  version "0.7.11"
-  resolved "https://registry.yarnpkg.com/c3/-/c3-0.7.11.tgz#3efa9d98d40939a8774fd5b43c75d2857d6e1cdf"
-  integrity sha512-+051dE9Bqaz3NHJvl7sprWSofd2jE4TSHbSRBURTHXRhj0f/75Qj33XhmIW7JklSeM1T3dO0n00p4HPReRZ1qg==
+  version "0.7.8"
+  resolved "https://registry.yarnpkg.com/c3/-/c3-0.7.8.tgz#de3e550b51a34e658150ea1906089a16fe933cb0"
+  integrity sha512-yccP+u4Bp/MVPRowT8go5Sp66FZWsP071v5tqRR+mjqB37U6oDHY3pna1qE5ba/YIIxWHrz6ianI45SpzR4dhA==
   dependencies:
     d3 "^5.8.0"
 
