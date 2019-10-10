@@ -302,13 +302,19 @@ export default {
       },
       axis: {
         x: {
-          label: 'x',
+          label: {
+            text: 'x',
+            position: 'outer-center',
+          },
           tick: {
             fit: false,
           },
         },
         y: {
-          label: 'y',
+          label: {
+            text: 'y',
+            position: 'outer-middle',
+          },
         },
       },
       legend: {
