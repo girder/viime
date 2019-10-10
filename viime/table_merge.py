@@ -40,17 +40,16 @@ def simple_merge(validated_tables: List[ValidatedMetaboliteTable]):
 
     merged = pandas.concat(tables, axis=1, join='inner')
 
+    # create similar structure
     metadata = pandas.DataFrame(measurement_metadata).T
-    print(metadata.shape)
     metadata.columns = list(merged)
-    print(metadata.shape)
 
     row_types = [
         TABLE_ROW_TYPES.INDEX,
         TABLE_ROW_TYPES.METADATA  # data source
     ] + ([TABLE_ROW_TYPES.DATA] * merged.shape[0])
 
+    # merge as str
     table = pandas.concat([metadata, merged.astype(str)])
-    print(table.to_csv())
 
     return table.to_csv(), column_types, row_types

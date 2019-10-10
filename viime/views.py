@@ -157,7 +157,7 @@ def merge_csv_files(name: str, description: str, method: str, datasets: List[str
     tables = [ValidatedMetaboliteTable.query.filter_by(csv_file_id=id).first_or_404()
               for id in datasets]
 
-    merged, column_types, row_types  = simple_merge(tables)
+    merged, column_types, row_types = simple_merge(tables)
 
     try:
         csv_file = csv_file_schema.load(dict(
@@ -166,17 +166,19 @@ def merge_csv_files(name: str, description: str, method: str, datasets: List[str
             meta={'merged': [str(id) for id in datasets]}
         ))
 
+        # update types afterwards since the default is auto generated
+
         if row_types:
             # update the row types
             for row, row_type in zip(csv_file.rows, row_types):
                 row.row_type = row_type
+                db.session.add(row)
+
         if column_types:
             # update the row types
             for column, column_type in zip(csv_file.columns, column_types):
-                row.column_type = column_type
-
-        print(row_types, csv_file.rows)
-        print(column_types)
+                column.column_type = column_type
+                db.session.add(column)
 
         db.session.add(csv_file)
         db.session.flush()
