@@ -3,7 +3,7 @@ from io import BytesIO
 import json
 import math
 from pathlib import PurePath
-from typing import Callable, cast, Dict, Optional
+from typing import Callable, cast, Dict, List, Optional
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
@@ -24,6 +24,7 @@ from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
 from viime.normalization import validate_normalization_method
 from viime.plot import pca
 from viime.scaling import SCALING_METHODS
+from viime.table_merge import simple_merge
 from viime.table_validation import get_fatal_index_errors, ValidationSchema
 from viime.transformation import TRANSFORMATION_METHODS
 
@@ -144,41 +145,26 @@ def upload_excel_file(file: FileStorage, meta: Dict):
         raise
 
 
-@csv_bp.route('/csv/merge', methods=['POST'])
+@csv_bp.route('/merge', methods=['POST'])
 @use_kwargs({
-    'csv_file_ids': fields.List(
+    'name': fields.Str(required=True),
+    'description': fields.Str(),
+    'method': fields.Str(required=True, validate=validate.OneOf(['simple'])),
+    'datasets': fields.List(
         fields.UUID(), validate=validate.Length(min=2))
 })
-def merge_csv_files(csv_file_ids):
-    """
-    Generate a new validated csv file by concatonating a list of 2 or more
-    validated tables.
+def merge_csv_files(name: str, description: str, method: str, datasets: List[str]):
+    tables = [ValidatedMetaboliteTable.query.filter_by(csv_file_id=id).first_or_404()
+              for id in datasets]
 
-    NOTE: This current uses the groups from the first table, removes
-    all of the metadata, and does and "inner join" with the row indices"
-    """
-    tables = []
-    for index, csv_file_id in enumerate(csv_file_ids):
-        table = ValidatedMetaboliteTable.query.filter_by(
-            csv_file_id=csv_file_id
-        ).first()
-        if index == 0:
-            groups = table.groups
-
-        if table is None:
-            raise ValidationError(
-                'One or more csv_files does not exist or is not validated')
-
-        tables.append(table.measurements)
-
-    merged = pandas.concat([groups] + tables, axis=1, join='inner')
+    merged = simple_merge(tables)
 
     try:
         csv_file = csv_file_schema.load(dict(
             id=uuid4(),
-            name='merged.csv',
+            name=name,
             table=merged.to_csv(),
-            meta={'merged': [str(id) for id in csv_file_ids]}
+            meta={'merged': [str(id) for id in datasets]}
         ))
         db.session.add(csv_file)
         db.session.flush()

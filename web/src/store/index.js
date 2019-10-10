@@ -356,13 +356,14 @@ const actions = {
     }
   },
 
-  async [CREATE_MERGED_DATASET]({ state, commit }, params) {
+  async [CREATE_MERGED_DATASET]({ state, commit, dispatch }, params) {
     commit(SET_LOADING, true);
 
     try {
       const { data } = await ApiService.merge(params);
       commit(INITIALIZE_DATASET, { dataset_id: data.id, name: data.name });
       commit(SET_DATASET_DATA, { data });
+      await dispatch(VALIDATE_TABLE, { dataset_id: data.id });
       state.store.save(state, state.session_id);
     } catch (err) {
       commit(SET_LAST_ERROR, err);
