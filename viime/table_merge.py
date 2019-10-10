@@ -5,7 +5,8 @@ from typing import List
 
 import pandas
 
-from viime.models import ValidatedMetaboliteTable
+from viime.models import TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
+    ValidatedMetaboliteTable
 
 
 def simple_merge(validated_tables: List[ValidatedMetaboliteTable]):
@@ -16,12 +17,40 @@ def simple_merge(validated_tables: List[ValidatedMetaboliteTable]):
     NOTE: This current uses the groups from the first table, removes
     all of the metadata, and does and "inner join" with the row indices
     """
-    tables = []
 
-    for index, table in enumerate(validated_tables):
-        if index == 0:
-            groups = table.groups
+    tables: List[pandas.DataFrame] = []
+    column_types: List[str] = [
+        TABLE_COLUMN_TYPES.INDEX
+    ]
+    measurement_metadata: List[str] = []
 
-        tables.append(table.measurements)
+    to_merge = [
+        (TABLE_COLUMN_TYPES.GROUP, 'groups'),
+        (TABLE_COLUMN_TYPES.METADATA, 'sample_metadata'),
+        (TABLE_COLUMN_TYPES.DATA, 'measurements')
+    ]
+    for (column_type, attr) in to_merge:
+        for table in validated_tables:
+            df = getattr(table, attr)
+            count = df.shape[1]
+            print(count, table.csv_file_id, column_type)
+            tables.append(df)
+            column_types.extend([column_type] * count)
+            measurement_metadata.extend([str(table.csv_file_id)] * count)
 
-    return pandas.concat([groups] + tables, axis=1, join='inner')
+    merged = pandas.concat(tables, axis=1, join='inner')
+
+    metadata = pandas.DataFrame(measurement_metadata).T
+    print(metadata.shape)
+    metadata.columns = list(merged)
+    print(metadata.shape)
+
+    row_types = [
+        TABLE_ROW_TYPES.INDEX,
+        TABLE_ROW_TYPES.METADATA  # data source
+    ] + ([TABLE_ROW_TYPES.DATA] * merged.shape[0])
+
+    table = pandas.concat([metadata, merged.astype(str)])
+    print(table.to_csv())
+
+    return table.to_csv(), column_types, row_types
