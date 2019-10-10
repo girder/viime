@@ -407,9 +407,8 @@ export default {
 
     onResize() {
       const bb = this.$el.getBoundingClientRect();
-      this.width = bb.width;
+      this.width = bb.width - 20;
       this.height = bb.height;
-      console.log(this.width, this.height);
     },
   },
 };
