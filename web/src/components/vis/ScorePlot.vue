@@ -13,7 +13,7 @@
   .tooltip(ref="tooltip")
 </template>
 
-<style scoped lang="scss">
+<style scoped>
 div.tooltip {
   position: fixed;
   text-align: center;
@@ -25,13 +25,17 @@ div.tooltip {
   z-index: 20;
   opacity: 0;
 }
+
+.ellipses >>> circle {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
 </style>
 
 <script>
 import { select, event } from 'd3-selection';
 import { format } from 'd3-format';
-import { scaleOrdinal } from 'd3-scale';
-import { schemeCategory10 } from 'd3-scale-chromatic';
 import 'd3-transition';
 
 import { axisPlot } from './mixins/axisPlot';
@@ -94,19 +98,18 @@ export default {
       type: Array,
       validator: prop => prop.every(val => typeof val === 'string'),
     },
-    groupLabels: {
+    groups: { // string[]
       required: true,
-      type: Object,
+      type: Array,
+    },
+    groupToColor: { // (group:string) => string
+      required: true,
+      type: Function,
     },
     eigenvalues: {
       required: true,
       type: Array,
       validator: prop => prop.every(Number.isFinite),
-    },
-    columns: {
-      required: true,
-      type: Array,
-      validator: prop => prop.every(column => ['column_header', 'column_type'].every(key => Object.prototype.hasOwnProperty.call(column, key))),
     },
   },
   data() {
@@ -151,24 +154,17 @@ export default {
       return minmax(this.xyPoints.map(p => p.y), 0.1);
     },
 
-    group() {
-      const { columns } = this;
-      const column = columns.find(elem => elem.column_type === 'group');
-
-      return column.column_header;
-    },
-
     valid() {
       const {
         pcCoords,
         rowLabels,
-        groupLabels,
+        groups,
         eigenvalues,
       } = this;
 
       return pcCoords.length > 0
         && rowLabels.length > 0
-        && Object.keys(groupLabels).length > 0
+        && groups.length > 0
         && eigenvalues.length > 0;
     },
 
@@ -179,8 +175,8 @@ export default {
       const {
         eigenvalues,
         xyPoints,
-        group,
-        groupLabels,
+        groups,
+        groupToColor,
         rowLabels,
         duration,
         xlabel,
@@ -207,8 +203,6 @@ export default {
 
       // Draw the data.
       //
-      // Set up a colormap and select an arbitrary label to color the nodes.
-      const cmap = scaleOrdinal(schemeCategory10);
 
       // Plot the points in the scatter plot.
       const tooltip = select(this.$refs.tooltip);
@@ -221,7 +215,6 @@ export default {
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
-          .style('stroke', (d, i) => (group ? cmap(groupLabels[group][i]) : null))
           .style('fill-opacity', 0.001)
           .on('mouseover', function mouseover(d, i) {
             select(this)
@@ -248,6 +241,7 @@ export default {
           }))
         .transition()
         .duration(this.fadeInDuration)
+        .style('stroke', (d, i) => groupToColor(groups[i]))
         .attr('r', radius)
         .attr('cx', d => this.scaleX(d.x))
         .attr('cy', d => this.scaleY(d.y));
@@ -255,7 +249,7 @@ export default {
       // Decompose the data into its label categories.
       const streams = {};
       xyPoints.forEach((p, i) => {
-        const category = groupLabels[group][i];
+        const category = groups[i];
         if (!streams[category]) {
           streams[category] = [];
         }
@@ -263,8 +257,9 @@ export default {
       });
 
       // Compute the ellipse data for each subset.
+
+      const ellipses = [];
       if (showEllipses) {
-        const ellipses = [];
         Object.keys(streams).forEach((category) => {
           const data = streams[category];
 
@@ -328,43 +323,36 @@ export default {
             category,
           });
         });
-
-        // Draw the ellipses.
-        svg.select('g.ellipses')
-          .selectAll('g.ellipse')
-          .data(ellipses)
-          .enter()
-          .append('g')
-          .classed('ellipse', true)
-          .attr('transform', d => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`)
-          .append('circle')
-          .attr('cx', 0)
-          .attr('cy', 0)
-          .attr('r', 1)
-          .attr('style', 'fill: none; stroke: black;')
-          .attr('vector-effect', 'non-scaling-stroke')
-          .style('stroke', d => cmap(d.category));
-
-        svg.select('g.ellipses')
-          .selectAll('g.ellipse')
-          .data(ellipses)
-          .transition()
-          .duration(this.duration)
-          .attr('transform', (d) => {
-            const xMean = this.scaleX(d.xMean);
-            const yMean = this.scaleY(d.yMean);
-            const rotation = -180 * d.rotation / Math.PI;
-
-            return `translate(${xMean}, ${yMean}) rotate(${rotation}) scale(${d.axes[0]}, ${d.axes[1]})`;
-          });
-      } else {
-        svg.select('g.ellipses')
-          .selectAll('*')
-          .transition()
+      }
+      // Draw the ellipses.
+      svg.select('g.ellipses')
+        .selectAll('g.ellipse')
+        .data(ellipses, d => d.category)
+        .join((enter) => {
+          const entered = enter.append('g')
+            .classed('ellipse', true)
+            .style('opacity', 1)
+            .attr('transform', d => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`);
+          entered.append('circle').attr('r', 1);
+          return entered;
+        },
+        null,
+        exit => exit.transition()
           .duration(this.duration)
           .style('opacity', 0.0)
-          .remove();
-      }
+          .attr('transform', d => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`)
+          .remove())
+        .transition()
+        .duration(this.duration)
+        .attr('transform', (d) => {
+          const xMean = this.scaleX(d.xMean);
+          const yMean = this.scaleY(d.yMean);
+          const rotation = -180 * d.rotation / Math.PI;
+
+          return `translate(${xMean}, ${yMean}) rotate(${rotation}) scale(${d.axes[0]}, ${d.axes[1]})`;
+        })
+        .select('circle')
+        .style('stroke', d => groupToColor(d.category));
     },
     setRanges(xyPoints) {
       this.xrange = minmax(xyPoints.map(p => p.x), 0.1);

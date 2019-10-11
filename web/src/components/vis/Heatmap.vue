@@ -3,7 +3,7 @@ import resize from 'vue-resize-directive';
 import { hierarchy, cluster } from 'd3-hierarchy';
 import { scaleSequential } from 'd3-scale';
 import { interpolateBlues } from 'd3-scale-chromatic';
-import { select } from 'd3-selection';
+import { select, event } from 'd3-selection';
 
 function extent(arr) {
   let min = Number.POSITIVE_INFINITY;
@@ -34,6 +34,7 @@ const LABEL_WIDTH = 150;
 
 const MDI_PLUS_CIRCLE = '&#xF417;';
 const MDI_MINUS_CIRCLE = '&#xF376;';
+const MDI_STAR_CIRCLE = '&#xF4CF;';
 
 export const heatmapLayouts = [
   { label: 'Auto', value: 'auto' },
@@ -82,11 +83,15 @@ export default {
       column: {
         hovered: new Set(),
         collapsed: new Set(),
+        focus: null,
       },
       row: {
         hovered: new Set(),
         collapsed: new Set(),
+        focus: null,
       },
+      rnode: null,
+      cnode: null,
       DENDOGRAM_RATIO,
       LABEL_WIDTH,
     };
@@ -132,7 +137,7 @@ export default {
     },
 
     columnTree() {
-      return this.computeTree(this.columnClustering, this.column.collapsed);
+      return this.computeTree(this.columnClustering, this.column);
     },
 
     columnHierarchy() {
@@ -140,7 +145,7 @@ export default {
     },
 
     rowTree() {
-      return this.computeTree(this.rowClustering, this.row.collapsed);
+      return this.computeTree(this.rowClustering, this.row);
     },
 
     rowHierarchy() {
@@ -204,7 +209,7 @@ export default {
   },
 
   methods: {
-    computeTree(node, collapsed) {
+    computeTree(node, { collapsed, focus }) {
       if (!node) {
         return null;
       }
@@ -220,10 +225,20 @@ export default {
 
       injectIndices(node);
 
-      return hierarchy(node,
+      let root = hierarchy(node,
         d => (collapsed.has(d) ? [] : (d.children || [])))
         .count()
         .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
+
+      if (focus) {
+        // find the focus node and it is the new root
+        root.each((n) => {
+          if (n.data === focus) {
+            root = n;
+          }
+        });
+      }
+      return root;
     },
     computeHierarchy(root, layoutWidth, layoutHeight) {
       if (!root) {
@@ -272,12 +287,17 @@ export default {
           .html(`<circle r="${padding}"></circle><text><text><title></title>`)
           .attr('transform', d => `translate(${d.x},${d.y})`);
         r.on('click', (d) => {
-          if (wrapper.collapsed.has(d.data)) {
+          if (wrapper.focus === d.data) {
+            wrapper.focus = null;
+          } else if (event.ctrlKey || event.shiftKey) {
+            wrapper.focus = d.data;
+          } else if (wrapper.collapsed.has(d.data)) {
             wrapper.collapsed.delete(d.data);
+            wrapper.collapsed = new Set(wrapper.collapsed);
           } else {
             wrapper.collapsed.add(d.data);
+            wrapper.collapsed = new Set(wrapper.collapsed);
           }
-          wrapper.collapsed = new Set(wrapper.collapsed);
         }).on('mouseenter', (d) => {
           wrapper.hovered = new Set(d.data.indices);
         }).on('mouseleave', () => {
@@ -286,9 +306,15 @@ export default {
         return r;
       });
 
-      inner.select('text').html(d => (collapsed.has(d.data) ? MDI_PLUS_CIRCLE : MDI_MINUS_CIRCLE));
+      inner.select('text').html((d) => {
+        if (wrapper.focus === d.data) {
+          return MDI_STAR_CIRCLE;
+        }
+        return collapsed.has(d.data) ? MDI_PLUS_CIRCLE : MDI_MINUS_CIRCLE;
+      });
       inner.select('title').text(d => d.data.name);
       inner.classed('collapsed', d => collapsed.has(d.data));
+      inner.classed('focused', d => wrapper.focus === d.data);
 
       inner.attr('transform', d => `translate(${d.x},${d.y})`);
     },
@@ -415,13 +441,19 @@ export default {
       const i = Math.floor(evt.offsetY / h);
       const rnode = this.rowLeaves[i].data;
       const cnode = this.columnLeaves[j].data;
-      this.row.hovered = new Set(rnode.indices);
-      this.column.hovered = new Set(cnode.indices);
-      canvas.title = `${rnode.name} x ${cnode.name} = ${aggregate(this.values.data, rnode.indices, cnode.indices)}`;
+      if (rnode !== this.rnode || cnode !== this.cnode) {
+        this.rnode = rnode;
+        this.cnode = cnode;
+        this.row.hovered = new Set(rnode.indices);
+        this.column.hovered = new Set(cnode.indices);
+        canvas.title = `${rnode.name} x ${cnode.name} = ${aggregate(this.values.data, rnode.indices, cnode.indices)}`;
+      }
     },
     canvasMouseLeave() {
       this.row.hovered = new Set();
       this.column.hovered = new Set();
+      this.rnode = null;
+      this.cnode = null;
     },
   },
 };
@@ -552,7 +584,8 @@ export default {
   fill: orange;
 }
 
-.nodes >>> .collapsed {
+.nodes >>> .collapsed,
+.nodes >>> .focused {
   opacity: 1;
 }
 
