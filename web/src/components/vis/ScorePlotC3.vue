@@ -187,7 +187,6 @@ export default {
 
     update() {
       const {
-        pcCoords,
         pcPoints,
         pcX,
         pcY,
@@ -227,7 +226,6 @@ export default {
       const xs = {};
       groups.forEach((g) => {
         const xName = `${g}_x`;
-        const labelName = `${g}_label`;
 
         columns.push([xName, ...grouped[g].map(d => d.x)]);
         columns.push([g, ...grouped[g].map(d => d.y)]);
@@ -254,7 +252,7 @@ export default {
         ...confidenceEllipse(grouped[group].map(d => d.x), grouped[group].map(d => d.y), 1),
         category: group,
       }));
-      confidenceEllipses.forEach(ell => {
+      confidenceEllipses.forEach((ell) => {
         if (ellipseVisible[ell.category] === undefined) {
           ellipseVisible[ell.category] = true;
         }
@@ -284,8 +282,7 @@ export default {
             .attr('rx', d => d.rx)
             .attr('ry', d => d.ry)
             .attr('transform', d => `${plotTransform} ${d.transform}`)
-            .style('display', (d) =>
-              showEllipses && ellipseVisible[d.category] ? null : 'none'),
+            .style('display', d => (showEllipses && ellipseVisible[d.category] ? null : 'none')),
           exit => exit.transition('exit')
             .duration(duration)
             .style('opacity', 0)
