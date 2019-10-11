@@ -116,7 +116,7 @@ export default {
 <template lang="pug">
 v-layout.data-source(row, fill-height)
   v-container.grow-overflow.ma-0(grid-list-lg, fluid, v-if="dataset && ready")
-    v-container.pa-2
+    v-container.pa-2(:style="{height: 0}")
       v-form(v-model="valid")
         v-text-field(label="Data Source Name", :value="dataset.name", required,
             @change="setName($event)", :rules="requiredRules")
