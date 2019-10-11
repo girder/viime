@@ -142,6 +142,9 @@ v-layout.data-source(row, fill-height)
               v-list-tile-title {{dataset.name}}
               v-list-tile-sub-title(v-if="!dataset.valid", color="error") Invalid Data source
               v-list-tile-sub-title(v-else) {{dataset.description || 'No Description'}}
+            v-list-tile-action
+              v-btn(:to="{name: '', params: {id: dataset.id}}", icon)
+                v-icon {{$vuetify.icons.eye}}
 
         v-subheader Groups
         v-data-table(:headers="groupLevelHeaders", :items="groupLevels", item-key="name",
