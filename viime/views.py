@@ -159,7 +159,7 @@ def merge_csv_files(name: str, description: str, method: str, datasets: List[str
     merged, column_types, row_types = simple_merge(tables)
 
     try:
-        csv_file = csv_file_schema.load(dict(
+        csv_file: CSVFile = csv_file_schema.load(dict(
             name=name,
             table=merged.to_csv(),
             meta={
@@ -183,7 +183,7 @@ def merge_csv_files(name: str, description: str, method: str, datasets: List[str
                 db.session.add(column)
 
         # need to call it manually since we might have changed the column types
-        csv_file.derive_group_levels()
+        csv_file.derive_group_levels(clear_caches=True)
 
         db.session.add(csv_file)
         db.session.flush()
@@ -511,7 +511,7 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
 })
 def remerge_csv_file(csv_id, method):
     try:
-        csv_file = CSVFile.query.get_or_404(csv_id)
+        csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
         if 'merged' not in csv_file.meta:
             raise ValidationError('given file is not a merged one')
 
@@ -530,12 +530,14 @@ def remerge_csv_file(csv_id, method):
         _update_row_types(csv_file, row_types)
 
         # need to call it manually since we might have changed the column types
-        csv_file.derive_group_levels()
+        csv_file.derive_group_levels(clear_caches=True)
 
-        csv_file.meta = {
+        meta = csv_file.meta.copy()
+        meta.update({
             'merged': [str(id) for id in datasets],
             'merge_method': method
-        }
+        })
+        csv_file.meta = meta
 
         db.session.add(csv_file)
         db.session.commit()

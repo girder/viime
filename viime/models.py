@@ -235,7 +235,9 @@ class CSVFile(db.Model):
             self.derive_group_levels()
             clear_cache()
 
-    def derive_group_levels(self):
+    def derive_group_levels(self, clear_caches=False):
+        if clear_caches:
+            clear_cache(csv_file=self)
         groups = self.groups
         if groups is None or groups.empty:
             self.group_levels = []
