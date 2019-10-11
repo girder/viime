@@ -1,7 +1,7 @@
 """
 This module contains methods related to mergind dataset
 """
-from typing import List
+from typing import Dict, List, Set
 
 import pandas
 
@@ -18,6 +18,7 @@ def simple_merge(validated_tables: List[ValidatedMetaboliteTable]):
     all of the metadata, and does and "inner join" with the row indices
     """
 
+    used_column_names: Set[str] = set()
     tables: List[pandas.DataFrame] = []
     column_types: List[str] = [
         TABLE_COLUMN_TYPES.INDEX
@@ -33,6 +34,22 @@ def simple_merge(validated_tables: List[ValidatedMetaboliteTable]):
         for table in validated_tables:
             df = getattr(table, attr)
             count = df.shape[1]
+            column_names = list(df)
+            renames: Dict[str, str] = {}
+
+            for column_name in column_names:
+                i = 1
+                new_column_name = column_name
+                while new_column_name in used_column_names:
+                    new_column_name = '%s_%s' % (column_name, i)
+                    i += 1
+                if column_name != new_column_name:
+                    renames[column_name] = new_column_name
+
+            if renames:
+                df = df.rename(columns=renames)
+
+            used_column_names.update(list(df))
             tables.append(df)
             column_types.extend([column_type] * count)
             measurement_metadata.extend([str(table.csv_file_id)] * count)
