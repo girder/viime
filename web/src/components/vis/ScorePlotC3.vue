@@ -391,73 +391,9 @@ export default {
         .style('opacity', 0.3);
     },
 
-    showEllipse(which) {
-      const selector = `ellipse.ellipse-${which}`;
-
-      select(this.$refs.chart)
-        .select(selector)
-        .style('display', null);
-    },
-
-    hideEllipse(which) {
-      const selector = `ellipse.ellipse-${which}`;
-
-      select(this.$refs.chart)
-        .select(selector)
-        .style('display', 'none');
-    },
-
-    toggleEllipse2(which) {
-      const selector = `ellipse.ellipse-${which}`;
-
-      const showing = this.ellipseShowing(which);
-
-      (showing ? this.hideEllipse : this.showEllipse)(which);
-    },
-
     toggleEllipse(which) {
       this.ellipseVisible[which] = !this.ellipseVisible[which];
       return this.ellipseVisible[which];
-    },
-
-    ellipseShowing(which) {
-      const selector = `ellipse.ellipse-${which}`;
-
-      const showing = select(this.$refs.chart)
-        .select(selector)
-        .style('display') !== 'none';
-
-      return showing;
-    },
-
-    setEllipseVisibility(on) {
-      const visible =
-        select(this.$refs.chart).select('.ellipse').style('display') !== 'none';
-
-      if (on === visible) {
-        return;
-      }
-
-      const opacity = on ? 1.0 : 0.0;
-
-      const sel = select(this.$refs.chart)
-        .selectAll('.ellipse');
-
-      if (on) {
-        sel.style('opacity', 0.0)
-          .style('display', null);
-      }
-
-      const t = sel.transition()
-        .duration(this.duration)
-        .style('opacity', opacity);
-
-      t.on('end', () => {
-        if (!on) {
-          sel.style('display', 'none')
-            .style('opacity', 1.0);
-        }
-      });
     },
 
     onResize() {
