@@ -4,12 +4,6 @@ div(v-resize:throttle="onResize")
   span(style="display: none") {{ update }}
 </template>
 
-<style>
-.c3 text {
-  font-family: Barlow Condensed;
-}
-</style>
-
 <script>
 import c3 from 'c3';
 import { select } from 'd3-selection';
@@ -18,6 +12,7 @@ import { format } from 'd3-format';
 import resize from 'vue-resize-directive';
 
 import 'c3/c3.css';
+import './score-plot-c3.css';
 
 function covar(xs, ys) {
   const e_xy = mean(xs.map((x, i) => x * ys[i]));
