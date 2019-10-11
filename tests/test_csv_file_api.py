@@ -214,7 +214,7 @@ def test_merge_files(client):
         'column_index': 1,
         'column_type': 'group'
     }, {
-        'column_header': 'g',
+        'column_header': 'g_1',
         'column_index': 2,
         'column_type': 'group'
     }, {
