@@ -120,6 +120,7 @@ export default {
     return {
       chart: null,
       ellipseVisible: {},
+      labels: {},
       duration: 500,
       width: 100,
       height: 100,
@@ -218,21 +219,25 @@ export default {
       });
 
       const [xData, yData] = pcPoints;
+      const grouped = this.grouped(xData, yData);
 
-      const xGrouped = this.grouped(xData);
-      const yGrouped = this.grouped(yData);
-
-      const groups = Object.keys(xGrouped);
+      const groups = Object.keys(grouped);
       const columns = [];
+      const labels = {};
       const xs = {};
       groups.forEach((g) => {
         const xName = `${g}_x`;
+        const labelName = `${g}_label`;
 
-        columns.push([xName, ...xGrouped[g]]);
-        columns.push([g, ...yGrouped[g]]);
+        columns.push([xName, ...grouped[g].map(d => d.x)]);
+        columns.push([g, ...grouped[g].map(d => d.y)]);
+
+        labels[g] = [...grouped[g].map(d => d.label)];
 
         xs[g] = xName;
       });
+
+      this.labels = labels;
 
       // Draw the C3 chart.
       this.chart.load({
@@ -245,8 +250,8 @@ export default {
       const scaleY = this.chart.internal.y;
       const cmap = this.chart.internal.color;
 
-      const confidenceEllipses = Object.keys(xGrouped).map(group => ({
-        ...confidenceEllipse(xGrouped[group], yGrouped[group], 1),
+      const confidenceEllipses = Object.keys(grouped).map(group => ({
+        ...confidenceEllipse(grouped[group].map(d => d.x), grouped[group].map(d => d.y), 1),
         category: group,
       }));
       confidenceEllipses.forEach(ell => {
@@ -338,6 +343,36 @@ export default {
           },
         },
       },
+      tooltip: {
+        contents: (d, title, value, color) => {
+          const category = d[0].id;
+          const label = this.labels[category][d[0].index];
+          const col = color(category);
+          const fmt = format('.2f');
+          const x = fmt(d[0].x);
+          const y = fmt(d[0].value);
+
+          const html = `
+          <div class="c3-tooltip-container">
+            <table class="c3-tooltip">
+              <tbody>
+                <tr>
+                  <th colspan="2">${label}</th>
+                </tr>
+                <tr class="c3-tooltip-name--${category}">
+                  <td class="name">
+                    <span style="background-color:${col}"></span>
+                    ${category}
+                  </td>
+                  <td class="value">(${x}, ${y})</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>`;
+
+          return html;
+        },
+      },
     });
 
     select(this.$refs.chart)
@@ -347,22 +382,31 @@ export default {
   },
 
   methods: {
-    grouped(data) {
+    grouped(xdata, ydata) {
       const {
         groupLabels,
+        rowLabels,
         group,
       } = this;
 
       const grouped = {};
 
-      data.forEach((d, i) => {
+      xdata.forEach((d, i) => {
         const g = groupLabels[group][i];
 
         if (!Object.prototype.hasOwnProperty.call(grouped, g)) {
           grouped[g] = [];
         }
 
-        grouped[g].push(d);
+        grouped[g].push({
+          x: d,
+          y: ydata[i],
+          label: rowLabels[i],
+        });
+      });
+
+      Object.keys(grouped).forEach((g) => {
+        grouped[g].sort((a, b) => a.x - b.x);
       });
 
       return grouped;
