@@ -124,6 +124,7 @@ export default {
   data() {
     return {
       chart: null,
+      ellipseVisible: {},
       duration: 500,
       width: 100,
       height: 100,
@@ -195,6 +196,7 @@ export default {
         pcX,
         pcY,
         showEllipses,
+        ellipseVisible,
         duration,
         pcVariances,
         valid,
@@ -252,6 +254,12 @@ export default {
         ...confidenceEllipse(xGrouped[group], yGrouped[group], 1),
         category: group,
       }));
+      confidenceEllipses.forEach(ell => {
+        if (ellipseVisible[ell.category] === undefined) {
+          ellipseVisible[ell.category] = true;
+        }
+      });
+
       const xFactor = (scaleX(1e10) - scaleX(0)) / 1e10;
       const yFactor = (scaleY(1e10) - scaleY(0)) / 1e10;
       const plotTransform = `translate(${scaleX(0)} ${scaleY(0)}) scale(${xFactor} ${yFactor})`;
@@ -260,30 +268,29 @@ export default {
         .selectAll('ellipse')
         .data(confidenceEllipses)
         .join(
-          enter => enter.append('ellipse')
+          enter => enter
+            .append('ellipse')
             .attr('class', d => `ellipse-${d.category}`)
             .classed('ellipse', true)
             .style('fill', 'none')
             .style('stroke', d => cmap(d.category))
             .style('stroke-width', 1)
             .attr('vector-effect', 'non-scaling-stroke')
-            .attr('rx', 0)
-            .attr('ry', 0)
+            .attr('rx', d => d.rx)
+            .attr('ry', d => d.ry)
             .attr('transform', d => `${plotTransform} ${d.transform}`)
             .style('opacity', 1),
-          update => update,
+          update => update
+            .attr('rx', d => d.rx)
+            .attr('ry', d => d.ry)
+            .attr('transform', d => `${plotTransform} ${d.transform}`)
+            .style('display', (d) =>
+              showEllipses && ellipseVisible[d.category] ? null : 'none'),
           exit => exit.transition('exit')
             .duration(duration)
             .style('opacity', 0)
             .remove(),
-        )
-        .transition('update')
-        .duration(duration)
-        .attr('rx', d => d.rx)
-        .attr('ry', d => d.ry)
-        .attr('transform', d => `${plotTransform} ${d.transform}`);
-
-      this.setEllipseVisibility(showEllipses);
+        );
 
       return String(Math.random());
     },
@@ -327,9 +334,9 @@ export default {
 
           onclick: (id) => {
             this.chart.toggle(id);
-            this.toggleEllipse(id);
+            const showing = this.toggleEllipse(id);
 
-            if (!this.ellipseShowing(id)) {
+            if (!showing) {
               this.chart.focus();
               this.focusEllipse();
             }
@@ -400,12 +407,17 @@ export default {
         .style('display', 'none');
     },
 
-    toggleEllipse(which) {
+    toggleEllipse2(which) {
       const selector = `ellipse.ellipse-${which}`;
 
       const showing = this.ellipseShowing(which);
 
       (showing ? this.hideEllipse : this.showEllipse)(which);
+    },
+
+    toggleEllipse(which) {
+      this.ellipseVisible[which] = !this.ellipseVisible[which];
+      return this.ellipseVisible[which];
     },
 
     ellipseShowing(which) {
