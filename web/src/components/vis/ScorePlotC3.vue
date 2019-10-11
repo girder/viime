@@ -324,6 +324,16 @@ export default {
             this.chart.focus();
             this.focusEllipse();
           },
+
+          onclick: (id) => {
+            this.chart.toggle(id);
+            this.toggleEllipse(id);
+
+            if (!this.ellipseShowing(id)) {
+              this.chart.focus();
+              this.focusEllipse();
+            }
+          },
         },
       },
     });
@@ -374,11 +384,44 @@ export default {
         .style('opacity', 0.3);
     },
 
+    showEllipse(which) {
+      const selector = `ellipse.ellipse-${which}`;
+
+      select(this.$refs.chart)
+        .select(selector)
+        .style('display', null);
+    },
+
+    hideEllipse(which) {
+      const selector = `ellipse.ellipse-${which}`;
+
+      select(this.$refs.chart)
+        .select(selector)
+        .style('display', 'none');
+    },
+
+    toggleEllipse(which) {
+      const selector = `ellipse.ellipse-${which}`;
+
+      const showing = this.ellipseShowing(which);
+
+      (showing ? this.hideEllipse : this.showEllipse)(which);
+    },
+
+    ellipseShowing(which) {
+      const selector = `ellipse.ellipse-${which}`;
+
+      const showing = select(this.$refs.chart)
+        .select(selector)
+        .style('display') !== 'none';
+
+      return showing;
+    },
+
     setEllipseVisibility(on) {
       const visible =
         select(this.$refs.chart).select('.ellipse').style('display') !== 'none';
 
-      console.log(on, visible);
       if (on === visible) {
         return;
       }
