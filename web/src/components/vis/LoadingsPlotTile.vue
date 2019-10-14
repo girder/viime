@@ -83,5 +83,4 @@ vis-tile(v-if="plot", title="PCA Loadings Plot", :loading="plot.loading", svg-do
     p.
       The menu contains options for selecting which components to show in the
       plot, as well as a toggle for turning the reticle display on and off.
-
 </template>

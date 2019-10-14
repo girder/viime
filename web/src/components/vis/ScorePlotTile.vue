@@ -126,5 +126,4 @@ vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading", svg-downl
       confidence ellipses on and off. As the PCs are changed, note that the
       percent of total variance accounted for by each component is displayed
       within the axis label.
-
 </template>

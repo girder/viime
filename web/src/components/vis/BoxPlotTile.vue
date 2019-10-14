@@ -55,5 +55,4 @@ vis-tile(title="Metabolite Box Plot", :loading="false", svg-download)
       Hovering the mouse pointer over various parts of the plot will show
       detailed information in a tooltip. These include details of the different
       quartile ranges, and the values of outliers.
-
 </template>

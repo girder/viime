@@ -74,5 +74,4 @@ vis-tile(v-if="plot", title="PCA Scree Plot", :loading="plot.loading", svg-downl
     p.
       The settings menu enables selection of how many principal components to
       plot, as well as whether the diagnostic cutoff lines are displayed.
-
 </template>
