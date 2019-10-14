@@ -34,7 +34,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(title="Boxplot Plot", :loading="false", svg-download)
+vis-tile(title="Metabolite Box Plot", :loading="false", svg-download)
   boxplot-plot(
       v-if="dataset.ready",
       :rows="chartData")
