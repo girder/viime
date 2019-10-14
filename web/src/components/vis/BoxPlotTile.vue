@@ -39,5 +39,21 @@ vis-tile(title="Boxplot Plot", :loading="false", svg-download)
       v-if="dataset.ready",
       :rows="chartData")
   template(#help)
-    | TODO write help text
+    p.
+      This chart shows the distribution of each metabolite's measurements using
+      a series of box plots.
+
+    p.
+      Each metabolite appears along the y-axis, with a horizontal box plot
+      showing the four quartile values, emphasizing the interquartile range
+      (IQR) with solid bars. Individual outliers appear as well: normal ones,
+      falling at least 1.5 IQRs away from the interquartile range, as dots;
+      and "far-out" outliers, falling at least 3 IQRs away from the
+      interquartile range, as larger dots.
+
+    p.
+      Hovering the mouse pointer over various parts of the plot will show
+      detailed information in a tooltip. These include details of the different
+      quartile ranges, and the values of outliers.
+
 </template>
