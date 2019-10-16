@@ -65,8 +65,10 @@ v-layout.pretreatment-component(row, fill-height)
           v-list-tile(:to="{ name: 'Pretreat Data', params: { id: dataset.id } }",
               @click="stopPropagation")
               v-list-tile-title
-                v-icon(color="warning", v-if="dataset.validation.length") {{ $vuetify.icons.warning }}
-                v-icon(color="success", v-else) {{ $vuetify.icons.check }}
+                v-icon(color="warning", v-if="dataset.validation.length")
+                  | {{ $vuetify.icons.warning }}
+                v-icon(color="success", v-else)
+                  | {{ $vuetify.icons.check }}
                 | {{ dataset.name }}
 
         v-list-tile(:to="{ name: 'Clean Up Table' }")
@@ -88,6 +90,11 @@ v-layout.pretreatment-component(row, fill-height)
               template(#activator="{ on }")
                 v-icon(small, @click="", v-on="on") {{ $vuetify.icons.info }}
               span {{ problemData.description }}
+
+        v-list-tile.small-tile(:to="{ name: 'Impute Table' }")
+          v-list-tile-title
+            v-icon.drawericon {{ $vuetify.icons.tableEdit }}
+            | Impute Table
 
         v-list-tile(:to="{ name: 'Transform Table' }",
             :disabled="!valid(dataset)")
