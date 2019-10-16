@@ -54,6 +54,7 @@ export default {
     save: 'mdi-content-save',
     settings: 'mdi-settings',
     tableEdit: 'mdi-table-edit',
+    tablePlus: 'mdi-table-plus',
     transform: 'mdi-set-right',
     upload: 'mdi-upload',
     warning: 'mdi-alert',

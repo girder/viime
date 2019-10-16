@@ -7,7 +7,7 @@ import {
 } from '../utils';
 import analyses from '../components/vis/analyses';
 import { plot_types } from '../utils/constants';
-import { CSVService, ExcelService } from '../common/api.service';
+import ApiService, { CSVService, ExcelService } from '../common/api.service';
 
 import {
   CHANGE_AXIS_LABEL,
@@ -21,6 +21,8 @@ import {
   SET_DATASET_NAME,
   SET_DATASET_DESCRIPTION,
   SET_DATASET_SELECTED_COLUMNS,
+  CREATE_MERGED_DATASET,
+  REMERGE_DATASET,
   SET_DATASET_GROUP_LEVELS,
 } from './actions.type';
 
@@ -44,12 +46,14 @@ const SET_TRANSFORMATION = 'set_transformation';
 
 // private actions
 const VALIDATE_TABLE = 'validate_table';
+const ADD_DATASET = 'add_dataset';
 
 Vue.use(Vuex);
 
 const datasetDefaults = {
   description: '',
   created: new Date(),
+  meta: {},
   ready: false,
   validation: [],
   sourcerows: [],
@@ -125,6 +129,7 @@ const getters = {
   txType: state => (id, category) => getters.ready(state)(id)
     && state.datasets[id][category],
   plot: state => (id, name) => getters.ready(state)(id) && state.plots[id][name],
+  isMerged: state => id => getters.ready(id) && Array.isArray(state.datasets[id].meta.merged),
 };
 
 
@@ -169,6 +174,7 @@ const mutations = {
       ...{
         name,
         description,
+        meta: data.meta || {},
         created: new Date(created),
         selectedColumns: data.selected_columns || [],
         groupLevels: data.group_levels || [],
@@ -322,14 +328,19 @@ const actions = {
     }
   },
 
+  async [ADD_DATASET]({ commit, dispatch }, data) {
+    commit(INITIALIZE_DATASET, { dataset_id: data.id, name: data.name });
+    commit(SET_LABELS, { dataset_id: data.id, rows: data.rows, columns: data.columns });
+    commit(SET_DATASET_DATA, { data });
+    await dispatch(VALIDATE_TABLE, { dataset_id: data.id });
+    return data;
+  },
+
   async [UPLOAD_CSV]({ state, commit, dispatch }, { file }) {
     commit(SET_LOADING, true);
     try {
       const { data } = await CSVService.upload(file);
-      commit(INITIALIZE_DATASET, { dataset_id: data.id, name: data.name });
-      commit(SET_LABELS, { dataset_id: data.id, rows: data.rows, columns: data.columns });
-      commit(SET_DATASET_DATA, { data });
-      await dispatch(VALIDATE_TABLE, { dataset_id: data.id });
+      await dispatch(ADD_DATASET, data);
       state.store.save(state, state.session_id);
     } catch (err) {
       commit(SET_LAST_ERROR, err);
@@ -343,24 +354,32 @@ const actions = {
     commit(SET_LOADING, true);
     try {
       const { data } = await ExcelService.upload(file);
-      const promiseList = data.map((dataFile) => {
-        commit(INITIALIZE_DATASET, { dataset_id: dataFile.id, name: data.name });
-        commit(SET_LABELS, {
-          dataset_id: dataFile.id,
-          rows: dataFile.rows,
-          columns: dataFile.columns,
-        });
-        commit(SET_DATASET_DATA, { data: dataFile });
-        return dispatch(VALIDATE_TABLE, { dataset_id: dataFile.id });
-      });
+      const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
       await Promise.all(promiseList);
       state.store.save(state, state.session_id);
+      commit(SET_LOADING, false);
+      return data;
     } catch (err) {
       commit(SET_LAST_ERROR, err);
       commit(SET_LOADING, false);
       throw err;
     }
-    commit(SET_LOADING, false);
+  },
+
+  async [CREATE_MERGED_DATASET]({ state, commit, dispatch }, params) {
+    commit(SET_LOADING, true);
+
+    try {
+      const { data } = await ApiService.merge(params);
+      const ds = await dispatch(ADD_DATASET, data);
+      state.store.save(state, state.session_id);
+      commit(SET_LOADING, false);
+      return ds;
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
   },
 
   /**
@@ -442,6 +461,21 @@ const actions = {
       throw err;
     }
     commit(SET_LOADING, false);
+  },
+
+  async [REMERGE_DATASET]({ commit, dispatch }, { dataset_id, method }) {
+    commit(SET_LOADING, true);
+
+    try {
+      await CSVService.remerge(dataset_id, { method });
+      await dispatch(LOAD_DATASET, { dataset_id });
+      commit(INVALIDATE_PLOTS, { dataset_id });
+      commit(SET_LOADING, false);
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
   },
 
   async [MUTEX_TRANSFORM_TABLE]({ commit }, {
