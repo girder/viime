@@ -51,15 +51,15 @@ v-layout.pretreatment-component(row, fill-height)
           :class="{ active: $route.name === 'Pretreat Data' && dataset.id === id}",
           :value="dataset.id === id")
         template(#activator)
-          v-list-tile.dataset-level(:to="{ name: 'Pretreat Data', params: { id: dataset.id } }", exact,
-              @click="stopPropagation")
-              v-list-tile-title.title
-                | {{ dataset.name }}
-              v-list-tile-action
-                v-icon(color="warning", v-if="dataset.validation.length")
-                  | {{ $vuetify.icons.warning }}
-                v-icon(color="success", v-else)
-                  | {{ $vuetify.icons.check }}
+          v-list-tile.dataset-level(:to="{ name: 'Pretreat Data', params: { id: dataset.id } }",
+              exact, @click="stopPropagation")
+            v-list-tile-title.title
+              | {{ dataset.name }}
+            v-list-tile-action
+              v-icon(color="warning", v-if="dataset.validation.length")
+                | {{ $vuetify.icons.warning }}
+              v-icon(color="success", v-else)
+                | {{ $vuetify.icons.check }}
 
         v-list-tile.top-level(:to="{ name: 'Clean Up Table' }", exact)
           v-list-tile-title
@@ -97,8 +97,8 @@ v-layout.pretreatment-component(row, fill-height)
             value="true")
           template(#activator)
             v-list-tile.top-level(:to="{ name: 'Analyze Data' }", exact,
-              :disabled="!valid(dataset)",
-              @click="stopPropagation")
+                :disabled="!valid(dataset)",
+                @click="stopPropagation")
               v-list-tile-title
                 v-icon.drawericon {{ $vuetify.icons.cogs }}
                 | Analyze Table
