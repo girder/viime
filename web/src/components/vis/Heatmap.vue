@@ -60,11 +60,11 @@ export default {
       type: Object,
       default: null,
     },
-    rowConfig: { // { dendogram: boolean, colorer?: (index) => string }
+    rowConfig: { // { dendogram: boolean, colorer?: (name) => string }
       type: Object,
       default: () => ({ dendogram: true, colorer: null }),
     },
-    columnConfig: { // { dendogram: boolean, colorer?: (index) => string }
+    columnConfig: { // { dendogram: boolean, colorer?: (name) => string }
       type: Object,
       default: () => ({ dendogram: true, colorer: null }),
     },
@@ -216,9 +216,11 @@ export default {
       const injectIndices = (s) => {
         if (typeof s.index === 'number') {
           s.indices = [s.index];
+          s.names = [s.name];
         } else {
           s.indices = [].concat(...s.children.map(injectIndices));
-          s.name = s.children.map(d => d.name).join(',');
+          s.names = [].concat(...s.children.map(c => c.names));
+          s.name = s.names.join(', ');
         }
         return s.indices;
       };
@@ -342,26 +344,26 @@ export default {
       text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
       text.text(d => d.data.name);
 
-      const combineColor = (indices) => {
-        if (indices.length === 1) {
-          return colorer(indices[0]);
+      const combineColor = (names) => {
+        if (names.length === 1) {
+          return colorer(names[0]);
         }
         const frequencies = new Map();
-        indices.forEach((index) => {
-          const color = colorer(index);
+        names.forEach((name) => {
+          const color = colorer(name);
           frequencies.set(color, (frequencies.get(color) || 0) + 1);
         });
         // most frequent color
         return Array.from(frequencies.entries()).sort((a, b) => b[1] - a[1])[0][0];
       };
 
-      const toColor = (indices) => {
-        const color = combineColor(indices);
+      const toColor = (names) => {
+        const color = combineColor(names);
         return `linear-gradient(${isColumn ? 'to top' : 'to right'}, ${color} 0, ${color} 5px, transparent 5px)`;
       };
 
       text.classed('color', colorer != null);
-      text.style('background', !colorer ? null : (d => toColor(d.data.indices)));
+      text.style('background', !colorer ? null : (d => toColor(d.data.names)));
     },
     updateColumnLabel() {
       this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves,

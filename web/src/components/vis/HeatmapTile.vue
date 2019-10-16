@@ -88,16 +88,16 @@ export default {
         return [];
       }
       const levelLookup = new Map(this.dataset.groupLevels.map(({ name, color }) => [name, color]));
-      return this.dataset.validatedGroups.data.map(row => levelLookup.get(row[0]));
+      const groups = this.dataset.validatedGroups;
+      return new Map(groups.rowNames.map((row, i) => [row, levelLookup.get(groups.data[i][0])]));
     },
   },
   methods: {
-    isSelectedColor(index) {
-      const column = this.values.columnNames[index];
+    isSelectedColor(column) {
       return this.selectionLookup.has(column) ? '#ffa500' : '#4682b4';
     },
-    groupColor(index) {
-      return this.groupLookup[index];
+    groupColor(row) {
+      return this.groupLookup.get(row);
     },
   },
 };

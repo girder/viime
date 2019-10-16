@@ -778,8 +778,9 @@ def get_hierarchical_clustering_heatmap(validated_table: ValidatedMetaboliteTabl
         csv_file: CSVFile = CSVFile.query.get_or_404(validated_table.csv_file_id)
         if columns == 'selected':
             table = table.loc[:, csv_file.selected_columns or []]
-        elif columns == 'non-selected' and csv_file.selected_columns:
-            table = table.loc[:, [c for c in table if c not in csv_file.selected_columns]]
+        elif columns == 'not-selected' and csv_file.selected_columns:
+            non_selected = [c for c in table if str(c) not in csv_file.selected_columns]
+            table = table.loc[:, non_selected]
 
     return hierarchical_clustering(table)
 
