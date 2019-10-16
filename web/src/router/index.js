@@ -8,6 +8,7 @@ import Transform from '../components/Transform.vue';
 import AnalyzeData from '../components/AnalyzeData.vue';
 import ProblemBar from '../components/ProblemBar.vue';
 import DataSource from '../components/DataSource.vue';
+import NewMerge from '../components/NewMerge.vue';
 import analyses from '../components/vis/analyses';
 
 Vue.use(Router);
@@ -17,6 +18,11 @@ export const routes = [
     path: '/select',
     name: 'Upload Data',
     component: Upload,
+  },
+  {
+    path: '/pretreatment/merge',
+    component: NewMerge,
+    props: true,
   },
   {
     path: '/pretreatment/:id',

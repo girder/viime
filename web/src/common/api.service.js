@@ -37,6 +37,10 @@ const ApiService = {
   download(resource, slug) {
     return Vue.axios.get(`${resource}/${slug}/download`);
   },
+
+  merge(data) {
+    return Vue.axios.post('merge', data);
+  },
 };
 
 export default ApiService;
@@ -67,6 +71,10 @@ export const CSVService = {
 
   download(slug) {
     return ApiService.download('csv', slug);
+  },
+
+  remerge(slug, params) {
+    return ApiService.post(`csv/${slug}/remerge`, params);
   },
 
   validatedDownloadUrl(slug) {

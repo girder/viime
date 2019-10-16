@@ -3,8 +3,7 @@ from io import BytesIO
 import json
 import math
 from pathlib import PurePath
-from typing import Callable, cast, Dict, Optional
-from uuid import uuid4
+from typing import Callable, cast, Dict, List, Optional
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
@@ -24,6 +23,7 @@ from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
 from viime.normalization import validate_normalization_method
 from viime.plot import pca
 from viime.scaling import SCALING_METHODS
+from viime.table_merge import simple_merge
 from viime.table_validation import get_fatal_index_errors, ValidationSchema
 from viime.transformation import TRANSFORMATION_METHODS
 
@@ -144,42 +144,47 @@ def upload_excel_file(file: FileStorage, meta: Dict):
         raise
 
 
-@csv_bp.route('/csv/merge', methods=['POST'])
+@csv_bp.route('/merge', methods=['POST'])
 @use_kwargs({
-    'csv_file_ids': fields.List(
+    'name': fields.Str(required=True),
+    'description': fields.Str(missing=None),
+    'method': fields.Str(required=True, validate=validate.OneOf(['simple'])),
+    'datasets': fields.List(
         fields.UUID(), validate=validate.Length(min=2))
 })
-def merge_csv_files(csv_file_ids):
-    """
-    Generate a new validated csv file by concatonating a list of 2 or more
-    validated tables.
+def merge_csv_files(name: str, description: str, method: str, datasets: List[str]):
+    tables = [ValidatedMetaboliteTable.query.filter_by(csv_file_id=id).first_or_404()
+              for id in datasets]
 
-    NOTE: This current uses the groups from the first table, removes
-    all of the metadata, and does and "inner join" with the row indices"
-    """
-    tables = []
-    for index, csv_file_id in enumerate(csv_file_ids):
-        table = ValidatedMetaboliteTable.query.filter_by(
-            csv_file_id=csv_file_id
-        ).first()
-        if index == 0:
-            groups = table.groups
-
-        if table is None:
-            raise ValidationError(
-                'One or more csv_files does not exist or is not validated')
-
-        tables.append(table.measurements)
-
-    merged = pandas.concat([groups] + tables, axis=1, join='inner')
+    merged, column_types, row_types = simple_merge(tables)
 
     try:
-        csv_file = csv_file_schema.load(dict(
-            id=uuid4(),
-            name='merged.csv',
+        csv_file: CSVFile = csv_file_schema.load(dict(
+            name=name,
             table=merged.to_csv(),
-            meta={'merged': [str(id) for id in csv_file_ids]}
+            meta={
+                'merged': [str(id) for id in datasets],
+                'merge_method': method
+            }
         ))
+
+        # update types afterwards since the default is auto generated
+
+        if row_types:
+            # update the row types
+            for row, row_type in zip(csv_file.rows, row_types):
+                row.row_type = row_type
+                db.session.add(row)
+
+        if column_types:
+            # update the row types
+            for column, column_type in zip(csv_file.columns, column_types):
+                column.column_type = column_type
+                db.session.add(column)
+
+        # need to call it manually since we might have changed the column types
+        csv_file.derive_group_levels(clear_caches=True)
+
         db.session.add(csv_file)
         db.session.flush()
 
@@ -443,6 +448,103 @@ def get_row(csv_id, row_index):
     return jsonify(table_row_schema.dump(
         TableRow.query.get_or_404((csv_id, row_index))
     ))
+
+
+def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
+    if row_types is None:
+        return
+
+    count_target = len(row_types)
+    count_current = len(csv_file.rows)
+    # update the row types
+    for row, row_type in zip(csv_file.rows, row_types):
+        row.row_type = row_type
+        db.session.add(row)
+
+    if count_target > count_current:
+        # create missing
+        for index, row_type in enumerate(row_types[count_current:]):
+            row = table_row_schema.load({
+                'csv_file_id': csv_file.id, 'row_index': index + count_current,
+                'row_type': row_type
+            })
+            csv_file.rows.append(row)
+            db.session.add(row)
+    elif count_target < count_current:
+        # delete extra
+        for row in csv_file.rows[count_target:]:
+            db.session.delete(row)
+
+
+def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
+    if column_types is None:
+        return
+
+    count_target = len(column_types)
+    count_current = len(csv_file.columns)
+
+    # update the column types
+
+    for column, column_type in zip(csv_file.columns, column_types):
+        column.column_type = column_type
+        db.session.add(column)
+
+    if count_target > count_current:
+        # create missing
+        for index, column_type in enumerate(column_types[count_current:]):
+            column = table_column_schema.load({
+                'csv_file_id': csv_file.id, 'column_index': index + count_current,
+                'column_type': column_type
+            })
+            csv_file.columns.append(column)
+            db.session.add(column)
+
+    elif count_target < count_current:
+        # delete extra
+        for column in csv_file.column[count_target:]:
+            db.session.delete(column)
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/remerge', methods=['POST'])
+@use_kwargs({
+    'method': fields.Str(missing=None)
+})
+def remerge_csv_file(csv_id, method):
+    try:
+        csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
+        if 'merged' not in csv_file.meta:
+            raise ValidationError('given file is not a merged one')
+
+        datasets = csv_file.meta['merged']
+        if not method:
+            method = csv_file.meta['merge_method']
+
+        tables = [ValidatedMetaboliteTable.query.filter_by(csv_file_id=id).first_or_404()
+                  for id in datasets]
+
+        merged, column_types, row_types = simple_merge(tables)
+
+        csv_file.save_table(merged)
+
+        _update_column_types(csv_file, column_types)
+        _update_row_types(csv_file, row_types)
+
+        # need to call it manually since we might have changed the column types
+        csv_file.derive_group_levels(clear_caches=True)
+
+        meta = csv_file.meta.copy()
+        meta.update({
+            'merged': [str(id) for id in datasets],
+            'merge_method': method
+        })
+        csv_file.meta = meta
+
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/validate', methods=['POST'])
