@@ -24,20 +24,11 @@ export default {
     valid(dataset) {
       return this.$store.getters.valid(dataset.id);
     },
-    navigate(evt, dataset) {
-      evt.preventDefault();
-      evt.stopPropagation();
-      const { id } = dataset;
-      this.$router.push({
-        name: 'Pretreat Data',
-        params: { id },
-      });
-    },
     problemNav(problem) {
       if (problem.multi) {
-        this.$router.push({ path: `/pretreatment/${this.id}/cleanup/${problem.type}` });
+        this.$router.push({ name: 'Problem', params: { problem: problem.type } });
       } else {
-        this.$router.push({ path: `/pretreatment/${this.id}/cleanup` });
+        this.$router.push({ name: 'Clean Up Table' });
         this.$store.commit(SET_SELECTION, {
           key: this.id,
           event: {},
@@ -45,9 +36,6 @@ export default {
           idx: problem[`${problem.context}_index`],
         });
       }
-    },
-    isSubRoute(dataset, start) {
-      return this.$router.currentRoute.path.startsWith(`/pretreatment/${dataset.id}/${start}`);
     },
   },
 };
@@ -57,26 +45,27 @@ export default {
 v-layout.pretreatment-component(row, fill-height)
 
   v-navigation-drawer.navigation(floating, permanent, style="min-width: 220px; width: 220px;")
-    v-list(dense)
-      v-list-group(v-for="(dataset, index) in datasets",
+    v-list
+      v-list-group.root-level(v-for="(dataset, index) in datasets",
           :key="dataset.id",
           :value="dataset.id === id")
         template(#activator)
-          v-list-tile(:to="{ name: 'Pretreat Data', params: { id: dataset.id } }",
+          v-list-tile.dataset-level(:to="{ name: 'Pretreat Data', params: { id: dataset.id } }", exact,
               @click="stopPropagation")
-              v-list-tile-title
+              v-list-tile-title.title
+                | {{ dataset.name }}
+              v-list-tile-action
                 v-icon(color="warning", v-if="dataset.validation.length")
                   | {{ $vuetify.icons.warning }}
                 v-icon(color="success", v-else)
                   | {{ $vuetify.icons.check }}
-                | {{ dataset.name }}
 
-        v-list-tile(:to="{ name: 'Clean Up Table' }")
+        v-list-tile.top-level(:to="{ name: 'Clean Up Table' }", exact)
           v-list-tile-title
             v-icon.drawericon {{ $vuetify.icons.tableEdit }}
             | Clean Up Table
 
-        v-list-tile.small-tile(v-for="problemData in dataset.validation",
+        v-list-tile.sub-level(v-for="problemData in dataset.validation",
             @click="problemNav(problemData)",
             :class="{ active: problemData.type === problem }",
             :inactive="!problemData.clickable",
@@ -91,28 +80,27 @@ v-layout.pretreatment-component(row, fill-height)
                 v-icon(small, @click="", v-on="on") {{ $vuetify.icons.info }}
               span {{ problemData.description }}
 
-        v-list-tile.small-tile(:to="{ name: 'Impute Table' }")
+        v-list-tile.sub-level(:to="{ name: 'Impute Table' }")
           v-list-tile-title
             v-icon.drawericon {{ $vuetify.icons.tableEdit }}
             | Impute Table
 
-        v-list-tile(:to="{ name: 'Transform Table' }",
+        v-list-tile.top-level(:to="{ name: 'Transform Table' }",
             :disabled="!valid(dataset)")
           v-list-tile-title
             v-icon.pr-1.drawericon {{ $vuetify.icons.bubbles }}
             | Transform Table
 
-        v-list-group(sub-group,
+        v-list-group.top-level(sub-group,
             :disabled="!valid(dataset)",
-            group=".*/analyze/.*"
             :value="true")
           template(#activator)
-            v-list-tile(:to="{ name: 'Analyze Data' }",
+            v-list-tile.top-level(:to="{ name: 'Analyze Data' }", exact,
               @click="stopPropagation")
               v-list-tile-title
                 v-icon.drawericon {{ $vuetify.icons.cogs }}
                 | Analyze Table
-          v-list-tile.small-tile(v-for="a in analyses", :key="a.path",
+          v-list-tile.sub-level(v-for="a in analyses", :key="a.path",
               :to="{ name: a.shortName }",
               :disabled="!valid(dataset)")
             v-list-tile-title
@@ -125,23 +113,149 @@ v-layout.pretreatment-component(row, fill-height)
 
 <style lang="scss">
 .navigation {
-  .drawericon {
-    vertical-align: top;
-    margin-right: 2px;
+  > .v-list {
+    padding: 0;
+
+    > .v-list__group > .v-list__group__items {
+      padding: 8px 0;
+    }
   }
 
-  // .small-tile .v-list__tile {
-  //   height: 32px;
-  // }
+  .drawericon {
+    vertical-align: top;
+    margin-right: 4px;
+  }
 
-  // .active {
-  //   background-color: #37474f;
-  //   border-radius: 40px 0 0 40px;
-  //   color: white;
-  //   i {
-  //     color: white;
-  //   }
-  // }
+  .root-level > .v-list__group__header--active {
+    background: unset;
+  }
+
+
+  .dataset-level {
+    order: 2;
+
+    .v-list__tile {
+      padding: 0 8px 0 0;
+      color: black !important;
+
+      &:hover {
+        background: unset;
+      }
+    }
+
+    .v-list__tile__action {
+      min-width: unset;
+    }
+  }
+
+  .top-level {
+    .v-list__group__header {
+      position: relative;
+
+      &:hover {
+        background: unset;
+      }
+
+      .v-list__tile {
+        padding-left: 16px;
+      }
+    }
+
+    .v-list__group__header__prepend-icon {
+      min-width: unset;
+      padding: 0;
+      margin: 0;
+      justify-content: flex-end;
+      z-index: 1;
+      position: absolute;
+      left: 8px;
+      top: 0;
+      height: 100%;
+    }
+
+    // .v-list__group__header--active > .v-list__group__header__prepend-icon > .v-icon {
+    //   color: white;
+    // }
+  }
+
+
+  .sub-level {
+    margin: 4px 0 4px 24px;
+
+    .v-list__tile {
+      height: 32px;
+    }
+  }
+
+  > .v-list {
+    .top-level {
+      > .v-list__tile {
+        margin-left: 8px;
+
+        .v-list__tile__title  {
+          padding-left: 8px;
+        }
+      }
+    }
+
+    .sub-level {
+      > .v-list__tile {
+        margin-left: 8px;
+
+        .v-list__tile__title  {
+          padding-left: 4px;
+        }
+      }
+    }
+
+    .top-level,
+    .sub-level {
+      > .v-list__tile {
+        border-radius: 24px 0 0 24px;
+
+        .v-list__tile__title  {
+          font-size: 16px;
+        }
+      }
+
+      > .v-list__tile--active {
+        background-color: #37474f;
+        color: white;
+
+        &:hover {
+          background-color: #4b616d;
+        }
+
+        i,
+        .v-list__tile__title {
+          color: white;
+        }
+      }
+    }
+
+    // .group-level {
+    //   > .v-list__tile {
+
+    //     .v-list__tile__title {
+    //       font-size: 16px;
+    //     }
+
+    //     &:hover {
+    //       background: unset;
+    //     }
+    //   }
+
+    //   > .v-list__tile--active {
+    //     color: white;
+
+    //     i,
+    //     .v-list__tile__title {
+    //       color: white;
+    //     }
+    //   }
+    // }
+  }
+}
   // .file-name .v-list__tile {
   //   padding-right: 0;
 
@@ -163,5 +277,4 @@ v-layout.pretreatment-component(row, fill-height)
   //     border-radius: 40px 0 0 40px;
   //   }
   // }
-}
 </style>
