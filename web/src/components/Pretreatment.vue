@@ -26,7 +26,7 @@ export default {
     },
     problemNav(problem) {
       if (problem.multi) {
-        this.$router.push({ name: 'Problem', params: { problem: problem.type } });
+        this.$router.push({ name: 'Problem', params: { id: this.id, problem: problem.type } });
       } else {
         this.$router.push({ name: 'Clean Up Table' });
         this.$store.commit(SET_SELECTION, {
