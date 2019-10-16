@@ -80,11 +80,11 @@ v-data-table.elevation-1.main(:headers="headers", :items="items", disable-initia
   template(v-slot:[headercell]="{header}")
     | {{header.text}}
     v-btn.toggle(icon, small, @click="toggleHighlighted(header, $event, true)",
-        title="Adds the highlighted Metabolites to the selected set"
+        title="Adds the highlighted Metabolites to the selected set",
         v-if="!header.isLabel")
       span.mdi(:class="{ [$vuetify.icons.plusMultiple]: true }")
     v-btn.toggle(icon, small, @click="toggleHighlighted(header, $event, false)",
-        title="Removes the highlighted Metabolites from the selected set"
+        title="Removes the highlighted Metabolites from the selected set",
         v-if="!header.isLabel")
       span.mdi(:class="{ [$vuetify.icons.minusMultiple]: true }")
 
