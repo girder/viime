@@ -140,6 +140,9 @@ export default {
     removeAll() {
       this.readyFiles.concat(this.pendingFiles).forEach(f => this.remove(f));
     },
+    createMergedDataset() {
+      // TODO
+    },
   },
 };
 </script>
@@ -168,6 +171,9 @@ v-layout.upload-component(column, fill-height)
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title All Data Sources
         v-spacer
+        v-btn(flat, small, to="/pretreatment/merge", :disabled="files.length < 2")
+          v-icon.pr-1 {{ $vuetify.icons.tablePlus }}
+          | merge data sources
         v-btn(flat, small, @click="deleteCount = files.length; doDelete = removeAll")
           v-icon.pr-1 {{ $vuetify.icons.clearAll }}
           | clear all
