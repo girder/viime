@@ -24,10 +24,6 @@ export default {
   },
 
   data() {
-    const filters = {};
-    this.headers.forEach((header) => {
-      filters[header.value] = Infinity;
-    });
     return {
       format: format('.4e'),
       pagination: {
@@ -36,7 +32,6 @@ export default {
       // need to use this workaround, since `header-cell` as slot name doesn't work
       // and `headerCell` isn't allowed by the linter
       headercell: 'headerCell',
-      filters,
     };
   },
 
@@ -51,39 +46,48 @@ export default {
         this.$emit('input', s);
       },
     },
-    filteredItems() {
-      const filters = Object.entries(this.filters).filter(entry => entry[1] < 0.1);
-      if (filters.length === 0) {
-        return this.items;
-      }
-      return this.items.filter(item => filters.every(([k, v]) => item[k] <= v));
-    },
   },
 
   methods: {
     isInteresting(value) {
       return value < this.threshold;
     },
-    setFilter(header, value) {
-      this.filters[header.value] = value === 0.1 ? Infinity : value;
-    },
-    filterText(header) {
-      return `Filter ${header.text} <= ${this.filters[header.value]}`;
+    toggleHighlighted(header, evt, add) {
+      evt.preventDefault();
+      evt.stopPropagation();
+
+      const highlighted = this.items.filter(item => this.isInteresting(item[header.value]));
+      const current = this.selectedItems.slice();
+      const currentLookup = new Set(current);
+      highlighted.forEach((item) => {
+        if (add && !currentLookup.has(item)) {
+          current.push(item);
+        } else if (!add && currentLookup.has(item)) {
+          const index = current.indexOf(item);
+          current.splice(index, 1);
+        }
+      });
+      this.selectedItems = current;
     },
   },
 };
 </script>
 
 <template lang="pug">
-v-data-table.elevation-1.main(:headers="headers", :items="filteredItems", disable-initial-sort,
+v-data-table.elevation-1.main(:headers="headers", :items="items", disable-initial-sort,
     item-key="Metabolite", :pagination.sync="pagination",
     v-model="selectedItems", select-all)
   template(v-slot:[headercell]="{header}")
     | {{header.text}}
-    v-slider(v-if="header.filter", min="0", max="0.1", step="0.001", thumb-label,
-        :title="filterText(header)",
-        :value="filters[header.value]", @input="setFilter(header, $event)",
-        hide-details, @click="$event.stopPropagation()")
+    v-btn.toggle(icon, small, @click="toggleHighlighted(header, $event, true)",
+        title="Adds the highlighted Metabolites to the selected set"
+        v-if="!header.isLabel")
+      span.mdi(:class="{ [$vuetify.icons.plusMultiple]: true }")
+    v-btn.toggle(icon, small, @click="toggleHighlighted(header, $event, false)",
+        title="Removes the highlighted Metabolites from the selected set"
+        v-if="!header.isLabel")
+      span.mdi(:class="{ [$vuetify.icons.minusMultiple]: true }")
+
   template(#items="props")
     td.cell
       v-checkbox(v-model="props.selected", hide-details)
@@ -115,29 +119,13 @@ v-data-table.elevation-1.main(:headers="headers", :items="filteredItems", disabl
   padding: 2px 7px;
 }
 
-.main >>> thead > tr > th {
-  position: relative;
-  height: 50px;
-  vertical-align: top;
-}
-
-.main >>> thead > tr > th:nth-child(2) {
-  min-width: 20em;
-}
-
-.v-input--slider {
-  position: absolute;
-  bottom: 0;
-  padding: 2px 2px;
-  box-sizing: border-box;
+.toggle {
   margin: 0;
-  width: unset;
+  opacity: 0;
 }
 
-.v-input--slider >>> .v-slider__thumb-label {
-  top: 100%;
-  border-radius: 0 50% 50%;
-  bottom: unset;
-  transform: translateY(20%) translateY(12px) translateX(-50%) rotate(45deg);
+.main >>> thead > tr > th:hover .toggle {
+  opacity: 0.6;
 }
+
 </style>

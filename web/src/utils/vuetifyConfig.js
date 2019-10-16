@@ -58,5 +58,7 @@ export default {
     upload: 'mdi-upload',
     warning: 'mdi-alert',
     warningCircle: 'mdi-alert-circle',
+    plusMultiple: 'mdi-checkbox-multiple-blank-outline',
+    minusMultiple: 'mdi-checkbox-multiple-marked-outline',
   },
 };

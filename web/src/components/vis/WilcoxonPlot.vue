@@ -35,9 +35,11 @@ export default Vue.extend({
       return [
         {
           text: 'Metabolite',
+          align: 'left',
           value: 'Metabolite',
+          isLabel: true,
         },
-        ...this.pairs.map(text => ({ text, value: text, filter: true })),
+        ...this.pairs.map(text => ({ text, value: text })),
       ];
     },
   },
