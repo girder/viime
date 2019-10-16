@@ -48,6 +48,7 @@ v-layout.pretreatment-component(row, fill-height)
     v-list
       v-list-group.root-level(v-for="(dataset, index) in datasets",
           :key="dataset.id",
+          :class="{ active: $route.name === 'Pretreat Data' && dataset.id === id}",
           :value="dataset.id === id")
         template(#activator)
           v-list-tile.dataset-level(:to="{ name: 'Pretreat Data', params: { id: dataset.id } }", exact,
@@ -67,7 +68,7 @@ v-layout.pretreatment-component(row, fill-height)
 
         v-list-tile.sub-level(v-for="problemData in dataset.validation",
             @click="problemNav(problemData)",
-            :class="{ active: problemData.type === problem }",
+            :class="{ active: problemData.type === problem && dataset.id === id}",
             :inactive="!problemData.clickable",
             :key="problemData.title")
           v-list-tile-title
@@ -92,6 +93,7 @@ v-layout.pretreatment-component(row, fill-height)
             | Transform Table
 
         v-list-group.top-level(sub-group,
+            :class="{ active: $route.name === 'Analyze Data' && dataset.id === id}",
             value="true")
           template(#activator)
             v-list-tile.top-level(:to="{ name: 'Analyze Data' }", exact,
@@ -130,6 +132,18 @@ v-layout.pretreatment-component(row, fill-height)
     background: unset;
   }
 
+  .root-level.active > .v-list__group__header {
+    background-color: #37474f;
+  }
+
+  .root-level.active > .v-list__group__header,
+  .top-level.active > .v-list__group__header {
+    .v-list__group__header__prepend-icon > .v-icon,
+    .v-list__group__header__append-icon > .v-icon,
+    .v-list__tile__title {
+      color: white !important;
+    }
+  }
 
   .dataset-level {
     order: 2;
@@ -158,6 +172,7 @@ v-layout.pretreatment-component(row, fill-height)
 
       .v-list__tile {
         padding-left: 16px;
+
       }
     }
 
