@@ -92,10 +92,10 @@ v-layout.pretreatment-component(row, fill-height)
             | Transform Table
 
         v-list-group.top-level(sub-group,
-            :disabled="!valid(dataset)",
-            :value="true")
+            value="true")
           template(#activator)
             v-list-tile.top-level(:to="{ name: 'Analyze Data' }", exact,
+              :disabled="!valid(dataset)",
               @click="stopPropagation")
               v-list-tile-title
                 v-icon.drawericon {{ $vuetify.icons.cogs }}
