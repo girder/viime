@@ -5,8 +5,8 @@ import {
   defaultRowOption,
   defaultColOption,
 } from '@/utils/constants';
-import { base26Converter } from '@/utils';
-import DataTable from '@/components/DataTable.vue';
+import { base26Converter, textColor } from '../utils';
+import DataTable from './DataTable.vue';
 
 
 export default {
@@ -46,6 +46,11 @@ export default {
         column.header.clazz.push(...selected);
         return column;
       });
+    },
+    groupToColor() {
+      const levels = this.dataset.groupLevels;
+      const lookup = new Map(levels.map(({ name, color }) => [name, color]));
+      return group => lookup.get(group) || null;
     },
   },
   methods: {
@@ -109,12 +114,26 @@ export default {
         this.onRowClick({ event, rowIndex });
       }
     },
+    cellStyles(rowIndex, columnIndex, value) {
+      const columnType = this.dataset.column.labels[columnIndex];
+      const rowType = this.dataset.row.labels[rowIndex];
+      if (columnType !== 'group' || rowType !== 'sample') {
+        return null;
+      }
+      const color = this.groupToColor(value);
+      const tColor = textColor(color);
+      return {
+        backgroundColor: color,
+        color: tColor === 'black' ? null : tColor, // avoid setting default color
+      };
+    },
   },
 };
 </script>
 
 <template lang="pug">
 data-table(:row-headers="rowHeaders", :columns="columns",
-    :cell-classes="cellClasses", @row-click="onRowClick($event)",
+    :cell-classes="cellClasses", :cell-styles="cellStyles",
+    @row-click="onRowClick($event)",
     @column-click="onColumnClick($event)", @cell-click="onCellClick($event)")
 </template>
