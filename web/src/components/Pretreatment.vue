@@ -123,6 +123,19 @@ v-layout.pretreatment-component(row, fill-height)
     }
   }
 
+  .v-list__group__header.v-list__group__header--sub-group
+    .v-list__group__header__prepend-icon .v-icon,
+  .v-list__group__header
+    .v-list__group__header__append-icon .v-icon {
+    transform: rotate(-90deg);
+  }
+  .v-list__group__header--active.v-list__group__header--sub-group
+    .v-list__group__header__prepend-icon .v-icon,
+  .v-list__group__header--active
+    .v-list__group__header__append-icon .v-icon {
+    transform: unset;
+  }
+
   .drawericon {
     vertical-align: top;
     margin-right: 4px;
