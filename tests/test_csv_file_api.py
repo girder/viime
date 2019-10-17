@@ -197,10 +197,16 @@ def test_merge_files(client):
     db.session.commit()
 
     resp = client.post(url_for('csv.merge_csv_files'),
-                       json={'csv_file_ids': [csv_file1.id, csv_file2.id]})
+                       json={
+                           'name': 'merge',
+                           'description': '',
+                           'method': 'simple',
+                           'datasets': [csv_file1.id, csv_file2.id]
+                        })
     assert resp.status_code == 201
-    assert resp.json['columns'] == [{
-        'column_header': 'id',
+
+    expected_column_types = [{
+        'column_header': 'nan',
         'column_index': 0,
         'column_type': 'key'
     }, {
@@ -208,32 +214,51 @@ def test_merge_files(client):
         'column_index': 1,
         'column_type': 'group'
     }, {
-        'column_header': 'col1',
+        'column_header': 'g_1',
         'column_index': 2,
-        'column_type': 'measurement'
+        'column_type': 'group'
     }, {
-        'column_header': 'col2',
+        'column_header': 'col1',
         'column_index': 3,
         'column_type': 'measurement'
     }, {
-        'column_header': 'col3',
+        'column_header': 'col2',
         'column_index': 4,
         'column_type': 'measurement'
     }, {
-        'column_header': 'col4',
+        'column_header': 'col3',
         'column_index': 5,
         'column_type': 'measurement'
+    }, {
+        'column_header': 'col4',
+        'column_index': 6,
+        'column_type': 'measurement'
     }]
-    assert resp.json['rows'] == [{
+
+    expected_row_types = [{
         'row_index': 0,
-        'row_name': 'id',
+        'row_name': 'nan',
         'row_type': 'header'
     }, {
         'row_index': 1,
+        'row_name': 'Data Source',
+        'row_type': 'metadata'
+    }, {
+        'row_index': 2,
         'row_name': 'row1',
         'row_type': 'sample'
     }, {
-        'row_index': 2,
+        'row_index': 3,
         'row_name': 'row2',
         'row_type': 'sample'
     }]
+
+    assert resp.json['columns'] == expected_column_types
+    assert resp.json['rows'] == expected_row_types
+
+    # test remerge which shouldn't change a thing
+
+    resp = client.post(url_for('csv.remerge_csv_file', csv_id=resp.json['id']))
+    assert resp.status_code == 200
+    assert resp.json['columns'] == expected_column_types
+    assert resp.json['rows'] == expected_row_types
