@@ -13,7 +13,7 @@
         .column-header-cell(:class="item.header.clazz", @click="onColumnClick($event, index)")
           | {{item.header.text}}
         .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(i, index)",
-            @click="onCellClick($event, i, index)") {{r}}
+            :style="cellStyles(i, index, r)", @click="onCellClick($event, i, index)") {{r}}
 </template>
 
 <script>
@@ -35,7 +35,13 @@ export default {
     },
     cellClasses: { // (rowIndex: number, columnIndex: number) => string[]
       type: Function,
-      required: true,
+      required: false,
+      default() { return () => null; },
+    },
+    cellStyles: { // (rowIndex: number, columnIndex: number, value: any) => object
+      type: Function,
+      required: false,
+      default() { return () => null; },
     },
   },
   methods: {
