@@ -48,12 +48,16 @@ vis-tile-large(v-if="plot", title="Wilcoxon Test", :loading="plot.loading", expa
     v-card.mx-3(flat)
       v-card-actions
         v-layout(column)
-          v-slider.my-1.minCorrelation(v-model="threshold", label="0", thumb-label,
+          v-slider.my-1.minCorrelation(v-model="threshold", label="0", thumb-label="always",
               hide-details, min="0", max="0.1", step="0.001")
   wilcoxon-plot(:data="plot.data", :threshold="threshold", v-model="selected")
 </template>
 
 <style scoped>
+.minCorrelation {
+  padding-top: 16px;
+}
+
 .minCorrelation >>> .v-input__slot::after {
   content: "0.1";
   color: rgba(0,0,0,0.54);

@@ -90,6 +90,13 @@ v-layout.pretreatment-component(row, fill-height)
                     v-icon.pl-1(small, @click="", v-on="on") {{ $vuetify.icons.info }}
                   span {{ problemData.description }}
 
+            v-list-tile.ml-4.my-1.px-0.small-tile(
+                :class="{ active: $router.currentRoute.name === 'Impute Table' }",
+                @click="$router.push({ path: `/pretreatment/${dataset.id}/cleanup/impute` })")
+              v-list-tile-title.small-tile.pl-2
+                v-icon.pr-1.middle {{ $vuetify.icons.tableEdit }}
+                | Impute Table
+
             v-list-tile.ml-2(
                 :class="{ active: $router.currentRoute.name === 'Transform Table' }",
                 :disabled="!valid(dataset)",

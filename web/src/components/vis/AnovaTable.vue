@@ -37,10 +37,12 @@ export default {
           text: 'Metabolite',
           align: 'left',
           value: 'Metabolite',
+          isLabel: true,
         },
         {
           text: 'Group',
           value: 'Group',
+          isLabel: true,
         },
         ...this.pairs.map(text => ({ text, value: text })),
       ];
