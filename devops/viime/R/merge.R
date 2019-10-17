@@ -45,3 +45,34 @@ compute_clean_pca <- function(prefix, measurements) {
 
   MS.scores.variance
 }
+
+#' multi_block_pca_merge
+#'
+#' @export
+multi_block_pca_merge <- function(...) {
+  #--------------#
+  ## Multiblock ##
+  #--------------#
+  tables <- c(...)
+  
+  prepare_table <- function(t) {
+    MS_metab = read.csv(t, row.names=1)
+    #First matrix
+    MS.svd <- svd(MS_metab) #Perform Singular Value Decomposition
+    a_1 <- 1/(MS.svd$d[1]^2) #calculate the weight, it is the inverse of the first squared singular value
+    Z1 <- MS_metab*a_1 #multiply the entire matrix by the weight
+    
+    Z1
+  }
+  
+  mb = prepare_table(tables[1])
+  for(t in tables[-1]) {
+    z = prepare_table(t)
+    mb = merge(mb, z, by='row.names')
+  }
+  
+  # Multiblock PCA
+  MB.PCA <- prcomp(mb, center=TRUE, scale=TRUE)
+
+  MB.PCA$x
+}

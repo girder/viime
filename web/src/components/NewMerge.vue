@@ -10,6 +10,10 @@ export const mergeMethods = [
     value: 'clean',
     label: 'Clean PCA',
   },
+  {
+    value: 'multi_block',
+    label: 'Multiblock PCA',
+  },
 ];
 
 export default {

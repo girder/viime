@@ -1,6 +1,7 @@
 """
 This module contains methods related to mergind dataset
 """
+from collections import OrderedDict
 from typing import Callable, Dict, List, Optional, Set
 
 import pandas as pd
@@ -12,7 +13,8 @@ from .opencpu import opencpu_request
 
 def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
                 transformer: Optional[Callable[[pd.DataFrame, int],
-                                      pd.DataFrame]] = None):
+                                      pd.DataFrame]] = None,
+                combined_measurements: Optional[pd.DataFrame] = None):
     used_column_names: Set[str] = set()
     tables: List[pd.DataFrame] = []
     column_types: List[str] = [
@@ -20,36 +22,42 @@ def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
     ]
     measurement_metadata: List[int] = []
 
-    to_merge = [
-        (TABLE_COLUMN_TYPES.GROUP, 'groups', False),
-        (TABLE_COLUMN_TYPES.METADATA, 'sample_metadata', False),
-        (TABLE_COLUMN_TYPES.DATA, 'measurements', True)
-    ]
-    for (column_type, attr, do_transform) in to_merge:
+    def append_table(column_type: str, df: pd.DataFrame, index: int):
+        count = df.shape[1]
+        column_names = list(df)
+        renames: Dict[str, str] = {}
+
+        for column_name in column_names:
+            i = 1
+            new_column_name = column_name
+            while new_column_name in used_column_names:
+                new_column_name = '%s_%s' % (column_name, i)
+                i += 1
+            if column_name != new_column_name:
+                renames[column_name] = new_column_name
+
+        if renames:
+            df = df.rename(columns=renames)
+
+        used_column_names.update(list(df))
+        tables.append(df)
+        column_types.extend([column_type] * count)
+        measurement_metadata.extend([index + 1] * count)
+
+    def append_tables(column_type: str, attr: str, do_transform=False):
         for index, table in enumerate(validated_tables):
             df = getattr(table, attr)
             if do_transform and transformer:
                 df = transformer(df, index)
-            count = df.shape[1]
-            column_names = list(df)
-            renames: Dict[str, str] = {}
+            append_table(column_type, df, index)
 
-            for column_name in column_names:
-                i = 1
-                new_column_name = column_name
-                while new_column_name in used_column_names:
-                    new_column_name = '%s_%s' % (column_name, i)
-                    i += 1
-                if column_name != new_column_name:
-                    renames[column_name] = new_column_name
+    append_tables(TABLE_COLUMN_TYPES.GROUP, 'groups', False)
+    append_tables(TABLE_COLUMN_TYPES.METADATA, 'sample_metadata', False)
 
-            if renames:
-                df = df.rename(columns=renames)
-
-            used_column_names.update(list(df))
-            tables.append(df)
-            column_types.extend([column_type] * count)
-            measurement_metadata.extend([index + 1] * count)
+    if combined_measurements is None:
+        append_tables(TABLE_COLUMN_TYPES.DATA, 'measurements', True)
+    else:
+        append_table(TABLE_COLUMN_TYPES.DATA, combined_measurements, -1)
 
     merged = pd.concat(tables, axis=1, join='inner')
 
@@ -91,4 +99,15 @@ def clean_pca_merge(validated_tables: List[ValidatedMetaboliteTable]):
     return _merge_impl(validated_tables, _clean_pca_transformer)
 
 
-merge_methods = dict(simple=simple_merge, clean=clean_pca_merge)
+def multi_block_merge(validated_tables: List[ValidatedMetaboliteTable]):
+    files: OrderedDict[str, str] = OrderedDict()
+    for index, table in enumerate(validated_tables):
+        files['table%d'] = table.measurements.to_csv().encode()
+
+    combined = opencpu_request('multi_block_pca_merge', files)
+
+    return _merge_impl(validated_tables, combined_measurements=combined)
+
+
+merge_methods = dict(simple=simple_merge, clean=clean_pca_merge,
+                     multi_block=multi_block_merge)
