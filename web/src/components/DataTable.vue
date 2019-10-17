@@ -90,16 +90,6 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
   text-overflow: ellipsis;
 }
 
-
-.column-header-cell {
-  text-align: center;
-  background-color: $background;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  cursor: pointer;
-}
-
 .row-header-cell {
   background-color: $background;
   cursor: pointer;
@@ -180,6 +170,16 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
   &.active.rowFirst.rowLast {
     background-color: $color;
   }
+}
+
+.column-header-cell {
+  @include selectionAware($background);
+
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  cursor: pointer;
 }
 
 // column
