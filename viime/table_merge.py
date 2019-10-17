@@ -102,7 +102,7 @@ def clean_pca_merge(validated_tables: List[ValidatedMetaboliteTable]):
 def multi_block_merge(validated_tables: List[ValidatedMetaboliteTable]):
     files: OrderedDict[str, str] = OrderedDict()
     for index, table in enumerate(validated_tables):
-        files['table%d'] = table.measurements.to_csv().encode()
+        files['table%d' % index] = table.measurements.to_csv().encode()
 
     combined = opencpu_request('multi_block_pca_merge', files)
 

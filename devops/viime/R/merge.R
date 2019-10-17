@@ -53,7 +53,7 @@ multi_block_pca_merge <- function(...) {
   #--------------#
   ## Multiblock ##
   #--------------#
-  tables <- c(...)
+  tables <- list(...)
   
   prepare_table <- function(t) {
     MS_metab = read.csv(t, row.names=1)
@@ -65,14 +65,20 @@ multi_block_pca_merge <- function(...) {
     Z1
   }
   
-  mb = prepare_table(tables[1])
-  for(t in tables[-1]) {
+  mb = NULL
+  for(t in tables) {
     z = prepare_table(t)
-    mb = merge(mb, z, by='row.names')
+    if(is.null(mb)) {
+      mb = z
+    } else {
+      mb = merge(mb, z, by='row.names')
+      rownames(mb) = mb$Row.names
+      mb = mb[-1]
+    }
   }
   
   # Multiblock PCA
   MB.PCA <- prcomp(mb, center=TRUE, scale=TRUE)
-
+  
   MB.PCA$x
 }
