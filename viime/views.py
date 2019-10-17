@@ -23,7 +23,7 @@ from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
 from viime.normalization import validate_normalization_method
 from viime.plot import pca
 from viime.scaling import SCALING_METHODS
-from viime.table_merge import simple_merge
+from viime.table_merge import merge_methods
 from viime.table_validation import get_fatal_index_errors, ValidationSchema
 from viime.transformation import TRANSFORMATION_METHODS
 
@@ -148,7 +148,7 @@ def upload_excel_file(file: FileStorage, meta: Dict):
 @use_kwargs({
     'name': fields.Str(required=True),
     'description': fields.Str(missing=None),
-    'method': fields.Str(required=True, validate=validate.OneOf(['simple'])),
+    'method': fields.Str(required=True, validate=validate.OneOf(merge_methods.keys())),
     'datasets': fields.List(
         fields.UUID(), validate=validate.Length(min=2))
 })
@@ -156,7 +156,7 @@ def merge_csv_files(name: str, description: str, method: str, datasets: List[str
     tables = [ValidatedMetaboliteTable.query.filter_by(csv_file_id=id).first_or_404()
               for id in datasets]
 
-    merged, column_types, row_types = simple_merge(tables)
+    merged, column_types, row_types = merge_methods[method](tables)
 
     try:
         csv_file: CSVFile = csv_file_schema.load(dict(
@@ -507,7 +507,7 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
 
 @csv_bp.route('/csv/<uuid:csv_id>/remerge', methods=['POST'])
 @use_kwargs({
-    'method': fields.Str(missing=None)
+    'method': fields.Str(missing=None, validate=validate.OneOf(merge_methods.keys())),
 })
 def remerge_csv_file(csv_id, method):
     try:
@@ -522,7 +522,7 @@ def remerge_csv_file(csv_id, method):
         tables = [ValidatedMetaboliteTable.query.filter_by(csv_file_id=id).first_or_404()
                   for id in datasets]
 
-        merged, column_types, row_types = simple_merge(tables)
+        merged, column_types, row_types = merge_methods[method](tables)
 
         csv_file.save_table(merged)
 

@@ -6,6 +6,10 @@ export const mergeMethods = [
     value: 'simple',
     label: 'Simple',
   },
+  {
+    value: 'clean',
+    label: 'Clean PCA',
+  },
 ];
 
 export default {
