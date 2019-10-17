@@ -60,13 +60,13 @@ export default {
       type: Object,
       default: null,
     },
-    rowConfig: { // { dendogram: boolean }
+    rowConfig: { // { dendogram: boolean, colorer?: (name) => string }
       type: Object,
-      default: () => ({ dendogram: true }),
+      default: () => ({ dendogram: true, colorer: null }),
     },
-    columnConfig: { // { dendogram: boolean }
+    columnConfig: { // { dendogram: boolean, colorer?: (name) => string }
       type: Object,
-      default: () => ({ dendogram: true }),
+      default: () => ({ dendogram: true, colorer: null }),
     },
     layout: { // { dendogram: boolean }
       type: String,
@@ -150,6 +150,9 @@ export default {
 
     rowHierarchy() {
       const root = this.computeHierarchy(this.rowTree, this.matrixHeight, this.width);
+      if (!root) {
+        return root;
+      }
       root.each((node) => {
         const t = node.x;
         node.x = node.y;
@@ -161,10 +164,10 @@ export default {
       return scaleSequential(interpolateBlues).domain(extent(this.values.data));
     },
     columnLeaves() {
-      return this.columnTree.leaves();
+      return this.columnTree ? this.columnTree.leaves() : [];
     },
     rowLeaves() {
-      return this.rowTree.leaves();
+      return this.rowTree ? this.rowTree.leaves() : [];
     },
     columnDendogramHeight() {
       return this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
@@ -207,12 +210,17 @@ export default {
 
   methods: {
     computeTree(node, { collapsed, focus }) {
+      if (!node) {
+        return null;
+      }
       const injectIndices = (s) => {
         if (typeof s.index === 'number') {
           s.indices = [s.index];
+          s.names = [s.name];
         } else {
           s.indices = [].concat(...s.children.map(injectIndices));
-          s.name = s.children.map(d => d.name).join(',');
+          s.names = [].concat(...s.children.map(c => c.names));
+          s.name = s.names.join(', ');
         }
         return s.indices;
       };
@@ -235,13 +243,16 @@ export default {
       return root;
     },
     computeHierarchy(root, layoutWidth, layoutHeight) {
+      if (!root) {
+        return null;
+      }
       const l = cluster()
         .size([layoutWidth, layoutHeight * DENDOGRAM_RATIO - this.padding2])
         .separation(() => 1);
       return l(root);
     },
     updateTree(ref, root, wrapper, config, horizontalLayout) {
-      if (!ref || !config.dendogram) {
+      if (!ref || !config.dendogram || !root) {
         return;
       }
       const svg = select(ref);
@@ -322,7 +333,7 @@ export default {
       }
       this.updateTree(this.$refs.row, this.rowHierarchy, this.row, this.rowConfig, false);
     },
-    updateLabel(ref, wrapper, labels) {
+    updateLabel(ref, wrapper, labels, colorer) {
       if (!ref) {
         return;
       }
@@ -331,13 +342,33 @@ export default {
       const { hovered } = wrapper;
 
       text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
-      text.text(d => d.data.name);
+
+      const combineColor = (names) => {
+        if (names.length === 1) {
+          return colorer(names[0]);
+        }
+        const frequencies = new Map();
+        names.forEach((name) => {
+          const color = colorer(name);
+          frequencies.set(color, (frequencies.get(color) || 0) + 1);
+        });
+        // most frequent color
+        return Array.from(frequencies.entries()).sort((a, b) => b[1] - a[1])[0][0];
+      };
+
+      if (colorer) {
+        text.html(d => `<span class="color" style="background: ${combineColor(d.data.names)}"></span><span class="label">${d.data.name}</span>`);
+      } else {
+        text.span(d => `<span class="label">${d.data.name}</span>`);
+      }
     },
     updateColumnLabel() {
-      this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves, true);
+      this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves,
+        this.columnConfig.colorer, true);
     },
     updateRowLabel() {
-      this.updateLabel(this.$refs.rowlabel, this.row, this.rowLeaves, false);
+      this.updateLabel(this.$refs.rowlabel, this.row, this.rowLeaves,
+        this.rowConfig.colorer, false);
     },
     updateMatrix() {
       if (!this.$refs.matrix || !this.values) {
@@ -478,15 +509,24 @@ export default {
 .collabel {
   grid-area: clabel;
   display: flex;
-  align-items: flex-start;
   justify-content: center;
   overflow: hidden;
 }
 
 .collabel >>> div {
+  flex-direction: column;
+}
+
+.collabel >>> .label {
+  text-align: right;
   writing-mode: tb;
   transform: rotate(-180deg);
-  justify-content: center;
+}
+
+.collabel >>> .color {
+  align-self: stretch;
+  height: 5px;
+  margin-bottom: 2px;
 }
 
 .rowlabel {
@@ -496,13 +536,27 @@ export default {
   justify-content: center;
 }
 
+
+.rowlabel >>> .color {
+  align-self: stretch;
+  width: 5px;
+  min-width: 5px;
+  margin-right: 2px;
+}
+
 .collabel >>> div,
 .rowlabel >>> div {
   flex: 1 1 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   display: flex;
   align-items: center;
+}
+
+.collabel >>> .label,
+.rowlabel >>> .label {
+  flex: 1 1 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rowlabel >>> .selected,

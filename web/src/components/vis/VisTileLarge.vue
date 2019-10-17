@@ -13,7 +13,7 @@ export default {
 
   computed: {
     hasControls() {
-      return !!this.$slots.controls;
+      return !!this.$slots.controls || !!this.$scopedSlots.controls;
     },
   },
 };
