@@ -333,7 +333,7 @@ export default {
       }
       this.updateTree(this.$refs.row, this.rowHierarchy, this.row, this.rowConfig, false);
     },
-    updateLabel(ref, wrapper, labels, colorer, isColumn) {
+    updateLabel(ref, wrapper, labels, colorer) {
       if (!ref) {
         return;
       }
@@ -342,7 +342,6 @@ export default {
       const { hovered } = wrapper;
 
       text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
-      text.text(d => d.data.name);
 
       const combineColor = (names) => {
         if (names.length === 1) {
@@ -357,13 +356,11 @@ export default {
         return Array.from(frequencies.entries()).sort((a, b) => b[1] - a[1])[0][0];
       };
 
-      const toColor = (names) => {
-        const color = combineColor(names);
-        return `linear-gradient(${isColumn ? 'to top' : 'to right'}, ${color} 0, ${color} 5px, transparent 5px)`;
-      };
-
-      text.classed('color', colorer != null);
-      text.style('background', !colorer ? null : (d => toColor(d.data.names)));
+      if (colorer) {
+        text.html(d => `<span class="color" style="background: ${combineColor(d.data.names)}"></span><span class="label">${d.data.name}</span>`);
+      } else {
+        text.span(d => `<span class="label">${d.data.name}</span>`);
+      }
     },
     updateColumnLabel() {
       this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves,
@@ -512,19 +509,24 @@ export default {
 .collabel {
   grid-area: clabel;
   display: flex;
-  align-items: flex-start;
   justify-content: center;
   overflow: hidden;
 }
 
 .collabel >>> div {
-  writing-mode: tb;
-  transform: rotate(-180deg);
-  justify-content: center;
+  flex-direction: column;
 }
 
-.collabel >>> div.color {
-  padding-bottom: 7px;
+.collabel >>> .label {
+  text-align: right;
+  writing-mode: tb;
+  transform: rotate(-180deg);
+}
+
+.collabel >>> .color {
+  align-self: stretch;
+  height: 5px;
+  margin-bottom: 2px;
 }
 
 .rowlabel {
@@ -534,17 +536,27 @@ export default {
   justify-content: center;
 }
 
-.rowlabel >>> div.color {
-  padding-left: 7px;
+
+.rowlabel >>> .color {
+  align-self: stretch;
+  width: 5px;
+  min-width: 5px;
+  margin-right: 2px;
 }
 
 .collabel >>> div,
 .rowlabel >>> div {
   flex: 1 1 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   display: flex;
   align-items: center;
+}
+
+.collabel >>> .label,
+.rowlabel >>> .label {
+  flex: 1 1 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rowlabel >>> .selected,
