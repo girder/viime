@@ -58,6 +58,7 @@ export const routes = [
         children: [
           {
             path: ':problem',
+            name: 'Problem',
             component: ProblemBar,
             props: true,
           },
