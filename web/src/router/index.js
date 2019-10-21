@@ -9,6 +9,7 @@ import AnalyzeData from '../components/AnalyzeData.vue';
 import ProblemBar from '../components/ProblemBar.vue';
 import DataSource from '../components/DataSource.vue';
 import Impute from '../components/Impute.vue';
+import Download from '../components/Download.vue';
 import NewMerge from '../components/NewMerge.vue';
 import analyses from '../components/vis/analyses';
 
@@ -79,6 +80,12 @@ export const routes = [
       ...analyses.map(({ path, shortName: name, component }) => ({
         path: `analyze/${path}`, name, component, props: true,
       })),
+      {
+        path: 'download',
+        name: 'Download Data',
+        component: Download,
+        props: true,
+      },
     ],
   },
   {
