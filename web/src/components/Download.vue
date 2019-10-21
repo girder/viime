@@ -2,6 +2,7 @@
 import DataTable from './DataTable.vue';
 import ToolbarOption from './ToolbarOption.vue';
 import { textColor } from '../utils';
+import { downloadCSV } from '../utils/exporter';
 
 
 export default {
@@ -82,7 +83,9 @@ export default {
       if (hidden.size === 0) {
         return base;
       }
-      return base.filter(({ text }) => !this.groupLookup.has(text) || !hidden.has(this.groupLookup.get(text).name));
+      return base.filter(({ text }) => (
+        !this.groupLookup.has(text) || !hidden.has(this.groupLookup.get(text).name)
+      ));
     },
     rowHeaders() {
       if (this.transpose) {
@@ -140,6 +143,39 @@ export default {
         this.hiddenGroups.push(level.name);
       }
     },
+
+    downloadTable() {
+      const { data } = this.dataframe;
+      let csv = null;
+      if (this.transpose) {
+        csv = {
+          fields: ['', ...this.filteredRowNames.map(d => d.text)],
+          data: this.filteredColumnNames.map(({ text, i: j }) => [
+            text,
+            ...this.filteredRowNames.map(({ i }) => data[i][j]),
+          ]),
+        };
+      } else {
+        csv = {
+          fields: ['', ...this.filteredColumnNames.map(d => d.text)],
+          data: this.filteredRowNames.map(({ text, i }) => [
+            text,
+            ...this.filteredColumnNames.map(({ i: j }) => data[i][j]),
+          ]),
+        };
+      }
+      downloadCSV(csv, `${this.dataset.name}_Table`);
+    },
+    downloadMetabolites() {
+      const metabolites = this.filteredColumnNames;
+
+      downloadCSV(`Metabolites\n${metabolites.map(d => d.text).join('\n')}`, `${this.dataset.name}_Metabolites`);
+    },
+    downloadSamples() {
+      const samples = this.filteredRowNames;
+
+      downloadCSV(`Samples\n${samples.map(d => d.text).join('\n')}`, `${this.dataset.name}_Samples`);
+    },
   },
 };
 </script>
@@ -151,7 +187,7 @@ v-layout.download-component(row, fill-height)
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title Metabolite Filter
       v-card.mx-3(flat)
-        v-card-actions(:style="{display: 'block'}")
+        v-card-actions.vertical
           v-checkbox.my-0(v-model="showSelected",
               :label="`Selected (${countSelected})`", hide-details, color="#ffa500")
           v-checkbox.my-0(v-model="showNotSelected",
@@ -160,12 +196,31 @@ v-layout.download-component(row, fill-height)
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title Sample Filter
       v-card.mx-3(flat)
-        v-card-actions(:style="{display: 'block'}")
+        v-card-actions.vertical
           v-checkbox.my-0(v-for="level in groupLevels", :key="level.name",
               :input-value="!hiddenGroups.includes(level.name)",
               @change="setLevelVisible(level, $event)",
               :label="`${level.name} (${level.count})`", hide-details, :color="level.color")
 
+      v-toolbar.darken-3(color="primary", dark, flat, dense)
+        v-toolbar-title Options
+      v-card.mx-3(flat)
+        v-card-actions.vertical
+          v-checkbox.my-0(v-model="transpose", label="Transpose Table", hide-details)
+
+      v-toolbar.darken-3(color="primary", dark, flat, dense)
+        v-toolbar-title Download
+      v-card.mx-3(flat)
+        v-card-actions.vertical
+          v-btn.my-0.mx-0(text, flat, @click="downloadTable")
+            v-icon {{$vuetify.icons.fileDownload}}
+            | Table
+          v-btn.my-0.mx-0(text, flat, @click="downloadMetabolites")
+            v-icon {{$vuetify.icons.fileDownload}}
+            | Metabolite List
+          v-btn.my-0.mx-0(text, flat, @click="downloadSamples")
+            v-icon {{$vuetify.icons.fileDownload}}
+            | Sample List
 
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
@@ -183,5 +238,9 @@ v-layout.download-component(row, fill-height)
   flex: 1 1 0;
 }
 
+.vertical {
+  flex-direction: column;
+  align-items: flex-start;
+}
 
 </style>
