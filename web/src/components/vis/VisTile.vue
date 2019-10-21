@@ -50,7 +50,7 @@ export default {
       this.scaleIndex = Math.max(Math.min(Number.parseInt(value, 10), this.scales.length - 1), 0);
     },
     hasHelp() {
-      return this.$slots.help != null;
+      return this.$slots.help != null || this.$scopedSlots.help != null;
     },
     downloadSVG() {
       const svg = this.$el.querySelector('svg');

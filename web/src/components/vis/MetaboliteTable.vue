@@ -29,6 +29,9 @@ export default {
       pagination: {
         rowsPerPage: -1,
       },
+      // need to use this workaround, since `header-cell` as slot name doesn't work
+      // and `headerCell` isn't allowed by the linter
+      headercell: 'headerCell',
     };
   },
 
@@ -49,6 +52,23 @@ export default {
     isInteresting(value) {
       return value < this.threshold;
     },
+    toggleHighlighted(header, evt, add) {
+      evt.preventDefault();
+      evt.stopPropagation();
+
+      const highlighted = this.items.filter(item => this.isInteresting(item[header.value]));
+      const current = this.selectedItems.slice();
+      const currentLookup = new Set(current);
+      highlighted.forEach((item) => {
+        if (add && !currentLookup.has(item)) {
+          current.push(item);
+        } else if (!add && currentLookup.has(item)) {
+          const index = current.indexOf(item);
+          current.splice(index, 1);
+        }
+      });
+      this.selectedItems = current;
+    },
   },
 };
 </script>
@@ -57,7 +77,18 @@ export default {
 v-data-table.elevation-1.main(:headers="headers", :items="items", disable-initial-sort,
     item-key="Metabolite", :pagination.sync="pagination",
     v-model="selectedItems", select-all)
-  template(v-slot:items="props")
+  template(v-slot:[headercell]="{header}")
+    | {{header.text}}
+    v-btn.toggle(icon, small, @click="toggleHighlighted(header, $event, true)",
+        title="Adds the highlighted Metabolites to the selected set",
+        v-if="!header.isLabel")
+      span.mdi(:class="{ [$vuetify.icons.plusMultiple]: true }")
+    v-btn.toggle(icon, small, @click="toggleHighlighted(header, $event, false)",
+        title="Removes the highlighted Metabolites from the selected set",
+        v-if="!header.isLabel")
+      span.mdi(:class="{ [$vuetify.icons.minusMultiple]: true }")
+
+  template(#items="props")
     td.cell
       v-checkbox(v-model="props.selected", hide-details)
     td.cell {{ props.item.Metabolite }}
@@ -87,4 +118,14 @@ v-data-table.elevation-1.main(:headers="headers", :items="items", disable-initia
   height: 25px;
   padding: 2px 7px;
 }
+
+.toggle {
+  margin: 0;
+  opacity: 0;
+}
+
+.main >>> thead > tr > th:hover .toggle {
+  opacity: 0.6;
+}
+
 </style>
