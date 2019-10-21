@@ -4,7 +4,8 @@
       key-field="index", direction="horizontal")
     template(#before)
       .column-header
-        .column-header-cell
+        .column-header-cell(v-if="renderStats") {{stats}}
+        .column-header-cell(v-else)
         .row-header-cell(v-for="(r,i) in rowHeaders", :key="i",
             :class="r.clazz", :style="r.style", @click="onRowClick($event, i)")
           | {{r.text}}
@@ -43,6 +44,16 @@ export default {
       type: Function,
       required: false,
       default() { return () => null; },
+    },
+    renderStats: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+  },
+  computed: {
+    stats() {
+      return `${this.rowHeaders.length} x ${this.columns.length}`;
     },
   },
   methods: {
