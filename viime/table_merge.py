@@ -1,7 +1,6 @@
 """
 This module contains methods related to mergind dataset
 """
-from collections import OrderedDict
 from typing import Callable, Dict, List, Optional, Set
 
 import pandas as pd
@@ -13,8 +12,7 @@ from .opencpu import opencpu_request
 
 def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
                 transformer: Optional[Callable[[pd.DataFrame, int],
-                                      pd.DataFrame]] = None,
-                combined_measurements: Optional[pd.DataFrame] = None):
+                                      pd.DataFrame]] = None):
     used_column_names: Set[str] = set()
     tables: List[pd.DataFrame] = []
     column_types: List[str] = [
@@ -53,11 +51,7 @@ def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
 
     append_tables(TABLE_COLUMN_TYPES.GROUP, 'groups', False)
     append_tables(TABLE_COLUMN_TYPES.METADATA, 'sample_metadata', False)
-
-    if combined_measurements is None:
-        append_tables(TABLE_COLUMN_TYPES.DATA, 'measurements', True)
-    else:
-        append_table(TABLE_COLUMN_TYPES.DATA, combined_measurements, -1)
+    append_tables(TABLE_COLUMN_TYPES.DATA, 'measurements', True)
 
     merged = pd.concat(tables, axis=1, join='inner')
 
@@ -99,14 +93,15 @@ def clean_pca_merge(validated_tables: List[ValidatedMetaboliteTable]):
     return _merge_impl(validated_tables, _clean_pca_transformer)
 
 
+def _multi_block_transformer(measurements: pd.DataFrame, index: int) -> pd.DataFrame:
+    files = {
+        'measurements': measurements.to_csv().encode()
+    }
+    return opencpu_request('compute_multi_block', files)
+
+
 def multi_block_merge(validated_tables: List[ValidatedMetaboliteTable]):
-    files: OrderedDict[str, str] = OrderedDict()
-    for index, table in enumerate(validated_tables):
-        files['table%d' % index] = table.measurements.to_csv().encode()
-
-    combined = opencpu_request('multi_block_pca_merge', files)
-
-    return _merge_impl(validated_tables, combined_measurements=combined)
+    return _merge_impl(validated_tables, _multi_block_transformer)
 
 
 merge_methods = dict(simple=simple_merge, clean=clean_pca_merge,
