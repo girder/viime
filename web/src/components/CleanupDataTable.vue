@@ -1,5 +1,6 @@
 <script>
 import { mapMutations } from 'vuex';
+import { format } from 'd3-format';
 import { SET_SELECTION } from '@/store/mutations.type';
 import {
   defaultRowOption,
@@ -32,7 +33,8 @@ export default {
     },
     columns() {
       const rows = this.dataset.sourcerows;
-      const f = v => (typeof v === 'number' ? v.toFixed(3) : v);
+      const nf = format('.4e');
+      const f = v => (typeof v === 'number' || (v && !Number.isNaN(v)) ? nf(parseFloat(v)) : v);
 
       return this.dataset.column.labels.map((colType, i) => {
         const column = {

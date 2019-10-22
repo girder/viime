@@ -228,6 +228,7 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
 // column, row
 .type-sample {
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 // column, row
 .type-missing {

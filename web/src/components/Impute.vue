@@ -1,4 +1,5 @@
 <script>
+import { format } from 'd3-format';
 import { CHANGE_IMPUTATION_OPTIONS } from '../store/actions.type';
 import DataTable from './DataTable.vue';
 import ToolbarOption from './ToolbarOption.vue';
@@ -36,7 +37,8 @@ export default {
     },
     columns() {
       const { columnNames, data, rowNames } = this.dataframe;
-      const f = v => (typeof v === 'number' ? v.toFixed(3) : v);
+      const nf = format('.4e');
+      const f = v => (typeof v === 'number' ? nf(v) : v);
 
       return columnNames.map((text, j) => ({
         index: j,
