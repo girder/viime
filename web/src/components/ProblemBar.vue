@@ -59,6 +59,7 @@ v-navigation-drawer.primary.darken-3.problem-bar-component(v-if="dataset && prob
     touchless, permanent, floating, style="width: 230px; min-width: 220px;")
 
   v-layout(column, fill-height)
+    v-btn(large, color="error", @click="maskAll") Mask all
 
     v-toolbar.primary.darken-3(dark, flat, dense, :card="false")
       v-toolbar-title
@@ -79,5 +80,4 @@ v-navigation-drawer.primary.darken-3.problem-bar-component(v-if="dataset && prob
         v-spacer
         v-btn.ma-0(icon, small, flat, color="error", @click="mask(item.index)")
           v-icon {{ $vuetify.icons.masked }}
-    v-btn(large, color="error", @click="maskAll") Mask all
 </template>
