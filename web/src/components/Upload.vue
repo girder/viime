@@ -22,13 +22,8 @@ const dataTypes = [
   { name: 'Other', value: 'other' },
 ];
 
-const excelMimeTypes = [
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-];
-
 function isExcelFile(file) {
-  return excelMimeTypes.includes(file.type) || file.name.match(/\.xlsx$/i);
+  return file.name.match(/\.xlsx$/i);
 }
 
 function isCSVFile(file) {
