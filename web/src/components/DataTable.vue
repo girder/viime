@@ -4,7 +4,7 @@
       key-field="index", direction="horizontal")
     template(#before)
       .column-header
-        .column-header-cell
+        .column-header-cell {{corner}}
         .row-header-cell(v-for="(r,i) in rowHeaders", :key="i",
             :class="r.clazz", @click="onRowClick($event, i)")
           | {{r.text}}
@@ -42,6 +42,11 @@ export default {
       type: Function,
       required: false,
       default() { return () => null; },
+    },
+    corner: {
+      type: String,
+      required: false,
+      default: '',
     },
   },
   methods: {

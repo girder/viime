@@ -53,6 +53,13 @@ export default {
       });
       return lookup;
     },
+
+    corner() {
+      if (this.dataset.missing_cells.length === 0) {
+        return '';
+      }
+      return `filled ${this.dataset.missing_cells.length}`;
+    },
   },
   methods: {
     cellClasses(rowIndex, columnIndex) {
@@ -93,7 +100,7 @@ v-layout.impute-component(row, fill-height)
     h4.display-1.pa-3 Loading Data Set
 
   data-table.impute_table(v-else-if="ready", :row-headers="rowHeaders",
-      :columns="columns", :cell-classes="cellClasses")
+      :columns="columns", :cell-classes="cellClasses", :corner="corner")
 </template>
 
 <style scoped lang="scss">
