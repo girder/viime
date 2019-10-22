@@ -65,19 +65,20 @@ v-navigation-drawer.primary.darken-3.problem-bar-component(v-if="dataset && prob
       v-toolbar-title
         .headline {{ problemData.title }}
 
-    v-card.mx-2.my-1(flat,
-        v-for="item in problemData.data",
-        :key="base26Converter(item.index + 1)")
-      v-card-title.pa-2
-        div
-          .title(
-              style="text-decoration:underline; cursor: pointer;",
-              @click="select($event, item)")
-            | {{ base26Converter(item.index + 1) }}:
-            | {{ item.name }}
-          .body-1 {{ item.info }}
-      v-card-actions.pt-0.pb-1
-        v-spacer
-        v-btn.ma-0(icon, small, flat, color="error", @click="mask(item.index)")
-          v-icon {{ $vuetify.icons.masked }}
+    v-container.grow-overflow.ma-0.pa-0.mainContainer(grid-list-lg)
+      v-card.mx-2.my-1(flat,
+          v-for="item in problemData.data",
+          :key="base26Converter(item.index + 1)")
+        v-card-title.pa-2
+          div
+            .title(
+                style="text-decoration:underline; cursor: pointer;",
+                @click="select($event, item)")
+              | {{ base26Converter(item.index + 1) }}:
+              | {{ item.name }}
+            .body-1 {{ item.info }}
+        v-card-actions.pt-0.pb-1
+          v-spacer
+          v-btn.ma-0(icon, small, flat, color="error", @click="mask(item.index)")
+            v-icon {{ $vuetify.icons.masked }}
 </template>
