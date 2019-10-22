@@ -647,7 +647,8 @@ def set_scaling_method(validated_table):
 @csv_bp.route('/csv/<uuid:csv_id>/validate/download', methods=['GET'])
 @use_kwargs({
     'transpose': fields.Boolean(missing=False),
-    'columns': fields.Str(missing='all', validate=validate.OneOf(['all', 'not-selected', 'selected', 'none'])),
+    'columns': fields.Str(missing='all', validate=validate.OneOf(['all', 'not-selected',
+                                                                  'selected', 'none'])),
     'rows': fields.Str(missing=None)
 })
 @load_validated_csv_file
@@ -671,9 +672,10 @@ def download_validated_csv_file(validated_table: ValidatedMetaboliteTable,
         table = table.loc[:, not_selected]
 
     if rows is not None:
-        groups = table.loc[:, 0]  # first column is group
-        valid = groups[:nr_row_meta] + rows.split(',')
-        table = table.loc[[r in valid for r in groups], :]
+        groups = table.iloc[:, 0]  # first column is group
+        valid = list(groups[:nr_row_meta]) + rows.split(',')
+        mask = [r in valid for r in groups]
+        table = table.loc[mask, :]
 
     if transpose:
         table = table.T
