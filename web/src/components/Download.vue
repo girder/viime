@@ -6,7 +6,6 @@ import { downloadCSV, download } from '../utils/exporter';
 import { CSVService } from '../common/api.service';
 
 
-
 export default {
   components: {
     DataTable,
