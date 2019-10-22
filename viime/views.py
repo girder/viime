@@ -645,10 +645,40 @@ def set_scaling_method(validated_table):
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/validate/download', methods=['GET'])
+@use_kwargs({
+    'transpose': fields.Boolean(missing=False),
+    'columns': fields.Str(missing='all', validate=validate.OneOf(['all', 'not-selected', 'selected', 'none'])),
+    'rows': fields.Str(missing=None)
+})
 @load_validated_csv_file
-def download_validated_csv_file(validated_table: ValidatedMetaboliteTable):
-    fp = BytesIO(validated_table.table.to_csv().encode())
+def download_validated_csv_file(validated_table: ValidatedMetaboliteTable,
+                                transpose: bool,
+                                columns: str, rows: Optional[str]):
+    table: pandas.DataFrame = validated_table.table
     csv_file: CSVFile = CSVFile.query.get_or_404(validated_table.csv_file_id)
+
+    nr_col_meta = validated_table.groups.shape[1] + validated_table.sample_metadata.shape[1]
+    nr_row_meta = validated_table.measurement_metadata.shape[0]
+
+    if columns == 'none':
+        table = table.iloc[:, []]
+    elif columns == 'selected':
+        selected = list(table)[:nr_col_meta] + (csv_file.selected_columns or [])
+        table = table.loc[:, selected]
+    elif columns == 'not-selected':
+        meta = list(table)[:nr_col_meta]
+        not_selected = [c for c in table if c in meta or str(c) not in csv_file.selected_columns]
+        table = table.loc[:, not_selected]
+
+    if rows is not None:
+        groups = table.loc[:, 0]  # first column is group
+        valid = groups[:nr_row_meta] + rows.split(',')
+        table = table.loc[[r in valid for r in groups], :]
+
+    if transpose:
+        table = table.T
+
+    fp = BytesIO(table.to_csv().encode())
     name = PurePath(csv_file.name).with_suffix('.csv').name
     return send_file(fp, mimetype='text/csv', as_attachment=True,
                      attachment_filename=name)

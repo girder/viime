@@ -2,7 +2,9 @@
 import DataTable from './DataTable.vue';
 import ToolbarOption from './ToolbarOption.vue';
 import { textColor } from '../utils';
-import { downloadCSV } from '../utils/exporter';
+import { downloadCSV, download } from '../utils/exporter';
+import { CSVService } from '../common/api.service';
+
 
 
 export default {
@@ -145,26 +147,21 @@ export default {
     },
 
     downloadTable() {
-      const { data } = this.dataframe;
-      let csv = null;
-      if (this.transpose) {
-        csv = {
-          fields: ['', ...this.filteredRowNames.map(d => d.text)],
-          data: this.filteredColumnNames.map(({ text, i: j }) => [
-            text,
-            ...this.filteredRowNames.map(({ i }) => data[i][j]),
-          ]),
-        };
-      } else {
-        csv = {
-          fields: ['', ...this.filteredColumnNames.map(d => d.text)],
-          data: this.filteredRowNames.map(({ text, i }) => [
-            text,
-            ...this.filteredColumnNames.map(({ i: j }) => data[i][j]),
-          ]),
-        };
+      const args = {
+        transpose: this.transpose,
+      };
+      if (this.hiddenGroups.length > 0) {
+        args.rows = this.dataset.groupLevels.filter(g => !this.hiddenGroups.includes(g.name)).map(d => d.name).join(',');
       }
-      downloadCSV(csv, `${this.dataset.name}_Table`);
+      if (!this.showSelected && this.showNotSelected) {
+        args.columns = 'not-selected';
+      } else if (this.showSelected && !this.showNotSelected) {
+        args.columns = 'selected';
+      } else if (!this.showSelected && !this.showNotSelected) {
+        args.columns = 'none';
+      }
+      const url = CSVService.validatedDownloadUrl(this.dataset.id, args);
+      download(url, `${this.dataset.name}_Table`);
     },
     downloadMetabolites() {
       const metabolites = this.filteredColumnNames;
