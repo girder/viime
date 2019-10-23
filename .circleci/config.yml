@@ -4,8 +4,10 @@ jobs:
     docker:
       - image: themattrix/tox
       - image: viime/opencpu-base
+        environment:
+          CIRCLE_BRANCH: $CIRCLE_BRANCH
         command: |
-          R -e 'library(devtools); devtools::install_github("${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}", subdir="devops/viime", ref="${CIRCLE_BRANCH}", dependencies=NA, quiet=TRUE, upgrade="never")' && service cron start && /usr/lib/rstudio-server/bin/rserver && apachectl -DFOREGROUND
+          R -e 'library(devtools); devtools::install_github("girder/viime", subdir="devops/viime", ref=Sys.getenv("CIRCLE_BRANCH"), dependencies=NA, quiet=TRUE, upgrade="never")' && service cron start && /usr/lib/rstudio-server/bin/rserver && apachectl -DFOREGROUND
     steps:
       - checkout
       - run: pip install -U 'tox>=3.7'
