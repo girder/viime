@@ -6,6 +6,14 @@ export const mergeMethods = [
     value: 'simple',
     label: 'Simple',
   },
+  {
+    value: 'clean',
+    label: 'Clean PCA',
+  },
+  {
+    value: 'multi_block',
+    label: 'Multiblock PCA',
+  },
 ];
 
 export default {
