@@ -39,6 +39,7 @@ export default {
     error: 'mdi-close',
     eye: 'mdi-eye',
     fileUpload: 'mdi-file-upload',
+    fileDownload: 'mdi-file-download',
     eyedropper: 'mdi-eyedropper',
     group: 'mdi-group',
     header: 'mdi-key-variant',

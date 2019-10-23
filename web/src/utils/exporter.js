@@ -1,5 +1,6 @@
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import font from '!url-loader?limit=undefined!@openfonts/barlow-condensed_all/files/barlow-condensed-all-400.woff2';
+import { unparse } from 'papaparse';
 
 
 export function svg2png(svgElement, options = {}) {
@@ -74,14 +75,30 @@ export function svg2png(svgElement, options = {}) {
   });
 }
 
-export async function downloadSVG(svgElement, title = 'Image') {
-  const url = await svg2png(svgElement);
+export function download(url, title) {
   const a = document.createElement('a');
   a.href = url;
   a.style.position = 'absolute';
   a.style.left = '-10000px';
   a.style.top = '-10000px';
-  a.download = `${title}.png`;
+  a.download = title;
   document.body.appendChild(a);
   a.click();
+  a.remove();
+}
+
+export function downloadCSV(content, title) {
+  let data = content;
+  if (typeof content !== 'string') {
+    data = unparse(content);
+  }
+  const csv = new Blob([data], { type: 'text/csv;charset=utf-8' });
+  const csvUrl = URL.createObjectURL(csv);
+  download(csvUrl, `${title}.csv`);
+  URL.revokeObjectURL(csvUrl);
+}
+
+export async function downloadSVG(svgElement, title = 'Image') {
+  const url = await svg2png(svgElement);
+  download(url, `${title}.png`);
 }

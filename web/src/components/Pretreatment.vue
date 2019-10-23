@@ -109,6 +109,12 @@ v-layout.pretreatment-component(row, fill-height)
               v-icon.drawericon {{ $vuetify.icons.compare }}
               | {{a.shortName}}
 
+        v-list-tile.top-level(:to="{ name: 'Download Data' }",
+            :disabled="!valid(dataset)")
+          v-list-tile-title
+            v-icon.pr-1.drawericon {{ $vuetify.icons.fileDownload }}
+            | Download Data
+
   keep-alive
     router-view
 </template>

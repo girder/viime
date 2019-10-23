@@ -6,11 +6,12 @@
       .column-header
         .column-header-cell {{corner}}
         .row-header-cell(v-for="(r,i) in rowHeaders", :key="i",
-            :class="r.clazz", @click="onRowClick($event, i)")
+            :class="r.clazz", :style="r.style", @click="onRowClick($event, i)")
           | {{r.text}}
     template(#default="{ item, index }")
-      .column(:class="item.clazz")
-        .column-header-cell(:class="item.header.clazz", @click="onColumnClick($event, index)")
+      .column(:class="item.clazz", :style="item.style")
+        .column-header-cell(:class="item.header.clazz", :style="item.header.style",
+            @click="onColumnClick($event, index)")
           | {{item.header.text}}
         .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(i, index)",
             :style="cellStyles(i, index, r)", @click="onCellClick($event, i, index)") {{r}}

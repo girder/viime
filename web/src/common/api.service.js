@@ -8,8 +8,16 @@ const ApiService = {
     Vue.axios.defaults.baseURL = '/api/v1';
   },
 
-  buildUrl(path) {
-    return [Vue.axios.defaults.baseURL, path].join('/');
+  buildUrl(path, args) {
+    const base = [Vue.axios.defaults.baseURL, path].join('/');
+    if (!args) {
+      return base;
+    }
+    const params = new URLSearchParams();
+    Object.keys(args).forEach((arg) => {
+      params.set(arg, String(args[arg]));
+    });
+    return `${base}?${params.toString()}`;
   },
 
   get(resource, path, params = {}) {
@@ -77,8 +85,8 @@ export const CSVService = {
     return ApiService.post(`csv/${slug}/remerge`, params);
   },
 
-  validatedDownloadUrl(slug) {
-    return ApiService.buildUrl(`csv/${slug}/validate/download`);
+  validatedDownloadUrl(slug, args) {
+    return ApiService.buildUrl(`csv/${slug}/validate/download`, args);
   },
 
   setName(slug, name) {
