@@ -88,17 +88,53 @@ export default {
         !this.groupLookup.has(text) || !hidden.has(this.groupLookup.get(text).name)
       ));
     },
+    extraRowHeaders() {
+      let extras = [];
+
+      if (!this.transpose && this.dataset.validatedMeasurementsMetaData) {
+        extras = this.dataset.validatedMeasurementsMetaData.rowNames;
+      } else if (this.transpose && this.dataset.validatedSampleMetaData) {
+        extras = this.dataset.validatedSampleMetaData.columnNames;
+      }
+
+      return extras.map(text => ({
+        text,
+        clazz: ['type-metadata'],
+      }));
+    },
     rowHeaders() {
       if (this.transpose) {
-        return this.filteredColumnNames.map(({ text }) => ({
+        return [...this.extraRowHeaders, ...this.filteredColumnNames.map(({ text }) => ({
           text,
           style: this.getStyle(this.isSelectedColor(text)),
-        }));
+        }))];
       }
-      return this.filteredRowNames.map(({ text }) => ({
+
+      return [...this.extraRowHeaders, ...this.filteredRowNames.map(({ text }) => ({
         text,
         style: this.getStyle(this.groupColor(text)),
-      }));
+      }))];
+    },
+    extraColumns() {
+      const { validatedSampleMetaData, validatedMeasurementsMetaData } = this.dataset;
+      const extras = this.extraRowHeaders.map(() => '');
+
+      if (!this.transpose && validatedSampleMetaData) {
+        return validatedSampleMetaData.columnNames.map((text, i) => ({
+          index: i,
+          header: { text, clazz: ['type-metadata'] },
+          values: [...extras, ...validatedSampleMetaData.data.map(row => row[i])],
+        }));
+      }
+
+      if (this.transpose && validatedMeasurementsMetaData) {
+        return validatedMeasurementsMetaData.rowNames.map((text, i) => ({
+          index: i,
+          header: { text, clazz: ['type-metadata'] },
+          values: [...extras, ...validatedMeasurementsMetaData.data[i]],
+        }));
+      }
+      return [];
     },
     columns() {
       if (!this.dataframe) {
@@ -107,22 +143,35 @@ export default {
       const { data } = this.dataframe;
       const f = v => (typeof v === 'number' ? v.toFixed(3) : v);
 
+      const { validatedSampleMetaData, validatedMeasurementsMetaData } = this.dataset;
+      const extras = this.extraRowHeaders;
+
       if (this.transpose) {
-        return this.filteredRowNames.map(({ text, i }) => ({
-          index: i,
+        return [...this.extraColumns, ...this.filteredRowNames.map(({ text, i }) => ({
+          index: i + this.extraColumns.length,
           header: { text, style: this.getStyle(this.groupColor(text)) },
-          values: this.filteredColumnNames.map(({ i: j }) => f(data[i][j])),
-        }));
+          values: [
+            ...extras.map((_, j) => validatedSampleMetaData.data[i][j]),
+            ...this.filteredColumnNames.map(({ i: j }) => f(data[i][j])),
+          ],
+        }))];
       }
-      return this.filteredColumnNames.map(({ text, i: j }) => ({
-        index: j,
+
+      return [...this.extraColumns, ...this.filteredColumnNames.map(({ text, i: j }) => ({
+        index: j + this.extraColumns.length,
         header: { text, style: this.getStyle(this.isSelectedColor(text)) },
-        values: this.filteredRowNames.map(({ i }) => f(data[i][j])),
-      }));
+        values: [
+          ...extras.map((_, i) => validatedMeasurementsMetaData.data[i][j]),
+          ...this.filteredRowNames.map(({ i }) => f(data[i][j])),
+        ],
+      }))];
     },
   },
   methods: {
-    cellClasses() {
+    cellClasses(rowIndex, columnIndex) {
+      if (rowIndex < this.extraRowHeaders.length || columnIndex < this.extraColumns.length) {
+        return ['type-metadata'];
+      }
       return ['type-sample'];
     },
     isSelectedColor(column) {
