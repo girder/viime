@@ -115,8 +115,13 @@ v-layout.pretreatment-component(row, fill-height)
 
 <style lang="scss">
 .navigation {
+  display: flex;
+  flex-direction: column;
+
   > .v-list {
     padding: 0;
+    flex: 1 1 0;
+    overflow: auto;
 
     > .v-list__group > .v-list__group__items {
       padding: 8px 0;
