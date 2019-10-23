@@ -166,6 +166,9 @@ export default {
         ],
       }))];
     },
+    corner() {
+      return `${this.rowHeaders.length} x ${this.columns.length}`;
+    },
   },
   methods: {
     cellClasses(rowIndex, columnIndex) {
@@ -272,7 +275,7 @@ v-layout.download-component(row, fill-height)
     h4.display-1.pa-3 Loading Data Set
 
   data-table.download_table(v-else-if="ready", :row-headers="rowHeaders",
-      :columns="columns", :cell-classes="cellClasses", render-stats)
+      :columns="columns", :cell-classes="cellClasses", :corner="corner")
 </template>
 
 <style scoped lang="scss">
