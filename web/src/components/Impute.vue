@@ -6,6 +6,7 @@ import {
   mcar_imputation_methods,
   mnar_imputation_methods,
 } from '../utils/constants';
+import { formatter } from '../utils';
 
 
 export default {
@@ -36,12 +37,10 @@ export default {
     },
     columns() {
       const { columnNames, data, rowNames } = this.dataframe;
-      const f = v => (typeof v === 'number' ? v.toFixed(3) : v);
-
       return columnNames.map((text, j) => ({
         index: j,
         header: { text, clazz: ['type-header'] },
-        values: rowNames.map((_, i) => f(data[i][j])),
+        values: rowNames.map((_, i) => formatter(data[i][j])),
       }));
     },
 
@@ -52,6 +51,13 @@ export default {
         lookup.add(`${r}x${c}`);
       });
       return lookup;
+    },
+
+    corner() {
+      if (this.dataset.missing_cells.length === 0) {
+        return '';
+      }
+      return `filled ${this.dataset.missing_cells.length}`;
     },
   },
   methods: {
@@ -93,7 +99,7 @@ v-layout.impute-component(row, fill-height)
     h4.display-1.pa-3 Loading Data Set
 
   data-table.impute_table(v-else-if="ready", :row-headers="rowHeaders",
-      :columns="columns", :cell-classes="cellClasses")
+      :columns="columns", :cell-classes="cellClasses", :corner="corner")
 </template>
 
 <style scoped lang="scss">
