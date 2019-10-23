@@ -6,6 +6,10 @@ jobs:
       - image: viime/opencpu-base
     steps:
       - checkout
+      - run:
+          name: update installed R package with local version
+          command: |
+            devtools::install_github('${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}', subdir='devops/viime', ref='${CIRCLE_BRANCH}', dependencies=NA, quiet=TRUE, upgrade="never")
       - run: pip install -U 'tox>=3.7'
       - run: tox -p auto -o
 
