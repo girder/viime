@@ -5,7 +5,7 @@ jobs:
       - image: themattrix/tox
       - image: viime/opencpu-base
         command: |
-          R -e 'library(devtools); devtools::install_github("girder/viime", subdir="devops/viime", ref="{{ $CIRCLE_BRANCH }}", dependencies=NA, quiet=TRUE, upgrade="never")' && service cron start && /usr/lib/rstudio-server/bin/rserver && apachectl -DFOREGROUND
+          /bin/sh -c "R -e 'library(devtools); devtools::install_github(\"girder/viime\", subdir=\"devops/viime\", ref=Sys.getenv('CIRCLE_BRANCH'), dependencies=NA, quiet=TRUE, upgrade="never")' && service cron start && /usr/lib/rstudio-server/bin/rserver && apachectl -DFOREGROUND"
     steps:
       - checkout
       - run: pip install -U 'tox>=3.7'
