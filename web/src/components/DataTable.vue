@@ -4,8 +4,7 @@
       key-field="index", direction="horizontal")
     template(#before)
       .column-header
-        .column-header-cell(v-if="renderStats") {{stats}}
-        .column-header-cell(v-else)
+        .column-header-cell {{corner}}
         .row-header-cell(v-for="(r,i) in rowHeaders", :key="i",
             :class="r.clazz", :style="r.style", @click="onRowClick($event, i)")
           | {{r.text}}
@@ -45,15 +44,10 @@ export default {
       required: false,
       default() { return () => null; },
     },
-    renderStats: {
-      type: Boolean,
+    corner: {
+      type: String,
       required: false,
-      default: false,
-    },
-  },
-  computed: {
-    stats() {
-      return `${this.rowHeaders.length} x ${this.columns.length}`;
+      default: '',
     },
   },
   methods: {
@@ -235,6 +229,7 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
 // column, row
 .type-sample {
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 // column, row
 .type-missing {

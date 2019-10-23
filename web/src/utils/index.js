@@ -113,6 +113,11 @@ function textColor(backgroundColor) {
   return c.l < 0.5 ? 'white' : 'black';
 }
 
+function formatter(v) {
+  const nf = n => (n.toPrecision(6).length <= 10 ? n.toPrecision(6) : n.toExponential(4));
+  return typeof v === 'number' || (v && !Number.isNaN(+v)) ? nf(parseFloat(v)) : v;
+}
+
 export {
   base26Converter,
   convertCsvToRows,
@@ -121,4 +126,5 @@ export {
   textColor,
   RangeList,
   SessionStore,
+  formatter,
 };

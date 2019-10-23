@@ -192,7 +192,7 @@ def check_valid_index(series):
 
 def check_valid_groups(groups):
     index = Index(groups.iloc[:, 0])
-    if index.hasnans or index.contains(''):
+    if index.hasnans or '' in index:
         return 'Contains empty values'
 
 

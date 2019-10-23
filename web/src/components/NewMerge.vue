@@ -6,6 +6,14 @@ export const mergeMethods = [
     value: 'simple',
     label: 'Simple',
   },
+  {
+    value: 'clean',
+    label: 'Clean PCA',
+  },
+  {
+    value: 'multi_block',
+    label: 'Multiblock PCA',
+  },
 ];
 
 export default {
@@ -31,9 +39,34 @@ export default {
       return Object.values(this.$store.state.datasets).map(d => ({
         id: d.id,
         name: d.name,
+        dataset: d,
         description: d.description,
         valid: this.$store.getters.valid(d.id),
       }));
+    },
+
+    mergeWarning() {
+      const selected = this.datasets.filter(d => this.selected.includes(d.id)
+                                                 && d.dataset.validatedMeasurements);
+      if (selected.length < 2) {
+        return '';
+      }
+      // check overlap of their row identifiers
+
+      const rowNames = selected.map(d => new Set(d.dataset.validatedMeasurements.rowNames));
+
+      const union = rowNames.reduce((acc, n) => {
+        n.forEach(v => acc.add(v));
+        return acc;
+      }, new Set());
+
+      const intersection = Array.from(rowNames[0]).filter(v => rowNames.every(r => r.has(v)));
+
+      const jaccard = intersection.length / union.size;
+      if (jaccard < 0.8) {
+        return `Only ${intersection.length} out of ${union.size} rows will be merged`;
+      }
+      return '';
     },
   },
   methods: {
@@ -95,6 +128,9 @@ v-form(v-model="valid", ref="form", @submit="submit")
     .v-messages.theme--light.error--text(v-if="!(selected.length >= 2)")
       .v-messages__wrapper
         .v-messages__message At least two data sources are required
+    .v-messages.theme--light.warning--text.bigger(v-if="mergeWarning")
+      .v-messages__wrapper
+        .v-messages__message {{ mergeWarning }}
 
     v-btn.right(type="submit", :disabled="!valid",
         color="primary") create
@@ -111,5 +147,9 @@ v-form(v-model="valid", ref="form", @submit="submit")
   font-size: unset;
   font-feature-settings: unset;
   font-style: normal;
+}
+
+.bigger {
+  font-size: 16px;
 }
 </style>

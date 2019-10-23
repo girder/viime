@@ -22,13 +22,8 @@ const dataTypes = [
   { name: 'Other', value: 'other' },
 ];
 
-const excelMimeTypes = [
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-];
-
 function isExcelFile(file) {
-  return excelMimeTypes.includes(file.type) || file.name.match(/\.xlsx$/i);
+  return file.name.match(/\.xlsx$/i);
 }
 
 function isCSVFile(file) {
@@ -186,7 +181,8 @@ v-layout.upload-component(column, fill-height)
                 v-icon {{ $vuetify.icons.close }}
             v-list-tile-content.shrink
               v-list-tile-title(v-text="`${file.file.name} `")
-              v-list-tile-sub-title(v-text="formatSize(file.file.size)")
+              v-list-tile-sub-title
+                | {{file.file.size != null ? formatSize(file.file.size) : '?'}}
             v-list-tile-content.px-2.shrink(v-if="file.status === 'error'")
               v-chip.largetext(small, color="error", text-color="white")
                 v-avatar
