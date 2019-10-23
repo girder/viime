@@ -4,12 +4,10 @@ jobs:
     docker:
       - image: themattrix/tox
       - image: viime/opencpu-base
+        command: |
+          R -e 'library(devtools); devtools::install_github("${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}", subdir="devops/viime", ref="${CIRCLE_BRANCH}", dependencies=NA, quiet=TRUE, upgrade="never")' && service cron start && /usr/lib/rstudio-server/bin/rserver && apachectl -DFOREGROUND
     steps:
       - checkout
-      - run:
-          name: update installed R package with local version
-          command: |
-            devtools::install_github('${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}', subdir='devops/viime', ref='${CIRCLE_BRANCH}', dependencies=NA, quiet=TRUE, upgrade="never")
       - run: pip install -U 'tox>=3.7'
       - run: tox -p auto -o
 
