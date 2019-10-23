@@ -1,12 +1,11 @@
 <script>
 import { mapMutations } from 'vuex';
-import { format } from 'd3-format';
 import { SET_SELECTION } from '@/store/mutations.type';
 import {
   defaultRowOption,
   defaultColOption,
 } from '@/utils/constants';
-import { base26Converter, textColor } from '../utils';
+import { base26Converter, textColor, formatter } from '../utils';
 import DataTable from './DataTable.vue';
 
 
@@ -33,15 +32,13 @@ export default {
     },
     columns() {
       const rows = this.dataset.sourcerows;
-      const nf = format('.4e');
-      const f = v => (typeof v === 'number' || (v && !Number.isNaN(v)) ? nf(parseFloat(v)) : v);
 
       return this.dataset.column.labels.map((colType, i) => {
         const column = {
           index: i,
           header: this.createHeader(colType, defaultColOption, base26Converter(i + 1)),
           clazz: [`type-${colType}`],
-          values: rows.map(row => f(row[i])),
+          values: rows.map(row => formatter(row[i])),
         };
         const selected = this.getSelectionClasses('column', i);
         column.clazz.push(...selected);

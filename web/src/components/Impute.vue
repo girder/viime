@@ -1,5 +1,4 @@
 <script>
-import { format } from 'd3-format';
 import { CHANGE_IMPUTATION_OPTIONS } from '../store/actions.type';
 import DataTable from './DataTable.vue';
 import ToolbarOption from './ToolbarOption.vue';
@@ -7,6 +6,7 @@ import {
   mcar_imputation_methods,
   mnar_imputation_methods,
 } from '../utils/constants';
+import { formatter } from '../utils';
 
 
 export default {
@@ -37,13 +37,10 @@ export default {
     },
     columns() {
       const { columnNames, data, rowNames } = this.dataframe;
-      const nf = format('.4e');
-      const f = v => (typeof v === 'number' ? nf(v) : v);
-
       return columnNames.map((text, j) => ({
         index: j,
         header: { text, clazz: ['type-header'] },
-        values: rowNames.map((_, i) => f(data[i][j])),
+        values: rowNames.map((_, i) => formatter(data[i][j])),
       }));
     },
 
