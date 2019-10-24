@@ -11,9 +11,13 @@ export default {
       type: Boolean,
       required: true,
     },
-    svgDownload: {
+    download: {
       default: false,
       type: Boolean,
+    },
+    downloadImpl: {
+      default: null,
+      type: Function,
     },
   },
 
@@ -24,7 +28,11 @@ export default {
   },
 
   methods: {
-    downloadSVG() {
+    downloadImage() {
+      if (this.downloadImpl) {
+        this.downloadImpl(this.$el);
+        return;
+      }
       const svg = this.$el.querySelector('svg');
       if (svg) {
         downloadSVG(svg, this.title);
@@ -41,8 +49,8 @@ v-layout(v-else, row, fill-height)
       style="width: 200px;min-width: 200px;")
     slot(name="controls")
 
-    div(v-if="svgDownload")
-      v-btn(flat, dark, block, @click="downloadSVG")
+    div(v-if="download")
+      v-btn(flat, dark, block, @click="downloadImage")
         v-icon.mr-2 {{ $vuetify.icons.save }}
         | Download PNG
 
