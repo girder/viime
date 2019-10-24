@@ -4,7 +4,7 @@ v-app#viime-landing
     v-toolbar-title(style="height: 100%; padding: 10px 0;")
       img(src="../assets/viime_logo_ko.svg", alt="VIIME", height="100%")
     v-spacer
-    v-btn(color="accent", depressed, large) Your Datasets
+    v-btn(color="accent", depressed, large, :to="{ name: 'App' }") Your Datasets
 
   v-container(fluid, pa-0).banner-area
     v-layout(row, reverse)
@@ -22,7 +22,7 @@ v-app#viime-landing
               |  provides a new workflow for metabolomics research by offering state-of-the-art
               | integration algorithms and visualizations.
           v-card-actions.banner-buttons.px-0
-            v-btn(color="accent", depressed, large) Try it now
+            v-btn(color="accent", depressed, large, :to="{ name: 'App' }") Try it now
       .scroll-down
         .scroll-down-wrap
           span
