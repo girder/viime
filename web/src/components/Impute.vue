@@ -5,8 +5,9 @@ import ToolbarOption from './ToolbarOption.vue';
 import {
   mcar_imputation_methods,
   mnar_imputation_methods,
+  colors,
 } from '../utils/constants';
-import { formatter } from '../utils';
+import { formatter, textColor } from '../utils';
 
 
 export default {
@@ -22,6 +23,7 @@ export default {
   },
   data() {
     return {
+      colors,
       mcar_imputation_methods,
       mnar_imputation_methods,
     };
@@ -53,11 +55,6 @@ export default {
       return this.dataframe.columnNames.filter((_, i) => indices.has(i));
     },
 
-    missingRows() {
-      const indices = new Set(this.missingCells.map(a => a[1]));
-      return this.dataframe.rowNames.filter((_, i) => indices.has(i));
-    },
-
     missingLookup() {
       const cells = this.missingCells;
       const lookup = new Set();
@@ -70,6 +67,37 @@ export default {
     noMissing() {
       return this.missingCells.length === 0;
     },
+
+    mnarCount() {
+      if (!this.dataset || !this.dataset.imputationInfo
+          || this.dataset.imputationInfo.mnar == null) {
+        return '?';
+      }
+      return this.dataset.imputationInfo.mnar.length;
+    },
+    mcarCount() {
+      if (!this.dataset || !this.dataset.imputationInfo
+          || this.dataset.imputationInfo.mcar == null) {
+        return '?';
+      }
+      return this.dataset.imputationInfo.mcar.length;
+    },
+
+    imputedByMCARLookup() {
+      if (!this.dataset || !this.dataset.imputationInfo
+          || this.dataset.imputationInfo.mcar == null) {
+        return new Set();
+      }
+      return new Set(this.dataset.imputationInfo.mcar);
+    },
+
+    imputedByMNARLookup() {
+      if (!this.dataset || !this.dataset.imputationInfo
+          || this.dataset.imputationInfo.mnar == null) {
+        return new Set();
+      }
+      return new Set(this.dataset.imputationInfo.mnar);
+    },
   },
   methods: {
     cellClasses(rowIndex, columnIndex) {
@@ -78,6 +106,28 @@ export default {
         return ['type-missing'];
       }
       return ['type-sample'];
+    },
+
+    cellStyles(rowIndex, columnIndex) {
+      const missing = this.missingLookup.has(`${rowIndex}x${columnIndex}`);
+      if (!missing) {
+        return null;
+      }
+
+      const columnName = this.dataframe.columnNames[columnIndex];
+      if (this.imputedByMCARLookup.has(columnName)) {
+        return {
+          backgroundColor: colors.mcarMethod,
+          color: textColor(colors.mcarMethod),
+        };
+      }
+      if (this.imputedByMNARLookup.has(columnName)) {
+        return {
+          backgroundColor: colors.mnarMethod,
+          color: textColor(colors.mnarMethod),
+        };
+      }
+      return null;
     },
 
     changeImputationSettings(change) {
@@ -102,20 +152,28 @@ v-layout.impute-component(row, fill-height)
         | No missing values
       v-alert(:value="!noMissing", color="transparent", :style="{border: 'none'}")
         | {{ missingCells.length }} missing cells in {{ missingColumns.length }} Metabolites
+        br
+        | {{ mnarCount }} imputed using MNAR method
+        br
+        | {{ mcarCount }} imputed using MCAR method
 
-      toolbar-option(title="MNAR imputation method", :value="dataset.imputationMNAR",
+      toolbar-option(:value="dataset.imputationMNAR",
           @change="changeImputationSettings({mnar: $event})", :disabled="noMissing",
           :options="mnar_imputation_methods")
+        v-icon(:color="colors.mnarMethod") {{ $vuetify.icons.square }}
+        | MNAR imputation method
       toolbar-option(title="MCAR imputation method", :value="dataset.imputationMCAR",
           @change="changeImputationSettings({mcar: $event})", :disabled="noMissing",
           :options="mcar_imputation_methods")
+        v-icon(:color="colors.mcarMethod") {{ $vuetify.icons.square }}
+        | MCAR imputation method
 
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
 
   data-table.impute_table(v-else-if="ready", :row-headers="rowHeaders",
-      :columns="columns", :cell-classes="cellClasses")
+      :columns="columns", :cell-classes="cellClasses", :cell-styles="cellStyles")
 </template>
 
 <style scoped lang="scss">

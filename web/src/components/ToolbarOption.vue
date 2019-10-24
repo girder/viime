@@ -3,7 +3,8 @@ export default {
   props: {
     title: {
       type: String,
-      required: true,
+      required: false,
+      default: '',
     },
     value: {
       type: String,
@@ -24,7 +25,9 @@ export default {
 <template lang="pug">
 div
   v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-    v-toolbar-title {{title}}
+    v-toolbar-title
+      slot(name=title) {{title}}
+
   v-card.mx-3(flat)
     v-card-actions
       v-radio-group.my-0(:value="value",
