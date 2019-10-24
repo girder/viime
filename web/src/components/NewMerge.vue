@@ -3,16 +3,16 @@ import { CREATE_MERGED_DATASET } from '../store/actions.type';
 
 export const mergeMethods = [
   {
-    value: 'simple',
-    label: 'Simple',
+    value: 'multi_block',
+    label: 'Multiblock Data Fusion',
   },
   {
     value: 'clean',
-    label: 'Clean PCA',
+    label: 'PCA Data Fusion',
   },
   {
-    value: 'multi_block',
-    label: 'Multiblock PCA',
+    value: 'simple',
+    label: 'Simple Data Fusion',
   },
 ];
 

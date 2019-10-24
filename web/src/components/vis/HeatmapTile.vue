@@ -4,6 +4,7 @@ import VisTileLarge from './VisTileLarge.vue';
 import plotData from './mixins/plotData';
 import ToolbarOption from '../ToolbarOption.vue';
 import { download } from '../../utils/exporter';
+import { colors } from '../../utils/constants';
 
 export default {
   components: {
@@ -23,6 +24,7 @@ export default {
 
   data() {
     return {
+      colors,
       column: {
         dendogram: true,
         colorer: this.isSelectedColor,
@@ -95,7 +97,7 @@ export default {
   },
   methods: {
     isSelectedColor(column) {
-      return this.selectionLookup.has(column) ? '#ffa500' : '#4682b4';
+      return this.selectionLookup.has(column) ? colors.selected : colors.notSelected;
     },
     groupColor(row) {
       return this.groupLookup.get(row);
@@ -121,9 +123,10 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl=
     v-card.mx-3(flat)
       v-card-actions(:style="{display: 'block'}")
         v-checkbox.my-0(v-model="showSelected",
-            :label="`Selected (${countSelected})`", hide-details, color="#ffa500")
+            :label="`Selected (${countSelected})`", hide-details, :color="colors.selected")
         v-checkbox.my-0(v-model="showNotSelected",
-            :label="`Not Selected (${countNotSelected})`", hide-details, color="#4682b4")
+            :label="`Not Selected (${countNotSelected})`", hide-details,
+            :color="colors.notSelected")
     v-toolbar.darken-3(color="primary", dark, flat, dense)
       v-toolbar-title Dendogram
     v-card.mx-3(flat)
