@@ -263,12 +263,12 @@ class CSVFile(db.Model):
         col, row = numpy.nonzero(table.isna().to_numpy())
         return numpy.column_stack((row, col)).astype(int).tolist()
 
-    def apply_transforms(self):
+    def apply_transforms(self, add_impute_info=False):
         table = self.raw_measurement_table
         table = _coerce_numeric(table)
-        table = impute_missing(
-            table, self.groups, mnar=self.imputation_mnar, mcar=self.imputation_mcar)
-        return table
+        return impute_missing(
+            table, self.groups, mnar=self.imputation_mnar, mcar=self.imputation_mcar,
+            add_info=add_impute_info)
 
     def save_table(self, table):
         # TODO: Delete cache entries if a file at self.uri exists already
@@ -662,10 +662,10 @@ def _get_raw_measurement_table(csv_file):
 
 
 @csv_file_cache
-def _get_measurement_table(csv_file):
+def _get_measurement_table(csv_file, add_impute_info=False):
     if not get_fatal_index_errors(csv_file):
         try:
-            return csv_file.apply_transforms()
+            return csv_file.apply_transforms(add_impute_info=add_impute_info)
         except Exception as e:
             # TODO: We should handle this better
             current_app.logger.exception(e)

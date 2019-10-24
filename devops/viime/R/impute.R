@@ -18,9 +18,12 @@
 #' @export
 imputation <- function(table, groups,
                        mnar="zero", mcar="random-forest",
-                       p_mnar=0.70, p_mcar=0.40) {
+                       p_mnar=0.70, p_mcar=0.40, add_info=FALSE) {
   table <- read.csv(table, row.names = 1)
   if (sum(colSums(is.na(table))) == 0) {
+    if (add_info) {
+      colnames(table) = paste0('A-', colnames(table))
+    }
     return(table)
   }
 
@@ -184,5 +187,24 @@ imputation <- function(table, groups,
   table[colnames(comp_imp)] < comp_imp[colnames(comp_imp)]
 
   # impute MAR
-  return(f_mcar(table))
+  out <- f_mcar(table)
+
+  if (add_info) {
+    # encode the type of imputation in the column: A- ... as is, N- ... MNAR, C- ... MCAR
+    base = colnames(out)
+    with_meta_info = paste0('A-', base)
+    done_mnar = row.names(var_keep_mnar)
+    with_meta_info[base %in% done_mnar] = paste0('N-', base[base %in% done_mnar])
+
+    # find column names which have some NA inside
+    any_missing = names(which(sapply(table, anyNA)))
+    # since it checks <= ... so also values with no missing values at all
+    done_mcar = intersect(row.names(var_keep_mcar), any_missing)
+
+    with_meta_info[base %in% done_mcar] = paste0('C-', base[base %in% done_mcar])
+
+    colnames(out) <- with_meta_info
+  }
+
+  return(out)
 }
