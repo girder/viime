@@ -20,10 +20,12 @@ imputation <- function(table, groups,
                        mnar="zero", mcar="random-forest",
                        p_mnar=0.70, p_mcar=0.40, add_info=FALSE) {
   table <- read.csv(table, row.names = 1)
+
   if (sum(colSums(is.na(table))) == 0) {
     if (add_info) {
       colnames(table) = paste0('A-', colnames(table))
     }
+    # no missing values
     return(table)
   }
 
@@ -59,6 +61,7 @@ imputation <- function(table, groups,
       y
     })
     hm_imp <- as.data.frame(imputation)
+    rownames(hm_imp) <- rownames(x)
     return(hm_imp)
   }
 
@@ -94,6 +97,7 @@ imputation <- function(table, groups,
       y
     })
     mean_imp <- as.data.frame(imputation)
+    rownames(mean_imp) <- rownames(x)
     return(mean_imp)
   }
 
@@ -106,6 +110,7 @@ imputation <- function(table, groups,
       y
     })
     median_imp <- as.data.frame(imputation)
+    rownames(median_imp) <- rownames(x)
     return(median_imp)
   }
 
@@ -185,6 +190,10 @@ imputation <- function(table, groups,
 
   # replace in the input table
   table[colnames(comp_imp)] < comp_imp[colnames(comp_imp)]
+
+  # impute mnar on colnames(new_metab_dat_mcar)
+  # impute mcar on colnames(new_metab_dat_mcar)
+  # imput mcar on all afterwards
 
   # impute MAR
   out <- f_mcar(table)
