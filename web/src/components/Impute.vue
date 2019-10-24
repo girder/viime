@@ -44,8 +44,22 @@ export default {
       }));
     },
 
+    missingCells() {
+      return !this.dataset ? [] : this.dataset.missing_cells || [];
+    },
+
+    missingColumns() {
+      const indices = new Set(this.missingCells.map(a => a[0]));
+      return this.dataframe.columnNames.filter((_, i) => indices.has(i));
+    },
+
+    missingRows() {
+      const indices = new Set(this.missingCells.map(a => a[1]));
+      return this.dataframe.rowNames.filter((_, i) => indices.has(i));
+    },
+
     missingLookup() {
-      const cells = this.dataset.missing_cells;
+      const cells = this.missingCells;
       const lookup = new Set();
       cells.forEach(([c, r]) => {
         lookup.add(`${r}x${c}`);
@@ -53,11 +67,8 @@ export default {
       return lookup;
     },
 
-    corner() {
-      if (this.dataset.missing_cells.length === 0) {
-        return '';
-      }
-      return `filled ${this.dataset.missing_cells.length}`;
+    noMissing() {
+      return this.missingCells.length === 0;
     },
   },
   methods: {
@@ -87,11 +98,16 @@ export default {
 v-layout.impute-component(row, fill-height)
   v-navigation-drawer.primary.darken-3(permanent, style="width: 200px; min-width: 200px;")
     v-layout(column, fill-height, v-if="dataset && ready")
+      v-alert(:value="noMissing", color="transparent", :style="{border: 'none'}")
+        | No missing values
+      v-alert(:value="!noMissing", color="transparent", :style="{border: 'none'}")
+        | {{ missingCells.length }} missing cells in {{ missingColumns.length }} Metabolites
+
       toolbar-option(title="MNAR imputation method", :value="dataset.imputationMNAR",
-          @change="changeImputationSettings({mnar: $event})",
+          @change="changeImputationSettings({mnar: $event})", :disabled="noMissing",
           :options="mnar_imputation_methods")
       toolbar-option(title="MCAR imputation method", :value="dataset.imputationMCAR",
-          @change="changeImputationSettings({mcar: $event})",
+          @change="changeImputationSettings({mcar: $event})", :disabled="noMissing",
           :options="mcar_imputation_methods")
 
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
@@ -99,7 +115,7 @@ v-layout.impute-component(row, fill-height)
     h4.display-1.pa-3 Loading Data Set
 
   data-table.impute_table(v-else-if="ready", :row-headers="rowHeaders",
-      :columns="columns", :cell-classes="cellClasses", :corner="corner")
+      :columns="columns", :cell-classes="cellClasses")
 </template>
 
 <style scoped lang="scss">
