@@ -10,6 +10,10 @@ export default {
       type: String,
       default: null,
     },
+    id: {
+      type: String,
+      default: null,
+    },
   },
   data() {
     return {
@@ -25,12 +29,13 @@ export default {
       return this.$store.getters.valid(dataset.id);
     },
     problemNav(problem) {
+      const { id } = this;
       if (problem.multi) {
-        this.$router.push({ name: 'Problem', params: { id: this.id, problem: problem.type } });
+        this.$router.push({ name: 'Problem', params: { id, problem: problem.type } });
       } else {
-        this.$router.push({ name: 'Clean Up Table' });
+        this.$router.push({ name: 'Clean Up Table', params: { id } });
         this.$store.commit(SET_SELECTION, {
-          key: this.id,
+          key: id,
           event: {},
           axis: problem.context,
           idx: problem[`${problem.context}_index`],

@@ -3,6 +3,8 @@ import Router from 'vue-router';
 
 import Pretreatment from '../components/Pretreatment.vue';
 import Cleanup from '../components/Cleanup.vue';
+import Landing from '../components/Landing.vue';
+import ViimeApp from '../components/ViimeApp.vue';
 import Upload from '../components/Upload.vue';
 import Transform from '../components/Transform.vue';
 import AnalyzeData from '../components/AnalyzeData.vue';
@@ -17,81 +19,89 @@ Vue.use(Router);
 
 export const routes = [
   {
-    path: '/select',
-    name: 'Upload Data',
-    component: Upload,
-  },
-  {
-    path: '/pretreatment/merge',
-    component: NewMerge,
-    props: true,
-  },
-  {
-    path: '/pretreatment/:id',
-    component: Pretreatment,
-    props: true,
-    meta: {
-      breadcrumb(params, store) {
-        const ds = store.getters.dataset(params.id);
-        return {
-          text: ds ? ds.name : params.id,
-        };
-      },
-    },
+    path: '/app',
+    name: 'App',
+    component: ViimeApp,
+    redirect: { name: 'Upload Data' },
     children: [
       {
-        path: '',
-        name: 'Pretreat Data',
-        component: DataSource,
+        path: 'select',
+        name: 'Upload Data',
+        component: Upload,
+      },
+      {
+        path: 'pretreatment/merge',
+        component: NewMerge,
         props: true,
       },
       {
-        path: 'cleanup/impute',
-        name: 'Impute Table',
-        component: Impute,
+        path: 'pretreatment/:id',
+        component: Pretreatment,
         props: true,
-      },
-      {
-        path: 'cleanup',
-        name: 'Clean Up Table',
-        component: Cleanup,
-        props: true,
+        meta: {
+          breadcrumb(params, store) {
+            const ds = store.getters.dataset(params.id);
+            return {
+              text: ds ? ds.name : params.id,
+            };
+          },
+        },
         children: [
           {
-            path: ':problem',
-            name: 'Problem',
-            component: ProblemBar,
+            path: '',
+            name: 'Pretreat Data',
+            component: DataSource,
+            props: true,
+          },
+          {
+            path: 'cleanup/impute',
+            name: 'Impute Table',
+            component: Impute,
+            props: true,
+          },
+          {
+            path: 'cleanup',
+            name: 'Clean Up Table',
+            component: Cleanup,
+            props: true,
+            children: [
+              {
+                path: ':problem',
+                name: 'Problem',
+                component: ProblemBar,
+                props: true,
+              },
+            ],
+          },
+          {
+            path: 'transform',
+            name: 'Transform Table',
+            component: Transform,
+            props: true,
+          },
+          {
+            path: 'analyze',
+            name: 'Analyze Data',
+            component: AnalyzeData,
+            props: true,
+          },
+          ...analyses.map(({ path, shortName: name, component }) => ({
+            path: `analyze/${path}`, name, component, props: true,
+          })),
+          {
+            path: 'download',
+            name: 'Download Data',
+            component: Download,
             props: true,
           },
         ],
-      },
-      {
-        path: 'transform',
-        name: 'Transform Table',
-        component: Transform,
-        props: true,
-      },
-      {
-        path: 'analyze',
-        name: 'Analyze Data',
-        component: AnalyzeData,
-        props: true,
-      },
-      ...analyses.map(({ path, shortName: name, component }) => ({
-        path: `analyze/${path}`, name, component, props: true,
-      })),
-      {
-        path: 'download',
-        name: 'Download Data',
-        component: Download,
-        props: true,
       },
     ],
   },
   {
     path: '/',
     name: 'Root',
-    redirect: { name: 'Upload Data' },
+    component: Landing,
   },
 ];
 

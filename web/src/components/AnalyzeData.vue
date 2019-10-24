@@ -29,6 +29,6 @@ v-layout.analyze-component(row, fill-height)
                 | {{card.description}}
             v-card-actions
               v-btn(text,
-                  @click="$router.push({ path: `/pretreatment/${id}/analyze/${card.path}` })")
+                  @click="$router.push({ name: card.shortName, params: { id } })")
                 | Analyze
 </template>
