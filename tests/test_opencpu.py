@@ -13,4 +13,3 @@ def test_echo(app):
             'table': df.to_csv().encode()
         })
         assert_frame_equal(df, out)
-        raise AssertionError('dummz')
