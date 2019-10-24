@@ -177,6 +177,12 @@ const plot_types = {
   ANALYSIS: 'analysis',
 };
 
+const colors = {
+  selected: '#ffa500',
+  notSelected: '#c3c3c3',
+  correlationNode: '#4682b4',
+};
+
 export {
   rowMenuOptions,
   defaultRowOption,
@@ -198,6 +204,7 @@ export {
   validationMeta,
 
   plot_types,
+  colors,
 
   measurementColumnName,
   measurementValueName,
