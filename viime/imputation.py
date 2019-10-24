@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import pandas as pd
 
@@ -32,7 +32,13 @@ def impute_missing(table: pd.DataFrame, groups: pd.DataFrame,
         # A ... as is
         # C ... mcar
         # N ... mnar
-        info: List[str] = [c[0] for c in columns]
+        info: Dict[str, List[str]] = dict(mcar=[], mnar=[])
+        for c in columns:
+            if c[0] == 'C':
+                info['mcar'].append(c[2:])
+            elif c[0] == 'N':
+                info['mnar'].append(c[2:])
+
         output = output.rename(columns=renames)
         return output, info
 

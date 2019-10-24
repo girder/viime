@@ -61,6 +61,7 @@ const datasetDefaults = {
   height: 0,
   imputationMCAR: null,
   imputationMNAR: null,
+  imputationInfo: { mnar: [], mcar: [] },
   normalization: null,
   normalization_argument: null,
   transformation: null,
@@ -186,6 +187,7 @@ const mutations = {
         sourcerows,
         imputationMCAR: data.imputation_mcar,
         imputationMNAR: data.imputation_mnar,
+        imputationInfo: data.imputation_info || { mcar: [], mnar: [] },
         normalization: data.normalization,
         normalization_argument: data.normalization_argument,
         transformation: data.transformation,
@@ -216,6 +218,7 @@ const mutations = {
     const validatedSampleMetaData = parsePandasDataFrame(data.sample_metadata, base);
 
     const delta = {
+      imputationInfo: data.imputation_info || { mcar: [], mnar: [] },
       validatedMeasurements,
       validatedGroups,
       validatedMeasurementsMetaData,

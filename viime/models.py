@@ -125,6 +125,15 @@ class CSVFile(db.Model):
             raise
 
     @property
+    def measurement_table_and_info(self):
+        """Return the processed metabolite date table."""
+        try:
+            return _get_measurement_table(self, add_impute_info=True)
+        except Exception:
+            current_app.logger.exception('Error getting measurement_table')
+            raise
+
+    @property
     def measurement_metadata(self):
         """Return metadata rows."""
         return _get_measurement_metadata(self)
@@ -704,6 +713,7 @@ class ValidatedMetaboliteTable(db.Model):
     normalization_argument = db.Column(db.String, nullable=True)
     transformation = db.Column(db.String, nullable=True)
     scaling = db.Column(db.String, nullable=True)
+    imputation_info = db.Column(JSONType, nullable=True)
     meta = db.Column(JSONType, nullable=False)
 
     raw_measurements_bytes = db.Column(db.LargeBinary, nullable=False)
@@ -721,7 +731,7 @@ class ValidatedMetaboliteTable(db.Model):
 
     @classmethod
     def create_from_csv_file(cls, csv_file, **kwargs):
-        table = csv_file.measurement_table
+        table, info = csv_file.measurement_table_and_info
         assert table is not None, 'Invalid csv_file provided'
 
         attributes = {
@@ -730,6 +740,7 @@ class ValidatedMetaboliteTable(db.Model):
             'name': csv_file.name,
             'meta': csv_file.meta.copy(),
             'raw_measurements_bytes': cls.serialize_table(table),
+            'imputation_info': info,
             'measurement_metadata_bytes': cls.serialize_table(csv_file.measurement_metadata),
             'sample_metadata_bytes': cls.serialize_table(csv_file.sample_metadata),
             'groups_bytes': cls.serialize_table(csv_file.groups)
@@ -801,6 +812,7 @@ class ValidatedMetaboliteTableSchema(BaseSchema):
     scaling = fields.Str(missing=None, validate=validate.OneOf(SCALING_METHODS))
     transformation = fields.Str(missing=None, validate=validate.OneOf(TRANSFORMATION_METHODS))
     meta = fields.Dict(missing=dict)
+    imputation_info = fields.Dict(missing=dict)
 
     # not included in the serialized output
     raw_measurements_bytes = fields.Raw(required=True, load_only=True)

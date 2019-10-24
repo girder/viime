@@ -225,6 +225,7 @@ def get_csv_file(csv_id):
     if validated_table is not None:
         transformation_schema = ValidatedMetaboliteTableSchema(
             only=['normalization', 'normalization_argument', 'scaling',
+                  'imputation_info',
                   'scaling', 'transformation']
         )
         transformation = transformation_schema.dump(validated_table)
