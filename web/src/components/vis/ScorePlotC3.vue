@@ -293,10 +293,12 @@ export default {
             .attr('transform', d => `${plotTransform} ${d.transform}`)
             .style('opacity', 1),
           update => update
+            .style('display', d => (showEllipses && ellipseVisible[d.category] ? null : 'none'))
+            .transition()
+            .duration(300)
             .attr('rx', d => d.rx)
             .attr('ry', d => d.ry)
-            .attr('transform', d => `${plotTransform} ${d.transform}`)
-            .style('display', d => (showEllipses && ellipseVisible[d.category] ? null : 'none')),
+            .attr('transform', d => `${plotTransform} ${d.transform}`),
           exit => exit.transition('exit')
             .duration(duration)
             .style('opacity', 0)
