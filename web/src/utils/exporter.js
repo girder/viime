@@ -1,31 +1,48 @@
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import font from '!url-loader?limit=undefined!@openfonts/barlow-condensed_all/files/barlow-condensed-all-400.woff2';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import iconFont from '!url-loader?limit=undefined!@mdi/font/fonts/materialdesignicons-webfont.woff2';
 import { unparse } from 'papaparse';
 
 
-export function svg2png(svgElement, options = {}) {
+export function svg2url(svgElement, options = {}) {
   const findStyles = options.styles !== false;
-  const returnSvg = options.return === 'svg';
+  const includeFont = options.font !== false;
+  const includeIconFont = options.icons;
 
   // based on http://bl.ocks.org/biovisualize/8187844
   const copy = svgElement.cloneNode(true);
   // proper bg
   copy.style.backgroundColor = 'white';
   // inject font
-  copy.style.fontFamily = 'Barlow Condensed, sans-serif';
-  copy.insertAdjacentHTML('afterbegin', `<style>
-    /* barlow-condensed-400normal - all */
-    @font-face {
-      font-family: 'Barlow Condensed';
-      font-style: normal;
-      font-display: swap;
-      font-weight: 400;
-      src:
-        local('Barlow Condensed Regular'),
-        local('BarlowCondensed-Regular'),
-        url('${font}') format('woff2')
+  if (includeFont) {
+    copy.style.fontFamily = 'Barlow Condensed, sans-serif';
+    copy.insertAdjacentHTML('afterbegin', `<style>
+      /* barlow-condensed-400normal - all */
+      @font-face {
+        font-family: 'Barlow Condensed';
+        font-style: normal;
+        font-display: swap;
+        font-weight: 400;
+        src:
+          local('Barlow Condensed Regular'),
+          local('BarlowCondensed-Regular'),
+          url('${font}') format('woff2');
+      }
+    </style>`);
+  }
+  if (includeIconFont) {
+    copy.insertAdjacentHTML('afterbegin', `<style>
+      /* MaterialDesignIcons.com */
+      @font-face {
+        font-family: "Material Design Icons";
+        src:
+          url('${iconFont}') format('woff2');
+        font-weight: normal;
+        font-style: normal;
     }
-  </style>`);
+    </style>`);
+  }
 
   // find related style sheets
   const scopedAttr = Array.from(copy.getAttributeNames()).find(d => d.startsWith('data-v-'));
@@ -50,15 +67,12 @@ export function svg2png(svgElement, options = {}) {
 
   const svgString = new XMLSerializer().serializeToString(copy);
   const svg = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-  const svgUrl = URL.createObjectURL(svg);
+  return URL.createObjectURL(svg);
+}
 
-  if (returnSvg) {
-    return Promise.resolve(svgUrl);
-  }
-
+export function renderImage(imgUrl, bb) {
   const canvas = document.createElement('canvas');
 
-  const bb = svgElement.getBoundingClientRect();
   canvas.width = bb.width;
   canvas.height = bb.height;
   const ctx = canvas.getContext('2d');
@@ -67,11 +81,19 @@ export function svg2png(svgElement, options = {}) {
   return new Promise((resolve) => {
     img.onload = () => {
       ctx.drawImage(img, 0, 0);
-      URL.revokeObjectURL(svgUrl);
       const png = canvas.toDataURL('image/png');
       resolve(png);
     };
-    img.src = svgUrl;
+    img.src = imgUrl;
+  });
+}
+
+export function svg2png(svgElement, options) {
+  const svgUrl = svg2url(svgElement, options);
+
+  return renderImage(svgUrl, svgElement.getBoundingClientRect()).then((img) => {
+    URL.revokeObjectURL(svgUrl);
+    return img;
   });
 }
 
