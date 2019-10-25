@@ -124,6 +124,7 @@ export default {
       duration: 500,
       width: 100,
       height: 100,
+      hasMounted: false,
     };
   },
 
@@ -176,9 +177,10 @@ export default {
         rowLabels,
         groupLabels,
         eigenvalues,
+        hasMounted,
       } = this;
 
-      return this.$refs.chart
+      return hasMounted
         && pcCoords.length > 0
         && rowLabels.length > 0
         && Object.keys(groupLabels).length > 0
@@ -294,6 +296,8 @@ export default {
   },
 
   mounted() {
+    this.hasMounted = true;
+
     this.chart = c3.generate({
       bindto: this.$refs.chart,
       data: {
