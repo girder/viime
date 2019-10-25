@@ -10,10 +10,12 @@ from flask_sqlalchemy import SQLAlchemy
 from marshmallow import fields, post_dump, post_load, \
     Schema, validate, validates_schema
 from marshmallow.exceptions import ValidationError
+import numpy
 import pandas
 from sqlalchemy import MetaData
 from sqlalchemy.event import listen
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import relationship
 from sqlalchemy_utils.types.json import JSONType
 from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
@@ -66,6 +68,25 @@ class BaseSchema(Schema):
         return data
 
 
+class GroupLevel(db.Model):
+    csv_file_id = db.Column(
+        UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
+    name = db.Column(db.String, primary_key=True)
+    color = db.Column(db.String, nullable=False)
+    label = db.Column(db.String)
+    description = db.Column(db.String)
+
+
+class GroupLevelSchema(BaseSchema):
+    __model__ = GroupLevel
+
+    csv_file_id = fields.UUID(required=True, load_only=True)
+    name = fields.Str(required=True)
+    color = fields.Str(required=True)
+    label = fields.Str()
+    description = fields.Str(allow_none=True)
+
+
 class CSVFile(db.Model):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -75,6 +96,7 @@ class CSVFile(db.Model):
     imputation_mcar = db.Column(db.String, nullable=False)
     meta = db.Column(JSONType, nullable=False)
     selected_columns = db.Column(db.PickleType, nullable=True)
+    group_levels = relationship('GroupLevel', cascade='all, delete, delete-orphan')
 
     @property
     def table_validation(self):
@@ -205,12 +227,28 @@ class CSVFile(db.Model):
             old_column.column_type = TABLE_COLUMN_TYPES.METADATA
             db.session.add(old_column)
             clear_cache()
+            self.group_levels = []
 
         if value is not None:
             new_column = self.columns[value]
             new_column.column_type = TABLE_COLUMN_TYPES.GROUP
             db.session.add(new_column)
+            self.derive_group_levels()
             clear_cache()
+
+    def derive_group_levels(self, clear_caches=False):
+        if clear_caches:
+            clear_cache(csv_file=self)
+        groups = self.groups
+        if groups is None or groups.empty:
+            self.group_levels = []
+            return
+        levels = sorted([str(v) for v in groups.iloc[:, 0].unique()])
+        # d3 scheme category 10
+        colors = ['#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
+                  '#7f7f7f', '#bcbd22', '#17becf', '#ff7f0e']
+        self.group_levels = [GroupLevel(name=l, label=l, color=colors[i % len(colors)])
+                             for i, l in enumerate(levels)]
 
     @property
     def keys(self):
@@ -218,6 +256,12 @@ class CSVFile(db.Model):
 
     def filter_table_by_types(self, row_type, column_type):
         return _filter_table_by_types(self, row_type, column_type)
+
+    @property
+    def missing_cells(self):
+        table = _coerce_numeric(self.raw_measurement_table)
+        col, row = numpy.nonzero(table.isna().to_numpy())
+        return numpy.column_stack((row, col)).astype(int).tolist()
 
     def apply_transforms(self):
         table = self.raw_measurement_table
@@ -249,12 +293,17 @@ class CSVFile(db.Model):
                 'csv_file_id': id, 'row_index': index, 'row_type': row_type
             }))
 
+        csv_file.rows = rows
+
         columns = []
         table_column_schema = TableColumnSchema()
         for index, column_type in enumerate(column_types):
             columns.append(table_column_schema.load({
                 'csv_file_id': id, 'column_index': index, 'column_type': column_type
             }))
+
+        csv_file.columns = columns
+        csv_file.derive_group_levels()
 
         return csv_file, rows, columns
 
@@ -299,10 +348,12 @@ class CSVFileSchema(BaseSchema):
     rows = fields.List(fields.Nested('TableRowSchema', exclude=['csv_file']))
 
     selected_columns = fields.List(fields.Str(), dump_only=True, missing=list)
+    group_levels = fields.List(fields.Nested('GroupLevelSchema'))
 
     table_validation = fields.Nested('ValidationSchema', many=True, dump_only=True)
     # imputed measurements
     measurement_table = fields.Raw(dump_only=True, allow_none=True)
+    missing_cells = fields.Raw(dump_only=True, allow_none=True)
     size = fields.Int(dump_only=True)
 
     @post_load

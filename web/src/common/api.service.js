@@ -8,8 +8,16 @@ const ApiService = {
     Vue.axios.defaults.baseURL = '/api/v1';
   },
 
-  buildUrl(path) {
-    return [Vue.axios.defaults.baseURL, path].join('/');
+  buildUrl(path, args) {
+    const base = [Vue.axios.defaults.baseURL, path].join('/');
+    if (!args) {
+      return base;
+    }
+    const params = new URLSearchParams();
+    Object.keys(args).forEach((arg) => {
+      params.set(arg, String(args[arg]));
+    });
+    return `${base}?${params.toString()}`;
   },
 
   get(resource, path, params = {}) {
@@ -36,6 +44,10 @@ const ApiService = {
 
   download(resource, slug) {
     return Vue.axios.get(`${resource}/${slug}/download`);
+  },
+
+  merge(data) {
+    return Vue.axios.post('merge', data);
   },
 };
 
@@ -69,8 +81,12 @@ export const CSVService = {
     return ApiService.download('csv', slug);
   },
 
-  validatedDownloadUrl(slug) {
-    return ApiService.buildUrl(`csv/${slug}/validate/download`);
+  remerge(slug, params) {
+    return ApiService.post(`csv/${slug}/remerge`, params);
+  },
+
+  validatedDownloadUrl(slug, args) {
+    return ApiService.buildUrl(`csv/${slug}/validate/download`, args);
   },
 
   setName(slug, name) {
@@ -79,6 +95,10 @@ export const CSVService = {
 
   setDescription(slug, description) {
     return ApiService.put(`csv/${slug}/description`, { description });
+  },
+
+  setGroupLevels(slug, groupLevels) {
+    return ApiService.put(`csv/${slug}/group-levels`, { group_levels: groupLevels });
   },
 
   setSelectedColumns(slug, columns) {

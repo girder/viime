@@ -146,8 +146,6 @@ v-layout.transform-component(row, fill-height)
       layout-grid(:cell-size="cellSize")
         score-plot-c3-tile(
             v-if="visiblePlots.score",
-            :width="600",
-            :height="600",
             :columns="dataset.column.data",
             :id="id")
         loadings-plot-tile(

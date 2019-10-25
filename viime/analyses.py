@@ -41,7 +41,10 @@ def anova_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, Any]:
     }
 
 
-def _do_clustering(arr: np.ndarray, columns) -> Dict[str, Any]:
+def _do_clustering(arr: np.ndarray, columns) -> Optional[Dict[str, Any]]:
+    if len(arr) == 0:
+        return None
+
     r = linkage(arr, optimal_ordering=True)
     df = pd.DataFrame(r.astype(np.int))
     df = df.rename(columns={

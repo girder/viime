@@ -22,13 +22,8 @@ const dataTypes = [
   { name: 'Other', value: 'other' },
 ];
 
-const excelMimeTypes = [
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-];
-
 function isExcelFile(file) {
-  return excelMimeTypes.includes(file.type) || file.name.match(/\.xlsx$/i);
+  return file.name.match(/\.xlsx$/i);
 }
 
 function isCSVFile(file) {
@@ -140,6 +135,9 @@ export default {
     removeAll() {
       this.readyFiles.concat(this.pendingFiles).forEach(f => this.remove(f));
     },
+    createMergedDataset() {
+      // TODO
+    },
   },
 };
 </script>
@@ -168,6 +166,9 @@ v-layout.upload-component(column, fill-height)
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title All Data Sources
         v-spacer
+        v-btn(flat, small, to="/pretreatment/merge", :disabled="files.length < 2")
+          v-icon.pr-1 {{ $vuetify.icons.tablePlus }}
+          | merge data sources
         v-btn(flat, small, @click="deleteCount = files.length; doDelete = removeAll")
           v-icon.pr-1 {{ $vuetify.icons.clearAll }}
           | clear all
@@ -180,7 +181,8 @@ v-layout.upload-component(column, fill-height)
                 v-icon {{ $vuetify.icons.close }}
             v-list-tile-content.shrink
               v-list-tile-title(v-text="`${file.file.name} `")
-              v-list-tile-sub-title(v-text="formatSize(file.file.size)")
+              v-list-tile-sub-title
+                | {{file.file.size != null ? formatSize(file.file.size) : '?'}}
             v-list-tile-content.px-2.shrink(v-if="file.status === 'error'")
               v-chip.largetext(small, color="error", text-color="white")
                 v-avatar

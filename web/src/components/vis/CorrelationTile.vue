@@ -4,6 +4,7 @@ import VisTileLarge from './VisTileLarge.vue';
 import ToolbarOption from '../ToolbarOption.vue';
 import plotData from './mixins/plotData';
 import { correlation_methods } from './constants';
+import { colors } from '../../utils/constants';
 
 export default {
   components: {
@@ -23,6 +24,7 @@ export default {
 
   data() {
     return {
+      colors,
       showNodeLabels: false,
       showEdgeLabels: false,
       linkDistance: 50,
@@ -87,7 +89,7 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     v-card.mx-3(flat)
       v-card-actions
         v-layout(column)
-          v-slider.my-1.minCorrelation(:value="min_correlation", label="0", thumb-label,
+          v-slider.my-1.minCorrelation(:value="min_correlation", label="0", thumb-label="always",
               hide-details, min="0", max="1", step="0.01",
               @change="changePlotArgs({min_correlation: $event})")
     v-toolbar.darken-3(color="primary", dark, flat, dense)
@@ -95,9 +97,9 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     v-card.mx-3(flat)
       v-card-actions.checkboxlist
         v-checkbox.my-0(v-model="showSelected", :label="`Selected (${countSelected})`",
-            hide-details, color="#ffa500")
+            hide-details, :color="colors.selected")
         v-checkbox.my-0(v-model="showNotSelected", :label="`Not Selected (${countNotSelected})`",
-            hide-details, color="#4682b4")
+            hide-details, :color="colors.correlationNode")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Advanced Options
@@ -113,17 +115,18 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     force-directed-graph(:edges="edges", :nodes="nodes",
         :link-distance="linkDistanceAsNumber", :show-node-labels="showNodeLabels",
         :show-edge-labels="showEdgeLabels",
-        :min-stroke-value="min_correlation", highlight-color="#ffa500", color="#4682b4")
+        :min-stroke-value="min_correlation",
+        :highlight-color="colors.selected", :color="colors.correlationNode")
 </template>
 
 <style scoped>
+
+.minCorrelation {
+  padding-top: 16px;
+}
+
 .minCorrelation >>> .v-input__slot::after {
   content: "1";
-  color: rgba(0,0,0,0.54);
-  margin-left: 16px;
-}
-.minThreshold >>> .v-input__slot::after {
-  content: "0.1";
   color: rgba(0,0,0,0.54);
   margin-left: 16px;
 }

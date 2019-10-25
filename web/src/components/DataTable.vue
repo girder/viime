@@ -4,132 +4,64 @@
       key-field="index", direction="horizontal")
     template(#before)
       .column-header
-        .column-header-cell
+        .column-header-cell {{corner}}
         .row-header-cell(v-for="(r,i) in rowHeaders", :key="i",
-            :class="r.clazz", @click="onRowClick($event, i)")
+            :class="r.clazz", :style="r.style", @click="onRowClick($event, i)")
           | {{r.text}}
     template(#default="{ item, index }")
-      .column(:class="item.clazz")
-        .column-header-cell(:class="item.header.clazz", @click="onColumnClick($event, index)")
+      .column(:class="item.clazz", :style="item.style")
+        .column-header-cell(:class="item.header.clazz", :style="item.header.style",
+            @click="onColumnClick($event, index)")
           | {{item.header.text}}
-        .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(i)",
-            @click="onCellClick($event, i, index)") {{r}}
+        .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(i, index)",
+            :style="cellStyles(i, index, r)", @click="onCellClick($event, i, index)") {{r}}
 </template>
 
 <script>
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import { RecycleScroller } from 'vue-virtual-scroller';
 
-import { base26Converter } from '../utils';
-import { defaultRowOption, defaultColOption } from '../utils/constants';
-
 export default {
   components: {
     RecycleScroller,
   },
   props: {
-    dataset: {
-      type: Object,
+    rowHeaders: { // {text: string, clazz?: string[]}[]
+      type: Array,
       required: true,
     },
-    id: {
+    columns: { // {index: number, header: ..., clazz?: string[], values: string[]}[]
+      type: Array,
+      required: true,
+    },
+    cellClasses: { // (rowIndex: number, columnIndex: number) => string[]
+      type: Function,
+      required: false,
+      default() { return () => null; },
+    },
+    cellStyles: { // (rowIndex: number, columnIndex: number, value: any) => object
+      type: Function,
+      required: false,
+      default() { return () => null; },
+    },
+    corner: {
       type: String,
-      required: true,
-    },
-    selected: {
-      type: Object,
-      required: true,
-    },
-  },
-  computed: {
-    rowHeaders() {
-      return this.dataset.row.labels.map(
-        (rowType, i) => {
-          const header = this.createHeader(rowType, defaultRowOption, i + 1);
-          header.clazz.push(...this.getSelectionClasses('row', i));
-          return header;
-        },
-      );
-    },
-    columns() {
-      const rows = this.dataset.sourcerows;
-      const f = v => (typeof v === 'number' ? v.toFixed(3) : v);
-
-      return this.dataset.column.labels.map((colType, i) => {
-        const column = {
-          index: i,
-          header: this.createHeader(colType, defaultColOption, base26Converter(i + 1)),
-          clazz: [`type-${colType}`],
-          values: rows.map(row => f(row[i])),
-        };
-        const selected = this.getSelectionClasses('column', i);
-        column.clazz.push(...selected);
-        column.header.clazz.push(...selected);
-        return column;
-      });
+      required: false,
+      default: '',
     },
   },
   methods: {
-    createHeader(type, defaultType, text) {
-      const header = {
-        text,
-        clazz: [`type-${type}`],
-      };
-      if (type !== defaultType) {
-        // icon
-        header.text = '';
-        header.clazz.push('mdi', this.$vuetify.icons[type]);
-      }
-      return header;
-    },
-    cellClasses(rowIndex) {
-      const rowType = this.dataset.row.labels[rowIndex];
-      return [`type-${rowType}`, ...this.getSelectionClasses('row', rowIndex)];
-    },
     setSelection(selection) {
       this.$emit('setselection', selection);
     },
-    getSelectionClasses(axis, index) {
-      if (this.selected.type !== axis) {
-        return [];
-      }
-      const includes = this.selected.ranges.includes(index);
-      const classList = [];
-      if (includes.member) {
-        classList.push('active');
-      }
-      if (includes.first) {
-        classList.push(`${axis}First`);
-      }
-      if (includes.last) {
-        classList.push(`${axis}Last`);
-      }
-      return classList;
-    },
     onRowClick(event, rowIndex) {
-      this.setSelection({
-        key: this.id,
-        event,
-        axis: 'row',
-        idx: rowIndex,
-      });
+      this.$emit('row-click', { event, rowIndex });
     },
     onColumnClick(event, columnIndex) {
-      this.setSelection({
-        key: this.id,
-        event,
-        axis: 'column',
-        idx: columnIndex,
-      });
+      this.$emit('column-click', { event, columnIndex });
     },
     onCellClick(event, rowIndex, columnIndex) {
-      const columnType = this.dataset.column.labels[columnIndex];
-      const rowType = this.dataset.row.labels[rowIndex];
-      if (rowType === 'header') {
-        this.onColumnClick(event, columnIndex);
-      } else if (columnType === 'key') {
-        this.onRowClick(event, rowIndex);
-      }
+      this.$emit('cell-click', { event, rowIndex, columnIndex });
     },
   },
 };
@@ -168,16 +100,6 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-
-.column-header-cell {
-  text-align: center;
-  background-color: $background;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  cursor: pointer;
 }
 
 .row-header-cell {
@@ -262,6 +184,16 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
   }
 }
 
+.column-header-cell {
+  @include selectionAware($background);
+
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  cursor: pointer;
+}
+
 // column
 .type-key {
   @include selectionAware(var(--v-primary-lighten3));
@@ -283,6 +215,10 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
   position: sticky;
   top: 25px;
   cursor: pointer;
+
+  &.column-header-cell {
+    top: 0;
+  }
 }
 // column, row
 .type-masked {
@@ -292,6 +228,12 @@ $selectionBorderWidth2: calc(100% - #{$selectionBorderWidth});
 }
 // column, row
 .type-sample {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+// column, row
+.type-missing {
+  @include selectionAware(var(--v-secondary-lighten2));
   text-align: right;
 }
 

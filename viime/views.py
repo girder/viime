@@ -3,8 +3,7 @@ from io import BytesIO
 import json
 import math
 from pathlib import PurePath
-from typing import Callable, cast, Dict, Optional
-from uuid import uuid4
+from typing import Callable, cast, Dict, List, Optional
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
@@ -17,13 +16,14 @@ from viime.analyses import anova_test, hierarchical_clustering, pairwise_correla
 from viime.cache import csv_file_cache
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
-    ModifyLabelListSchema, \
+    GroupLevelSchema, ModifyLabelListSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     TableColumn, TableColumnSchema, TableRow, \
     TableRowSchema, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
 from viime.normalization import validate_normalization_method
 from viime.plot import pca
 from viime.scaling import SCALING_METHODS
+from viime.table_merge import merge_methods
 from viime.table_validation import get_fatal_index_errors, ValidationSchema
 from viime.transformation import TRANSFORMATION_METHODS
 
@@ -144,42 +144,47 @@ def upload_excel_file(file: FileStorage, meta: Dict):
         raise
 
 
-@csv_bp.route('/csv/merge', methods=['POST'])
+@csv_bp.route('/merge', methods=['POST'])
 @use_kwargs({
-    'csv_file_ids': fields.List(
+    'name': fields.Str(required=True),
+    'description': fields.Str(missing=None),
+    'method': fields.Str(required=True, validate=validate.OneOf(merge_methods.keys())),
+    'datasets': fields.List(
         fields.UUID(), validate=validate.Length(min=2))
 })
-def merge_csv_files(csv_file_ids):
-    """
-    Generate a new validated csv file by concatonating a list of 2 or more
-    validated tables.
+def merge_csv_files(name: str, description: str, method: str, datasets: List[str]):
+    tables = [ValidatedMetaboliteTable.query.filter_by(csv_file_id=id).first_or_404()
+              for id in datasets]
 
-    NOTE: This current uses the groups from the first table, removes
-    all of the metadata, and does and "inner join" with the row indices"
-    """
-    tables = []
-    for index, csv_file_id in enumerate(csv_file_ids):
-        table = ValidatedMetaboliteTable.query.filter_by(
-            csv_file_id=csv_file_id
-        ).first()
-        if index == 0:
-            groups = table.groups
-
-        if table is None:
-            raise ValidationError(
-                'One or more csv_files does not exist or is not validated')
-
-        tables.append(table.measurements)
-
-    merged = pandas.concat([groups] + tables, axis=1, join='inner')
+    merged, column_types, row_types = merge_methods[method](tables)
 
     try:
-        csv_file = csv_file_schema.load(dict(
-            id=uuid4(),
-            name='merged.csv',
+        csv_file: CSVFile = csv_file_schema.load(dict(
+            name=name,
             table=merged.to_csv(),
-            meta={'merged': [str(id) for id in csv_file_ids]}
+            meta={
+                'merged': [str(id) for id in datasets],
+                'merge_method': method
+            }
         ))
+
+        # update types afterwards since the default is auto generated
+
+        if row_types:
+            # update the row types
+            for row, row_type in zip(csv_file.rows, row_types):
+                row.row_type = row_type
+                db.session.add(row)
+
+        if column_types:
+            # update the row types
+            for column, column_type in zip(csv_file.columns, column_types):
+                column.column_type = column_type
+                db.session.add(column)
+
+        # need to call it manually since we might have changed the column types
+        csv_file.derive_group_levels(clear_caches=True)
+
         db.session.add(csv_file)
         db.session.flush()
 
@@ -271,6 +276,23 @@ def set_csv_file_description(csv_id, description):
     try:
         csv_file = CSVFile.query.get_or_404(csv_id)
         csv_file.description = description
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/group-levels', methods=['PUT'])
+@use_kwargs({
+    'group_levels': fields.List(fields.Nested(GroupLevelSchema(exclude=['csv_file_id'])),
+                                required=True)
+})
+def set_csv_file_group_levels(csv_id, group_levels):
+    try:
+        csv_file = CSVFile.query.get_or_404(csv_id)
+        csv_file.group_levels = group_levels
         db.session.add(csv_file)
         db.session.commit()
         return jsonify(csv_file_schema.dump(csv_file))
@@ -379,7 +401,7 @@ def get_column(csv_id, column_index):
 def batch_modify_label(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
     args = modify_label_list_schema.load(request.json or {})
-    row_column_dump_schema = CSVFileSchema(only=['rows', 'columns'])
+    row_column_dump_schema = CSVFileSchema(only=['rows', 'columns', 'group_levels'])
 
     for change in args['changes']:
         index = change['index']
@@ -428,6 +450,103 @@ def get_row(csv_id, row_index):
     ))
 
 
+def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
+    if row_types is None:
+        return
+
+    count_target = len(row_types)
+    count_current = len(csv_file.rows)
+    # update the row types
+    for row, row_type in zip(csv_file.rows, row_types):
+        row.row_type = row_type
+        db.session.add(row)
+
+    if count_target > count_current:
+        # create missing
+        for index, row_type in enumerate(row_types[count_current:]):
+            row = table_row_schema.load({
+                'csv_file_id': csv_file.id, 'row_index': index + count_current,
+                'row_type': row_type
+            })
+            csv_file.rows.append(row)
+            db.session.add(row)
+    elif count_target < count_current:
+        # delete extra
+        for row in csv_file.rows[count_target:]:
+            db.session.delete(row)
+
+
+def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
+    if column_types is None:
+        return
+
+    count_target = len(column_types)
+    count_current = len(csv_file.columns)
+
+    # update the column types
+
+    for column, column_type in zip(csv_file.columns, column_types):
+        column.column_type = column_type
+        db.session.add(column)
+
+    if count_target > count_current:
+        # create missing
+        for index, column_type in enumerate(column_types[count_current:]):
+            column = table_column_schema.load({
+                'csv_file_id': csv_file.id, 'column_index': index + count_current,
+                'column_type': column_type
+            })
+            csv_file.columns.append(column)
+            db.session.add(column)
+
+    elif count_target < count_current:
+        # delete extra
+        for column in csv_file.column[count_target:]:
+            db.session.delete(column)
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/remerge', methods=['POST'])
+@use_kwargs({
+    'method': fields.Str(missing=None, validate=validate.OneOf(merge_methods.keys())),
+})
+def remerge_csv_file(csv_id, method):
+    try:
+        csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
+        if 'merged' not in csv_file.meta:
+            raise ValidationError('given file is not a merged one')
+
+        datasets = csv_file.meta['merged']
+        if not method:
+            method = csv_file.meta['merge_method']
+
+        tables = [ValidatedMetaboliteTable.query.filter_by(csv_file_id=id).first_or_404()
+                  for id in datasets]
+
+        merged, column_types, row_types = merge_methods[method](tables)
+
+        csv_file.save_table(merged)
+
+        _update_column_types(csv_file, column_types)
+        _update_row_types(csv_file, row_types)
+
+        # need to call it manually since we might have changed the column types
+        csv_file.derive_group_levels(clear_caches=True)
+
+        meta = csv_file.meta.copy()
+        meta.update({
+            'merged': [str(id) for id in datasets],
+            'merge_method': method
+        })
+        csv_file.meta = meta
+
+        db.session.add(csv_file)
+        db.session.commit()
+        return jsonify(csv_file_schema.dump(csv_file))
+    except Exception:
+        db.session.rollback()
+        raise
+
+
 @csv_bp.route('/csv/<uuid:csv_id>/validate', methods=['POST'])
 def save_validated_csv_file(csv_id):
     csv_file = CSVFile.query.get_or_404(csv_id)
@@ -435,13 +554,21 @@ def save_validated_csv_file(csv_id):
     if fatal_errors:
         return jsonify(validation_schema.dump(fatal_errors, many=True)), 400
 
-    old_table = ValidatedMetaboliteTable.query.filter_by(csv_file_id=csv_id)
+    old_table = ValidatedMetaboliteTable.query.filter_by(csv_file_id=csv_id).first()
     try:
+        old = {}
         if old_table is not None:
-            old_table.delete()
+            transformation_schema = ValidatedMetaboliteTableSchema(
+                only=['normalization', 'normalization_argument',
+                      'scaling', 'transformation']
+            )
+            # copy some values
+            old = transformation_schema.dump(old_table)
+
+            db.session.delete(old_table)
             db.session.commit()  # we actually want to persist to invalidate the old table
 
-        validated_table = ValidatedMetaboliteTable.create_from_csv_file(csv_file)
+        validated_table = ValidatedMetaboliteTable.create_from_csv_file(csv_file, **old)
         db.session.add(validated_table)
         db.session.commit()
         return jsonify(validated_metabolite_table_schema.dump(validated_table)), 201
@@ -518,10 +645,42 @@ def set_scaling_method(validated_table):
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/validate/download', methods=['GET'])
+@use_kwargs({
+    'transpose': fields.Boolean(missing=False),
+    'columns': fields.Str(missing='all', validate=validate.OneOf(['all', 'not-selected',
+                                                                  'selected', 'none'])),
+    'rows': fields.Str(missing=None)
+})
 @load_validated_csv_file
-def download_validated_csv_file(validated_table: ValidatedMetaboliteTable):
-    fp = BytesIO(validated_table.table.to_csv().encode())
+def download_validated_csv_file(validated_table: ValidatedMetaboliteTable,
+                                transpose: bool,
+                                columns: str, rows: Optional[str]):
+    table: pandas.DataFrame = validated_table.table
     csv_file: CSVFile = CSVFile.query.get_or_404(validated_table.csv_file_id)
+
+    nr_col_meta = validated_table.groups.shape[1] + validated_table.sample_metadata.shape[1]
+    nr_row_meta = validated_table.measurement_metadata.shape[0]
+
+    if columns == 'none':
+        table = table.iloc[:, []]
+    elif columns == 'selected':
+        selected = list(table)[:nr_col_meta] + (csv_file.selected_columns or [])
+        table = table.loc[:, selected]
+    elif columns == 'not-selected':
+        meta = list(table)[:nr_col_meta]
+        not_selected = [c for c in table if c in meta or str(c) not in csv_file.selected_columns]
+        table = table.loc[:, not_selected]
+
+    if rows is not None:
+        groups = table.iloc[:, 0]  # first column is group
+        valid = list(groups[:nr_row_meta]) + rows.split(',')
+        mask = [r in valid for r in groups]
+        table = table.loc[mask, :]
+
+    if transpose:
+        table = table.T
+
+    fp = BytesIO(table.to_csv().encode())
     name = PurePath(csv_file.name).with_suffix('.csv').name
     return send_file(fp, mimetype='text/csv', as_attachment=True,
                      attachment_filename=name)
@@ -638,10 +797,24 @@ def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Opti
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/heatmap', methods=['GET'])
-@use_kwargs({})
+@use_kwargs({
+    'columns': fields.Str(required=False, missing=None,
+                          validate=validate.OneOf(['selected', 'not-selected']))
+})
 @load_validated_csv_file
-def get_hierarchical_clustering_heatmap(validated_table: ValidatedMetaboliteTable):
-    return hierarchical_clustering(validated_table.measurements)
+def get_hierarchical_clustering_heatmap(validated_table: ValidatedMetaboliteTable,
+                                        columns: Optional[str]):
+    table = validated_table.measurements
+
+    if columns:
+        csv_file: CSVFile = CSVFile.query.get_or_404(validated_table.csv_file_id)
+        if columns == 'selected':
+            table = table.loc[:, csv_file.selected_columns or []]
+        elif columns == 'not-selected' and csv_file.selected_columns:
+            non_selected = [c for c in table if str(c) not in csv_file.selected_columns]
+            table = table.loc[:, non_selected]
+
+    return hierarchical_clustering(table)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/correlation', methods=['GET'])

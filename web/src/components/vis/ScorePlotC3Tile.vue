@@ -12,16 +12,6 @@ export default {
   mixins: [plotData('pca')],
 
   props: {
-    width: {
-      required: true,
-      type: Number,
-      validator: Number.isInteger,
-    },
-    height: {
-      required: true,
-      type: Number,
-      validator: Number.isInteger,
-    },
     id: {
       type: String,
       required: true,
@@ -82,8 +72,6 @@ export default {
 <template lang="pug">
 vis-tile(title="PCA Score Plot")
   score-plot-c3(
-      :width="width",
-      :height="height",
       :pc-coords="pcCoords",
       :row-labels="rowLabels",
       :group-labels="groupLabels",

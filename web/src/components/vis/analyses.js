@@ -30,7 +30,9 @@ export default [
     shortName: 'Heatmap',
     description: 'cool stuff',
     component: HeatmapTile,
-    args: {},
+    args: {
+      columns: null,
+    },
     type: plot_types.ANALYSIS,
   },
   {
