@@ -80,7 +80,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(title="PCA Score Plot (C3)")
+vis-tile(title="PCA Score Plot")
   score-plot-c3(
       :width="width",
       :height="height",

@@ -144,11 +144,8 @@ v-layout.transform-component(row, fill-height)
   v-layout(column, v-else-if="ready && valid")
     v-container.grow-overflow.ma-0(grid-list-lg, fluid)
       layout-grid(:cell-size="cellSize")
-        score-plot-tile(
-            v-if="visiblePlots.score",
-            :columns="dataset.column.data",
-            :id="id")
         score-plot-c3-tile(
+            v-if="visiblePlots.score",
             :width="600",
             :height="600",
             :columns="dataset.column.data",
