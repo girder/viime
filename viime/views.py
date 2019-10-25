@@ -66,7 +66,7 @@ class JSONDictStr(fields.Dict):
 
 @csv_bp.route('/csv/upload', methods=['POST'])
 @use_kwargs({
-    'file': fields.Field(location='files', validate=lambda f: f.content_type == 'text/csv'),
+    'file': fields.Field(location='files'),
     'meta': JSONDictStr(missing=dict)
 })
 def upload_csv_file(file, meta):
@@ -90,16 +90,9 @@ def upload_csv_file(file, meta):
         raise
 
 
-_excel_mime_types = [
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-]
-
-
 @csv_bp.route('/excel/upload', methods=['POST'])
 @use_kwargs({
-    'file': fields.Field(location='files', required=True,
-                         validate=lambda f: f.content_type in _excel_mime_types),
+    'file': fields.Field(location='files', required=True),
     'meta': JSONDictStr(missing={})
 })
 def upload_excel_file(file: FileStorage, meta: Dict):
