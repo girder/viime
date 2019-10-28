@@ -3,6 +3,7 @@ import Heatmap, { heatmapLayouts } from './Heatmap.vue';
 import VisTileLarge from './VisTileLarge.vue';
 import plotData from './mixins/plotData';
 import ToolbarOption from '../ToolbarOption.vue';
+import { download } from '../../utils/exporter';
 import { colors } from '../../utils/constants';
 
 export default {
@@ -101,13 +102,20 @@ export default {
     groupColor(row) {
       return this.groupLookup.get(row);
     },
+    async download() {
+      if (!this.$refs.heatmap) {
+        return;
+      }
+      const url = await this.$refs.heatmap.generateImage();
+      download(url, 'Heatmap.png');
+    },
   },
 };
 
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="plot", title="Heatmap", expanded,
+vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl="download",
     :loading="plot.loading || !dataset.ready || !values || values.data.length === 0")
   template(#controls)
     v-toolbar.darken-3(color="primary", dark, flat, dense)
@@ -128,7 +136,7 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded,
     toolbar-option(title="Layout", :value="layout",
         :options="layouts",
         @change="layout = $event")
-  heatmap(
+  heatmap(ref="heatmap",
       v-if="plot && plot.data && dataset.ready && values",
       :values="values",
       :column-config="column", :row-config="row", :layout="layout",
