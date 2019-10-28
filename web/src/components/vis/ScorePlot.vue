@@ -124,6 +124,13 @@ export default {
       duration: 500,
       width: 100,
       height: 100,
+
+      // This property is set to `true` in the mounted hook, and is necessary to
+      // prevent reactively calling `update()` before the component has mounted.
+      //
+      // The alternative would be to make `update()` into a method, then set a
+      // series of watchers based on its dependent properties, which results in a
+      // code duplication that would likely become a source of difficulties.
       hasMounted: false,
     };
   },
