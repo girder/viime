@@ -23,9 +23,7 @@ def mock_load_dotenv(monkeypatch):
 @pytest.fixture(autouse=True)
 def mock_imputation(monkeypatch):
     def noop(table, groups, **kwargs):
-        if kwargs.get('add_info'):
-            return table.copy(), dict(mnar=[], mcar=[])
-        return table.copy()
+        return table.copy(), dict(mnar=[], mcar=[])
 
     monkeypatch.setattr(models, 'impute_missing', noop)
 

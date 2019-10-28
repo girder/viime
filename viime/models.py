@@ -118,11 +118,7 @@ class CSVFile(db.Model):
     @property
     def measurement_table(self):
         """Return the processed metabolite date table."""
-        try:
-            return _get_measurement_table(self)
-        except Exception:
-            current_app.logger.exception('Error getting measurement_table')
-            raise
+        return self.measurement_table_and_info[0]
 
     @property
     def measurement_table_and_info(self):
@@ -272,13 +268,11 @@ class CSVFile(db.Model):
         col, row = numpy.nonzero(table.isna().to_numpy())
         return numpy.column_stack((row, col)).astype(int).tolist()
 
-    def apply_transforms(self, add_impute_info=False):
+    def apply_transforms(self):
         table = self.raw_measurement_table
         table = _coerce_numeric(table)
-        r = impute_missing(
-            table, self.groups, mnar=self.imputation_mnar, mcar=self.imputation_mcar,
-            add_info=add_impute_info)
-        return r
+        return impute_missing(table, self.groups,
+                              mnar=self.imputation_mnar, mcar=self.imputation_mcar)
 
     def save_table(self, table):
         # TODO: Delete cache entries if a file at self.uri exists already
@@ -672,23 +666,14 @@ def _get_raw_measurement_table(csv_file):
 
 
 @csv_file_cache
-def _get_measurement_table(csv_file):
+def _get_measurement_table_and_info(csv_file):
     if not get_fatal_index_errors(csv_file):
         try:
             return csv_file.apply_transforms()
         except Exception as e:
             # TODO: We should handle this better
             current_app.logger.exception(e)
-
-
-@csv_file_cache
-def _get_measurement_table_and_info(csv_file):
-    if not get_fatal_index_errors(csv_file):
-        try:
-            return csv_file.apply_transforms(add_impute_info=True)
-        except Exception as e:
-            # TODO: We should handle this better
-            current_app.logger.exception(e)
+    return None, dict(mcar=[], mnar=[])
 
 
 @csv_file_cache
