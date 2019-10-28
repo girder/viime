@@ -7,7 +7,6 @@ import {
   transform_methods,
 } from '@/utils/constants';
 import ScorePlotTile from '@/components/vis/ScorePlotTile.vue';
-import ScorePlotC3Tile from '@/components/vis/ScorePlotC3Tile.vue';
 import ScreePlotTile from '@/components/vis/ScreePlotTile.vue';
 import LoadingsPlotTile from '@/components/vis/LoadingsPlotTile.vue';
 import BoxPlotTile from '@/components/vis/BoxPlotTile.vue';
@@ -18,7 +17,6 @@ export default {
   components: {
     LoadingsPlotTile,
     ScorePlotTile,
-    ScorePlotC3Tile,
     ScreePlotTile,
     BoxPlotTile,
     LayoutGrid,
@@ -144,7 +142,7 @@ v-layout.transform-component(row, fill-height)
   v-layout(column, v-else-if="ready && valid")
     v-container.grow-overflow.ma-0(grid-list-lg, fluid)
       layout-grid(:cell-size="cellSize")
-        score-plot-c3-tile(
+        score-plot-tile(
             v-if="visiblePlots.score",
             :columns="dataset.column.data",
             :id="id")

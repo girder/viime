@@ -16,6 +16,10 @@ export default {
       type: String,
       required: true,
     },
+    columns: {
+      required: true,
+      type: Array,
+    },
   },
 
   data() {
@@ -36,36 +40,29 @@ export default {
     },
 
     pcCoords() {
-      return this.getPlotDataProperty('x', []);
+      return this.maybeData('x', []);
     },
 
     rowLabels() {
-      return this.getPlotDataProperty('rows', []);
+      return this.maybeData('rows', []);
     },
 
-    groups() {
-      const base = this.getPlotDataProperty('labels', {});
-      const groups = Object.keys(base);
-      if (groups.length === 0) {
-        return [];
-      }
-      if (groups.length === 1) {
-        return base[groups[0]];
-      }
-      // find the right one, since it is a mix of group and column
-      const group = this.dataset.validatedGroups
-        ? this.dataset.validatedGroups.columnNames[0] : groups[0];
-      return base[group] || [];
-    },
-
-    groupToColor() {
-      const levels = this.dataset.groupLevels;
-      const lookup = new Map(levels.map(({ name, color }) => [name, color]));
-      return group => lookup.get(group) || null;
+    groupLabels() {
+      return this.maybeData('labels', {});
     },
 
     eigenvalues() {
-      return this.getPlotDataProperty('sdev', []);
+      return this.maybeData('sdev', []);
+    },
+  },
+
+  methods: {
+    maybeData(key, dflt) {
+      const {
+        plot,
+      } = this;
+
+      return plot.data ? plot.data[key] : dflt;
     },
   },
 };
@@ -73,14 +70,13 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading", svg-download)
+vis-tile(title="PCA Score Plot")
   score-plot(
-      v-if="plot && dataset.ready",
       :pc-coords="pcCoords",
       :row-labels="rowLabels",
-      :groups="groups",
-      :group-to-color="groupToColor",
+      :group-labels="groupLabels",
       :eigenvalues="eigenvalues",
+      :columns="columns",
       :pc-x="pcX",
       :pc-y="pcY",
       :show-ellipses="showEllipses")
@@ -107,23 +103,4 @@ vis-tile(v-if="plot", title="PCA Score Plot", :loading="plot.loading", svg-downl
               outline,
               v-model="pcYval")
           v-switch.py-2(v-model="showEllipses", label="Data ellipses", hide-details)
-  template(v-slot:help)
-    p.
-      This chart shows Principal Component Analysis (PCA) scores as a
-      scatter plot. When the chart first appears, it displays the first two
-      principal components on the x and y axes.
-
-    p.
-      The dataset's group column is used to partition the observations into
-      groups by color; each group's data points are plotted along with a
-      confidence ellipse illustrating one standard deviation in the group's
-      primary and secondary directions.
-
-    p.
-      The control panel contains a few settings you can use to change how the
-      PCA score data is displayed: the number fields allow you to choose which
-      two PCs are plotted, while the toggle switch enables turning the
-      confidence ellipses on and off. As the PCs are changed, note that the
-      percent of total variance accounted for by each component is displayed
-      within the axis label.
 </template>
