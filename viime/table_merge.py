@@ -60,9 +60,12 @@ def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
     metadata.columns = list(merged)
     metadata.index = ['Data Source']
 
+    levels = [dict(name=i + 1, label=t.name) for i, t in enumerate(validated_tables)]
+    source_meta = dict(levels=levels)
+
     row_types = [
         dict(type=TABLE_ROW_TYPES.INDEX),
-        dict(type=TABLE_ROW_TYPES.METADATA)  # data source
+        dict(type=TABLE_ROW_TYPES.METADATA, subtype='categorical', meta=source_meta)  # data source
     ] + ([dict(type=TABLE_ROW_TYPES.DATA)] * merged.shape[0])
 
     table = pd.concat([metadata, merged])
