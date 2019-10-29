@@ -3,7 +3,7 @@ from io import BytesIO
 import json
 import math
 from pathlib import PurePath
-from typing import Callable, cast, Dict, List, Optional
+from typing import Any, Callable, cast, Dict, List, Optional
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
@@ -166,13 +166,17 @@ def merge_csv_files(name: str, description: str, method: str, datasets: List[str
         if row_types:
             # update the row types
             for row, row_type in zip(csv_file.rows, row_types):
-                row.row_type = row_type
+                row.row_type = row_type['type']
+                row.subtype = row_type.get('subtype')
+                row.meta = row_type.get('meta')
                 db.session.add(row)
 
         if column_types:
             # update the row types
             for column, column_type in zip(csv_file.columns, column_types):
-                column.column_type = column_type
+                column.column_type = column_type['type']
+                column.subtype = column_type.get('subtype')
+                column.meta = column_type.get('meta')
                 db.session.add(column)
 
         # need to call it manually since we might have changed the column types
@@ -443,7 +447,7 @@ def get_row(csv_id, row_index):
     ))
 
 
-def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
+def _update_row_types(csv_file: CSVFile, row_types: Optional[List[Dict[str, Any]]]):
     if row_types is None:
         return
 
@@ -451,7 +455,9 @@ def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
     count_current = len(csv_file.rows)
     # update the row types
     for row, row_type in zip(csv_file.rows, row_types):
-        row.row_type = row_type
+        row.row_type = row_type['type']
+        row.subtype = row_type.get('subtype')
+        row.meta = row_type.get('meta')
         db.session.add(row)
 
     if count_target > count_current:
@@ -469,7 +475,7 @@ def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
             db.session.delete(row)
 
 
-def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
+def _update_column_types(csv_file: CSVFile, column_types: Optional[List[Dict[str, Any]]]):
     if column_types is None:
         return
 
@@ -479,7 +485,9 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
     # update the column types
 
     for column, column_type in zip(csv_file.columns, column_types):
-        column.column_type = column_type
+        column.column_type = column_type['type']
+        column.subtype = column_type.get('subtype')
+        column.meta = column_type.get('meta')
         db.session.add(column)
 
     if count_target > count_current:

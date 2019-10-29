@@ -42,9 +42,11 @@ db = SQLAlchemy(metadata=metadata)
 AxisNameTypes = namedtuple('AxisNameTypes', ['ROW', 'COLUMN'])
 TableColumnTypes = namedtuple('TableTypes', ['INDEX', 'METADATA', 'DATA', 'MASK', 'GROUP'])
 TableRowTypes = namedtuple('TableTypes', ['INDEX', 'METADATA', 'DATA', 'MASK'])
+MetaDataTypes = namedtuple('MetaDataTypes', ['CATEGORICAL', 'NUMERICAL', 'ORDINAL'])
 TABLE_COLUMN_TYPES = TableColumnTypes('key', 'metadata', 'measurement', 'masked', 'group')
 TABLE_ROW_TYPES = TableRowTypes('header', 'metadata', 'sample', 'masked')
 AXIS_NAME_TYPES = AxisNameTypes('row', 'column')
+METADATA_TYPES = MetaDataTypes('categorical', 'numerical', 'ordinal')
 
 
 def _guess_table_structure(table):
@@ -384,6 +386,8 @@ class TableColumn(db.Model):
     csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     column_index = db.Column(db.Integer, primary_key=True)
     column_type = db.Column(db.String, nullable=False)
+    subtype = db.Column(db.String, nullable=True)
+    meta = db.Column(JSONType, nullable=True)
 
     csv_file = db.relationship(
         CSVFile, backref=db.backref('columns', lazy=True, order_by='TableColumn.column_index'))
@@ -416,6 +420,8 @@ class TableColumnSchema(BaseSchema):
     column_header = fields.Str(dump_only=True)
     column_index = fields.Int(required=True, validate=validate.Range(min=0))
     column_type = fields.Str(required=True, validate=validate.OneOf(TABLE_COLUMN_TYPES))
+    subtype = fields.Str(required=False, validate=validate.OneOf(METADATA_TYPES))
+    meta = fields.Dict(missing=dict)
 
     csv_file = fields.Nested(
         CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
@@ -426,6 +432,8 @@ class TableRow(db.Model):
         UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     row_index = db.Column(db.Integer, primary_key=True)
     row_type = db.Column(db.String, nullable=False)
+    subtype = db.Column(db.String, nullable=True)
+    meta = db.Column(JSONType, nullable=True)
 
     csv_file = db.relationship(
         CSVFile, backref=db.backref('rows', lazy=True, order_by='TableRow.row_index'))
@@ -456,6 +464,8 @@ class TableRowSchema(BaseSchema):
     row_name = fields.Str(dump_only=True)
     row_index = fields.Int(required=True, validate=validate.Range(min=0))
     row_type = fields.Str(required=True, validate=validate.OneOf(TABLE_ROW_TYPES))
+    subtype = fields.Str(required=False, validate=validate.OneOf(METADATA_TYPES))
+    meta = fields.Dict(missing=dict)
 
     csv_file = fields.Nested(
         CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)

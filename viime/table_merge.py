@@ -1,7 +1,7 @@
 """
 This module contains methods related to mergind dataset
 """
-from typing import Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set
 
 import pandas as pd
 
@@ -15,8 +15,8 @@ def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
                                       pd.DataFrame]] = None):
     used_column_names: Set[str] = set()
     tables: List[pd.DataFrame] = []
-    column_types: List[str] = [
-        TABLE_COLUMN_TYPES.INDEX
+    column_types: List[Dict[str, Any]] = [
+        dict(type=TABLE_COLUMN_TYPES.INDEX)
     ]
     measurement_metadata: List[int] = []
 
@@ -39,7 +39,7 @@ def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
 
         used_column_names.update(list(df))
         tables.append(df)
-        column_types.extend([column_type] * count)
+        column_types.extend([dict(type=column_type)] * count)
         measurement_metadata.extend([index + 1] * count)
 
     def append_tables(column_type: str, attr: str, do_transform=False):
@@ -61,9 +61,9 @@ def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
     metadata.index = ['Data Source']
 
     row_types = [
-        TABLE_ROW_TYPES.INDEX,
-        TABLE_ROW_TYPES.METADATA  # data source
-    ] + ([TABLE_ROW_TYPES.DATA] * merged.shape[0])
+        dict(type=TABLE_ROW_TYPES.INDEX),
+        dict(type=TABLE_ROW_TYPES.METADATA)  # data source
+    ] + ([dict(type=TABLE_ROW_TYPES.DATA)] * merged.shape[0])
 
     table = pd.concat([metadata, merged])
 
