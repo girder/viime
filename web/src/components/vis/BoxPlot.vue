@@ -17,6 +17,11 @@ export default {
       type: Array,
       default: () => [],
     },
+    groupSize: {
+      type: Number,
+      required: false,
+      default: 1,
+    },
   },
   data() {
     return {
@@ -100,8 +105,10 @@ export default {
         boxplots.select('.whisker path')
           .html(d => `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`);
         boxplots.select('.box line')
+          .style('stroke', d => d.color)
           .html(d => `<title>${d.name}: ${f(d.fiveNums[1])} (q1) - ${f(d.fiveNums[2])} (median) = ${count(d.values, d.fiveNums[1], d.fiveNums[2])} Items</title>`);
         boxplots.select('.box line:last-of-type')
+          .style('stroke', d => d.color)
           .html(d => `<title>${d.name}: ${f(d.fiveNums[2])} (median) - ${f(d.fiveNums[3])} (q3) = ${count(d.values, d.fiveNums[2], d.fiveNums[3])} Items</title>`);
         boxplots.select('.whisker path:last-of-type')
           .html(d => `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`);

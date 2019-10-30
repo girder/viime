@@ -14,7 +14,8 @@ export default {
       required: false,
       default: 'Metabolite Color',
     },
-    value: { // {option: string | null, apply(column: string) => string | null}
+    value: { // {option: string | null,
+    // levels: {name: string, color: string}[], apply(row: string) => string | null}
       type: Object,
       required: false,
       default: null,
@@ -55,9 +56,16 @@ export default {
       const toIndex = this.columnToIndex;
       return column => lookup.get(meta.data[toIndex(column)]);
     },
+    generateLevels(value) {
+      if (!value || value === this.emptyOption) {
+        return [];
+      }
+      return this.options.find(d => d.value === value).options;
+    },
     changeValue(value) {
       const wrapper = {
         option: value,
+        levels: this.generateLevels(value),
         apply: this.generateColorer(value),
       };
       this.$emit('input', wrapper);

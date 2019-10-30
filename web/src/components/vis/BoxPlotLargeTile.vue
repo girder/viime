@@ -2,14 +2,14 @@
 import BoxplotPlot from './BoxPlot.vue';
 import VisTileLarge from './VisTileLarge.vue';
 import MetaboliteFilter from '../toolbar/MetaboliteFilter.vue';
-import MetaboliteColorer from '../toolbar/MetaboliteColorer.vue';
+import SampleFilter from '../toolbar/SampleFilter.vue';
 
 export default {
   components: {
     BoxplotPlot,
     VisTileLarge,
     MetaboliteFilter,
-    MetaboliteColorer,
+    SampleFilter,
   },
 
   props: {
@@ -17,6 +17,13 @@ export default {
       type: String,
       required: true,
     },
+  },
+
+  data() {
+    return {
+      metaboliteFilter: null,
+      sampleFilter: null,
+    };
   },
 
   computed: {
@@ -27,10 +34,31 @@ export default {
       if (!df) {
         return [];
       }
-      return df.columnNames.map((name, i) => ({
+      let data = df.columnNames.map((name, i) => ({
         name,
         values: df.data.map(row => row[i]),
       }));
+
+      if (this.metaboliteFilter) {
+        data = data.filter(d => this.metaboliteFilter.apply(d.name));
+      }
+
+      // if (this.sampleFilter && this.$refs.sample) {
+      //   // split by groups
+      //   const enabled = new Set(this.sampleFilter.filter);
+      //   const bak = data;
+      //   data = [];
+      //   df.rowNames.map(())
+      //   bak.forEach((entry) => {
+
+      //   });
+      // }
+
+      return data;
+    },
+
+    groupSize() {
+      return !this.sampleFilter ? 1 : this.sampleFilter.filter.length;
     },
   },
 };
@@ -40,9 +68,14 @@ export default {
 <template lang="pug">
 vis-tile-large(v-if="dataset", title="Metabolite Box Plot", :loading="false",
     download, expanded)
+  template(#controls)
+    metabolite-filter(:dataset="dataset", v-model="metaboliteFilter")
+    sample-filter(ref='sample', :dataset="dataset", v-model="sampleFilter",
+        title="Group By", empty-option="No grouping")
+
   boxplot-plot.main(
       v-if="dataset.ready",
-      :rows="chartData")
+      :rows="chartData", :group-size="groupSize")
 </template>
 
 <style scoped>

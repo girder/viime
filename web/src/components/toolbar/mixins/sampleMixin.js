@@ -44,16 +44,17 @@ export default {
         ...groups.columnMetaData[i],
       })).filter(d => d.levels) : [];
 
+      return [...metaGroupsM, ...metaDataM];
+    },
+
+    options() {
       const empty = this.emptyOption ? [{
         name: this.emptyOption,
         value: '',
         options: [],
       }] : [];
-      return [...empty, ...metaGroupsM, ...metaDataM];
-    },
-
-    options() {
       return [
+        ...empty,
         ...this.categoricalMetaData.map(({ name, value, levels }) => ({
           name,
           value,
