@@ -214,7 +214,7 @@ const mutations = {
     // the imputed table index are column can be used for all the other ones
     const base = ds.measurement_table;
 
-    const toMeta = ({ meta, subtype }) => ({ meta, subtype });
+    const toMeta = ({ meta, subtype }) => ({ ...(meta || {}), subtype });
 
     base.columnMetaData = ds.column.data.filter(d => d.column_type === 'measurement').map(toMeta);
     base.rowMetaData = ds.row.data.filter(d => d.row_type === 'sample').map(toMeta);
@@ -227,6 +227,11 @@ const mutations = {
     // inject meta data
 
     validatedGroups.columnMetaData = ds.column.data.filter(d => d.column_type === 'group').map(toMeta);
+
+    if (ds.groupLevels && validatedGroups.columnMetaData.length > 0) {
+      validatedGroups.columnMetaData[0].levels = ds.groupLevels;
+    }
+
     validatedSampleMetaData.columnMetaData = ds.column.data.filter(d => d.column_type === 'metadata').map(toMeta);
     validatedMeasurementsMetaData.rowMetaData = ds.row.data.filter(d => d.row_type === 'metadata').map(toMeta);
 

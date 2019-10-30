@@ -21,6 +21,7 @@ from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
 
 from viime.cache import clear_cache, csv_file_cache, region
+from viime.colors import category10
 from viime.imputation import IMPUTE_MCAR_METHODS, impute_missing, IMPUTE_MNAR_METHODS
 from viime.normalization import NORMALIZATION_METHODS, normalize
 from viime.scaling import scale, SCALING_METHODS
@@ -251,11 +252,8 @@ class CSVFile(db.Model):
             self.group_levels = []
             return
         levels = sorted([str(v) for v in groups.iloc[:, 0].unique()])
-        # d3 scheme category 10
-        colors = ['#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
-                  '#7f7f7f', '#bcbd22', '#17becf', '#ff7f0e']
-        self.group_levels = [GroupLevel(name=l, label=l, color=colors[i % len(colors)])
-                             for i, l in enumerate(levels)]
+        self.group_levels = [GroupLevel(name=l, label=l, color=color)
+                             for i, (l, color) in enumerate(zip(levels, category10()))]
 
     @property
     def keys(self):

@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, List, Optional, Set
 
 import pandas as pd
 
+from .colors import scheme_set3
 from .models import TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     ValidatedMetaboliteTable
 from .opencpu import opencpu_request
@@ -60,7 +61,8 @@ def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
     metadata.columns = list(merged)
     metadata.index = ['Data Source']
 
-    levels = [dict(name=i + 1, label=t.name) for i, t in enumerate(validated_tables)]
+    levels = [dict(name=i + 1, label=t.name, color=color)
+              for i, (t, color) in enumerate(zip(validated_tables, scheme_set3()))]
     source_meta = dict(levels=levels)
 
     row_types = [

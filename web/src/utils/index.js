@@ -61,7 +61,7 @@ function parsePandasDataFrame(toSplitDictResult, baseDataFrame) {
     if (!arr) {
       return null;
     }
-    return arr.map(() => ({ subtype: null, meta: null }));
+    return arr.map(() => ({ subtype: null }));
   };
 
   return {
