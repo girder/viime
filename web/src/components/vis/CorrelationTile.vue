@@ -2,6 +2,7 @@
 import ForceDirectedGraph from './ForceDirectedGraph.vue';
 import VisTileLarge from './VisTileLarge.vue';
 import ToolbarOption from '../toolbar/ToolbarOption.vue';
+import MetaboliteFilter from '../toolbar/MetaboliteFilter.vue';
 import plotData from './mixins/plotData';
 import { correlation_methods } from './constants';
 import { colors } from '../../utils/constants';
@@ -11,6 +12,7 @@ export default {
     ForceDirectedGraph,
     ToolbarOption,
     VisTileLarge,
+    MetaboliteFilter,
   },
 
   mixins: [plotData('correlation')],
@@ -29,8 +31,7 @@ export default {
       showEdgeLabels: false,
       linkDistance: 50,
       correlation_methods,
-      showSelected: true,
-      showNotSelected: true,
+      nodeFilter: null,
     };
   },
 
@@ -92,14 +93,7 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
           v-slider.my-1.minCorrelation(:value="min_correlation", label="0", thumb-label="always",
               hide-details, min="0", max="1", step="0.01",
               @change="changePlotArgs({min_correlation: $event})")
-    v-toolbar.darken-3(color="primary", dark, flat, dense)
-      v-toolbar-title Node Filter
-    v-card.mx-3(flat)
-      v-card-actions.checkboxlist
-        v-checkbox.my-0(v-model="showSelected", :label="`Selected (${countSelected})`",
-            hide-details, :color="colors.selected")
-        v-checkbox.my-0(v-model="showNotSelected", :label="`Not Selected (${countNotSelected})`",
-            hide-details, :color="colors.correlationNode")
+    metabolite-filter(title="Node Filter", :dataset="dataset", v-model="nodeFilter")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Advanced Options
