@@ -27,17 +27,17 @@ export default {
       if (this.options.length === 0) {
         return null;
       }
-      const v = this.options[0].name;
+      const v = this.options[0].value;
       this.changeValue(v);
       return v;
     },
   },
   methods: {
     generateColorer(value) {
-      if (!value || value === this.emptyOption) {
+      if (!value) {
         return () => null;
       }
-      const meta = this.categoricalMetaData.find(d => d.name === value);
+      const meta = this.categoricalMetaData.find(d => d.value === value);
       const lookup = new Map(meta.levels.map(({ name, color }) => [name, color]));
       const toIndex = this.rowToIndex;
       return column => lookup.get(meta.data[toIndex(column)]);

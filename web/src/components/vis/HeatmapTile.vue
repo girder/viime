@@ -5,6 +5,8 @@ import plotData from './mixins/plotData';
 import ToolbarOption from '../toolbar/ToolbarOption.vue';
 import MetaboliteFilter from '../toolbar/MetaboliteFilter.vue';
 import SampleFilter from '../toolbar/SampleFilter.vue';
+import MetaboliteColorer from '../toolbar/MetaboliteColorer.vue';
+import SampleColorer from '../toolbar/SampleColorer.vue';
 import { download } from '../../utils/exporter';
 import { colors } from '../../utils/constants';
 
@@ -15,6 +17,8 @@ export default {
     ToolbarOption,
     MetaboliteFilter,
     SampleFilter,
+    MetaboliteColorer,
+    SampleColorer,
   },
 
   mixins: [plotData('heatmap')],
@@ -31,17 +35,19 @@ export default {
       colors,
       column: {
         dendogram: true,
-        colorer: this.isSelectedColor,
+        colorer: this.columnColor,
       },
       row: {
         dendogram: true,
-        colorer: this.groupColor,
+        colorer: this.rowColor,
       },
       dummy: false,
       layout: 'auto',
       layouts: heatmapLayouts,
       metaboliteFilter: null,
       sampleFilter: null,
+      metaboliteColor: null,
+      sampleColor: null,
     };
   },
 
@@ -49,24 +55,41 @@ export default {
     values() {
       return this.dataset.validatedMeasurements;
     },
-    selectionLookup() {
-      return new Set((this.dataset && this.dataset.selectedColumns) || []);
-    },
-    groupLookup() {
-      if (!this.dataset.validatedGroups || !this.dataset.groupLevels) {
-        return [];
+  },
+  watch: {
+    metaboliteFilter(newValue) {
+      if (newValue && newValue.option) {
+        this.changePlotArgs({
+          column: newValue.option,
+          column_filter: newValue.filter.join(','),
+        });
+      } else {
+        this.changePlotArgs({
+          column: null,
+          column_filter: null,
+        });
       }
-      const levelLookup = new Map(this.dataset.groupLevels.map(({ name, color }) => [name, color]));
-      const groups = this.dataset.validatedGroups;
-      return new Map(groups.rowNames.map((row, i) => [row, levelLookup.get(groups.data[i][0])]));
+    },
+    sampleFilter(newValue) {
+      if (newValue && newValue.option) {
+        this.changePlotArgs({
+          row: newValue.option,
+          row_filter: newValue.filter.join(','),
+        });
+      } else {
+        this.changePlotArgs({
+          row: null,
+          row_filter: null,
+        });
+      }
     },
   },
   methods: {
-    isSelectedColor(column) {
-      return this.selectionLookup.has(column) ? colors.selected : colors.notSelected;
+    columnColor(column) {
+      return this.metaboliteColor ? this.metaboliteColor.apply(column) : null;
     },
-    groupColor(row) {
-      return this.groupLookup.get(row);
+    rowColor(row) {
+      return this.sampleColor ? this.sampleColor.apply(row) : null;
     },
     async download() {
       if (!this.$refs.heatmap) {
@@ -86,6 +109,9 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl=
   template(#controls)
     metabolite-filter(:dataset="dataset", v-model="metaboliteFilter")
     sample-filter(:dataset="dataset", v-model="sampleFilter")
+
+    metabolite-colorer(:dataset="dataset", v-model="metaboliteColor")
+    sample-colorer(:dataset="dataset", v-model="sampleColor")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense)
       v-toolbar-title Dendogram

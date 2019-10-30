@@ -28,7 +28,7 @@ export default {
       if (this.options.length === 0) {
         return null;
       }
-      const v = this.options[0].name;
+      const v = this.options[0].value;
       this.changeValue(v);
       return v;
     },
@@ -38,7 +38,7 @@ export default {
       if (!value || value === this.emptyOption) {
         return () => null;
       }
-      if (value === 'Selection') {
+      if (value === 'selection') {
         const isSelected = this.selectionLookup;
         return column => (isSelected(column) ? colors.selected : this.notSelectedColor);
       }

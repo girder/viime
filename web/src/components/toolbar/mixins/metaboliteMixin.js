@@ -58,6 +58,7 @@ export default {
 
       return metaData ? metaData.rowNames.map((name, i) => ({
         name,
+        value: name,
         data: metaData.data[i],
         i,
         ...metaData.rowMetaData[i],
@@ -67,6 +68,7 @@ export default {
     selectedOption() {
       return this.hideSelection ? [] : [{
         name: 'Selection',
+        value: 'selection',
         options: [
           {
             name: `Selected (${this.countSelected})`,
@@ -83,13 +85,15 @@ export default {
     },
 
     options() {
-      const metaOptions = this.categoricalMetaData.map(({ name, levels }) => ({
+      const metaOptions = this.categoricalMetaData.map(({ name, value, levels }) => ({
         name,
+        value,
         options: levels.map(d => ({ name: d.label, value: d.name, color: d.color })),
       }));
 
       const empty = this.emptyOption ? [{
         name: this.emptyOption,
+        value: '',
         options: [],
       }] : [];
 

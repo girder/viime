@@ -8,7 +8,8 @@ export default {
     },
     value: {
       type: String,
-      required: true,
+      required: false,
+      default: null,
     },
     disabled: {
       type: Boolean,
@@ -24,7 +25,7 @@ export default {
       return !this.value || this.options.length > 1;
     },
     filterOptions() {
-      const selected = this.options.find(d => d.name === this.value);
+      const selected = this.options.find(d => d.value === this.value);
       return selected ? selected.options : [];
     },
   },

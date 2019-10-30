@@ -30,6 +30,7 @@ export default {
 
       const metaDataM = metaData ? metaData.columnNames.map((name, i) => ({
         name,
+        value: name,
         data: metaData.data.map(row => row[i]),
         i,
         ...metaData.columnMetaData[i],
@@ -37,6 +38,7 @@ export default {
 
       const metaGroupsM = groups ? groups.columnNames.map((name, i) => ({
         name,
+        value: name,
         data: groups.data.map(row => row[i]),
         i,
         ...groups.columnMetaData[i],
@@ -44,6 +46,7 @@ export default {
 
       const empty = this.emptyOption ? [{
         name: this.emptyOption,
+        value: '',
         options: [],
       }] : [];
       return [...empty, ...metaGroupsM, ...metaDataM];
@@ -51,8 +54,9 @@ export default {
 
     options() {
       return [
-        ...this.categoricalMetaData.map(({ name, levels }) => ({
+        ...this.categoricalMetaData.map(({ name, value, levels }) => ({
           name,
+          value,
           options: levels.map(d => ({ name: d.label, value: d.name, color: d.color })),
         })),
       ];

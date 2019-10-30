@@ -800,21 +800,39 @@ def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Opti
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/heatmap', methods=['GET'])
 @use_kwargs({
-    'columns': fields.Str(required=False, missing=None,
-                          validate=validate.OneOf(['selected', 'not-selected']))
+    'column': fields.Str(required=False, missing=None),
+    'column_filter': fields.Str(required=False, missing=''),
+    'row': fields.Str(required=False, missing=None),
+    'row_filter': fields.Str(required=False, missing=''),
 })
 @load_validated_csv_file
 def get_hierarchical_clustering_heatmap(validated_table: ValidatedMetaboliteTable,
-                                        columns: Optional[str]):
+                                        column: Optional[str], column_filter: str,
+                                        row: Optional[str], row_filter: str):
     table = validated_table.measurements
 
-    if columns:
+    if column:
+        cfilters = set(column_filter.split(','))
         csv_file: CSVFile = CSVFile.query.get_or_404(validated_table.csv_file_id)
-        if columns == 'selected':
-            table = table.loc[:, csv_file.selected_columns or []]
-        elif columns == 'not-selected' and csv_file.selected_columns:
-            non_selected = [c for c in table if str(c) not in csv_file.selected_columns]
-            table = table.loc[:, non_selected]
+        if column == 'selection':
+
+            def is_selected(c):
+                return csv_file.selected_columns and c in csv_file.selected_columns
+
+            cdata = ['selected' if is_selected(str(c)) else 'not-selected' for c in table]
+        else:
+            cmeta: pandas.DataFrame = validated_table.measurement_metadata.T
+            cdata = [str(v) for v in cmeta[column]]
+
+        table = table.loc[:, [d in cfilters for d in cdata]]
+
+    if row:
+        rfilters = set(row_filter.split(','))
+        rmeta: pandas.DataFrame = validated_table.sample_metadata
+        rgroups: pandas.DataFrame = validated_table.groups
+        rdata = [str(v) for v in (rmeta[row] if row in rmeta else rgroups[row])]
+
+        table = table.loc[[d in rfilters for d in rdata], :]
 
     return hierarchical_clustering(table)
 

@@ -31,13 +31,13 @@ export default {
         if (!value) {
           this.$emit('input', { option: null, filter: [] });
         } else {
-          const selected = this.options.find(d => d.name === value);
+          const selected = this.options.find(d => d.value === value);
           this.$emit('input', { option: value, filter: selected.options.map(d => d.value) });
         }
       },
     },
     filterOptions() {
-      const selected = this.options.find(d => d.name === this.selected);
+      const selected = this.options.find(d => d.value === this.selected);
       return selected ? selected.options : [];
     },
     filter: {

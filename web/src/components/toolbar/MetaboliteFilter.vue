@@ -33,7 +33,7 @@ export default {
       }
       const firstOption = this.options[0];
       const v = {
-        option: firstOption.name,
+        option: firstOption.value,
         filter: firstOption.options.map(d => d.value),
       };
       this.changeValue(v);
@@ -42,16 +42,16 @@ export default {
   },
   methods: {
     generateFilter(value) {
-      if (!value.option || value.option === this.emptyOption) {
+      if (!value.option) {
         return () => true;
       }
-      if (value.option === 'Selection') {
+      if (value.option === 'selection') {
         const isSelected = this.selectionLookup;
         const showSelected = value.filter.includes('selected');
         const showNotSelected = value.filter.includes('not-selected');
         return column => (isSelected(column) ? showSelected : showNotSelected);
       }
-      const meta = this.categoricalMetaData.find(d => d.name === value.option);
+      const meta = this.categoricalMetaData.find(d => d.value === value.option);
       const lookup = new Set(value.filter);
       const toIndex = this.columnToIndex;
       return column => lookup.has(meta.data[toIndex(column)]);
