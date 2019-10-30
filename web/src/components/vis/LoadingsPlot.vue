@@ -45,7 +45,7 @@ export default {
       required: true,
       validator: prop => !prop
           || (typeof prop === 'object'
-          && prop.every(val => ['col', 'cor'].every(key => key in val))),
+          && prop.every(val => ['col', 'loadings'].every(key => key in val))),
     },
     pcX: {
       default: 1,
@@ -152,7 +152,7 @@ export default {
             tooltip.transition()
               .duration(duration)
               .style('opacity', 0.9);
-            tooltip.html(`<b>${d.col}</b><br>(${coordFormat(d.cor[pcX - 1])}, ${coordFormat(d.cor[pcY - 1])})`)
+            tooltip.html(`<b>${d.col}</b><br>(${coordFormat(d.loadings[pcX - 1])}, ${coordFormat(d.loadings[pcY - 1])})`)
               .style('left', `${event.clientX + 15}px`)
               .style('top', `${event.pageY - 30}px`);
           })
@@ -169,8 +169,8 @@ export default {
         .transition()
         .duration(this.fadeInDuration)
         .attr('r', radius)
-        .attr('cx', d => this.scaleX(d.cor[pcX - 1]))
-        .attr('cy', d => this.scaleY(d.cor[pcY - 1]));
+        .attr('cx', d => this.scaleX(d.loadings[pcX - 1]))
+        .attr('cy', d => this.scaleY(d.loadings[pcY - 1]));
     },
   },
 };
