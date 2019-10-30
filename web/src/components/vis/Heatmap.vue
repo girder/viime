@@ -21,8 +21,8 @@ function domain(arr) {
       max = av;
     }
   }));
-  return [-max, 0, max];
-  // return [min, (min + max) / 2, max];
+  return [-max, max];
+  // return [min, max];
 }
 
 function aggregate(arr, rs, cs, transposed) {
