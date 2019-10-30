@@ -33,6 +33,14 @@ export default {
       return v;
     },
   },
+  watch: {
+    selectionLookup() {
+      // trigger update upon selection change
+      if (this.value && this.value.option === 'selection') {
+        this.changeValue('selection');
+      }
+    },
+  },
   methods: {
     generateColorer(value) {
       if (!value || value === this.emptyOption) {

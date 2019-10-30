@@ -40,6 +40,14 @@ export default {
       return v;
     },
   },
+  watch: {
+    selectionLookup() {
+      // trigger update upon selection change
+      if (this.value && this.value.option === 'selection') {
+        this.changeValue(this.value);
+      }
+    },
+  },
   methods: {
     generateFilter(value) {
       if (!value.option) {

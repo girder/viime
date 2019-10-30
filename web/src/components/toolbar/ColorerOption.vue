@@ -28,12 +28,21 @@ export default {
       const selected = this.options.find(d => d.value === this.value);
       return selected ? selected.options : [];
     },
+    hasOptions() {
+      if (this.options.length === 0) {
+        return false;
+      }
+      if (this.options.length === 1 && !this.options[0].value) {
+        return false;
+      }
+      return true;
+    },
   },
 };
 </script>
 
 <template lang="pug">
-div(v-if="options.length > 0")
+div(v-if="hasOptions")
   v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
     v-toolbar-title
       slot(name=title) {{title}}
