@@ -20,17 +20,29 @@ export default {
       type: Boolean,
       required: false,
     },
-    value: { // {option: string | null, filter: string[], apply(index: number) => boolean}
+    value: { // {option: string | null, filter: string[], apply(column: string) => boolean}
       type: Object,
       required: false,
       default: null,
     },
+    hideSelection: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   computed: {
+    columnToIndex() {
+      const df = this.dataset.validatedMeasurements;
+      if (!df) {
+        return () => -1;
+      }
+      const m = new Map(this.dataset.validatedMeasurements.columnNames.map((name, i) => [name, i]));
+      return column => (m.has(column) ? m.get(column) : -1);
+    },
     selectionLookup() {
       const selected = new Set((this.dataset && this.dataset.selectedColumns) || []);
-      const columns = this.dataset.validatedMeasurements.columnNames;
-      return index => selected.has(columns[index]);
+      return name => selected.has(name);
     },
     countSelected() {
       return (this.dataset.selectedColumns || []).length;
@@ -53,22 +65,23 @@ export default {
     },
 
     options() {
+      const s = this.hideSelection ? [] : [{
+        name: 'Selection',
+        options: [
+          {
+            name: `Selected (${this.countSelected})`,
+            value: 'selected',
+            color: colors.selected,
+          },
+          {
+            name: `Not Selected (${this.countNotSelected})`,
+            value: 'not-selected',
+            color: colors.notSelected,
+          },
+        ],
+      }];
       return [
-        {
-          name: 'Selection',
-          options: [
-            {
-              name: `Selected (${this.countSelected})`,
-              value: 'selected',
-              color: colors.selected,
-            },
-            {
-              name: `Not Selected (${this.countNotSelected})`,
-              value: 'not-selected',
-              color: colors.notSelected,
-            },
-          ],
-        },
+        ...s,
         ...this.categoricalMetaData.map(({ name, levels }) => ({
           name,
           options: levels.map(d => ({ name: d.label, value: d.name, color: d.color })),
@@ -79,6 +92,13 @@ export default {
       if (this.value) {
         return this.value;
       }
+      if (this.options.length === 0) {
+        return {
+          option: null,
+          filter: [],
+          apply: () => true,
+        };
+      }
       const firstOption = this.options[0];
       const v = {
         option: firstOption.name,
@@ -86,6 +106,16 @@ export default {
       };
       v.apply = this.generateFilter(v);
       return v;
+    },
+  },
+  watch: {
+    dataset(newValue, oldValue) {
+      const newId = newValue ? newValue.id : '';
+      const oldId = oldValue ? oldValue.id : '';
+      if (newId !== oldId && this.value) {
+        console.log('reset filter');
+        this.$emit('input', null);
+      }
     },
   },
   methods: {
@@ -97,11 +127,12 @@ export default {
         const isSelected = this.selectionLookup;
         const showSelected = value.filter.includes('selected');
         const showNotSelected = value.filter.includes('not-selected');
-        return index => (isSelected(index) ? showSelected : showNotSelected);
+        return column => (isSelected(column) ? showSelected : showNotSelected);
       }
       const meta = this.categoricalMetaData.find(d => d.name === value.option);
       const lookup = new Set(value.filter);
-      return index => lookup.has(meta.data[index]);
+      const toIndex = this.columnToIndex;
+      return column => lookup.has(meta.data[toIndex(column)]);
     },
     changeValue(value) {
       value.apply = this.generateFilter(value);

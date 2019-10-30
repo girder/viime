@@ -61,12 +61,6 @@ export default {
       return new Map(groups.rowNames.map((row, i) => [row, levelLookup.get(groups.data[i][0])]));
     },
   },
-  watch: {
-    dataset() {
-      this.metaboliteFilter = null;
-      this.sampleFilter = null;
-    },
-  },
   methods: {
     isSelectedColor(column) {
       return this.selectionLookup.has(column) ? colors.selected : colors.notSelected;

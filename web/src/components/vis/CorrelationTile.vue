@@ -72,12 +72,6 @@ export default {
           }));
     },
   },
-
-  watch: {
-    dataset() {
-      this.metaboliteFilter = null;
-    },
-  },
 };
 </script>
 

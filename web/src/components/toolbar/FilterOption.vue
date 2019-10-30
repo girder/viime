@@ -53,7 +53,7 @@ export default {
 </script>
 
 <template lang="pug">
-div
+div(v-if="options.length > 0")
   v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
     v-toolbar-title
       slot(name=title) {{title}}

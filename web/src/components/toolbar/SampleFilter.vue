@@ -19,13 +19,21 @@ export default {
       type: Boolean,
       required: false,
     },
-    value: { // {option: string | null, filter: string[], apply(index: number) => boolean}
+    value: { // {option: string | null, filter: string[], apply(row: string) => boolean}
       type: Object,
       required: false,
       default: null,
     },
   },
   computed: {
+    rowToIndex() {
+      const df = this.dataset.validatedMeasurements;
+      if (!df) {
+        return () => -1;
+      }
+      const m = new Map(this.dataset.validatedMeasurements.rowNames.map((name, i) => [name, i]));
+      return row => (m.has(row) ? m.get(row) : -1);
+    },
     categoricalMetaData() {
       const metaData = this.dataset.validatedSampleMetaData;
       const groups = this.dataset.validatedGroups;
@@ -59,6 +67,13 @@ export default {
       if (this.value) {
         return this.value;
       }
+      if (this.options.length === 0) {
+        return {
+          option: null,
+          filter: [],
+          apply: () => true,
+        };
+      }
       const firstOption = this.options[0];
       const v = {
         option: firstOption.name,
@@ -68,6 +83,15 @@ export default {
       return v;
     },
   },
+  watch: {
+    dataset(newValue, oldValue) {
+      const newId = newValue ? newValue.id : '';
+      const oldId = oldValue ? oldValue.id : '';
+      if (newId !== oldId && this.value) {
+        this.$emit('input', null);
+      }
+    },
+  },
   methods: {
     generateFilter(value) {
       if (!value.option) {
@@ -75,7 +99,8 @@ export default {
       }
       const meta = this.categoricalMetaData.find(d => d.name === value.option);
       const lookup = new Set(value.filter);
-      return index => lookup.has(meta.data[index]);
+      const toIndex = this.rowToIndex;
+      return row => lookup.has(meta.data[toIndex(row)]);
     },
     changeValue(value) {
       value.apply = this.generateFilter(value);
