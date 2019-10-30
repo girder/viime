@@ -41,16 +41,16 @@ export default {
 
   computed: {
     values() {
-      return this.dataset.validatedMeasurements;
+      return this.plot.data ? this.plot.data.values : [];
     },
     countSelected() {
       return !this.dataset ? 0 : (this.dataset.selectedColumns || []).length;
     },
     countNotSelected() {
-      if (!this.dataset || !this.values) {
+      if (!this.dataset) {
         return 0;
       }
-      return this.values.columnNames.length - this.countSelected;
+      return this.dataset.measurement_table.columnNames.length - this.countSelected;
     },
     showSetting() {
       return this.plot.args.columns;
@@ -88,7 +88,7 @@ export default {
     },
     groupLookup() {
       if (!this.dataset.validatedGroups || !this.dataset.groupLevels) {
-        return [];
+        return new Map();
       }
       const levelLookup = new Map(this.dataset.groupLevels.map(({ name, color }) => [name, color]));
       const groups = this.dataset.validatedGroups;
@@ -116,7 +116,7 @@ export default {
 
 <template lang="pug">
 vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl="download",
-    :loading="plot.loading || !dataset.ready || !values || values.data.length === 0")
+    :loading="plot.loading || !dataset.ready || !values || values.length === 0")
   template(#controls)
     v-toolbar.darken-3(color="primary", dark, flat, dense)
       v-toolbar-title Metabolite Filter

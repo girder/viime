@@ -2,11 +2,11 @@
 import resize from 'vue-resize-directive';
 import { hierarchy, cluster } from 'd3-hierarchy';
 import { scaleSequential } from 'd3-scale';
-import { interpolateBlues } from 'd3-scale-chromatic';
+import { interpolateRdBu } from 'd3-scale-chromatic';
 import { select, event } from 'd3-selection';
 import { svg2url } from '../../utils/exporter';
 
-function extent(arr) {
+function domain(arr) {
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
   arr.forEach(row => row.forEach((v) => {
@@ -16,8 +16,17 @@ function extent(arr) {
     if (v > max) {
       max = v;
     }
+    // const av = Math.abs(v);
+    // if (av > max) {
+    //   max = av;
+    // }
+    // const av = Math.abs(v);
+    // if (av > max) {
+    //   max = av;
+    // }
   }));
-  return [min, max];
+  // return [-max, 0, max];
+  return [min, (min + max) / 2, max];
 }
 
 function aggregate(arr, is, js) {
@@ -49,9 +58,9 @@ export default {
     resize,
   },
   props: {
-    values: { // {columnNames: string[], rowNames: string[], data: number[][]}
-      type: Object,
-      default: () => ({ columnNames: [], rowNames: [], data: [] }),
+    values: { // number[][]
+      type: Array,
+      default: () => [],
     },
     columnClustering: { // ITreeNode
       type: Object,
@@ -162,7 +171,7 @@ export default {
       return root;
     },
     valueScale() {
-      return scaleSequential(interpolateBlues).domain(extent(this.values.data));
+      return scaleSequential(t => interpolateRdBu(1 - t)).domain(domain(this.values));
     },
     columnLeaves() {
       return this.columnTree ? this.columnTree.leaves() : [];
@@ -395,7 +404,7 @@ export default {
 
 
       // work on copy for speed
-      const data = values.data.map(r => r.slice());
+      const data = values.map(r => r.slice());
 
       rows.forEach((rnode, i) => {
         const rowSelected = rnode.data.indices.some(s => hoveredRow.has(s));
@@ -446,7 +455,7 @@ export default {
         this.cnode = cnode;
         this.row.hovered = new Set(rnode.indices);
         this.column.hovered = new Set(cnode.indices);
-        canvas.title = `${rnode.name} x ${cnode.name} = ${aggregate(this.values.data, rnode.indices, cnode.indices)}`;
+        canvas.title = `${rnode.name} x ${cnode.name} = ${aggregate(this.values, rnode.indices, cnode.indices)}`;
       }
     },
     canvasMouseLeave() {
