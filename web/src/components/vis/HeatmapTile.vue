@@ -25,11 +25,11 @@ export default {
   data() {
     return {
       colors,
-      column: {
+      row: {
         dendogram: true,
         colorer: this.isSelectedColor,
       },
-      row: {
+      column: {
         dendogram: true,
         colorer: this.groupColor,
       },
@@ -41,6 +41,10 @@ export default {
 
   computed: {
     values() {
+      if (!this.plot.data) {
+        return [];
+      }
+      // TODO swap
       return this.plot.data ? this.plot.data.values : [];
     },
     countSelected() {
@@ -131,15 +135,15 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl=
       v-toolbar-title Dendogram
     v-card.mx-3(flat)
       v-card-actions(:style="{display: 'block'}")
-        v-checkbox.my-0(v-model="column.dendogram", label="Metabolite", hide-details)
-        v-checkbox.my-0(v-model="row.dendogram", label="Sample", hide-details)
+        v-checkbox.my-0(v-model="row.dendogram", label="Metabolite", hide-details)
+        v-checkbox.my-0(v-model="column.dendogram", label="Sample", hide-details)
     toolbar-option(title="Layout", :value="layout",
         :options="layouts",
         @change="layout = $event")
   heatmap(ref="heatmap",
       v-if="plot && plot.data && dataset.ready && values",
-      :values="values",
+      :values="values", transposed,
       :column-config="column", :row-config="row", :layout="layout",
-      :column-clustering="plot.data ? plot.data.column : null",
-      :row-clustering="plot.data ? plot.data.row : null")
+      :row-clustering="plot.data ? plot.data.column : null",
+      :column-clustering="plot.data ? plot.data.row : null")
 </template>

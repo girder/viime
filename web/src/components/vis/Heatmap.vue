@@ -7,29 +7,33 @@ import { select, event } from 'd3-selection';
 import { svg2url } from '../../utils/exporter';
 
 function domain(arr) {
-  let min = Number.POSITIVE_INFINITY;
+  // let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
   arr.forEach(row => row.forEach((v) => {
-    if (v < min) {
-      min = v;
-    }
-    if (v > max) {
-      max = v;
-    }
-    // const av = Math.abs(v);
-    // if (av > max) {
-    //   max = av;
+    // if (v < min) {
+    //   min = v;
     // }
-    // const av = Math.abs(v);
-    // if (av > max) {
-    //   max = av;
+    // if (v > max) {
+    //   max = v;
     // }
+    const av = Math.abs(v);
+    if (av > max) {
+      max = av;
+    }
   }));
-  // return [-max, 0, max];
-  return [min, (min + max) / 2, max];
+  return [-max, 0, max];
+  // return [min, (min + max) / 2, max];
 }
 
-function aggregate(arr, is, js) {
+function aggregate(arr, rs, cs, transposed) {
+  let is = rs;
+  let js = cs;
+
+  if (transposed) {
+    is = cs;
+    js = rs;
+  }
+
   if (is.length === 1 && js.length === 1) {
     return arr[is[0]][js[0]];
   }
@@ -82,6 +86,11 @@ export default {
       type: String,
       validate: v => heatmapLayouts.find(d => d.value === v),
       default: heatmapLayouts[0].value,
+    },
+    transposed: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   data() {
@@ -409,7 +418,7 @@ export default {
       rows.forEach((rnode, i) => {
         const rowSelected = rnode.data.indices.some(s => hoveredRow.has(s));
         columns.forEach((cnode, j) => {
-          const v = aggregate(data, rnode.data.indices, cnode.data.indices);
+          const v = aggregate(data, rnode.data.indices, cnode.data.indices, this.transposed);
           ctx.fillStyle = valueScale(v);
           ctx.fillRect(j * w, i * h, w, h);
         });
@@ -455,7 +464,7 @@ export default {
         this.cnode = cnode;
         this.row.hovered = new Set(rnode.indices);
         this.column.hovered = new Set(cnode.indices);
-        canvas.title = `${rnode.name} x ${cnode.name} = ${aggregate(this.values, rnode.indices, cnode.indices)}`;
+        canvas.title = `${rnode.name} x ${cnode.name} = ${aggregate(this.values, rnode.indices, cnode.indices, this.transposed)}`;
       }
     },
     canvasMouseLeave() {
