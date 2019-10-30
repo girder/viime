@@ -1,8 +1,9 @@
 <script>
 import resize from 'vue-resize-directive';
+import { format } from 'd3-format';
 import { hierarchy, cluster } from 'd3-hierarchy';
 import { scaleSequential } from 'd3-scale';
-import { interpolateRdBu } from 'd3-scale-chromatic';
+import { interpolateRdBu, schemeRdBu } from 'd3-scale-chromatic';
 import { select, event } from 'd3-selection';
 import { svg2url } from '../../utils/exporter';
 
@@ -95,6 +96,8 @@ export default {
   },
   data() {
     return {
+      format: format('.4e'),
+      legendGradient: `linear-gradient(to right, ${schemeRdBu[5][4]} 0%, ${schemeRdBu[5][2]} 50%, ${schemeRdBu[5][0]} 100%)`,
       padding: 8,
       width: 0,
       height: 0,
@@ -181,6 +184,9 @@ export default {
     },
     valueScale() {
       return scaleSequential(t => interpolateRdBu(1 - t)).domain(domain(this.values));
+    },
+    legendDomain() {
+      return this.valueScale.domain().map(this.format);
     },
     columnLeaves() {
       return this.columnTree ? this.columnTree.leaves() : [];
@@ -464,7 +470,7 @@ export default {
         this.cnode = cnode;
         this.row.hovered = new Set(rnode.indices);
         this.column.hovered = new Set(cnode.indices);
-        canvas.title = `${rnode.name} x ${cnode.name} = ${aggregate(this.values, rnode.indices, cnode.indices, this.transposed)}`;
+        canvas.title = `${rnode.name} x ${cnode.name} = ${this.format(aggregate(this.values, rnode.indices, cnode.indices, this.transposed))}`;
       }
     },
     canvasMouseLeave() {
@@ -595,6 +601,9 @@ export default {
   .rowlabel(ref="rowlabel",
       :style="{fontSize: fontSize+'px', width: LABEL_WIDTH+'px', height: this.matrixHeight+'px'}",
       :data-update="reactiveRowLabelUpdate")
+  .legend-wrapper(v-show="columnConfig.dendogram && rowConfig.dendogram")
+    .legend(:data-from="legendDomain[0]", :data-to="legendDomain[1]",
+        :style="{background: legendGradient}")
 </template>
 
 <style scoped>
@@ -605,7 +614,7 @@ export default {
   right: 8px;
   bottom: 8px;
   display: grid;
-  grid-template-areas: "d column dl"
+  grid-template-areas: "legend column dl"
     "row matrix rlabel"
     "rc clabel ll";
   justify-content: center;
@@ -621,6 +630,33 @@ export default {
 .matrix {
   grid-area: matrix;
 }
+
+.legend-wrapper {
+  grid-area: legend;
+  display: flex;
+  flex-direction: column;
+}
+
+.legend {
+  height: 1.5em;
+  margin: 2em;
+  position: relative;
+}
+
+.legend::before {
+  content: attr(data-from);
+  position: absolute;
+  top: 100%;
+}
+
+.legend::after {
+  content: attr(data-to);
+  position: absolute;
+  top: 100%;
+  right: 0;
+}
+
+
 .collabel {
   grid-area: clabel;
   display: flex;
