@@ -1,7 +1,6 @@
 from functools import wraps
 from io import BytesIO
 import json
-import math
 from pathlib import PurePath
 from typing import Callable, cast, Dict, List, Optional
 
