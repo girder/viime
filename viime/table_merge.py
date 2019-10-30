@@ -41,7 +41,7 @@ def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
         used_column_names.update(list(df))
         tables.append(df)
         column_types.extend([dict(type=column_type)] * count)
-        measurement_metadata.extend([f'DS${index + 1}'] * count)
+        measurement_metadata.extend([f'DS{index + 1}'] * count)
 
     def append_tables(column_type: str, attr: str, do_transform=False):
         for index, table in enumerate(validated_tables):
@@ -61,7 +61,7 @@ def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
     metadata.columns = list(merged)
     metadata.index = ['Data Source']
 
-    levels = [dict(name=f'DS${i + 1}', label=t.name, color=color)
+    levels = [dict(name=f'DS{i + 1}', label=t.name, color=color)
               for i, (t, color) in enumerate(zip(validated_tables, scheme_set3()))]
     source_meta = dict(levels=levels)
 
@@ -89,7 +89,7 @@ def _clean_pca_transformer(measurements: pd.DataFrame, index: int) -> pd.DataFra
         'measurements': measurements.to_csv().encode()
     }
     params = {
-        'prefix': 'DS%d' % (index + 1)
+        'prefix': f'DS{index + 1}'
     }
     return opencpu_request('compute_clean_pca', files, params)
 
