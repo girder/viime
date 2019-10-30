@@ -61,6 +61,8 @@ export default {
           .map(d => ({
             source: d.x,
             target: d.y,
+            color: d.value < 0 ? colors.negativeCorrelation : colors.positiveCorrelation,
+            ori: d.value,
             value: Math.abs(d.value),
           }));
     },
