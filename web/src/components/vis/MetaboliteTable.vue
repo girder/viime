@@ -1,5 +1,6 @@
 <script>
 import { format } from 'd3-format';
+import { colors } from '../../utils/constants';
 
 export default {
 
@@ -32,6 +33,7 @@ export default {
       // need to use this workaround, since `header-cell` as slot name doesn't work
       // and `headerCell` isn't allowed by the linter
       headercell: 'headerCell',
+      colors,
     };
   },
 
@@ -90,7 +92,7 @@ v-data-table.elevation-1.main(:headers="headers", :items="items", disable-initia
 
   template(#items="props")
     td.cell
-      v-checkbox(v-model="props.selected", hide-details)
+      v-checkbox(v-model="props.selected", hide-details, :color="colors.selected")
     td.cell {{ props.item.Metabolite }}
     td.cell.text-xs-right(v-for="c in headers.slice(1)",
         :class="isInteresting(props.item[c.value]) ? 'highlight' : ''")
