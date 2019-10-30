@@ -2,7 +2,7 @@
 import Heatmap, { heatmapLayouts } from './Heatmap.vue';
 import VisTileLarge from './VisTileLarge.vue';
 import plotData from './mixins/plotData';
-import ToolbarOption from '../ToolbarOption.vue';
+import ToolbarOption from '../toolbar/ToolbarOption.vue';
 import { download } from '../../utils/exporter';
 import { colors } from '../../utils/constants';
 

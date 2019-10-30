@@ -1,7 +1,7 @@
 <script>
-import AnovaTable from '@/components/vis/AnovaTable.vue';
-import VisTileLarge from '@/components/vis/VisTileLarge.vue';
-import ToolbarOption from '../ToolbarOption.vue';
+import AnovaTable from './AnovaTable.vue';
+import VisTileLarge from './VisTileLarge.vue';
+import ToolbarOption from '../toolbar/ToolbarOption.vue';
 import plotData from './mixins/plotData';
 import { SET_DATASET_SELECTED_COLUMNS } from '../../store/actions.type';
 

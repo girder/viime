@@ -1,7 +1,7 @@
 <script>
 import ForceDirectedGraph from './ForceDirectedGraph.vue';
 import VisTileLarge from './VisTileLarge.vue';
-import ToolbarOption from '../ToolbarOption.vue';
+import ToolbarOption from '../toolbar/ToolbarOption.vue';
 import plotData from './mixins/plotData';
 import { correlation_methods } from './constants';
 import { colors } from '../../utils/constants';
@@ -48,8 +48,8 @@ export default {
         : this.plot.data.columns
           .map(d => ({
             id: d,
-            highlighted: selected.has(d),
-          })).filter(d => (d.highlighted ? showSelected : showNotSelected));
+            color: selected.has(d) ? colors.selected : colors.correlationNode,
+          })).filter(d => (selected.has(d) ? showSelected : showNotSelected));
     },
     edges() {
       const selected = new Set(this.dataset.selectedColumns || []);
@@ -115,8 +115,7 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     force-directed-graph(:edges="edges", :nodes="nodes",
         :link-distance="linkDistanceAsNumber", :show-node-labels="showNodeLabels",
         :show-edge-labels="showEdgeLabels",
-        :min-stroke-value="min_correlation",
-        :highlight-color="colors.selected", :color="colors.correlationNode")
+        :min-stroke-value="min_correlation")
 </template>
 
 <style scoped>

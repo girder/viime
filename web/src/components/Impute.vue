@@ -1,7 +1,7 @@
 <script>
 import { CHANGE_IMPUTATION_OPTIONS } from '../store/actions.type';
 import DataTable from './DataTable.vue';
-import ToolbarOption from './ToolbarOption.vue';
+import ToolbarOption from './toolbar/ToolbarOption.vue';
 import {
   mcar_imputation_methods,
   mnar_imputation_methods,
