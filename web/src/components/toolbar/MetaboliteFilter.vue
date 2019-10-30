@@ -42,7 +42,7 @@ export default {
   },
   methods: {
     generateFilter(value) {
-      if (!value.option) {
+      if (!value.option || value.option === this.emptyOption) {
         return () => true;
       }
       if (value.option === 'Selection') {

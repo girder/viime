@@ -25,6 +25,11 @@ export default {
       required: false,
       default: colors.notSelected,
     },
+    emptyOption: {
+      type: String,
+      required: false,
+      default: '',
+    },
   },
   computed: {
     columnToIndex() {
@@ -82,10 +87,16 @@ export default {
         name,
         options: levels.map(d => ({ name: d.label, value: d.name, color: d.color })),
       }));
+
+      const empty = this.emptyOption ? [{
+        name: this.emptyOption,
+        options: [],
+      }] : [];
+
       if (this.selectionLast) {
-        return [...metaOptions, ...this.selectedOption];
+        return [...empty, ...metaOptions, ...this.selectedOption];
       }
-      return [...this.selectedOption, ...metaOptions];
+      return [...empty, ...this.selectedOption, ...metaOptions];
     },
   },
   watch: {

@@ -35,7 +35,7 @@ export default {
   },
   methods: {
     generateColorer(value) {
-      if (!value) {
+      if (!value || value === this.emptyOption) {
         return () => null;
       }
       if (value === 'Selection') {

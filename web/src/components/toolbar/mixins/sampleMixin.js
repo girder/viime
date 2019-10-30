@@ -9,6 +9,11 @@ export default {
       type: Boolean,
       required: false,
     },
+    emptyOption: {
+      type: String,
+      required: false,
+      default: '',
+    },
   },
   computed: {
     rowToIndex() {
@@ -37,7 +42,11 @@ export default {
         ...groups.columnMetaData[i],
       })).filter(d => d.levels) : [];
 
-      return [...metaGroupsM, ...metaDataM];
+      const empty = this.emptyOption ? [{
+        name: this.emptyOption,
+        options: [],
+      }] : [];
+      return [...empty, ...metaGroupsM, ...metaDataM];
     },
 
     options() {

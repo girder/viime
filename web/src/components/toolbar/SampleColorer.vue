@@ -34,7 +34,7 @@ export default {
   },
   methods: {
     generateColorer(value) {
-      if (!value) {
+      if (!value || value === this.emptyOption) {
         return () => null;
       }
       const meta = this.categoricalMetaData.find(d => d.name === value);
