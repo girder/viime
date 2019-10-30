@@ -16,10 +16,6 @@ export default {
       type: String,
       required: true,
     },
-    columns: {
-      required: true,
-      type: Array,
-    },
   },
 
   data() {
@@ -53,6 +49,10 @@ export default {
 
     eigenvalues() {
       return this.maybeData('sdev', []);
+    },
+
+    columns() {
+      return this.dataset.column.data;
     },
   },
 
