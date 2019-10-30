@@ -20,6 +20,9 @@ export default {
     },
   },
   computed: {
+    showSelect() {
+      return !this.value || this.options.length > 1;
+    },
     selected: {
       get() {
         return this.value ? this.value.option : null;
@@ -57,7 +60,7 @@ div
 
   v-card.mx-3(flat)
     v-card-actions(style="display: block")
-      v-select.my-0(v-model="selected",
+      v-select.my-0(v-model="selected", v-if="showSelect",
           hide-details, :disabled="disabled",
           :items="options", item-text="name")
       v-checkbox.my-0(v-model="filter",

@@ -1,6 +1,5 @@
 <script>
 import FilterOption from './FilterOption.vue';
-import { colors } from '../../utils/constants';
 
 export default {
   components: {
@@ -10,7 +9,7 @@ export default {
     title: {
       type: String,
       required: false,
-      default: 'Metabolite Filter',
+      default: 'Sample Filter',
     },
     dataset: {
       type: Object,
@@ -27,48 +26,29 @@ export default {
     },
   },
   computed: {
-    selectionLookup() {
-      const selected = new Set((this.dataset && this.dataset.selectedColumns) || []);
-      const columns = this.dataset.validatedMeasurements.columnNames;
-      return index => selected.has(columns[index]);
-    },
-    countSelected() {
-      return (this.dataset.selectedColumns || []).length;
-    },
-    countNotSelected() {
-      if (!this.dataset.validatedMeasurements) {
-        return 0;
-      }
-      return this.dataset.validatedMeasurements.columnNames.length - this.countSelected;
-    },
     categoricalMetaData() {
-      const metaData = this.dataset.validatedMeasurementsMetaData;
+      const metaData = this.dataset.validatedSampleMetaData;
+      const groups = this.dataset.validatedGroups;
 
-      return metaData ? metaData.rowNames.map((name, i) => ({
+      const metaDataM = metaData ? metaData.columnNames.map((name, i) => ({
         name,
-        data: metaData.data[i],
+        data: metaData.data.map(row => row[i]),
         i,
-        ...metaData.rowMetaData[i],
+        ...metaData.columnMetaData[i],
       })).filter(d => d.subtype === 'categorical') : [];
+
+      const metaGroupsM = groups ? groups.columnNames.map((name, i) => ({
+        name,
+        data: groups.data.map(row => row[i]),
+        i,
+        ...groups.columnMetaData[i],
+      })).filter(d => d.levels) : [];
+
+      return [...metaGroupsM, ...metaDataM];
     },
 
     options() {
       return [
-        {
-          name: 'Selection',
-          options: [
-            {
-              name: `Selected (${this.countSelected})`,
-              value: 'selected',
-              color: colors.selected,
-            },
-            {
-              name: `Not Selected (${this.countNotSelected})`,
-              value: 'not-selected',
-              color: colors.notSelected,
-            },
-          ],
-        },
         ...this.categoricalMetaData.map(({ name, levels }) => ({
           name,
           options: levels.map(d => ({ name: d.label, value: d.name, color: d.color })),
@@ -92,12 +72,6 @@ export default {
     generateFilter(value) {
       if (!value.option) {
         return () => true;
-      }
-      if (value.option === 'Selection') {
-        const isSelected = this.selectionLookup;
-        const showSelected = value.filter.includes('selected');
-        const showNotSelected = value.filter.includes('not-selected');
-        return index => (isSelected(index) ? showSelected : showNotSelected);
       }
       const meta = this.categoricalMetaData.find(d => d.name === value.option);
       const lookup = new Set(value.filter);

@@ -31,7 +31,7 @@ export default {
       showEdgeLabels: false,
       linkDistance: 50,
       correlation_methods,
-      nodeFilter: null,
+      metaboliteFilter: null,
     };
   },
 
@@ -44,13 +44,19 @@ export default {
     },
     nodes() {
       const selected = new Set(this.dataset.selectedColumns || []);
-      const { showSelected, showNotSelected } = this;
-      return !this.plot.data ? []
-        : this.plot.data.columns
-          .map(d => ({
-            id: d,
-            color: selected.has(d) ? colors.selected : colors.correlationNode,
-          })).filter(d => (selected.has(d) ? showSelected : showNotSelected));
+      if (!this.plot.data) {
+        return [];
+      }
+
+      const nodes = this.plot.data.columns.map(d => ({
+        id: d,
+        color: selected.has(d) ? colors.selected : colors.correlationNode,
+      }));
+
+      if (!this.metaboliteFilter) {
+        return nodes;
+      }
+      return nodes; // TODO apply filter
     },
     edges() {
       const selected = new Set(this.dataset.selectedColumns || []);
@@ -65,14 +71,11 @@ export default {
             value: Math.abs(d.value),
           }));
     },
-    countSelected() {
-      return (this.dataset.selectedColumns || []).length;
-    },
-    countNotSelected() {
-      if (!this.plot.data) {
-        return 0;
-      }
-      return this.plot.data.columns.length - this.countSelected;
+  },
+
+  watch: {
+    dataset() {
+      this.metaboliteFilter = null;
     },
   },
 };
