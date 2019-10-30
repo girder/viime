@@ -10,10 +10,20 @@ export default {
       type: Boolean,
       required: false,
     },
+    selectionLast: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
     hideSelection: {
       type: Boolean,
       required: false,
       default: false,
+    },
+    notSelectedColor: {
+      type: String,
+      required: false,
+      default: colors.notSelected,
     },
   },
   computed: {
@@ -61,20 +71,21 @@ export default {
           {
             name: `Not Selected (${this.countNotSelected})`,
             value: 'not-selected',
-            color: colors.notSelected,
+            color: this.notSelectedColor,
           },
         ],
       }];
     },
 
     options() {
-      return [
-        ...this.selectedOption,
-        ...this.categoricalMetaData.map(({ name, levels }) => ({
-          name,
-          options: levels.map(d => ({ name: d.label, value: d.name, color: d.color })),
-        })),
-      ];
+      const metaOptions = this.categoricalMetaData.map(({ name, levels }) => ({
+        name,
+        options: levels.map(d => ({ name: d.label, value: d.name, color: d.color })),
+      }));
+      if (this.selectionLast) {
+        return [...metaOptions, ...this.selectedOption];
+      }
+      return [...this.selectedOption, ...metaOptions];
     },
   },
   watch: {

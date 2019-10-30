@@ -23,12 +23,14 @@ export default {
   computed: {
     validatedValue() {
       if (this.value) {
-        return this.value;
+        return this.value.option;
       }
       if (this.options.length === 0) {
         return null;
       }
-      return this.options[0].name;
+      const v = this.options[0].name;
+      this.changeValue(v);
+      return v;
     },
   },
   methods: {
@@ -38,9 +40,9 @@ export default {
       }
       if (value === 'Selection') {
         const isSelected = this.selectionLookup;
-        return column => (isSelected(column) ? colors.selected : colors.notSelected);
+        return column => (isSelected(column) ? colors.selected : this.notSelectedColor);
       }
-      const meta = this.categoricalMetaData.find(d => d.name === value.option);
+      const meta = this.categoricalMetaData.find(d => d.name === value);
       const lookup = new Map(meta.levels.map(({ name, color }) => [name, color]));
       const toIndex = this.columnToIndex;
       return column => lookup.get(meta.data[toIndex(column)]);

@@ -36,7 +36,7 @@ export default {
         option: firstOption.name,
         filter: firstOption.options.map(d => d.value),
       };
-      v.apply = this.generateFilter(v);
+      this.changeValue(v);
       return v;
     },
   },

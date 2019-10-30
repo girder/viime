@@ -3,6 +3,7 @@ import ForceDirectedGraph from './ForceDirectedGraph.vue';
 import VisTileLarge from './VisTileLarge.vue';
 import ToolbarOption from '../toolbar/ToolbarOption.vue';
 import MetaboliteFilter from '../toolbar/MetaboliteFilter.vue';
+import MetaboliteColorer from '../toolbar/MetaboliteColorer.vue';
 import plotData from './mixins/plotData';
 import { correlation_methods } from './constants';
 import { colors } from '../../utils/constants';
@@ -13,6 +14,7 @@ export default {
     ToolbarOption,
     VisTileLarge,
     MetaboliteFilter,
+    MetaboliteColorer,
   },
 
   mixins: [plotData('correlation')],
@@ -32,6 +34,7 @@ export default {
       linkDistance: 50,
       correlation_methods,
       metaboliteFilter: null,
+      metaboliteColor: null,
     };
   },
 
@@ -43,25 +46,22 @@ export default {
       return parseInt(this.linkDistance, 10);
     },
     nodes() {
-      const selected = new Set(this.dataset.selectedColumns || []);
       if (!this.plot.data) {
         return [];
       }
 
       const nodes = this.plot.data.columns.map(d => ({
         id: d,
-        color: selected.has(d) ? colors.selected : colors.correlationNode,
+        color: this.metaboliteColor ? this.metaboliteColor.apply(d) : null,
       }));
 
       if (!this.metaboliteFilter) {
         return nodes;
       }
-      return nodes; // TODO apply filter
+      return nodes.filter(n => this.metaboliteFilter.apply(n.id));
     },
     edges() {
-      const selected = new Set(this.dataset.selectedColumns || []);
-      const { showSelected, showNotSelected } = this;
-      const show = id => (selected.has(id) ? showSelected : showNotSelected);
+      const show = !this.metaboliteFilter ? (() => true) : this.metaboliteFilter.apply;
       return !this.plot.data ? []
         : this.plot.data.correlations
           .filter(d => Math.abs(d.value) > this.min_correlation && show(d.x) && show(d.y))
@@ -90,7 +90,10 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
           v-slider.my-1.minCorrelation(:value="min_correlation", label="0", thumb-label="always",
               hide-details, min="0", max="1", step="0.01",
               @change="changePlotArgs({min_correlation: $event})")
-    metabolite-filter(title="Node Filter", :dataset="dataset", v-model="nodeFilter")
+    metabolite-filter(title="Node Filter", :dataset="dataset", v-model="metaboliteFilter",
+        :not-selected-color="colors.correlationNode", selection-last)
+    metabolite-colorer(title="Node Color", :dataset="dataset", v-model="metaboliteColor",
+        :not-selected-color="colors.correlationNode", selection-last)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Advanced Options

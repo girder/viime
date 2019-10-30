@@ -23,16 +23,8 @@ export default {
     showSelect() {
       return !this.value || this.options.length > 1;
     },
-    selected: {
-      get() {
-        return this.value ? this.value.option : null;
-      },
-      set(value) {
-        this.$emit('input', value);
-      },
-    },
     filterOptions() {
-      const selected = this.options.find(d => d.name === this.selected);
+      const selected = this.options.find(d => d.name === this.value);
       return selected ? selected.options : [];
     },
   },
@@ -47,10 +39,11 @@ div(v-if="options.length > 0")
 
   v-card.mx-3(flat)
     v-card-actions(style="display: block")
-      v-select.my-0(v-model="selected", v-if="showSelect",
+      v-select.my-0(:value="value", v-if="showSelect",
           hide-details, :disabled="disabled",
+          @change="$emit('input', $event)",
           :items="options", item-text="name")
       .my-0(v-for="o in filterOptions", :key="o.name")
-        v-icon(:color="o.color") {{ }}
-        {{ o.name }}
+        v-icon(:color="o.color") {{ $vuetify.icons.square }}
+        | {{ o.name }}
 </template>
