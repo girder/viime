@@ -39,26 +39,29 @@ export default {
         values: df.data.map(row => row[i]),
       }));
 
-      if (this.metaboliteFilter) {
+      if (this.metaboliteFilter && this.metaboliteFilter.option) {
         data = data.filter(d => this.metaboliteFilter.apply(d.name));
       }
 
-      // if (this.sampleFilter && this.$refs.sample) {
-      //   // split by groups
-      //   const enabled = new Set(this.sampleFilter.filter);
-      //   const bak = data;
-      //   data = [];
-      //   df.rowNames.map(())
-      //   bak.forEach((entry) => {
-
-      //   });
-      // }
+      if (this.sampleFilter && this.sampleFilter.option) {
+        // split by groups
+        const groups = this.sampleFilter.groupBy(df.rowNames);
+        data.forEach((row) => {
+          const vs = row.values;
+          delete row.values;
+          row.groups = groups.map(group => ({
+            name: group.name,
+            color: group.color,
+            values: group.indices.map(i => vs[i]),
+          }));
+        });
+      }
 
       return data;
     },
 
-    groupSize() {
-      return !this.sampleFilter ? 1 : this.sampleFilter.filter.length;
+    groups() {
+      return this.sampleFilter && this.sampleFilter.option ? this.sampleFilter.filter : [];
     },
   },
 };
@@ -70,12 +73,12 @@ vis-tile-large(v-if="dataset", title="Metabolite Box Plot", :loading="false",
     download, expanded)
   template(#controls)
     metabolite-filter(:dataset="dataset", v-model="metaboliteFilter")
-    sample-filter(ref='sample', :dataset="dataset", v-model="sampleFilter",
+    sample-filter(:dataset="dataset", v-model="sampleFilter",
         title="Group By", empty-option="No grouping")
 
   boxplot-plot.main(
       v-if="dataset.ready",
-      :rows="chartData", :group-size="groupSize")
+      :rows="chartData", :groups="groups")
 </template>
 
 <style scoped>
