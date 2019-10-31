@@ -31,7 +31,8 @@ def create_tables():
 
 
 @cli.command()
-@click.option('--url', default='https://viime.org', show_default=True, help='VIIME instance to load into')
+@click.option('--url', default='https://viime.org', show_default=True,
+              help='VIIME instance to load into')
 @click.option('--local', is_flag=True, help='instead of the url use the local instance')
 @click.option('--dir', default=samples_dir, show_default=True, help='samples directory')
 def load_samples(url: str, dir: str, local: bool = False):
@@ -56,7 +57,8 @@ def load_samples(url: str, dir: str, local: bool = False):
 
 
 @cli.command()
-@click.option('--url', default='https://viime.org', show_default=True, help='VIIME instance to dump from')
+@click.option('--url', default='https://viime.org', show_default=True,
+              help='VIIME instance to dump from')
 @click.option('--local', is_flag=True, help='instead of the url use the local instance')
 @click.option('--dir', default=samples_dir, show_default=True, help='samples directory')
 def dump_samples(url: str, dir: str, local: bool = False):
