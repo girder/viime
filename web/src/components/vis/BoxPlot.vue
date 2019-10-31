@@ -22,7 +22,7 @@ export default {
     groups: {
       type: Array,
       required: false,
-      default: () => [],
+      default: null,
     },
   },
   data() {
@@ -47,7 +47,7 @@ export default {
     },
     scaleGroup() {
       return scaleBand()
-        .domain(this.groups)
+        .domain(this.groups || [])
         .range([0, this.scaleY.bandwidth()], 0.1);
     },
     xrange() {
@@ -73,7 +73,7 @@ export default {
       return [min, max];
     },
     boxHeight() {
-      return this.groups.length === 0 ? this.scaleY.bandwidth() : this.scaleGroup.bandwidth();
+      return !this.groups ? this.scaleY.bandwidth() : this.scaleGroup.bandwidth();
     },
   },
 
@@ -106,7 +106,7 @@ export default {
       const base = svg.select('.plot');
       let boxplots;
 
-      if (this.groups.length === 0) {
+      if (!this.groups) {
         base.selectAll('g.boxplots').remove();
         boxplots = base.selectAll('g.boxplot').data(stats, d => d.name)
           .join(enter => enter.append('g').classed('boxplot', true))

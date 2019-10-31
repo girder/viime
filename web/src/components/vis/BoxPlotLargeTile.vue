@@ -61,7 +61,7 @@ export default {
     },
 
     groups() {
-      return this.sampleFilter && this.sampleFilter.option ? this.sampleFilter.filter : [];
+      return this.sampleFilter && this.sampleFilter.option ? this.sampleFilter.filter : null;
     },
   },
 };
