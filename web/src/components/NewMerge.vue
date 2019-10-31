@@ -44,12 +44,15 @@ export default {
         valid: this.$store.getters.valid(d.id),
       }));
     },
-
-    mergeWarning() {
+    mergeInfo() {
       const selected = this.datasets.filter(d => this.selected.includes(d.id)
                                                  && d.dataset.validatedMeasurements);
       if (selected.length < 2) {
-        return '';
+        return {
+          intersection: 0,
+          union: 0,
+          w: false,
+        };
       }
       // check overlap of their row identifiers
 
@@ -62,12 +65,13 @@ export default {
 
       const intersection = Array.from(rowNames[0]).filter(v => rowNames.every(r => r.has(v)));
 
-      const jaccard = intersection.length / union.size;
-      if (jaccard < 0.8) {
-        return `Only ${intersection.length} out of ${union.size} rows will be merged`;
-      }
-      return '';
+      return {
+        intersection: intersection.length,
+        union: union.size,
+        w: (intersection.length / union.size) < 0.8,
+      };
     },
+
   },
   methods: {
     rank(dataset) {
@@ -128,9 +132,10 @@ v-form(v-model="valid", ref="form", @submit="submit")
     .v-messages.theme--light.error--text(v-if="!(selected.length >= 2)")
       .v-messages__wrapper
         .v-messages__message At least two data sources are required
-    .v-messages.theme--light.warning--text.bigger(v-if="mergeWarning")
-      .v-messages__wrapper
-        .v-messages__message {{ mergeWarning }}
+    .v-messages.theme--light.bigger(v-if="selected.length >= 2")
+      .v-messages__wrapper(:class="{'warning--text': mergeInfo.w}")
+        .v-messages__message
+          | {{ mergeInfo.intersection }} out of {{ mergeInfo.union }} samples will be merged
 
     v-btn.right(type="submit", :disabled="!valid",
         color="primary") create

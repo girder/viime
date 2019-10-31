@@ -62,5 +62,6 @@ export default {
     warningCircle: 'mdi-alert-circle',
     plusMultiple: 'mdi-checkbox-multiple-marked-outline',
     minusMultiple: 'mdi-checkbox-multiple-blank-outline',
+    square: 'mdi-square',
   },
 };
