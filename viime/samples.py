@@ -16,24 +16,26 @@ def import_files(files: List[CSVFile]):
     # TODO extend with the merge sources
 
     for csv in files:
+        new_id = uuid4()
         ori_id = csv.id
         table = csv.table
 
         # remove from session
+        for sub in csv.columns + csv.rows + csv.group_levels:
+            db.session.expunge(sub)
+            make_transient(sub)
+            sub.csv_file_id = new_id
+
         db.session.expunge(csv)
         make_transient(csv)
 
         # update releated things
-        csv.id = uuid4()
+        csv.id = new_id
         csv.created = datetime.utcnow()
         csv.meta = csv.meta.copy()
         csv.sample_group = None
-        csv.save_table(table)
-
-        for sub in csv.columns + csv.rows + csv.group_levels:
-            db.session.expunge(sub)
-            make_transient(sub)
-            sub.csv_file_id = csv.id
+        # extra option to mimic the _read_csv logic
+        csv.save_table(table, index=False, header=False)
 
         db.session.add(csv)
         for sub in csv.columns + csv.rows + csv.group_levels:

@@ -275,11 +275,11 @@ class CSVFile(db.Model):
         return impute_missing(table, self.groups,
                               mnar=self.imputation_mnar, mcar=self.imputation_mcar)
 
-    def save_table(self, table):
+    def save_table(self, table, **kwargs):
         # TODO: Delete cache entries if a file at self.uri exists already
         # For now, there is no API for changing the data contained in an uploaded
         # file, so this is not important.
-        return self._save_csv_file_data(self.uri, table.to_csv())
+        return self._save_csv_file_data(self.uri, table.to_csv(**kwargs))
 
     @property
     def _stats(self):
