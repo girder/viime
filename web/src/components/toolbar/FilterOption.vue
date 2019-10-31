@@ -72,8 +72,16 @@ div(v-if="hasOptions")
       v-select.my-0(v-model="selected", v-if="showSelect",
           hide-details, :disabled="disabled",
           :items="options", item-text="name")
-      v-checkbox.my-0(v-model="filter",
+      v-checkbox.my-0.option(v-model="filter",
           v-for="o in filterOptions", :key="o.name",
-          :label="o.name", :value="o.value",
+          :label="o.name", :value="o.value", :title="o.name",
           hide-details, :color="o.color")
 </template>
+
+<style scoped>
+.option {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
