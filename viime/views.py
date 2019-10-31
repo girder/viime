@@ -1,7 +1,6 @@
 from functools import wraps
 from io import BytesIO
 import json
-import math
 from pathlib import PurePath
 from typing import Any, Callable, cast, Dict, List, Optional
 
@@ -716,38 +715,14 @@ def get_pca_plot(validated_table):
 
 
 def _get_loadings_data(validated_table):
-    def mean(x):
-        return sum(x) / len(x)
-
-    def sq(x):
-        return x * x
-
-    def cor(xs, ys):
-        if xs.equals(ys):
-            return 1.0
-
-        x_mean = mean(xs)
-        y_mean = mean(ys)
-
-        x_stddev = math.sqrt(sum(map(lambda x: sq(x - x_mean), xs)))
-        y_stddev = math.sqrt(sum(map(lambda y: sq(y - y_mean), ys)))
-
-        if x_stddev == 0 or y_stddev == 0:
-            return 0.0
-
-        prod_sum = sum(map(lambda x, y: (x - x_mean) * (y - y_mean), xs, ys))
-        return prod_sum / (x_stddev * y_stddev)
-
     table = validated_table.measurements
     pca_data = _get_pca_data(validated_table)
+    loadings = pca_data['rotation']
 
-    # Transpose the PCA values.
-    pca_data = [list(x) for x in zip(*pca_data['x'])]
-
-    # Compute correlations between each metabolite and both PC1 and PC2.
+    # Extract the correlations between each metabolite and all PCs.
     return [{'col': k,
-             'cor': [cor(v, pc) for pc in pca_data]}
-            for (k, v) in table.items()]
+             'loadings': loadings[i]}
+            for i, k in enumerate(table)]
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/plot/loadings', methods=['GET'])

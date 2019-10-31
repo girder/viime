@@ -24,6 +24,9 @@ export default {
     valid(dataset) {
       return this.$store.getters.valid(dataset.id);
     },
+    isMerged(dataset) {
+      return this.$store.getters.isMerged(dataset.id);
+    },
     problemNav(problem) {
       if (problem.multi) {
         this.$router.push({ name: 'Problem', params: { id: this.id, problem: problem.type } });
@@ -81,13 +84,13 @@ v-layout.pretreatment-component(row, fill-height)
                 v-icon(small, @click="", v-on="on") {{ $vuetify.icons.info }}
               span {{ problemData.description }}
 
-        v-list-tile.sub-level(:to="{ name: 'Impute Table' }")
+        v-list-tile.sub-level(:to="{ name: 'Impute Table' }", v-show="!isMerged(dataset)")
           v-list-tile-title
             v-icon.drawericon {{ $vuetify.icons.tableEdit }}
             | Impute Table
 
         v-list-tile.top-level(:to="{ name: 'Transform Table' }",
-            :disabled="!valid(dataset)")
+            :disabled="!valid(dataset)", v-show="!isMerged(dataset)")
           v-list-tile-title
             v-icon.pr-1.drawericon {{ $vuetify.icons.bubbles }}
             | Transform Table
