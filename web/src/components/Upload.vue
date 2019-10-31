@@ -162,7 +162,7 @@ v-layout.upload-component(column, fill-height)
       h3.headline.font-weight-bold.primary--text.text--darken-3 Upload your data (csv, xlsx, or txt)
       p.secondary--text.text--lighten-1 Choose a file from your computer
 
-    .mx-4.mb-4(v-if="files.length")
+    .mx-4.mb-4
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title All Data Sources
         v-spacer
