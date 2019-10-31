@@ -181,6 +181,8 @@ const colors = {
   selected: '#ffa500',
   notSelected: '#c3c3c3',
   correlationNode: '#4682b4',
+  mnarMethod: '#80b1d3',
+  mcarMethod: '#bc80bd',
 };
 
 export {
