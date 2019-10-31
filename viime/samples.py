@@ -1,10 +1,11 @@
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List
 from uuid import uuid4
 
 from sqlalchemy.orm.session import make_transient
 
-from .models import CSVFile, db, ValidatedMetaboliteTable
+from .models import CSVFile, CSVFileSchema, db, GroupLevel, TableColumn, \
+    TableRow, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
 
 
 def is_sample_file(csv: CSVFile) -> bool:
@@ -88,11 +89,74 @@ def list_samples():
     return [dict(name=k, files=[dump_info(csv) for csv in v]) for k, v in groups.items()]
 
 
+_validation_keys = ['normalization', 'normalization_argument', 'scaling',
+                    'imputation_info',
+                    'scaling', 'transformation']
+
+
 def dump(csv: CSVFile):
-    # TODO reverse of upload
-    return None
+    out = CSVFileSchema(exclude=[
+        'id',
+        'created',
+        'table_validation',
+        'measurement_table',
+        'size',
+        'missing_cells'
+    ]).dump(csv)
+
+    v = ValidatedMetaboliteTable.query.filter_by(csv_file_id=csv.id).first_or_404()
+
+    v_out = ValidatedMetaboliteTableSchema(
+        only=_validation_keys).dump(v)
+
+    if csv.sample_group:
+        out['sample_group'] = csv.sample_group
+    out.update(v_out)
+
+    return out
 
 
-def upload(group: Optional[str]):
-    # TODO reverse of dump
-    return None
+def upload(json: Dict[str, Any]):
+    # extract validated table specific keys
+    validated: Dict[str, Any] = {}
+    for key in _validation_keys:
+        if key in json:
+            validated[key] = json.pop(key)
+
+    # remove not auto imported things
+    columns: List[Any] = json.pop('columns', [])
+    rows: List[Any] = json.pop('rows', [])
+    group_levels: List[Any] = json.pop('group_levels', [])
+    sample_group = json.pop('sample_group', None)
+    selected_columns = json.pop('selected_columns', [])
+    if not json.get('description'):
+        json['description'] = ''
+
+    csv = CSVFileSchema().load(json)
+
+    # update types afterwards since the default is auto generated
+
+    def update(acts, templates, model):
+        if not templates:
+            return
+        for act, template in zip(acts, templates):
+            for col in model.__table__.columns.keys():
+                if col in template:
+                    setattr(act, col, template[col])
+            db.session.add(act)
+
+    update(csv.columns, columns, TableColumn)
+    update(csv.rows, rows, TableRow)
+
+    if group_levels:
+        csv.group_levels = [GroupLevel(**g) for g in group_levels]
+    csv.sample_group = sample_group
+    csv.selected_columns = selected_columns
+
+    db.session.add(csv)
+    db.session.flush()
+
+    validated_table = ValidatedMetaboliteTable.create_from_csv_file(csv, **validated)
+    db.session.add(validated_table)
+
+    return dump(csv)

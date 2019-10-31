@@ -884,15 +884,13 @@ def sample_get(csv_id: str):
 
 
 @csv_bp.route('/sample/sample', methods=['POST'])
-@use_kwargs({  # TODO
-    'group': fields.Str(required=False)
-})
-def sample_upload(group: Optional[str] = None):
-    dump = samples.upload(group)
+def sample_upload():
+    dump = samples.upload(request.json)
+    db.session.commit()
     return jsonify(dump), 200
 
 
-@csv_bp.route('/sample/sample/<uuid:csv_id>/enable', methods=['PUT', 'GET'])
+@csv_bp.route('/sample/sample/<uuid:csv_id>', methods=['PUT'])
 @use_kwargs({
     'group': fields.Str(required=False, missing=None)
 })

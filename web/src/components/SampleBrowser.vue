@@ -57,18 +57,9 @@ export default {
           v-card
             v-card-text
               | {{ file.description || 'no description available' }}
-
 </template>
 
 <style scoped lang="scss">
-.root {
-
-}
-
-.group {
-
-}
-
 .import {
   flex: 0 0 auto;
 }
