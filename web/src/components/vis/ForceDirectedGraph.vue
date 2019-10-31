@@ -46,16 +46,6 @@ export default {
       default: 0,
       required: false,
     },
-    color: {
-      type: String,
-      default: 'steelblue',
-      required: false,
-    },
-    highlightColor: {
-      type: String,
-      default: 'orange',
-      required: false,
-    },
   },
   data() {
     return {
@@ -212,10 +202,9 @@ export default {
         simulation.alphaTarget(0);
       }
 
-      const { color, highlightColor } = this;
       nodes.select('circle')
         .attr('r', this.radius)
-        .style('fill', d => (d.highlighted ? highlightColor : color))
+        .style('fill', d => d.color)
         .on('click', resetPinned)
         .call(drag()
           .container(function container() {
@@ -279,6 +268,7 @@ export default {
 
 .nodes >>> circle {
   cursor: grab;
+  fill: steelblue;
 }
 
 .nodes >>> text {
