@@ -95,6 +95,7 @@ class CSVFile(db.Model):
     imputation_mnar = db.Column(db.String, nullable=False)
     imputation_mcar = db.Column(db.String, nullable=False)
     meta = db.Column(JSONType, nullable=False)
+    sample_group = db.Column(db.String, nullable=True)
     selected_columns = db.Column(db.PickleType, nullable=True)
     group_levels = relationship('GroupLevel', cascade='all, delete, delete-orphan')
 
@@ -353,6 +354,8 @@ class CSVFileSchema(BaseSchema):
 
     selected_columns = fields.List(fields.Str(), dump_only=True, missing=list)
     group_levels = fields.List(fields.Nested('GroupLevelSchema'))
+
+    # don't add `sample_group` since it is hidden internal property
 
     table_validation = fields.Nested('ValidationSchema', many=True, dump_only=True)
     # imputed measurements

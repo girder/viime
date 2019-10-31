@@ -10,7 +10,7 @@ import pandas
 from webargs.flaskparser import use_kwargs
 from werkzeug import FileStorage
 
-from viime import opencpu
+from viime import opencpu, samples
 from viime.analyses import anova_test, hierarchical_clustering, pairwise_correlation, wilcoxon_test
 from viime.cache import csv_file_cache
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
@@ -806,24 +806,64 @@ def get_correlation(validated_table: ValidatedMetaboliteTable,
 # sample related
 #
 
+def _sample_import(files: List[CSVFile]):
+    imported: List[CSVFile] = []
+    try:
+        imported = samples.import_files(files)
+        db.session.flush()
+
+        serialized = [_serialize_csv_file(f) for f in imported]
+
+        db.session.commit()
+
+        return jsonify(serialized), 201
+    except Exception:
+        for f in imported:
+            if f.uri.is_file():
+                f.uri.unlink()
+        db.session.rollback()
+        raise
+
+
 @csv_bp.route('/sample/import/<uuid:csv_id>', methods=['POST'])
 def sample_import(csv_id: str):
-    return jsonify('ok'), 200
+    csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
+    if not samples.is_sample_file(csv_file):
+        raise ValidationError('not a sample')
+    return _sample_import([csv_file])
 
 
 @csv_bp.route('/sample/importgroup/<group_id>', methods=['POST'])
 def sample_import_all(group_id: str):
-    return jsonify('ok'), 200
+    files = list(CSVFile.query.filter_by(CSVFile.sample_group.isnot(None)).all())
+    if not files:
+        raise ValidationError('not members found')
+    return _sample_import(files)
 
 
 @csv_bp.route('/sample/sample', methods=['GET'])
 def sample_list():
-    return jsonify([]), 200
+    r = samples.list_samples()
+    return jsonify(r), 200
 
 
 @csv_bp.route('/sample/sample/<uuid:csv_id>', methods=['GET'])
 def sample_get(csv_id: str):
-    return jsonify({}), 200
+    csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
+    if not samples.is_sample_file(csv_file):
+        raise ValidationError('not a sample')
+
+    dump = samples.dump(csv_file)
+    return jsonify(dump), 200
+
+
+@csv_bp.route('/sample/sample', methods=['POST'])
+@use_kwargs({  # TODO
+    'group': fields.Str(required=False)
+})
+def sample_upload(group: Optional[str]):
+    dump = samples.upload(group)
+    return jsonify(dump), 200
 
 
 @csv_bp.route('/sample/sample/<uuid:csv_id>', methods=['PUT'])
@@ -831,9 +871,21 @@ def sample_get(csv_id: str):
     'group': fields.Str(required=False)
 })
 def sample_enable(csv_id: str, group: Optional[str]):
-    return jsonify({}), 200
+    csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
+
+    csv_file.sample_group = group or 'Default'
+    db.session.add(csv_file)
+    db.session.commit(csv_file)
+
+    return jsonify(dict(message='OK')), 200
 
 
 @csv_bp.route('/sample/sample/<uuid:csv_id>', methods=['DELETE'])
 def sample_disable(csv_id: str):
-    return jsonify({}), 200
+    csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
+
+    csv_file.sample_group = None
+    db.session.add(csv_file)
+    db.session.commit(csv_file)
+
+    return jsonify(dict(message='OK')), 200
