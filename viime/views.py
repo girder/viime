@@ -799,3 +799,40 @@ def get_correlation(validated_table: ValidatedMetaboliteTable,
     data = pairwise_correlation(table, min_correlation, method)
 
     return jsonify(data), 200
+
+
+#
+# sample related
+#
+
+@csv_bp.route('/sample/import/<uuid:csv_id>', methods=['POST'])
+def sample_import(csv_id: str):
+    return jsonify('ok'), 200
+
+
+@csv_bp.route('/sample/importgroup/<group_id>', methods=['POST'])
+def sample_import_all(group_id: str):
+    return jsonify('ok'), 200
+
+
+@csv_bp.route('/sample/sample', methods=['GET'])
+def sample_list():
+    return jsonify([]), 200
+
+
+@csv_bp.route('/sample/sample/<uuid:csv_id>', methods=['GET'])
+def sample_get(csv_id: str):
+    return jsonify({}), 200
+
+
+@csv_bp.route('/sample/sample/<uuid:csv_id>', methods=['PUT'])
+@use_kwargs({
+    'group': fields.Str(required=False)
+})
+def sample_enable(csv_id: str, group: Optional[str]):
+    return jsonify({}), 200
+
+
+@csv_bp.route('/sample/sample/<uuid:csv_id>', methods=['DELETE'])
+def sample_disable(csv_id: str):
+    return jsonify({}), 200
