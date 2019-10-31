@@ -861,9 +861,9 @@ def sample_import(csv_id: str):
 
 @csv_bp.route('/sample/importgroup/<group_id>', methods=['POST'])
 def sample_import_all(group_id: str):
-    files = list(CSVFile.query.filter(CSVFile.sample_group.isnot(None)).all())
+    files = list(CSVFile.query.filter(CSVFile.sample_group == group_id).all())
     if not files:
-        raise ValidationError('not members found')
+        raise ValidationError('no members found')
     return _sample_import(files)
 
 
