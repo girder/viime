@@ -12,11 +12,14 @@ def is_sample_file(csv: CSVFile) -> bool:
 
 
 def import_files(files: List[CSVFile]):
-    # imported_ids = set(c.id for c in csv)
-    # TODO extend with the merge sources
+    new_ids = {str(c.id): uuid4() for c in files}
 
-    for csv in files:
-        new_id = uuid4()
+    todo = files.copy()
+
+    while todo:
+        csv = todo.pop(0)
+
+        new_id = new_ids.get(str(csv.id))
         ori_id = csv.id
         table = csv.table
 
@@ -36,6 +39,22 @@ def import_files(files: List[CSVFile]):
         csv.sample_group = None
         # extra option to mimic the _read_csv logic
         csv.save_table(table, index=False, header=False)
+
+        if 'merged' in csv.meta:
+            # ensure we also merge the others
+            merged_ids: List[str] = csv.meta['merged']
+            new_merged_ids: List[str] = []
+            for file_id in merged_ids:
+                if file_id not in new_ids:
+                    extra: CSVFile = CSVFile.query.get(file_id)
+                    if extra:
+                        extra_new_id = uuid4()
+                        new_ids[extra.id] = extra_new_id
+                        todo.append(extra)
+                        new_merged_ids.append(str(extra_new_id))
+                else:
+                    new_merged_ids.append(str(new_ids[file_id]))
+            csv.meta['merged'] = new_merged_ids
 
         db.session.add(csv)
         for sub in csv.columns + csv.rows + csv.group_levels:
