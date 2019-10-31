@@ -887,21 +887,21 @@ def sample_get(csv_id: str):
 @use_kwargs({  # TODO
     'group': fields.Str(required=False)
 })
-def sample_upload(group: Optional[str]):
+def sample_upload(group: Optional[str] = None):
     dump = samples.upload(group)
     return jsonify(dump), 200
 
 
-@csv_bp.route('/sample/sample/<uuid:csv_id>', methods=['PUT'])
+@csv_bp.route('/sample/sample/<uuid:csv_id>/enable', methods=['PUT', 'GET'])
 @use_kwargs({
-    'group': fields.Str(required=False)
+    'group': fields.Str(required=False, missing=None)
 })
 def sample_enable(csv_id: str, group: Optional[str]):
     csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
 
     csv_file.sample_group = group or 'Default'
     db.session.add(csv_file)
-    db.session.commit(csv_file)
+    db.session.commit()
 
     return jsonify(dict(message='OK')), 200
 
@@ -912,6 +912,6 @@ def sample_disable(csv_id: str):
 
     csv_file.sample_group = None
     db.session.add(csv_file)
-    db.session.commit(csv_file)
+    db.session.commit()
 
     return jsonify(dict(message='OK')), 200

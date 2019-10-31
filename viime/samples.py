@@ -62,7 +62,7 @@ def dump_info(csv: CSVFile):
 
 def list_samples():
     groups: Dict[str, List[CSVFile]] = {}
-    for csv in CSVFile.query.filter_by(CSVFile.sample_group.isnot(None)).all():
+    for csv in CSVFile.query.filter(CSVFile.sample_group.isnot(None)).all():
         groups.setdefault(csv.sample_group, []).append(csv)
     return [dict(name=k, files=[dump_info(csv) for csv in v]) for k, v in groups.items()]
 

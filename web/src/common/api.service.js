@@ -20,6 +20,10 @@ const ApiService = {
     return `${base}?${params.toString()}`;
   },
 
+  list(resource, params = {}) {
+    return Vue.axios.get(resource, { params });
+  },
+
   get(resource, path, params = {}) {
     return Vue.axios.get(`${resource}/${path}`, { params });
   },
@@ -128,5 +132,25 @@ export const ExcelService = {
     const formData = new FormData();
     formData.append('file', file);
     return ApiService.upload('excel', formData);
+  },
+};
+
+
+export const SampleService = {
+
+  get(slug) {
+    return ApiService.get('sample/sample', slug);
+  },
+
+  list() {
+    return ApiService.list('sample/sample');
+  },
+
+  importSample(sampleId) {
+    return ApiService.post(`sample/import/${sampleId}`);
+  },
+
+  importSampleGroup(group) {
+    return ApiService.post(`sample/importgroup/${group}`);
   },
 };

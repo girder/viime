@@ -13,3 +13,6 @@ export const SET_DATASET_SELECTED_COLUMNS = 'set_dataset_selected_columns';
 export const CREATE_MERGED_DATASET = 'create_merged_dataset';
 export const REMERGE_DATASET = 'remerge_dataset';
 export const SET_DATASET_GROUP_LEVELS = 'set_dataset_group_levels';
+
+export const IMPORT_SAMPLE = 'import_sample';
+export const IMPORT_SAMPLE_GROUP = 'import_sample_group';

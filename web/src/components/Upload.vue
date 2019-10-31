@@ -3,6 +3,7 @@ import { mapState } from 'vuex';
 import { sizeFormatter } from '@girder/components/src/utils/mixins';
 import Dropzone from '@girder/components/src/components/Presentation/Dropzone.vue';
 import FileList from '@girder/components/src/components/Presentation/FileUploadList.vue';
+import SampleBrowser from './SampleBrowser.vue';
 import { UPLOAD_CSV, UPLOAD_EXCEL } from '@/store/actions.type';
 import { REMOVE_DATASET } from '@/store/mutations.type';
 
@@ -38,6 +39,7 @@ export default {
   components: {
     FileList,
     Dropzone,
+    SampleBrowser,
   },
   mixins: [sizeFormatter],
   data() {
@@ -49,6 +51,7 @@ export default {
       sampleTypes,
       snackbar: false,
       snackbarContent: '',
+      browseSamples: false,
     };
   },
   computed: {
@@ -135,9 +138,6 @@ export default {
     removeAll() {
       this.readyFiles.concat(this.pendingFiles).forEach(f => this.remove(f));
     },
-    createMergedDataset() {
-      // TODO
-    },
   },
 };
 </script>
@@ -166,6 +166,19 @@ v-layout.upload-component(column, fill-height)
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title All Data Sources
         v-spacer
+        v-dialog(v-model="browseSamples", max-width="33vw")
+          template(v-slot:activator="{ on }")
+            v-btn(flat, small, v-on="on")
+              v-icon.pr-1 {{ $vuetify.icons.tablePlus }}
+              | add sample
+          v-card
+            v-card-title
+              h3.headline Sample Datasets
+            v-card-text
+              sample-browser(@close="browseSamples = false")
+            v-card-actions
+              v-spacer
+              v-btn(@click="browseSamples = false") Close
         v-btn(flat, small, to="/pretreatment/merge", :disabled="files.length < 2")
           v-icon.pr-1 {{ $vuetify.icons.tablePlus }}
           | merge data sources
