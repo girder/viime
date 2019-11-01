@@ -65,7 +65,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="plot", title="Wilcoxon Test", :loading="plot.loading", expanded)
+vis-tile-large(title="Wilcoxon Test", :loading="plot.loading", expanded)
   template(#controls)
     metabolite-filter(:dataset="dataset", v-model="metaboliteFilter", hide-selection)
     metabolite-colorer(:dataset="dataset", v-model="metaboliteColor", hide-selection,
@@ -78,7 +78,7 @@ vis-tile-large(v-if="plot", title="Wilcoxon Test", :loading="plot.loading", expa
         v-layout(column)
           v-slider.my-1.minCorrelation(v-model="threshold", label="0", thumb-label="always",
               hide-details, min="0", max="0.1", step="0.001")
-  wilcoxon-plot(:data="tableData", :threshold="threshold", v-model="selected")
+  wilcoxon-plot(v-if="plot.data", :data="tableData", :threshold="threshold", v-model="selected")
 </template>
 
 <style scoped>

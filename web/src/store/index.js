@@ -591,8 +591,8 @@ const actions = {
   async [SET_DATASET_SELECTED_COLUMNS]({ commit }, { dataset_id, columns }) {
     commit(SET_LOADING, true);
     try {
-      await CSVService.setSelectedColumns(dataset_id, columns);
       commit(MERGE_INTO_DATASET, { dataset_id, data: { selectedColumns: columns } });
+      await CSVService.setSelectedColumns(dataset_id, columns);
       commit(SET_LOADING, false);
     } catch (err) {
       commit(SET_LAST_ERROR, err);
