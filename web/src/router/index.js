@@ -46,6 +46,9 @@ export const routes = [
         name: 'Pretreat Data',
         component: DataSource,
         props: true,
+        meta: {
+          hidden: true,
+        },
       },
       {
         path: 'cleanup/impute',
@@ -92,11 +95,7 @@ export const routes = [
             component: AnalyzeData,
             props: true,
             meta: {
-              breadcrumb() {
-                return {
-                  hidden: true,
-                };
-              },
+              hidden: true,
             },
           },
           ...analyses.map(({ path, shortName: name, component }) => ({
