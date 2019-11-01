@@ -3,7 +3,7 @@ import font from '!url-loader?limit=undefined!@openfonts/barlow-condensed_all/fi
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import iconFont from '!url-loader?limit=undefined!@mdi/font/fonts/materialdesignicons-webfont.woff2';
 import { unparse } from 'papaparse';
-import { select, selectAll } from 'd3-selection';
+import { select } from 'd3-selection';
 
 
 export function svg2url(svgElement, options = {}) {
@@ -88,7 +88,7 @@ export function svg2url(svgElement, options = {}) {
     // For some reason, C3 uses the "color" style property instead of "fill".
     select(copy)
       .selectAll('circle')
-      .each(function (d) {
+      .each(function s_color_fill() {
         const color = select(this).style('color');
         select(this)
           .style('fill', color)
