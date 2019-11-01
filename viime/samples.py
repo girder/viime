@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from sqlalchemy.orm.session import make_transient
@@ -160,3 +160,13 @@ def upload(json: Dict[str, Any]):
     db.session.add(validated_table)
 
     return dump(csv)
+
+
+def enable_sample(csv: CSVFile, group: Optional[str] = 'Default'):
+    csv.sample_group = group or 'Default'
+    return csv
+
+
+def disable_sample(csv: CSVFile, group: Optional[str] = 'Default'):
+    csv.sample_group = None
+    return csv

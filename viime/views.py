@@ -897,7 +897,8 @@ def sample_upload():
 def sample_enable(csv_id: str, group: Optional[str]):
     csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
 
-    csv_file.sample_group = group or 'Default'
+    csv_file = samples.enable_sample(csv_file, group)
+
     db.session.add(csv_file)
     db.session.commit()
 
@@ -908,7 +909,8 @@ def sample_enable(csv_id: str, group: Optional[str]):
 def sample_disable(csv_id: str):
     csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
 
-    csv_file.sample_group = None
+    csv_file = samples.disable_sample(csv_file)
+
     db.session.add(csv_file)
     db.session.commit()
 

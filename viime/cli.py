@@ -21,7 +21,7 @@ def cli():
     pass
 
 
-@cli.command()
+@cli.command(help='initializes the db')
 def create_tables():
     app = create_app()
 
@@ -30,7 +30,7 @@ def create_tables():
         flask_migrate.stamp()
 
 
-@cli.command()
+@cli.command(help='load samples into the db')
 @click.option('--url', default='http://localhost:8080', show_default=True,
               help='VIIME instance to load into')
 @click.option('--local', is_flag=True, help='instead of the url use the local instance')
@@ -58,7 +58,7 @@ def load_samples(url: str, dir: str, local: bool = False, ids: Optional[List[str
         load_samples(lambda data: requests.post(f'{url}{api_prefix}', json=data).raise_for_status())
 
 
-@cli.command()
+@cli.command(help='dump samples from the db')
 @click.option('--url', default='https://viime.org', show_default=True,
               help='VIIME instance to dump from')
 @click.option('--local', is_flag=True, help='instead of the url use the local instance')
@@ -88,3 +88,41 @@ def dump_samples(url: str, dir: str, local: bool = False, ids: Optional[List[str
         click.echo(f'requesting: {url}{api_prefix}')
         groups = requests.get(f'{url}{api_prefix}').json() if not ids else arg_ids
         dump_samples(groups, lambda fid: requests.get(f'{url}{api_prefix}/{fid}').json())
+
+
+@cli.command(help='mark a list of dataset ids to be samples')
+@click.option('--url', default='http://localhost:8080', show_default=True,
+              help='VIIME instance')
+@click.option('--local', is_flag=True, help='instead of the url use the local instance')
+@click.option('--group', default='Default', show_default=True, help='sample group name')
+@click.argument('ids', nargs=-1)
+def mark_sample(url: str, group: str, ids: List[str], local: bool = False):
+    if local:
+        with create_app().app_context():
+            for id in ids:
+                csv = samples.enable_sample(CSVFile.query.get(id), group)
+                db.session.add(csv)
+            db.session.commit()
+    else:
+        click.echo(f'using: {url}{api_prefix}')
+        for id in ids:
+            requests.put(f'{url}{api_prefix}/{id}', json=dict(group=group)).raise_for_status()
+
+
+@cli.command(help='unmark a list of dataset ids to be samples')
+@click.option('--url', default='http://localhost:8080', show_default=True,
+              help='VIIME instance')
+@click.option('--local', is_flag=True, help='instead of the url use the local instance')
+@click.option('--group', default='Default', show_default=True, help='sample group name')
+@click.argument('ids', nargs=-1)
+def unmark_sample(url: str, group: str, ids: List[str], local: bool = False):
+    if local:
+        with create_app().app_context():
+            for id in ids:
+                csv = samples.disable_sample(CSVFile.query.get(id))
+                db.session.add(csv)
+            db.session.commit()
+    else:
+        click.echo(f'using: {url}{api_prefix}')
+        for id in ids:
+            requests.delete(f'{url}{api_prefix}/{id}').raise_for_status()
