@@ -70,7 +70,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(title="PCA Score Plot")
+vis-tile(title="PCA Score Plot" svg-download)
   score-plot(
       :pc-coords="pcCoords",
       :row-labels="rowLabels",
