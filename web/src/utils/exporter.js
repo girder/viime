@@ -3,6 +3,7 @@ import font from '!url-loader?limit=undefined!@openfonts/barlow-condensed_all/fi
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import iconFont from '!url-loader?limit=undefined!@mdi/font/fonts/materialdesignicons-webfont.woff2';
 import { unparse } from 'papaparse';
+import { select, selectAll } from 'd3-selection';
 
 
 export function svg2url(svgElement, options = {}) {
@@ -63,6 +64,36 @@ export function svg2url(svgElement, options = {}) {
       }
     });
     copy.insertAdjacentHTML('afterbegin', `<style>${rules.join('\n')}</style>`);
+  }
+
+  // Need some special treatment for C3 charts.
+  const c3Chart = !select(copy)
+    .selectAll('.c3-chart')
+    .empty();
+  if (c3Chart) {
+    // See
+    // https://stackoverflow.com/questions/37701361/exporting-c3-js-line-charts-to-png-images-does-not-work.
+    copy.insertAdjacentHTML('afterbegin', `<style>
+      /* c3-chart considerations */
+      path.domain {
+        fill: none;
+        stroke: black;
+      }
+
+      .tick line {
+        stroke: black;
+      }
+    </style>`);
+
+    // For some reason, C3 uses the "color" style property instead of "fill".
+    select(copy)
+      .selectAll('circle')
+      .each(function (d) {
+        const color = select(this).style('color');
+        select(this)
+          .style('fill', color)
+          .style('color', null);
+      });
   }
 
   const svgString = new XMLSerializer().serializeToString(copy);
