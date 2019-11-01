@@ -1,7 +1,7 @@
 import json
 import os
 from pathlib import Path, PurePath
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Optional
 
 import click
 import flask_migrate
@@ -31,16 +31,18 @@ def create_tables():
 
 
 @cli.command()
-@click.option('--url', default='https://viime.org', show_default=True,
+@click.option('--url', default='http://localhost:8080', show_default=True,
               help='VIIME instance to load into')
 @click.option('--local', is_flag=True, help='instead of the url use the local instance')
 @click.option('--dir', default=samples_dir, show_default=True, help='samples directory')
-def load_samples(url: str, dir: str, local: bool = False):
+@click.argument('ids', nargs=-1)
+def load_samples(url: str, dir: str, local: bool = False, ids: Optional[List[str]] = None):
     out_dir = Path(dir)
     os.makedirs(out_dir, exist_ok=True)
 
     def load_samples(set_data: Callable[[Any], Any]):
-        for fname in out_dir.glob('*.json'):
+        files = [out_dir / f'{id}.json' for id in ids] if ids else out_dir.glob('*.json')
+        for fname in files:
             with open(fname, 'r') as f:
                 data = json.load(f)
                 click.echo(f'importing {fname}')
@@ -61,7 +63,8 @@ def load_samples(url: str, dir: str, local: bool = False):
               help='VIIME instance to dump from')
 @click.option('--local', is_flag=True, help='instead of the url use the local instance')
 @click.option('--dir', default=samples_dir, show_default=True, help='samples directory')
-def dump_samples(url: str, dir: str, local: bool = False):
+@click.argument('ids', nargs=-1)
+def dump_samples(url: str, dir: str, local: bool = False, ids: Optional[List[str]] = None):
     out_dir = PurePath(dir)
     os.makedirs(out_dir, exist_ok=True)
 
@@ -75,11 +78,13 @@ def dump_samples(url: str, dir: str, local: bool = False):
                     json.dump(data, f, indent=2)
                 click.echo(f'dumped {fid} {fname}')
 
+    arg_ids = [dict(files=[dict(id=id, name=id) for id in ids])] if ids else []
+
     if local:
         with create_app().app_context():
-            groups = samples.list_samples()
+            groups = samples.list_samples() if not ids else arg_ids
             dump_samples(groups, lambda fid: samples.dump(CSVFile.query.get(fid)))
     else:
         click.echo(f'requesting: {url}{api_prefix}')
-        groups = requests.get(f'{url}{api_prefix}').json()
+        groups = requests.get(f'{url}{api_prefix}').json() if not ids else arg_ids
         dump_samples(groups, lambda fid: requests.get(f'{url}{api_prefix}/{fid}').json())
