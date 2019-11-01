@@ -2,7 +2,7 @@ import WilcoxonPlotTile from './WilcoxonPlotTile.vue';
 import AnovaTableTile from './AnovaTableTile.vue';
 import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
-import PcaPage from './PcaPage.vue';
+import PcaPage from './PcaPage/PcaPage.vue';
 import { plot_types } from '../../utils/constants';
 import { correlation_methods } from './constants';
 
