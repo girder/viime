@@ -32,7 +32,7 @@ export default {
     dataset() { return this.$store.getters.dataset(this.id); },
     dataframe() { return this.dataset.measurement_table; },
     ready() { return this.$store.getters.ready(this.id); },
-    loading() { return this.$store.state.loading; },
+    loading() { return this.$store.getters.persisting; },
 
     rowHeaders() {
       return this.dataframe.rowNames.map(text => ({ text, clazz: ['type-key'] }));

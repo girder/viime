@@ -39,8 +39,8 @@ const SET_DATASET_DATA = 'set_dataset_data';
 const SET_VALIDATED_DATASET_DATA = 'set_validated_dataset_data';
 const MERGE_INTO_DATASET = 'merge_into_dataset';
 const SET_LABELS = 'set_labels';
-const SET_LAST_ERROR = 'set_last_error';
 const SET_LOADING = 'set_loading';
+const SET_SAVING = 'set_saving';
 const SET_SESSION_STORE = 'set_session_store';
 const SET_TRANSFORMATION = 'set_transformation';
 
@@ -131,6 +131,7 @@ const getters = {
     && state.datasets[id][category],
   plot: state => (id, name) => getters.ready(state)(id) && state.plots[id][name],
   isMerged: state => id => getters.ready(id) && Array.isArray(state.datasets[id].meta.merged),
+  persisting: state => state.loading || state.saving,
 };
 
 
@@ -267,16 +268,20 @@ const mutations = {
 
   /**
    * @private
+   * @param loading {boolean|error}
    */
-  [SET_LAST_ERROR](state, { err }) {
-    Vue.set(state, 'lasterror', err);
+  [SET_LOADING](state, loading) {
+    Vue.set(state, 'loading', loading === true);
+    Vue.set(state, 'lasterror', typeof loading === 'boolean' ? null : loading);
   },
 
   /**
    * @private
+   * @param saving {boolean|error}
    */
-  [SET_LOADING](state, loading) {
-    Vue.set(state, 'loading', loading);
+  [SET_SAVING](state, saving) {
+    Vue.set(state, 'saving', saving === true);
+    Vue.set(state, 'lasterror', typeof saving === 'boolean' ? null : saving);
   },
 
   [SET_PLOT](state, { dataset_id, name, obj }) {
@@ -340,47 +345,44 @@ const actions = {
   },
 
   async [UPLOAD_CSV]({ state, commit, dispatch }, { file }) {
-    commit(SET_LOADING, true);
+    commit(SET_SAVING, true);
     try {
       const { data } = await CSVService.upload(file);
       await dispatch(ADD_DATASET, data);
       state.store.save(state, state.session_id);
     } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, err);
       throw err;
     }
-    commit(SET_LOADING, false);
+    commit(SET_SAVING, false);
   },
 
   async [UPLOAD_EXCEL]({ state, commit, dispatch }, { file }) {
-    commit(SET_LOADING, true);
+    commit(SET_SAVING, true);
     try {
       const { data } = await ExcelService.upload(file);
       const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
       await Promise.all(promiseList);
       state.store.save(state, state.session_id);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, false);
       return data;
     } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, err);
       throw err;
     }
   },
 
   async [CREATE_MERGED_DATASET]({ state, commit, dispatch }, params) {
-    commit(SET_LOADING, true);
+    commit(SET_SAVING, true);
 
     try {
       const { data } = await ApiService.merge(params);
       const ds = await dispatch(ADD_DATASET, data);
       state.store.save(state, state.session_id);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, false);
       return ds;
     } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, err);
       throw err;
     }
   },
@@ -391,6 +393,7 @@ const actions = {
    */
   async [LOAD_DATASET]({ getters: _getters, commit, dispatch }, { dataset_id }) {
     try {
+      commit(SET_LOADING, true);
       const dataset = _getters.dataset(dataset_id);
       if (!dataset) {
         commit(INITIALIZE_DATASET, { dataset_id });
@@ -399,8 +402,9 @@ const actions = {
       commit(SET_LABELS, { dataset_id, rows: data.rows, columns: data.columns });
       commit(SET_DATASET_DATA, { data });
       await dispatch(VALIDATE_TABLE, { dataset_id: data.id });
+      commit(SET_LOADING, false);
     } catch (err) {
-      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, err);
       throw err;
     }
   },
@@ -417,6 +421,7 @@ const actions = {
       } = plot;
       if (!valid && !loading) {
         try {
+          commit(SET_LOADING, true);
           commit(SET_PLOT, { dataset_id, name, obj: { loading: true } });
           let d;
           switch (plotType) {
@@ -429,10 +434,11 @@ const actions = {
             default:
               throw new Error('Plot type unknown:', plotType);
           }
+          commit(SET_LOADING, false);
           commit(SET_PLOT, { dataset_id, name, obj: { loading: false, data: d, valid: true } });
         } catch (err) {
           commit(SET_PLOT, { dataset_id, name, obj: { loading: false, valid: false } });
-          commit(SET_LAST_ERROR, err);
+          commit(SET_LOADING, err);
           throw err;
         }
       }
@@ -458,25 +464,23 @@ const actions = {
           throw err;
         }
       }));
-    } catch (err) {
-      commit(SET_LAST_ERROR, err);
       commit(SET_LOADING, false);
+    } catch (err) {
+      commit(SET_LOADING, err);
       throw err;
     }
-    commit(SET_LOADING, false);
   },
 
   async [REMERGE_DATASET]({ commit, dispatch }, { dataset_id, method }) {
-    commit(SET_LOADING, true);
+    commit(SET_SAVING, true);
 
     try {
       await CSVService.remerge(dataset_id, { method });
       await dispatch(LOAD_DATASET, { dataset_id });
       commit(INVALIDATE_PLOTS, { dataset_id });
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, false);
     } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, err);
       throw err;
     }
   },
@@ -485,7 +489,7 @@ const actions = {
     category, dataset_id, transform_type, argument,
   }) {
     const key = dataset_id;
-    commit(SET_LOADING, true);
+    commit(SET_SAVING, true);
     try {
       const { data } = await CSVService.setTransform(key, category, transform_type, argument);
       commit(SET_VALIDATED_DATASET_DATA, { data });
@@ -493,16 +497,15 @@ const actions = {
         dataset_id, transform_type, category, argument,
       });
       commit(INVALIDATE_PLOTS, { dataset_id });
+      commit(SET_SAVING, false);
     } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, err);
       throw err;
     }
-    commit(SET_LOADING, false);
   },
 
   async [CHANGE_AXIS_LABEL]({ dispatch, commit }, { dataset_id, changes }) {
-    commit(SET_LOADING, true);
+    commit(SET_SAVING, true);
     try {
       const { data } = await CSVService.updateLabel(dataset_id, changes);
       const { rows, columns, group_levels } = data;
@@ -513,70 +516,70 @@ const actions = {
       // must await before plot invalidation because a new checkpoint
       // needs to be created before plots can be refreshed
       commit(INVALIDATE_PLOTS, { dataset_id });
+      commit(SET_SAVING, false);
     } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, err);
       throw err;
     }
-    commit(SET_LOADING, false);
   },
 
   async [CHANGE_IMPUTATION_OPTIONS]({ dispatch, commit }, { dataset_id, options }) {
-    commit(SET_LOADING, true);
-    await CSVService.setImputation(dataset_id, options);
-    await dispatch(LOAD_DATASET, { dataset_id });
-    commit(INVALIDATE_PLOTS, { dataset_id });
-    commit(SET_LOADING, false);
+    commit(SET_SAVING, true);
+    try {
+      await CSVService.setImputation(dataset_id, options);
+      await dispatch(LOAD_DATASET, { dataset_id });
+      commit(INVALIDATE_PLOTS, { dataset_id });
+      commit(SET_SAVING, false);
+    } catch (err) {
+      commit(SET_SAVING, err);
+      throw err;
+    }
   },
 
   async [SET_DATASET_NAME]({ commit }, { dataset_id, name }) {
-    commit(SET_LOADING, true);
+    commit(SET_SAVING, true);
     try {
       await CSVService.setName(dataset_id, name);
       commit(MERGE_INTO_DATASET, { dataset_id, data: { name } });
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, false);
     } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, err);
       throw err;
     }
   },
 
   async [SET_DATASET_DESCRIPTION]({ commit }, { dataset_id, description }) {
-    commit(SET_LOADING, true);
+    commit(SET_SAVING, true);
     try {
       await CSVService.setDescription(dataset_id, description);
       commit(MERGE_INTO_DATASET, { dataset_id, data: { description } });
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, false);
     } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, err);
       throw err;
     }
   },
 
   async [SET_DATASET_GROUP_LEVELS]({ commit }, { dataset_id, groupLevels }) {
-    commit(SET_LOADING, true);
+    commit(SET_SAVING, true);
     try {
       await CSVService.setGroupLevels(dataset_id, groupLevels);
       commit(MERGE_INTO_DATASET, { dataset_id, data: { groupLevels } });
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, false);
     } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, err);
       throw err;
     }
   },
 
   async [SET_DATASET_SELECTED_COLUMNS]({ commit }, { dataset_id, columns }) {
-    commit(SET_LOADING, true);
+    commit(SET_SAVING, true);
     try {
       await CSVService.setSelectedColumns(dataset_id, columns);
       commit(MERGE_INTO_DATASET, { dataset_id, data: { selectedColumns: columns } });
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, false);
     } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, err);
       throw err;
     }
   },

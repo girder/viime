@@ -5,14 +5,23 @@ v-app
     v-breadcrumbs(:items="breadcrumbs", divider="»")
       template(#item="props")
         v-breadcrumbs-item(:to="props.item.to", exact) {{props.item.text}}
+
+    v-spacer
+
+    save-status
+
   v-container.pa-0.d-flex(fluid)
     router-view.grow
 </template>
 
 <script>
+import SaveStatus from './components/SaveStatus.vue';
 
 export default {
   name: 'App',
+  components: {
+    SaveStatus,
+  },
   computed: {
     breadcrumbs() {
       return [
