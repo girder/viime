@@ -99,7 +99,10 @@ export const routes = [
             },
           },
           ...analyses.map(({ path, shortName: name, component }) => ({
-            path, name, component, props: true,
+            path,
+            name,
+            component,
+            props: true,
           })),
         ],
       },
