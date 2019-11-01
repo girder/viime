@@ -119,8 +119,7 @@ v-layout.pretreatment-component(row, fill-height)
             v-icon.pr-1.drawericon {{ $vuetify.icons.fileDownload }}
             | Download Data
 
-  keep-alive
-    router-view
+  router-view
 </template>
 
 <style lang="scss">
