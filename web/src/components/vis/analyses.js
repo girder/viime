@@ -2,10 +2,20 @@ import WilcoxonPlotTile from './WilcoxonPlotTile.vue';
 import AnovaTableTile from './AnovaTableTile.vue';
 import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
+import PcaPage from './PcaPage.vue';
 import { plot_types } from '../../utils/constants';
 import { correlation_methods } from './constants';
 
 export default [
+  {
+    path: 'pcapage',
+    name: 'Principal Component Analysis',
+    shortName: 'PCA',
+    description: 'TODO',
+    component: PcaPage,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
   {
     path: 'wilcoxon',
     name: 'Wilcoxon test',
