@@ -74,6 +74,7 @@ vis-tile(title="PCA Score Plot")
   score-plot(
       :pc-coords="pcCoords",
       :row-labels="rowLabels",
+      :colors="dataset.groupLevels",
       :group-labels="groupLabels",
       :eigenvalues="eigenvalues",
       :columns="columns",
