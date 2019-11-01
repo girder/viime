@@ -11,6 +11,7 @@ import DataSource from '../components/DataSource.vue';
 import Impute from '../components/Impute.vue';
 import Download from '../components/Download.vue';
 import NewMerge from '../components/NewMerge.vue';
+import RouterView from '../components/RouterView.vue';
 import analyses from '../components/vis/analyses';
 
 Vue.use(Router);
@@ -73,13 +74,34 @@ export const routes = [
       },
       {
         path: 'analyze',
-        name: 'Analyze Data',
-        component: AnalyzeData,
+        component: RouterView,
         props: true,
+        meta: {
+          breadcrumb() {
+            return {
+              text: 'Analyze Data',
+            };
+          },
+        },
+        children: [
+          {
+            path: '',
+            name: 'Analyze Data',
+            component: AnalyzeData,
+            props: true,
+            meta: {
+              breadcrumb() {
+                return {
+                  hidden: true,
+                };
+              },
+            },
+          },
+          ...analyses.map(({ path, shortName: name, component }) => ({
+            path, name, component, props: true,
+          })),
+        ],
       },
-      ...analyses.map(({ path, shortName: name, component }) => ({
-        path: `analyze/${path}`, name, component, props: true,
-      })),
       {
         path: 'download',
         name: 'Download Data',

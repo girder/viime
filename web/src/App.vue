@@ -28,7 +28,7 @@ export default {
             ...(b ? b.call(route, this.$route.params, this.$store) : {}),
           };
         }),
-      ];
+      ].filter(item => !item.hidden);
     },
   },
 };
