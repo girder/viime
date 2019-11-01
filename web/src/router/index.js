@@ -36,6 +36,7 @@ export const routes = [
         const ds = store.getters.dataset(params.id);
         return {
           text: ds ? ds.name : params.id,
+          to: { name: 'Pretreat Data', params },
         };
       },
     },
@@ -77,9 +78,10 @@ export const routes = [
         component: RouterView,
         props: true,
         meta: {
-          breadcrumb() {
+          breadcrumb(params) {
             return {
               text: 'Analyze Data',
+              to: { name: 'Analyze Data', params },
             };
           },
         },
