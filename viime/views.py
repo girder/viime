@@ -885,7 +885,8 @@ def sample_get(csv_id: str):
 
 @csv_bp.route('/sample/sample', methods=['POST'])
 def sample_upload():
-    dump = samples.upload(request.json)
+    csv = samples.upload(request.json)
+    dump = samples.dump(csv)
     db.session.commit()
     return jsonify(dump), 200
 

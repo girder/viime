@@ -15,10 +15,12 @@ def is_sample_file(csv: CSVFile) -> bool:
 def import_files(files: List[CSVFile]):
     new_ids = {str(c.id): uuid4() for c in files}
 
-    todo = files.copy()
+    todo: List[CSVFile] = files.copy()
+
+    imported: List[CSVFile] = []
 
     while todo:
-        csv = todo.pop(0)
+        csv: CSVFile = todo.pop(0)
 
         new_id = new_ids.get(str(csv.id))
         ori_id = csv.id
@@ -61,6 +63,8 @@ def import_files(files: List[CSVFile]):
         for sub in csv.columns + csv.rows + csv.group_levels:
             db.session.add(sub)
 
+        imported.append(csv)
+
         v: ValidatedMetaboliteTable = ValidatedMetaboliteTable.query \
             .filter_by(csv_file_id=ori_id).first()
         if not v:
@@ -75,7 +79,7 @@ def import_files(files: List[CSVFile]):
         v.meta = csv.meta.copy()
         db.session.add(v)
 
-    return files
+    return imported
 
 
 def dump_info(csv: CSVFile):
@@ -159,7 +163,7 @@ def upload(json: Dict[str, Any]):
     validated_table = ValidatedMetaboliteTable.create_from_csv_file(csv, **validated)
     db.session.add(validated_table)
 
-    return dump(csv)
+    return csv
 
 
 def enable_sample(csv: CSVFile, group: Optional[str] = 'Default'):
