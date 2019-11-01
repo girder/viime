@@ -29,7 +29,7 @@ export default {
           text: 'VIIME',
           to: { name: 'Root' },
         },
-        ...this.$route.matched.map((route) => {
+        ...this.$route.matched.filter(route => !route.meta.hidden).map((route) => {
           const b = route.meta.breadcrumb;
           return {
             text: route.name,
@@ -37,7 +37,7 @@ export default {
             ...(b ? b.call(route, this.$route.params, this.$store) : {}),
           };
         }),
-      ].filter(item => !item.hidden);
+      ];
     },
   },
 };
