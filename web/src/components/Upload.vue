@@ -64,6 +64,7 @@ export default {
       return Object.keys(datasets).map((id) => {
         const d = datasets[id];
         return {
+          id: d.id,
           file: {
             name: d.name,
             size: d.size, // TODO: fix when server implements this.
@@ -75,7 +76,7 @@ export default {
       });
     },
     files() {
-      return this.readyFiles.concat(this.pendingFiles.filter(f => f.status !== 'done'));
+      return this.readyFiles.concat(this.pendingFiles);
     },
     deleteDialog() {
       return this.deleteCount > 0;
@@ -98,6 +99,7 @@ export default {
 
       this.pendingFiles = this.pendingFiles.concat([...filteredFiles].map(file => ({
         file,
+        id: `${file.name}-pending`,
         status: 'pending',
         progress: {},
         meta: {},
@@ -119,6 +121,8 @@ export default {
           }
         });
       await Promise.all(promises);
+      // filter out done ones
+      this.pendingFiles = this.pendingFiles.filter(f => f.status !== 'done');
     },
     async next() {
       const id = Object.keys(this.datasets)[0];
@@ -174,7 +178,7 @@ v-layout.upload-component(column, fill-height)
           | clear all
       v-list.upload-list
         template(v-for="(file, idx) in files")
-          v-list-tile.pa-2(:key="file.file.name + file.status")
+          v-list-tile.pa-2(:key="file.id")
             v-list-tile-action
               v-btn(:disabled="file.status === 'uploading'",
                   icon, @click="doDelete = () => { remove(file); }; deleteCount = 1;")
