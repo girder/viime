@@ -84,6 +84,10 @@ export default {
   },
   methods: {
     async onFileChange(targetFiles) {
+      if (this.$refs.dropzone && this.$refs.dropzone.$el) {
+        const input = this.$refs.dropzone.$el.querySelector('input[type=file]');
+        input.value = ''; // reset file input to proper detect same file changes
+      }
       // filter to valid types only
       const filteredFiles = targetFiles.filter(
         f => isExcelFile(f) || isCSVFile(f) || isTextFile(f),
@@ -224,8 +228,8 @@ v-layout.upload-component(column, fill-height)
                   :items="dataTypes", label="Type of data",
                   item-text="name", item-value="value")
           v-divider(v-if="idx + 1 < files.length", :key="idx")
-    dropzone.filezone.mx-4.mb-4(:multiple="true", :message="message", @change="onFileChange",
-        accept=".csv,.xlsx,.txt")
+    dropzone.filezone.mx-4.mb-4(ref="dropzone", :multiple="true", :message="message",
+        @change="onFileChange", accept=".csv,.xlsx,.txt")
 
   v-toolbar(flat, dense)
     v-spacer
