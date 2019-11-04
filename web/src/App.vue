@@ -41,6 +41,10 @@ body {
 
 .logo.v-btn--icon {
   font-size: 150%;
+  color: transparent;
+  background-image: url("./assets/favicon.svg");
+  background-size: contain;
+  background-position: center center;
 }
 
 .v-breadcrumbs li {
