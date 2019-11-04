@@ -6,22 +6,6 @@ import FileList from '@girder/components/src/components/Presentation/FileUploadL
 import { UPLOAD_CSV, UPLOAD_EXCEL } from '@/store/actions.type';
 import { REMOVE_DATASET } from '@/store/mutations.type';
 
-const sampleTypes = [
-  { name: 'Serum', value: 'serum' },
-  { name: 'Urine', value: 'urine' },
-  { name: 'Tissue Extract', value: 'tissueextract' },
-  { name: 'Media', value: 'media' },
-  { name: 'Other', value: 'other' },
-];
-
-const dataTypes = [
-  { name: 'NMR Concentrations', value: 'nmr' },
-  { name: 'conc', value: 'conc' },
-  { name: 'GC/MS', value: 'gcms' },
-  { name: 'LC/MS', value: 'lcms' },
-  { name: 'Other', value: 'other' },
-];
-
 function isExcelFile(file) {
   return file.name.match(/\.xlsx$/i);
 }
@@ -45,8 +29,6 @@ export default {
       deleteCount: 0,
       doDelete: () => {},
       pendingFiles: [],
-      dataTypes,
-      sampleTypes,
       snackbar: false,
       snackbarContent: '',
     };
@@ -217,16 +199,6 @@ v-layout.upload-component(column, fill-height)
             v-list-tile-content.px-2.shrink(
                 v-if="file.status === 'uploading' || file.meta.ready === false")
               v-progress-circular(size="24", color="primary", indeterminate)
-            v-spacer
-            v-layout(row, shrink)
-              v-select.pa-2.tag-selection(hide-details,
-                  :disabled="true",
-                  :items="sampleTypes", label="Type of sample",
-                  item-text="name", item-value="value")
-              v-select.pa-2.tag-selection(hide-details,
-                  :disabled="true",
-                  :items="dataTypes", label="Type of data",
-                  item-text="name", item-value="value")
           v-divider(v-if="idx + 1 < files.length", :key="idx")
     dropzone.filezone.mx-4.mb-4(ref="dropzone", :multiple="true", :message="message",
         @change="onFileChange", accept=".csv,.xlsx,.txt")
