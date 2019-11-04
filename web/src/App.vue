@@ -45,6 +45,7 @@ body {
   background-image: url("./assets/favicon.svg");
   background-size: contain;
   background-position: center center;
+  border-radius: unset;
 }
 
 .v-breadcrumbs li {
