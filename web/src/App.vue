@@ -42,9 +42,8 @@ body {
 .logo.v-btn--icon {
   font-size: 150%;
   color: transparent;
-  background-image: url("./assets/favicon.svg");
-  background-size: contain;
-  background-position: center center;
+  background: url("./assets/favicon.svg") no-repeat center center;
+  background-size: 80%;
   border-radius: unset;
 }
 
