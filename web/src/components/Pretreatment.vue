@@ -110,7 +110,7 @@ v-layout.pretreatment-component(row, fill-height)
               :to="{ name: a.shortName, params: { id: dataset.id } }",
               :disabled="!valid(dataset)")
             v-list-tile-title
-              v-icon.drawericon {{ $vuetify.icons.compare }}
+              v-icon.drawericon {{ a.icon || $vuetify.icons.compare }}
               | {{a.shortName}}
 
         v-list-tile.top-level(:to="{ name: 'Download Data', params: { id: dataset.id } }",

@@ -63,5 +63,8 @@ export default {
     plusMultiple: 'mdi-checkbox-multiple-marked-outline',
     minusMultiple: 'mdi-checkbox-multiple-blank-outline',
     square: 'mdi-square',
+    heatmap: 'mdi-grid',
+    metaboliteTable: 'mdi-view-list',
+    graph: 'mdi-graphql',
   },
 };
