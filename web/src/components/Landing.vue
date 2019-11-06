@@ -157,11 +157,21 @@ v-app#viime-landing
 
   .collaboration
     v-container
-      h2.mb-3.pa-0 Ready for Collaboration
-      | The code for VIIME is in a permissive open source library, meaning it can be used and
-      |  extended across academia and industry with no restrictions. This includes deploying VIIME
-      |  at your institution for your internal research team. If you'd like to partner with us to
-      |  deploy or extend VIIME
+      v-layout(row)
+        v-flex(pa-3, sm6)
+          h2.mb-3.pa-0 Ready for Collaboration
+          p The code for VIIME is in a permissive open source library, meaning it can be used and
+            | extended across academia and industry with no restrictions. This includes deploying
+            | VIIME at your institution for your internal research team. If you'd like to partner
+            | with us to deploy or extend VIIME
+          v-btn.mt-3.mx-0.px-3(href="https://github.com/girder/viime", depressed, large)
+            v-icon.mr-2(left) mdi-github-face
+            | View on GitHub
+        v-flex(pa-3, sm6)
+          v-text-field(label="text field", placeholder="Placeholder", solo, dense)
+          v-text-field(label="text field", placeholder="Placeholder", solo, dense)
+          v-text-field(label="text field", placeholder="Placeholder", solo, dense)
+          v-btn.mx-0(color="accent lighten-1", depressed, large) join us
 
 </template>
 
@@ -294,12 +304,11 @@ v-app#viime-landing
 }
 
 .collaboration {
-  background-color: var(--v-primary-darken3);
+  background-color: var(--v-primary-darken4);
   color: #fff;
   font-size: 18px;
   padding: 15px 20px 30px;
   position: relative;
-  text-align: center;
   &:before {
     border-color: #ffffff transparent transparent transparent;
     border-style: solid;
