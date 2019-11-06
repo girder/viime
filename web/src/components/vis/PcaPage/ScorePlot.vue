@@ -78,15 +78,15 @@ export default {
 <template lang="pug">
 vis-tile(title="PCA Score Plot", :loading="plot.loading", svg-download, v-if="plot")
   score-plot(
-    :pc-coords="pcCoords",
-    :row-labels="rowLabels",
-    :colors="dataset.groupLevels",
-    :group-labels="groupLabels",
-    :eigenvalues="eigenvalues",
-    :columns="columns",
-    :pc-x="pcX",
-    :pc-y="pcY",
-    :show-ellipses="showEllipses")
+      :pc-coords="pcCoords",
+      :row-labels="rowLabels",
+      :colors="dataset.groupLevels",
+      :group-labels="groupLabels",
+      :eigenvalues="eigenvalues",
+      :columns="columns",
+      :pc-x="pcX",
+      :pc-y="pcY",
+      :show-ellipses="showEllipses")
 div(v-else)
   v-progress-circular(indeterminate, size="100", width="5")
   h4.display-1.pa-3 Loading Score Plot

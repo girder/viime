@@ -65,7 +65,7 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
               label="PC (X Axis)",
               min="1",
               outline,
-              :disabled="!showScore && !showLoadings"
+              :disabled="!showScore && !showLoadings",
               v-model="pcXval")
           v-text-field.py-2(
               hide-details,
@@ -73,13 +73,12 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
               label="PC (Y Axis)",
               min="1",
               outline,
-              :disabled="!showScore && !showLoadings"
+              :disabled="!showScore && !showLoadings",
               v-model="pcYval")
-
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title
-        v-container(pa-0 fluid)
+        v-container(pa-0, fluid)
           v-layout(align-center)
             v-flex Scree Plot
             v-flex
@@ -88,7 +87,7 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
       v-card-actions
         v-layout(column)
           v-text-field.py-2(
-              :disabled="!showScree"
+              :disabled="!showScree",
               hide-details,
               type="number",
               label="Number of PCs",
@@ -96,14 +95,14 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
               outline,
               v-model="numComponentsVal")
           v-switch.py-2(
-            v-model="showCutoffs"
-            label="Cutoff lines"
-            :disabled="!showScree"
-            hide-details)
+              v-model="showCutoffs",
+              label="Cutoff lines",
+              :disabled="!showScree",
+              hide-details)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title
-        v-container(pa-0 fluid)
+        v-container(pa-0, fluid)
           v-layout(align-center)
             v-flex Score Plot
             v-flex
@@ -112,14 +111,14 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
       v-card-actions
         v-layout(column)
           v-switch.py-2(
-            v-model="showEllipses"
-            label="Data ellipses"
-            :disabled="!showScore"
-            hide-details)
+              v-model="showEllipses",
+              label="Data ellipses",
+              :disabled="!showScore",
+              hide-details)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title
-        v-container(pa-0 fluid)
+        v-container(pa-0, fluid)
           v-layout(align-center)
             v-flex Loadings Plot
             v-flex
@@ -128,30 +127,30 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
       v-card-actions
         v-layout(column)
           v-switch.py-2(
-            v-model="showCrosshairs"
-            label="Crosshairs"
-            :disabled="!showLoadings"
-            hide-details)
+              v-model="showCrosshairs",
+              label="Crosshairs",
+              :disabled="!showLoadings",
+              hide-details)
 
   v-container.grow-overflow.ma-0(grid-list-lg, fluid)
     layout-grid(:cell-size="300")
       scree-plot(
-        v-show="showScree"
-        :id="id"
-        :pc-x="pcX"
-        :pc-y="pcY"
-        :num-components="numComponents"
-        :show-cutoffs="showCutoffs")
+          v-show="showScree",
+          :id="id",
+          :pc-x="pcX",
+          :pc-y="pcY",
+          :num-components="numComponents",
+          :show-cutoffs="showCutoffs")
       score-plot(
-        v-show="showScore"
-        :id="id"
-        :pc-x="pcX"
-        :pc-y="pcY"
-        :show-ellipses="showEllipses")
+          v-show="showScore",
+          :id="id",
+          :pc-x="pcX",
+          :pc-y="pcY",
+          :show-ellipses="showEllipses")
       loadings-plot(
-        v-show="showLoadings"
-        :id="id"
-        :pc-x="pcX"
-        :pc-y="pcY"
-        :show-crosshairs="showCrosshairs")
+          v-show="showLoadings",
+          :id="id",
+          :pc-x="pcX",
+          :pc-y="pcY",
+          :show-crosshairs="showCrosshairs")
 </template>
