@@ -56,7 +56,7 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
   template(#controls)
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title PC selector
-    v-card.mx-3(flat)
+    v-card.mb-3.mx-3(flat)
       v-card-actions
         v-layout(column)
           v-text-field.py-2(
@@ -83,7 +83,7 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
             v-flex Scree Plot
             v-flex
               v-switch.py-2(v-model="showScree", color="white", hide-details)
-    v-card.mx-3(flat)
+    v-card.mb-3.mx-3(flat)
       v-card-actions
         v-layout(column)
           v-text-field.py-2(
@@ -107,7 +107,7 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
             v-flex Score Plot
             v-flex
               v-switch.py-2(v-model="showScore", color="white", hide-details)
-    v-card.mx-3(flat)
+    v-card.mb-3.mx-3(flat)
       v-card-actions
         v-layout(column)
           v-switch.py-2(
@@ -123,7 +123,7 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
             v-flex Loadings Plot
             v-flex
               v-switch.py-2(v-model="showLoadings", color="white", hide-details)
-    v-card.mx-3(flat)
+    v-card.mb-3.mx-3(flat)
       v-card-actions
         v-layout(column)
           v-switch.py-2(
