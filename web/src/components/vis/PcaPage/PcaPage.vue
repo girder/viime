@@ -77,56 +77,44 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
               v-model="pcYval")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-      v-toolbar-title
-        v-container(pa-0, fluid)
-          v-layout(align-center)
-            v-flex Scree Plot
-            v-flex
-              v-switch.py-2(v-model="showScree", color="white", hide-details)
+      v-toolbar-title.switch-title Scree Plot
+        v-switch.switch(v-model="showScree", color="white", hide-details)
     v-card.mb-3.mx-3(flat)
       v-card-actions
         v-layout(column)
           v-text-field.py-2(
-              :disabled="!showScree",
-              hide-details,
-              type="number",
-              label="Number of PCs",
-              min="1",
-              outline,
-              v-model="numComponentsVal")
-          v-switch.py-2(
-              v-model="showCutoffs",
-              label="Cutoff lines",
-              :disabled="!showScree",
-              hide-details)
+            :disabled="!showScree",
+            hide-details,
+            type="number",
+            label="Number of PCs",
+            min="1",
+            outline,
+            v-model="numComponentsVal")
+          v-switch.ma-0.py-2(
+            v-model="showCutoffs",
+            label="Cutoff lines",
+            :disabled="!showScree",
+            hide-details)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-      v-toolbar-title
-        v-container(pa-0, fluid)
-          v-layout(align-center)
-            v-flex Score Plot
-            v-flex
-              v-switch.py-2(v-model="showScore", color="white", hide-details)
+      v-toolbar-title.switch-title Score Plot
+        v-switch.switch(v-model="showScore", color="white", hide-details)
     v-card.mb-3.mx-3(flat)
       v-card-actions
         v-layout(column)
-          v-switch.py-2(
+          v-switch.ma-0.py-2(
               v-model="showEllipses",
               label="Data ellipses",
               :disabled="!showScore",
               hide-details)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-      v-toolbar-title
-        v-container(pa-0, fluid)
-          v-layout(align-center)
-            v-flex Loadings Plot
-            v-flex
-              v-switch.py-2(v-model="showLoadings", color="white", hide-details)
+      v-toolbar-title.switch-title Loadings Plot
+        v-switch.switch(v-model="showLoadings", color="white", hide-details)
     v-card.mb-3.mx-3(flat)
       v-card-actions
         v-layout(column)
-          v-switch.py-2(
+          v-switch.ma-0.py-2(
               v-model="showCrosshairs",
               label="Crosshairs",
               :disabled="!showLoadings",
@@ -154,3 +142,16 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
           :pc-y="pcY",
           :show-crosshairs="showCrosshairs")
 </template>
+
+<style lang="scss" scoped>
+.switch-title {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  .switch {
+    flex-grow: 0;
+    margin-right: -10px;
+  }
+}
+</style>
