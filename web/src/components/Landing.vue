@@ -173,6 +173,9 @@ v-app#viime-landing
           v-text-field(label="text field", placeholder="Placeholder", solo, dense)
           v-btn.mx-0(color="accent lighten-1", depressed, large) join us
 
+  .footer
+    p.ma-0.pa-3 &copy; 2019 Kitware, Inc. | &lt; License Info Here &gt;
+
 </template>
 
  <style lang="scss" scoped>
@@ -321,6 +324,10 @@ v-app#viime-landing
     transform: translateX(-50%);
     width: 0;
   }
+}
+
+.footer {
+  text-align: center;
 }
 
 @keyframes animate {
