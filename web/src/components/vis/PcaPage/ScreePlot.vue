@@ -62,7 +62,7 @@ export default {
       return plot.data ? plot.data[key] : dflt;
     },
   },
-}
+};
 </script>
 
 <template lang="pug">

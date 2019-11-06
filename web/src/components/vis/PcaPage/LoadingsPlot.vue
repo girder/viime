@@ -36,7 +36,7 @@ export default {
       required: true,
     },
   },
-}
+};
 </script>
 
 <template lang="pug">

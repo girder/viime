@@ -37,15 +37,15 @@ export default {
 
   computed: {
     pcX() {
-      return Number.parseInt(this.pcXval);
+      return Number.parseInt(this.pcXval, 10);
     },
 
     pcY() {
-      return Number.parseInt(this.pcYval);
+      return Number.parseInt(this.pcYval, 10);
     },
 
     numComponents() {
-      return Number.parseInt(this.numComponentsVal);
+      return Number.parseInt(this.numComponentsVal, 10);
     },
   },
 };
