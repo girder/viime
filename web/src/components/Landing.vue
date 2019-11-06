@@ -107,12 +107,12 @@ v-app#viime-landing
   .partners
     v-container(py-5)
       v-layout(row wrap)
-        v-flex.partner(sm3)
+        v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
-            img(alt="Kitware, Inc.", src="../assets/kw_logo_mark.jpg", height="auto",
-            width="100")
             v-card-title.pt-3(primary-title)
-              h2.mx-auto Kitware, Inc.
+              img.mr-1(alt="Kitware, Inc.", src="../assets/kw_logo_mark.jpg", height="auto",
+              width="48")
+              h2 Kitware, Inc.
             v-card-text.pa-0
               v-list.team-members
                 v-list-tile(href="https://www.kitware.com/data-analytics/")
@@ -120,12 +120,12 @@ v-app#viime-landing
                     v-list-tile-title Data and Analytics team
                   v-list-tile-action
                     v-icon(color="accent lighten-1") mdi-link
-        v-flex.partner(sm3)
+        v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
-            img(alt="Indiana University", src="../assets/iu_logo_mark.jpg", height="auto",
-            width="100")
             v-card-title.pt-3(primary-title)
-              h2.mx-auto Indiana University
+              img.mr-1(alt="Indiana University", src="../assets/iu_logo_mark.jpg", height="auto",
+              width="48")
+              h2 Indiana University
             v-card-text.pa-0
               v-list.team-members
                 v-list-tile(href="https://medicine.iu.edu/research/faculty-labs/oconnell/")
@@ -141,12 +141,12 @@ v-app#viime-landing
                 v-list-tile
                   v-list-tile-content
                     v-list-tile-title Lilian Golzarri-Arroyo
-        v-flex.partner(sm3)
+        v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
-            img(alt="University of Washington", src="../assets/uw_logo_mark.jpg",
-            height="auto", width="100")
             v-card-title.pt-3(primary-title)
-              h2.mx-auto University of Washington
+              img.mr-2(alt="University of Washington", src="../assets/uw_logo_mark.jpg",
+              height="auto", width="48")
+              h2 University of Washington
             v-card-text.pa-0
               v-list.team-members
                 v-list-tile(href="https://sites.uw.edu/mmcslu/faculty/daniel-raftery-phd/")
@@ -154,10 +154,6 @@ v-app#viime-landing
                     v-list-tile-title Daniel Raftery
                   v-list-tile-action
                     v-icon(color="accent lighten-1") mdi-link
-        v-flex.partner(sm3)
-          v-card(color="transparent", flat, href="https://kitware.com")
-            v-card-title(primary-title)
-              h1.primary--text.text--darken-3 &lt; join us link &gt;
 
   .collaboration
     v-container
@@ -253,10 +249,6 @@ v-app#viime-landing
 }
 .partners {
   .partner {
-    img {
-      display: block;
-      margin: 0 auto;
-    }
     .team-members {
       border-top:4px solid var(--v-accent-lighten1);
       border-radius: 3px;
