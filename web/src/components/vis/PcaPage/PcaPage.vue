@@ -148,6 +148,7 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
   align-items: center;
   display: flex;
   justify-content: space-between;
+  overflow: visible;
   width: 100%;
   .switch {
     flex-grow: 0;
