@@ -4,6 +4,7 @@ import { hierarchy, cluster } from 'd3-hierarchy';
 import { scaleSequential } from 'd3-scale';
 import { interpolateBlues } from 'd3-scale-chromatic';
 import { select, event } from 'd3-selection';
+import { svg2url } from '../../utils/exporter';
 
 function extent(arr) {
   let min = Number.POSITIVE_INFINITY;
@@ -333,6 +334,19 @@ export default {
       }
       this.updateTree(this.$refs.row, this.rowHierarchy, this.row, this.rowConfig, false);
     },
+
+    combineColor(names, colorer) {
+      if (names.length === 1) {
+        return colorer(names[0]);
+      }
+      const frequencies = new Map();
+      names.forEach((name) => {
+        const color = colorer(name);
+        frequencies.set(color, (frequencies.get(color) || 0) + 1);
+      });
+      // most frequent color
+      return Array.from(frequencies.entries()).sort((a, b) => b[1] - a[1])[0][0];
+    },
     updateLabel(ref, wrapper, labels, colorer) {
       if (!ref) {
         return;
@@ -343,21 +357,8 @@ export default {
 
       text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
 
-      const combineColor = (names) => {
-        if (names.length === 1) {
-          return colorer(names[0]);
-        }
-        const frequencies = new Map();
-        names.forEach((name) => {
-          const color = colorer(name);
-          frequencies.set(color, (frequencies.get(color) || 0) + 1);
-        });
-        // most frequent color
-        return Array.from(frequencies.entries()).sort((a, b) => b[1] - a[1])[0][0];
-      };
-
       if (colorer) {
-        text.html(d => `<span class="color" style="background: ${combineColor(d.data.names)}"></span><span class="label">${d.data.name}</span>`);
+        text.html(d => `<span class="color" style="background: ${this.combineColor(d.data.names, colorer)}"></span><span class="label">${d.data.name}</span>`);
       } else {
         text.span(d => `<span class="label">${d.data.name}</span>`);
       }
@@ -453,6 +454,102 @@ export default {
       this.column.hovered = new Set();
       this.rnode = null;
       this.cnode = null;
+    },
+
+    generateImage() {
+      const canvas = document.createElement('canvas');
+      const columnDendogram = this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
+      const rowDendogram = this.rowConfig.dendogram ? this.width * DENDOGRAM_RATIO : 0;
+
+      canvas.width = rowDendogram + this.matrixWidth + LABEL_WIDTH;
+      canvas.height = columnDendogram + this.matrixHeight + LABEL_WIDTH;
+
+      const ctx = canvas.getContext('2d');
+      // copy matrix first
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(this.$refs.matrix, rowDendogram, columnDendogram);
+
+      const toWait = [];
+
+      if (columnDendogram > 0) {
+        // column dendogram
+        const url = svg2url(this.$refs.column, { font: false, icons: true });
+        const img = new Image(this.width * DENDOGRAM_RATIO, this.matrixHeight);
+        toWait.push(new Promise((resolve) => {
+          img.onload = () => {
+            ctx.drawImage(img, rowDendogram, 0);
+            URL.revokeObjectURL(url);
+            resolve();
+          };
+          img.src = url;
+        }));
+      }
+      if (rowDendogram > 0) {
+        // row dendogram
+        const url = svg2url(this.$refs.row, { font: false, icons: true });
+        const img = new Image(this.matrixWidth, this.height * DENDOGRAM_RATIO);
+        toWait.push(new Promise((resolve) => {
+          img.onload = () => {
+            ctx.drawImage(img, 0, columnDendogram);
+            URL.revokeObjectURL(url);
+            resolve();
+          };
+          img.src = url;
+        }));
+      }
+
+      // row labels
+      {
+        ctx.save();
+        ctx.translate(rowDendogram + this.matrixWidth, columnDendogram);
+        const hi = this.matrixHeight / this.rowLeaves.length;
+        const { colorer } = this.rowConfig;
+        if (colorer) {
+          this.rowLeaves.forEach((d, i) => {
+            ctx.fillStyle = this.combineColor(d.data.names, colorer);
+            ctx.fillRect(0, hi * i, 5, hi);
+          });
+        }
+        const x = colorer ? 7 : 0;
+
+        ctx.font = window.getComputedStyle(this.$refs.rowlabel).font;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'black';
+        this.rowLeaves.forEach((d, i) => {
+          ctx.fillText(d.data.name, x, hi * (i + 0.5));
+        });
+        ctx.restore();
+      }
+      // column labels
+      {
+        ctx.save();
+        ctx.translate(rowDendogram, columnDendogram + this.matrixHeight);
+        const wi = this.matrixWidth / this.columnLeaves.length;
+        const { colorer } = this.columnConfig;
+        if (colorer) {
+          this.columnLeaves.forEach((d, i) => {
+            ctx.fillStyle = this.combineColor(d.data.names, colorer);
+            ctx.fillRect(wi * i, 0, wi, 5);
+          });
+        }
+        const y = colorer ? 7 : 0;
+        ctx.font = window.getComputedStyle(this.$refs.collabel).font;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'black';
+        this.columnLeaves.forEach((d, i) => {
+          ctx.save();
+          ctx.translate(wi * (i + 0.5), y);
+          ctx.rotate(Math.PI * -0.5);
+          ctx.fillText(d.data.name, 0, 0);
+          ctx.restore();
+        });
+        ctx.restore();
+      }
+
+      return Promise.all(toWait).then(() => canvas.toDataURL('image/png'));
     },
   },
 };

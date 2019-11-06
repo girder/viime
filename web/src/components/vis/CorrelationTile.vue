@@ -4,6 +4,7 @@ import VisTileLarge from './VisTileLarge.vue';
 import ToolbarOption from '../ToolbarOption.vue';
 import plotData from './mixins/plotData';
 import { correlation_methods } from './constants';
+import { colors } from '../../utils/constants';
 
 export default {
   components: {
@@ -23,6 +24,7 @@ export default {
 
   data() {
     return {
+      colors,
       showNodeLabels: false,
       showEdgeLabels: false,
       linkDistance: 50,
@@ -77,7 +79,7 @@ export default {
 
 <template lang="pug">
 vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="plot.loading",
-    expanded)
+    expanded, download)
   template(#controls)
     toolbar-option(title="Method", :value="plot.args.method",
         :options="correlation_methods",
@@ -95,9 +97,9 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     v-card.mx-3(flat)
       v-card-actions.checkboxlist
         v-checkbox.my-0(v-model="showSelected", :label="`Selected (${countSelected})`",
-            hide-details, color="#ffa500")
+            hide-details, :color="colors.selected")
         v-checkbox.my-0(v-model="showNotSelected", :label="`Not Selected (${countNotSelected})`",
-            hide-details, color="#4682b4")
+            hide-details, :color="colors.correlationNode")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Advanced Options
@@ -113,7 +115,8 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     force-directed-graph(:edges="edges", :nodes="nodes",
         :link-distance="linkDistanceAsNumber", :show-node-labels="showNodeLabels",
         :show-edge-labels="showEdgeLabels",
-        :min-stroke-value="min_correlation", highlight-color="#ffa500", color="#4682b4")
+        :min-stroke-value="min_correlation",
+        :highlight-color="colors.selected", :color="colors.correlationNode")
 </template>
 
 <style scoped>

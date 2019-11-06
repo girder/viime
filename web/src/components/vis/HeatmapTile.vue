@@ -3,6 +3,8 @@ import Heatmap, { heatmapLayouts } from './Heatmap.vue';
 import VisTileLarge from './VisTileLarge.vue';
 import plotData from './mixins/plotData';
 import ToolbarOption from '../ToolbarOption.vue';
+import { download } from '../../utils/exporter';
+import { colors } from '../../utils/constants';
 
 export default {
   components: {
@@ -22,6 +24,7 @@ export default {
 
   data() {
     return {
+      colors,
       column: {
         dendogram: true,
         colorer: this.isSelectedColor,
@@ -94,10 +97,17 @@ export default {
   },
   methods: {
     isSelectedColor(column) {
-      return this.selectionLookup.has(column) ? '#ffa500' : '#4682b4';
+      return this.selectionLookup.has(column) ? colors.selected : colors.notSelected;
     },
     groupColor(row) {
       return this.groupLookup.get(row);
+    },
+    async download() {
+      if (!this.$refs.heatmap) {
+        return;
+      }
+      const url = await this.$refs.heatmap.generateImage();
+      download(url, 'Heatmap.png');
     },
   },
 };
@@ -105,7 +115,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="plot", title="Heatmap", expanded,
+vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl="download",
     :loading="plot.loading || !dataset.ready || !values || values.data.length === 0")
   template(#controls)
     v-toolbar.darken-3(color="primary", dark, flat, dense)
@@ -113,9 +123,10 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded,
     v-card.mx-3(flat)
       v-card-actions(:style="{display: 'block'}")
         v-checkbox.my-0(v-model="showSelected",
-            :label="`Selected (${countSelected})`", hide-details, color="#ffa500")
+            :label="`Selected (${countSelected})`", hide-details, :color="colors.selected")
         v-checkbox.my-0(v-model="showNotSelected",
-            :label="`Not Selected (${countNotSelected})`", hide-details, color="#4682b4")
+            :label="`Not Selected (${countNotSelected})`", hide-details,
+            :color="colors.notSelected")
     v-toolbar.darken-3(color="primary", dark, flat, dense)
       v-toolbar-title Dendogram
     v-card.mx-3(flat)
@@ -125,7 +136,7 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded,
     toolbar-option(title="Layout", :value="layout",
         :options="layouts",
         @change="layout = $event")
-  heatmap(
+  heatmap(ref="heatmap",
       v-if="plot && plot.data && dataset.ready && values",
       :values="values",
       :column-config="column", :row-config="row", :layout="layout",

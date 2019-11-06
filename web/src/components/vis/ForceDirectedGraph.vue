@@ -74,6 +74,13 @@ export default {
       this.update();
       return '';
     },
+    reactivePlotBoundsUpdate() {
+      if (!this.refsMounted) {
+        return '';
+      }
+      this.updateBounds();
+      return '';
+    },
     strokeScale() {
       return scalePow().exponent(2).domain([this.minStrokeValue, 1]).range([1, 8])
         .clamp(true);
@@ -141,11 +148,8 @@ export default {
       edges.select('text')
         .attr('transform', d => `translate(${t.applyX((d.source.x + d.target.x) / 2)},${t.applyY((d.source.y + d.target.y) / 2)})`);
     },
-    update() {
-      const { simulation, stopTicker } = this;
-
-      simulation.stop();
-      this.stopTicker();
+    updateBounds() {
+      const { simulation } = this;
 
       if (!this.$refs.svg) {
         return;
@@ -157,6 +161,25 @@ export default {
       svg.call(this.zoom
         .extent([[0, 0], [this.width, this.height]])
         .on('zoom', () => this.tick()));
+
+      simulation.force('link').distance(this.linkDistance);
+      simulation.force('x').x(this.width / 2);
+      simulation.force('y').y(this.height / 2);
+      simulation.force('center').x(this.width / 2).y(this.height / 2);
+      simulation.force('collide').radius(this.radius);
+    },
+
+    update() {
+      const { simulation, stopTicker } = this;
+
+      simulation.stop();
+      this.stopTicker();
+
+      if (!this.$refs.svg) {
+        return;
+      }
+
+      const svg = select(this.$refs.svg);
 
       // work on local copy since D3 manipulates the data structure
       const localNodes = this.nodes.map(d => Object.assign({}, d));
@@ -214,11 +237,7 @@ export default {
 
       // towards center of screen
       simulation.nodes(localNodes);
-      simulation.force('link').distance(this.linkDistance).links(localEdges);
-      simulation.force('x').x(this.width / 2);
-      simulation.force('y').y(this.height / 2);
-      simulation.force('center').x(this.width / 2).y(this.height / 2);
-      simulation.force('collide').radius(this.radius);
+      simulation.force('link').links(localEdges);
 
       simulation.alpha(1).restart().stop().tick(250); // forward 250 ticks
       this.tick();
@@ -236,7 +255,7 @@ export default {
 <template lang="pug">
 .main(v-resize:throttle="onResize")
   svg.svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
-      :data-update="reactivePlotUpdate")
+      :data-update="reactivePlotUpdate", :data-update-bounds="reactivePlotBoundsUpdate")
     g.zoom
       g.edges(:class="{ hideLabels: !this.showEdgeLabels }")
       g.nodes(:class="{ hideLabels: !this.showNodeLabels }")
