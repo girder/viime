@@ -1,12 +1,24 @@
+<script>
+export default {
+  data() {
+    return {
+      capabilityClasses: {
+        'px-4': this.$vuetify.breakpoint.smAndDown,
+        'px-0': this.$vuetify.breakpoint.mdAndUp,
+      },
+    };
+  },
+};
+</script>
 <template lang="pug">
-v-app#viime-landing
+v-app.viime-landing
   v-toolbar.main-toolbar.darken-4.py-2(dark, dense, color="transparent", flat)
     v-toolbar-title(style="height: 100%; padding: 10px 0;")
       img(src="../assets/viime_logo_ko.svg", alt="VIIME", height="100%")
     v-spacer
     v-btn(color="accent", depressed, large, :to="{ name: 'App' }") Your Datasets
 
-  v-container(fluid, pa-0).banner-area
+  v-container.banner-area(fluid, pa-0)
     v-layout(row, reverse)
       v-flex(md5, pa-0)
         v-card.banner-image(color="white", flat)
@@ -35,7 +47,7 @@ v-app#viime-landing
   .capabilities
     v-container(fluid, pa-0)
       v-layout.capability
-        v-container(:class="{'px-4': $vuetify.breakpoint.smAndDown, 'px-0': $vuetify.breakpoint.mdAndUp}", py-5)
+        v-container(:class="capabilityClasses", py-5)
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
               v-card(color="transparent", flat, pa-0)
@@ -49,7 +61,7 @@ v-app#viime-landing
                   |  from multiple measurement platforms (NMR, MS) or tissues (serum, urine, etc.)
 
       v-layout.capability
-        v-container(:class="{'px-4': $vuetify.breakpoint.smAndDown, 'px-0': $vuetify.breakpoint.mdAndUp}", py-2x)
+        v-container(:class="capabilityClasses", py-2x)
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
               v-card(color="transparent", flat, pa-0)
@@ -64,7 +76,7 @@ v-app#viime-landing
                   |  metabolite exclusion, and performs adjustable missing data imputation
 
       v-layout.capability
-        v-container(:class="{'px-4': $vuetify.breakpoint.smAndDown, 'px-0': $vuetify.breakpoint.mdAndUp}",  py-5)
+        v-container(:class="capabilityClasses", py-5)
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
               v-card(color="transparent", flat, pa-0)
@@ -78,7 +90,7 @@ v-app#viime-landing
                   |  investigation, and export resulting data and charts
 
       v-layout.capability
-        v-container(:class="{'px-4': $vuetify.breakpoint.smAndDown, 'px-0': $vuetify.breakpoint.mdAndUp}",  py-5)
+        v-container(:class="capabilityClasses", py-5)
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
               v-card(color="transparent", flat, pa-0)
@@ -92,7 +104,7 @@ v-app#viime-landing
                   |  make adjustments
 
       v-layout.capability
-        v-container(:class="{'px-4': $vuetify.breakpoint.smAndDown, 'px-0': $vuetify.breakpoint.mdAndUp}",  py-5)
+        v-container(:class="capabilityClasses", py-5)
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
               v-card(color="transparent", flat, pa-0)
@@ -106,12 +118,12 @@ v-app#viime-landing
                   |  the best understanding of your experimental data
   .partners
     v-container(py-5)
-      v-layout(row wrap)
+      v-layout(row, wrap)
         v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
             v-card-title.pt-3(primary-title)
               img.mr-1(alt="Kitware, Inc.", src="../assets/kw_logo_mark.jpg", height="auto",
-              width="48")
+                  width="48")
               h2 Kitware, Inc.
             v-card-text.pa-0
               v-list.team-members
@@ -124,7 +136,7 @@ v-app#viime-landing
           v-card.pa-3(color="transparent", flat)
             v-card-title.pt-3(primary-title)
               img.mr-1(alt="Indiana University", src="../assets/iu_logo_mark.jpg", height="auto",
-              width="48")
+                  width="48")
               h2 Indiana University
             v-card-text.pa-0
               v-list.team-members
@@ -145,7 +157,7 @@ v-app#viime-landing
           v-card.pa-3(color="transparent", flat)
             v-card-title.pt-3(primary-title)
               img.mr-2(alt="University of Washington", src="../assets/uw_logo_mark.jpg",
-              height="auto", width="48")
+                  height="auto", width="48")
               h2 University of Washington
             v-card-text.pa-0
               v-list.team-members
@@ -175,11 +187,10 @@ v-app#viime-landing
 
   .footer
     p.ma-0.pa-3 &copy; 2019 Kitware, Inc. | &lt; License Info Here &gt;
-
 </template>
 
  <style lang="scss" scoped>
-#viime-landing {
+.viime-landing {
   background: white;
 }
 .main-toolbar {
@@ -352,7 +363,6 @@ v-app#viime-landing
 @media screen and (max-width: 960px) {
   .banner-area {
     height: auto;
-    & > .layout {}
     .banner-content-wrap {
       min-height: 860px;
     }
@@ -376,12 +386,10 @@ v-app#viime-landing
       }
       .banner-buttons {
         margin: 0 auto;
-        button {}
       }
     }
     .banner-image {
       display: none;
-      img {}
     }
   }
   .capabilities {
@@ -398,10 +406,10 @@ v-app#viime-landing
 </style>
 
 <style lang="scss">
-#viime-landing {
+.viime-landing {
   .application--wrap {
     display: block;
     min-height: 100%;
   }
 }
-</styl
+</style>

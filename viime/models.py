@@ -118,8 +118,13 @@ class CSVFile(db.Model):
     @property
     def measurement_table(self):
         """Return the processed metabolite date table."""
+        return self.measurement_table_and_info[0]
+
+    @property
+    def measurement_table_and_info(self):
+        """Return the processed metabolite date table."""
         try:
-            return _get_measurement_table(self)
+            return _get_measurement_table_and_info(self)
         except Exception:
             current_app.logger.exception('Error getting measurement_table')
             raise
@@ -245,8 +250,8 @@ class CSVFile(db.Model):
             return
         levels = sorted([str(v) for v in groups.iloc[:, 0].unique()])
         # d3 scheme category 10
-        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
-                  '#7f7f7f', '#bcbd22', '#17becf']
+        colors = ['#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
+                  '#7f7f7f', '#bcbd22', '#17becf', '#ff7f0e']
         self.group_levels = [GroupLevel(name=l, label=l, color=colors[i % len(colors)])
                              for i, l in enumerate(levels)]
 
@@ -266,9 +271,8 @@ class CSVFile(db.Model):
     def apply_transforms(self):
         table = self.raw_measurement_table
         table = _coerce_numeric(table)
-        table = impute_missing(
-            table, self.groups, mnar=self.imputation_mnar, mcar=self.imputation_mcar)
-        return table
+        return impute_missing(table, self.groups,
+                              mnar=self.imputation_mnar, mcar=self.imputation_mcar)
 
     def save_table(self, table):
         # TODO: Delete cache entries if a file at self.uri exists already
@@ -662,13 +666,14 @@ def _get_raw_measurement_table(csv_file):
 
 
 @csv_file_cache
-def _get_measurement_table(csv_file):
+def _get_measurement_table_and_info(csv_file):
     if not get_fatal_index_errors(csv_file):
         try:
             return csv_file.apply_transforms()
         except Exception as e:
             # TODO: We should handle this better
             current_app.logger.exception(e)
+    return None, dict(mcar=[], mnar=[])
 
 
 @csv_file_cache
@@ -704,6 +709,7 @@ class ValidatedMetaboliteTable(db.Model):
     normalization_argument = db.Column(db.String, nullable=True)
     transformation = db.Column(db.String, nullable=True)
     scaling = db.Column(db.String, nullable=True)
+    imputation_info = db.Column(JSONType, nullable=True)
     meta = db.Column(JSONType, nullable=False)
 
     raw_measurements_bytes = db.Column(db.LargeBinary, nullable=False)
@@ -721,7 +727,7 @@ class ValidatedMetaboliteTable(db.Model):
 
     @classmethod
     def create_from_csv_file(cls, csv_file, **kwargs):
-        table = csv_file.measurement_table
+        table, info = csv_file.measurement_table_and_info
         assert table is not None, 'Invalid csv_file provided'
 
         attributes = {
@@ -730,6 +736,7 @@ class ValidatedMetaboliteTable(db.Model):
             'name': csv_file.name,
             'meta': csv_file.meta.copy(),
             'raw_measurements_bytes': cls.serialize_table(table),
+            'imputation_info': info,
             'measurement_metadata_bytes': cls.serialize_table(csv_file.measurement_metadata),
             'sample_metadata_bytes': cls.serialize_table(csv_file.sample_metadata),
             'groups_bytes': cls.serialize_table(csv_file.groups)
@@ -801,6 +808,7 @@ class ValidatedMetaboliteTableSchema(BaseSchema):
     scaling = fields.Str(missing=None, validate=validate.OneOf(SCALING_METHODS))
     transformation = fields.Str(missing=None, validate=validate.OneOf(TRANSFORMATION_METHODS))
     meta = fields.Dict(missing=dict)
+    imputation_info = fields.Dict(missing=dict)
 
     # not included in the serialized output
     raw_measurements_bytes = fields.Raw(required=True, load_only=True)

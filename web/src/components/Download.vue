@@ -4,6 +4,7 @@ import ToolbarOption from './ToolbarOption.vue';
 import { textColor } from '../utils';
 import { downloadCSV, download } from '../utils/exporter';
 import { CSVService } from '../common/api.service';
+import { colors } from '../utils/constants';
 
 
 export default {
@@ -19,6 +20,7 @@ export default {
   },
   data() {
     return {
+      colors,
       transpose: false,
       showSelected: true,
       showNotSelected: true,
@@ -178,7 +180,7 @@ export default {
       return ['type-sample'];
     },
     isSelectedColor(column) {
-      return this.selectionLookup.has(column) ? '#ffa500' : '#4682b4';
+      return this.selectionLookup.has(column) ? colors.selected : colors.notSelected;
     },
     groupColor(row) {
       return (this.groupLookup.get(row) || { color: null }).color;
@@ -237,9 +239,10 @@ v-layout.download-component(row, fill-height)
       v-card.mx-3(flat)
         v-card-actions.vertical
           v-checkbox.my-0(v-model="showSelected",
-              :label="`Selected (${countSelected})`", hide-details, color="#ffa500")
+              :label="`Selected (${countSelected})`", hide-details, :color="colors.selected")
           v-checkbox.my-0(v-model="showNotSelected",
-              :label="`Not Selected (${countNotSelected})`", hide-details, color="#4682b4")
+              :label="`Not Selected (${countNotSelected})`", hide-details,
+              :color="colors.notSelected")
 
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title Sample Filter
