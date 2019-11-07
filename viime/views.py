@@ -494,7 +494,7 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
 
     elif count_target < count_current:
         # delete extra
-        for column in csv_file.column[count_target:]:
+        for column in csv_file.columns[count_target:]:
             db.session.delete(column)
 
 
