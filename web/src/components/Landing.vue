@@ -121,7 +121,7 @@ v-app.viime-landing
       v-layout(row, wrap)
         v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
-            v-card-title.pt-3(primary-title)
+            v-card-title.partner-title.pt-3(primary-title)
               img.mr-1(alt="Kitware, Inc.", src="../assets/kw_logo_mark.jpg", height="auto",
                   width="48")
               h2 Kitware, Inc.
@@ -134,7 +134,7 @@ v-app.viime-landing
                     v-icon(color="accent lighten-1") $vuetify.icons.link
         v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
-            v-card-title.pt-3(primary-title)
+            v-card-title.partner-title.pt-3(primary-title)
               img.mr-1(alt="Indiana University", src="../assets/iu_logo_mark.jpg", height="auto",
                   width="48")
               h2 Indiana University
@@ -155,9 +155,9 @@ v-app.viime-landing
                     v-list-tile-title Lilian Golzarri-Arroyo
         v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
-            v-card-title.pt-3(primary-title)
+            v-card-title.partner-title.pt-3(primary-title)
               img.mr-2(alt="University of Washington", src="../assets/uw_logo_mark.jpg",
-                  height="auto", width="48")
+                  height="auto", width="32")
               h2 University of Washington
             v-card-text.pa-0
               v-list.team-members
@@ -277,6 +277,9 @@ v-app.viime-landing
       border-top:4px solid var(--v-accent-lighten1);
       border-radius: 3px;
       padding: 0;
+    }
+    .partner-title {
+      line-height: 48px;
     }
   }
 }
