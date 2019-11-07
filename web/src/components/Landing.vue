@@ -121,9 +121,8 @@ v-app.viime-landing
       v-layout(row, wrap)
         v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
-            v-card-title.pt-3(primary-title)
-              img.mr-1(alt="Kitware, Inc.", src="../assets/kw_logo_mark.jpg", height="auto",
-                  width="48")
+            v-card-title.partner-title.pt-3(primary-title)
+              img.mr-1(alt="Kitware, Inc.", src="../assets/kw_logo_mark.jpg", height="auto")
               h2 Kitware, Inc.
             v-card-text.pa-0
               v-list.team-members
@@ -131,12 +130,11 @@ v-app.viime-landing
                   v-list-tile-content
                     v-list-tile-title Data and Analytics team
                   v-list-tile-action
-                    v-icon(color="accent lighten-1") mdi-link
+                    v-icon(color="accent lighten-1") $vuetify.icons.link
         v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
-            v-card-title.pt-3(primary-title)
-              img.mr-1(alt="Indiana University", src="../assets/iu_logo_mark.jpg", height="auto",
-                  width="48")
+            v-card-title.partner-title.pt-3(primary-title)
+              img.mr-1(alt="Indiana University", src="../assets/iu_logo_mark.jpg", height="auto")
               h2 Indiana University
             v-card-text.pa-0
               v-list.team-members
@@ -144,7 +142,7 @@ v-app.viime-landing
                   v-list-tile-content
                     v-list-tile-title Thomas O'Connell
                   v-list-tile-action
-                    v-icon(color="accent lighten-1") mdi-link
+                    v-icon(color="accent lighten-1") $vuetify.icons.link
                 v-divider
                 v-list-tile
                   v-list-tile-content
@@ -155,9 +153,9 @@ v-app.viime-landing
                     v-list-tile-title Lilian Golzarri-Arroyo
         v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
-            v-card-title.pt-3(primary-title)
+            v-card-title.partner-title.pt-3(primary-title)
               img.mr-2(alt="University of Washington", src="../assets/uw_logo_mark.jpg",
-                  height="auto", width="48")
+                  height="auto")
               h2 University of Washington
             v-card-text.pa-0
               v-list.team-members
@@ -165,7 +163,7 @@ v-app.viime-landing
                   v-list-tile-content
                     v-list-tile-title Daniel Raftery
                   v-list-tile-action
-                    v-icon(color="accent lighten-1") mdi-link
+                    v-icon(color="accent lighten-1") $vuetify.icons.link
 
   .collaboration
     v-container
@@ -177,7 +175,7 @@ v-app.viime-landing
             | VIIME at your institution for your internal research team. If you'd like to partner
             | with us to deploy or extend VIIME
           v-btn.mt-3.mx-0.px-3(href="https://github.com/girder/viime", depressed, large)
-            v-icon.mr-2(left) mdi-github-face
+            v-icon.mr-2(left) $vuetify.icons.github
             | View on GitHub
         v-flex(pa-3, sm6)
           v-text-field(label="text field", placeholder="Placeholder", solo, dense)
@@ -277,6 +275,16 @@ v-app.viime-landing
       border-top:4px solid var(--v-accent-lighten1);
       border-radius: 3px;
       padding: 0;
+    }
+    .partner-title {
+      line-height: 48px;
+      white-space: nowrap;
+      flex-wrap: nowrap;
+
+      img {
+        width: 48px;
+        min-width: 32px;
+      }
     }
   }
 }
