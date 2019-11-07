@@ -1,5 +1,5 @@
 <template lang="pug">
-v-app
+v-app.viime-app
   v-toolbar.darken-3(dense, dark, color="primary")
     v-toolbar-side-icon.logo(@click="$router.push('/')") V
     v-breadcrumbs(:items="breadcrumbs", divider="»")
@@ -36,6 +36,8 @@ export default {
 
 <style lang="scss">
 .viime-app {
+  min-width: 900px;
+
   .logo.v-btn--icon {
     font-size: 150%;
   }

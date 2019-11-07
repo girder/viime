@@ -18,6 +18,5 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   max-height: 100vh;
-  min-width: 900px;
 }
 </style>
