@@ -122,8 +122,7 @@ v-app.viime-landing
         v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
             v-card-title.partner-title.pt-3(primary-title)
-              img.mr-1(alt="Kitware, Inc.", src="../assets/kw_logo_mark.jpg", height="auto",
-                  width="48")
+              img.mr-1(alt="Kitware, Inc.", src="../assets/kw_logo_mark.jpg", height="auto")
               h2 Kitware, Inc.
             v-card-text.pa-0
               v-list.team-members
@@ -135,8 +134,7 @@ v-app.viime-landing
         v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
             v-card-title.partner-title.pt-3(primary-title)
-              img.mr-1(alt="Indiana University", src="../assets/iu_logo_mark.jpg", height="auto",
-                  width="48")
+              img.mr-1(alt="Indiana University", src="../assets/iu_logo_mark.jpg", height="auto")
               h2 Indiana University
             v-card-text.pa-0
               v-list.team-members
@@ -157,7 +155,7 @@ v-app.viime-landing
           v-card.pa-3(color="transparent", flat)
             v-card-title.partner-title.pt-3(primary-title)
               img.mr-2(alt="University of Washington", src="../assets/uw_logo_mark.jpg",
-                  height="auto", width="32")
+                  height="auto")
               h2 University of Washington
             v-card-text.pa-0
               v-list.team-members
@@ -280,6 +278,13 @@ v-app.viime-landing
     }
     .partner-title {
       line-height: 48px;
+      white-space: nowrap;
+      flex-wrap: nowrap;
+
+      img {
+        width: 48px;
+        min-width: 32px;
+      }
     }
   }
 }
