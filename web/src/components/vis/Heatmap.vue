@@ -662,6 +662,7 @@ export default {
   display: flex;
   justify-content: center;
   overflow: hidden;
+  line-height: normal;
 }
 
 .collabel >>> div {
@@ -685,6 +686,7 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  line-height: normal;
 }
 
 
