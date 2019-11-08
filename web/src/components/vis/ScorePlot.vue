@@ -1,60 +1,20 @@
 <template lang="pug">
-.main(v-resize:throttle="onResize")
-  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
-      :data-update="reactiveUpdate")
-    g.master
-      g.axes
-      g.label.x(style="opacity: 0")
-        text PC1 (0%)
-      g.label.y(style="opacity: 0")
-        text PC2 (0%)
-      g.ellipses
-      g.plot
-  .tooltip(ref="tooltip")
+div(v-resize:throttle="onResize")
+  div(ref="chart")
+  span(style="display: none") {{ update }}
 </template>
 
-<style scoped>
-div.tooltip {
-  position: fixed;
-  text-align: center;
-  padding: 2px;
-  background: #eee;
-  border: 0px;
-  border-radius: 3px;
-  pointer-events: none;
-  z-index: 20;
-  opacity: 0;
-}
-
-.ellipses >>> circle {
-  fill: none;
-  vector-effect: non-scaling-stroke;
-}
-
-</style>
-
 <script>
-import { select, event } from 'd3-selection';
+import c3 from 'c3';
+import { select } from 'd3-selection';
+import { deviation, mean } from 'd3-array';
 import { format } from 'd3-format';
-import 'd3-transition';
+import resize from 'vue-resize-directive';
 
-import { axisPlot } from './mixins/axisPlot';
-
-function minmax(data, padding = 0.0) {
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const pad = padding * (max - min);
-
-  return [
-    min - pad,
-    max + pad,
-  ];
-}
+import 'c3/c3.css';
+import './score-plot.css';
 
 function covar(xs, ys) {
-  const sum = arr => arr.reduce((acc, x) => acc + x, 0);
-  const mean = arr => sum(arr) / arr.length;
-
   const e_xy = mean(xs.map((x, i) => x * ys[i]));
   const e_xx = mean(xs);
   const e_yy = mean(ys);
@@ -62,17 +22,59 @@ function covar(xs, ys) {
   return e_xy - e_xx * e_yy;
 }
 
-function unit(matrix) {
-  return matrix.map((row) => {
-    const mag = Math.sqrt(row[0] * row[0] + row[1] * row[1]);
-    return row.map(d => d / mag);
-  });
+// Create a plot of the covariance confidence ellipse of `x` and `y`.
+// x, y : array_like, shape (n, )
+//     Input data.
+// std : float
+//     The number of standard deviations to determine the ellipse's radiuses.
+//
+// Port of Python function from:
+//      https://matplotlib.org/gallery/statistics/confidence_ellipse.html
+function confidenceEllipse(x, y, std) {
+  // cov = np.cov(x, y)
+  const xdev = deviation(x);
+  const ydev = deviation(y);
+  const xcov = xdev * xdev;
+  const ycov = ydev * ydev;
+  const xycov = covar(x, y);
+
+  // pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
+  const pearson = xycov / Math.sqrt(xcov * ycov);
+
+  // # Using a special case to obtain the eigenvalues of this
+  // # two-dimensionl dataset.
+  // ell_radius_x = np.sqrt(1 + pearson)
+  // ell_radius_y = np.sqrt(1 - pearson)
+  const ell_radius_x = Math.sqrt(1 + pearson);
+  const ell_radius_y = Math.sqrt(1 - pearson);
+
+  // # Calculating the stdandard deviation of x from
+  // # the squareroot of the variance and multiplying
+  // # with the given number of standard deviations.
+  // scale_x = np.sqrt(cov[0, 0]) * n_std
+  // mean_x = np.mean(x)
+  const scale_x = Math.sqrt(xcov) * std;
+  const mean_x = mean(x);
+
+  // # calculating the stdandard deviation of y ...
+  // scale_y = np.sqrt(cov[1, 1]) * n_std
+  // mean_y = np.mean(y)
+  const scale_y = Math.sqrt(ycov) * std;
+  const mean_y = mean(y);
+
+  // transf = transforms.Affine2D() \
+  //     .rotate_deg(45) \
+  //     .scale(scale_x, scale_y) \
+  //     .translate(mean_x, mean_y)
+  const transform = `translate(${mean_x} ${mean_y}) scale(${scale_x} ${scale_y}) rotate(45)`;
+
+  return { rx: ell_radius_x, ry: ell_radius_y, transform };
 }
 
 export default {
-  mixins: [
-    axisPlot,
-  ],
+  directives: {
+    resize,
+  },
   props: {
     pcX: {
       required: true,
@@ -98,265 +100,389 @@ export default {
       type: Array,
       validator: prop => prop.every(val => typeof val === 'string'),
     },
-    groups: { // string[]
+    colors: {
       required: true,
       type: Array,
+      validator: prop => prop.every(val => ['name', 'color'].every(key => Object.prototype.hasOwnProperty.call(val, key))),
     },
-    groupToColor: { // (group:string) => string
+    groupLabels: {
       required: true,
-      type: Function,
+      type: Object,
     },
     eigenvalues: {
       required: true,
       type: Array,
       validator: prop => prop.every(Number.isFinite),
     },
+    columns: {
+      required: true,
+      type: Array,
+      validator: prop => prop.every(column => ['column_header', 'column_type'].every(key => Object.prototype.hasOwnProperty.call(column, key))),
+    },
   },
+
   data() {
     return {
-      margin: {
-        top: 20,
-        right: 20,
-        bottom: 50,
-        left: 50,
-      },
-      fadeInDuration: 500,
-      duration: 200,
+      chart: null,
+      ellipseVisible: {},
+      labels: {},
+      duration: 500,
+      width: 100,
+      height: 100,
+
+      // This property is set to `true` in the mounted hook, and is necessary to
+      // prevent reactively calling `update()` before the component has mounted.
+      //
+      // The alternative would be to make `update()` into a method, then set a
+      // series of watchers based on its dependent properties, which results in a
+      // code duplication that would likely become a source of difficulties.
+      hasMounted: false,
     };
   },
+
   computed: {
-    xlabel() {
-      return `PC${this.pcX}`;
-    },
-
-    ylabel() {
-      return `PC${this.pcY}`;
-    },
-
-    xyPoints() {
+    pcPoints() {
       const {
         pcCoords,
         pcX,
         pcY,
       } = this;
 
-      return pcCoords.map(p => ({
-        x: p[pcX - 1],
-        y: p[pcY - 1],
-      }));
+      const x = pcCoords.map(p => p[pcX - 1]);
+      const y = pcCoords.map(p => p[pcY - 1]);
+
+      return [x, y];
     },
 
-    xrange() {
-      return minmax(this.xyPoints.map(p => p.x), 0.1);
+    totalVariance() {
+      const {
+        eigenvalues,
+      } = this;
+
+      return eigenvalues.reduce((acc, x) => acc + x, 0);
     },
 
-    yrange() {
-      return minmax(this.xyPoints.map(p => p.y), 0.1);
+    pcVariances() {
+      const {
+        pcX,
+        pcY,
+        eigenvalues,
+        totalVariance,
+      } = this;
+
+      return [
+        eigenvalues[pcX - 1] / totalVariance,
+        eigenvalues[pcY - 1] / totalVariance,
+      ];
+    },
+
+    group() {
+      const { columns } = this;
+      const column = columns.find(elem => elem.column_type === 'group');
+
+      return column.column_header;
+    },
+
+    colorMapping() {
+      const {
+        colors,
+      } = this;
+
+      const mapping = {};
+      colors.forEach((color) => {
+        mapping[color.name] = color.color;
+      });
+
+      return mapping;
     },
 
     valid() {
       const {
         pcCoords,
         rowLabels,
-        groups,
+        groupLabels,
         eigenvalues,
+        hasMounted,
       } = this;
 
-      return pcCoords.length > 0
+      return hasMounted
+        && pcCoords.length > 0
         && rowLabels.length > 0
-        && groups.length > 0
+        && Object.keys(groupLabels).length > 0
         && eigenvalues.length > 0;
     },
 
-  },
-  methods: {
     update() {
-      // Grab the input props.
       const {
-        eigenvalues,
-        xyPoints,
-        groups,
-        groupToColor,
-        rowLabels,
-        duration,
-        xlabel,
-        ylabel,
+        colorMapping,
+        pcPoints,
         pcX,
         pcY,
         showEllipses,
+        ellipseVisible,
+        duration,
+        pcVariances,
         valid,
+        width,
+        height,
       } = this;
 
       if (!valid) {
-        return;
+        return '';
       }
 
-      // Set the axis labels.
-      //
-      // Compute the total variance in all the PCs.
-      const totVariance = eigenvalues.reduce((acc, x) => acc + x, 0);
-      const pctFormat = format('.2%');
-      const svg = select(this.$refs.svg);
-      this.axisPlot(svg);
-      this.setXLabel(`${xlabel} (${pctFormat(eigenvalues[pcX - 1] / totVariance)})`);
-      this.setYLabel(`${ylabel} (${pctFormat(eigenvalues[pcY - 1] / totVariance)})`);
+      const fmt = format('.2%');
+      const x = `PC${pcX} (${fmt(pcVariances[0])})`;
+      const y = `PC${pcY} (${fmt(pcVariances[1])})`;
 
-      // Draw the data.
-      //
-
-      // Plot the points in the scatter plot.
-      const tooltip = select(this.$refs.tooltip);
-      const coordFormat = format('.2f');
-      const radius = 4;
-      svg.select('g.plot')
-        .selectAll('circle')
-        .data(xyPoints)
-        .join(enter => enter.append('circle')
-          .attr('cx', this.scaleX(0))
-          .attr('cy', this.scaleY(0))
-          .attr('r', 0)
-          .style('fill-opacity', 0.001)
-          .on('mouseover', function mouseover(d, i) {
-            select(this)
-              .transition()
-              .duration(duration)
-              .attr('r', 2 * radius);
-
-            tooltip.transition()
-              .duration(duration)
-              .style('opacity', 0.9);
-            tooltip.html(`<b>${rowLabels[i]}</b><br>(${coordFormat(d.x)}, ${coordFormat(d.y)})`)
-              .style('left', `${event.clientX + 15}px`)
-              .style('top', `${event.clientY - 30}px`);
-          })
-          .on('mouseout', function mouseout() {
-            select(this)
-              .transition()
-              .duration(duration)
-              .attr('r', radius);
-
-            tooltip.transition()
-              .duration(this.duration)
-              .style('opacity', 0.0);
-          }))
-        .transition()
-        .duration(this.fadeInDuration)
-        .style('stroke', (d, i) => groupToColor(groups[i]))
-        .attr('r', radius)
-        .attr('cx', d => this.scaleX(d.x))
-        .attr('cy', d => this.scaleY(d.y));
-
-      // Decompose the data into its label categories.
-      const streams = {};
-      xyPoints.forEach((p, i) => {
-        const category = groups[i];
-        if (!streams[category]) {
-          streams[category] = [];
-        }
-        streams[category].push(p);
+      this.chart.axis.labels({
+        x,
+        y,
       });
 
-      // Compute the ellipse data for each subset.
+      this.chart.resize({
+        width,
+        height,
+      });
 
-      const ellipses = [];
-      if (showEllipses) {
-        Object.keys(streams).forEach((category) => {
-          const data = streams[category];
+      const [xData, yData] = pcPoints;
+      const grouped = this.grouped(xData, yData);
 
-          const xs = data.map(d => d.x);
-          const ys = data.map(d => d.y);
+      const groups = Object.keys(grouped);
+      const columns = [];
+      const labels = {};
+      const xs = {};
+      groups.forEach((g) => {
+        const xName = `${g}_x`;
 
-          // Compute the means.
-          const xMean = xs.reduce((acc, x) => acc + x, 0) / xs.length;
-          const yMean = ys.reduce((acc, y) => acc + y, 0) / ys.length;
+        columns.push([xName, ...grouped[g].map(d => d.x)]);
+        columns.push([g, ...grouped[g].map(d => d.y)]);
 
-          // Compute the covariance matrix. Note that "xy" = "yx" in this case so
-          // we just compute xy.
-          const xx = covar(xs, xs);
-          const yy = covar(ys, ys);
-          const xy = covar(xs, ys);
+        labels[g] = [...grouped[g].map(d => d.label)];
 
-          // Compute the trace and determinant.
-          const trace = xx + yy;
-          const det = xx * yy - xy * xy;
+        xs[g] = xName;
+      });
 
-          // Compute the eigenvalues and eigenvectors of the covariance matrix
-          // according to
-          // http://www.math.harvard.edu/archive/21b_fall_04/exhibits/2dmatrices/
-          const eigval = [
-            trace / 2 + Math.sqrt(trace * trace / 4 - det),
-            trace / 2 - Math.sqrt(trace * trace / 4 - det),
-          ];
+      // The following side effect depends on xData and yData in the same way
+      // that the C3 chart itself does, so we disable the linter warning that would
+      // prevent it.
+      //
+      // In general, this is part of the tradeoff of mixing an imperative vis
+      // library like C3 with a reactive framework like Vue. The alternatives are
+      // less attractive than breaking the rules here: for instance, we could set a
+      // series of watchers on the dependencies of this function to explicitly
+      // trigger it, but that presents a serious danger of falling out of sync with
+      // changes in the dependency list.
+      //
+      // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+      this.labels = labels;
 
-          const eigvec = Math.abs(xy) < 1e-10 ? [[1, 0], [0, 1]]
-            : unit([[eigval[0] - yy, xy],
-              [eigval[1] - yy, xy]]);
+      // Draw the C3 chart.
+      this.chart.load({
+        columns,
+        xs,
+      });
 
-          // Compute the rotation of the ellipse, mapping it into [-pi/2, pi/2].
-          let rotation = Math.acos(eigvec[0][0]);
-          if (rotation > Math.PI / 2) {
-            rotation -= Math.PI;
-          }
+      // Set the colors.
+      this.chart.data.colors(colorMapping);
 
-          // Compute the correct dimension of the ellipses.
-          //
-          // The ellipse major and minor axes are given in eigval, in *mixed
-          // units* of the PCx and PCy axes. Therefore, it is not correct to use
-          // this.scaleX and this.scaleY to determine their pixel extents.
-          // Instead, we need a bit of geometry: trigonometric identities
-          // together with the rotation angle will enable calculating the x and
-          // y projections of the axes onto the PC axes, and then the correct
-          // pixel size in the mixed direction can be calculated via Pythagoras.
-          const sq = x => x * x;
-          const sin_t = Math.abs(Math.sin(rotation));
-          const cos_t = Math.abs(Math.cos(rotation));
+      // Draw the data ellipses.
+      const scaleX = this.chart.internal.x;
+      const scaleY = this.chart.internal.y;
+      const cmap = this.chart.internal.color;
 
-          const xPixels = v => this.scaleX(v) - this.scaleX(0);
-          const yPixels = v => this.scaleY(v) - this.scaleY(0);
-          const pixels = h => Math.sqrt(sq(xPixels(h * cos_t)) + sq(yPixels(h * sin_t)));
+      const confidenceEllipses = Object.keys(grouped).map(group => ({
+        ...confidenceEllipse(grouped[group].map(d => d.x), grouped[group].map(d => d.y), 1),
+        category: group,
+      }));
+      confidenceEllipses.forEach((ell) => {
+        if (ellipseVisible[ell.category] === undefined) {
+          ellipseVisible[ell.category] = true;
+        }
+      });
 
-          ellipses.push({
-            xMean,
-            yMean,
-            rotation,
-            axes: eigval.map(Math.sqrt).map(pixels),
-            category,
-          });
-        });
-      }
-      // Draw the ellipses.
-      svg.select('g.ellipses')
-        .selectAll('g.ellipse')
-        .data(ellipses, d => d.category)
-        .join((enter) => {
-          const entered = enter.append('g')
+      const xFactor = (scaleX(1e10) - scaleX(0)) / 1e10;
+      const yFactor = (scaleY(1e10) - scaleY(0)) / 1e10;
+      const plotTransform = `translate(${scaleX(0)} ${scaleY(0)}) scale(${xFactor} ${yFactor})`;
+      select(this.$refs.chart)
+        .select('.c3-custom-ellipses')
+        .selectAll('ellipse')
+        .data(confidenceEllipses)
+        .join(
+          enter => enter
+            .append('ellipse')
+            .attr('class', d => `ellipse-${d.category}`)
             .classed('ellipse', true)
-            .style('opacity', 1)
-            .attr('transform', d => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`);
-          entered.append('circle').attr('r', 1);
-          return entered;
-        },
-        null,
-        exit => exit.transition()
-          .duration(this.duration)
-          .style('opacity', 0.0)
-          .attr('transform', d => `translate(${this.scaleX(d.xMean)}, ${this.scaleY(d.yMean)}) rotate(0) scale(1, 1)`)
-          .remove())
-        .transition()
-        .duration(this.duration)
-        .attr('transform', (d) => {
-          const xMean = this.scaleX(d.xMean);
-          const yMean = this.scaleY(d.yMean);
-          const rotation = -180 * d.rotation / Math.PI;
+            .style('fill', 'none')
+            .style('stroke', d => cmap(d.category))
+            .style('stroke-width', 1)
+            .attr('vector-effect', 'non-scaling-stroke')
+            .attr('rx', d => d.rx)
+            .attr('ry', d => d.ry)
+            .attr('transform', d => `${plotTransform} ${d.transform}`)
+            .style('opacity', 1),
+          update => update
+            .style('display', d => (showEllipses && ellipseVisible[d.category] ? null : 'none'))
+            .transition()
+            .duration(300)
+            .attr('rx', d => d.rx)
+            .attr('ry', d => d.ry)
+            .attr('transform', d => `${plotTransform} ${d.transform}`),
+          exit => exit.transition('exit')
+            .duration(duration)
+            .style('opacity', 0)
+            .remove(),
+        );
 
-          return `translate(${xMean}, ${yMean}) rotate(${rotation}) scale(${d.axes[0]}, ${d.axes[1]})`;
-        })
-        .select('circle')
-        .style('stroke', d => groupToColor(d.category));
+      return String(Math.random());
     },
-    setRanges(xyPoints) {
-      this.xrange = minmax(xyPoints.map(p => p.x), 0.1);
-      this.yrange = minmax(xyPoints.map(p => p.y), 0.1);
+  },
+
+  mounted() {
+    this.hasMounted = true;
+
+    this.chart = c3.generate({
+      bindto: this.$refs.chart,
+      data: {
+        columns: [],
+        type: 'scatter',
+      },
+      axis: {
+        x: {
+          label: {
+            text: 'x',
+            position: 'outer-center',
+          },
+          tick: {
+            fit: false,
+          },
+        },
+        y: {
+          label: {
+            text: 'y',
+            position: 'outer-middle',
+          },
+        },
+      },
+      legend: {
+        item: {
+          onmouseover: (id) => {
+            this.chart.focus(id);
+            this.focusEllipse(id);
+          },
+
+          onmouseout: () => {
+            this.chart.focus();
+            this.focusEllipse();
+          },
+
+          onclick: (id) => {
+            this.chart.toggle(id);
+            const showing = this.toggleEllipse(id);
+
+            if (!showing) {
+              this.chart.focus();
+              this.focusEllipse();
+            }
+          },
+        },
+      },
+      tooltip: {
+        contents: (d, title, value, color) => {
+          const category = d[0].id;
+          const label = this.labels[category][d[0].index];
+          const col = color(category);
+          const fmt = format('.2f');
+          const x = fmt(d[0].x);
+          const y = fmt(d[0].value);
+
+          const html = `
+          <div class="c3-tooltip-container">
+            <table class="c3-tooltip">
+              <tbody>
+                <tr>
+                  <th colspan="2">${label}</th>
+                </tr>
+                <tr class="c3-tooltip-name--${category}">
+                  <td class="name">
+                    <span style="background-color:${col}"></span>
+                    ${category}
+                  </td>
+                  <td class="value">(${x}, ${y})</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>`;
+
+          return html;
+        },
+      },
+    });
+
+    select(this.$refs.chart)
+      .select('.c3-chart')
+      .append('g')
+      .classed('c3-custom-ellipses', true);
+  },
+
+  methods: {
+    grouped(xdata, ydata) {
+      const {
+        groupLabels,
+        rowLabels,
+        group,
+      } = this;
+
+      const grouped = {};
+
+      xdata.forEach((d, i) => {
+        const g = groupLabels[group][i];
+
+        if (!Object.prototype.hasOwnProperty.call(grouped, g)) {
+          grouped[g] = [];
+        }
+
+        grouped[g].push({
+          x: d,
+          y: ydata[i],
+          label: rowLabels[i],
+        });
+      });
+
+      Object.keys(grouped).forEach((g) => {
+        grouped[g].sort((a, b) => a.x - b.x);
+      });
+
+      return grouped;
+    },
+
+    focusEllipse(which) {
+      const selector = which ? `ellipse.ellipse-${which}` : 'ellipse.ellipse';
+
+      this.defocusEllipse();
+
+      select(this.$refs.chart)
+        .selectAll(selector)
+        .style('opacity', 1.0);
+    },
+
+    defocusEllipse(which) {
+      const selector = which ? `ellipse.ellipse-${which}` : 'ellipse.ellipse';
+
+      select(this.$refs.chart)
+        .selectAll(selector)
+        .style('opacity', 0.3);
+    },
+
+    toggleEllipse(which) {
+      this.ellipseVisible[which] = !this.ellipseVisible[which];
+      return this.ellipseVisible[which];
+    },
+
+    onResize() {
+      const bb = this.$el.getBoundingClientRect();
+      this.width = bb.width - 20;
+      this.height = bb.height;
     },
   },
 };

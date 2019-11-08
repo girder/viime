@@ -183,6 +183,8 @@ const colors = {
   correlationNode: '#4682b4',
   positiveCorrelation: '#999999',
   negativeCorrelation: '#ef8a62',
+  mnarMethod: '#80b1d3',
+  mcarMethod: '#bc80bd',
 };
 
 export {

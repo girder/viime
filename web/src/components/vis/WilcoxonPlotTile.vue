@@ -41,7 +41,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="plot", title="Wilcoxon Test", :loading="plot.loading", expanded)
+vis-tile-large(title="Wilcoxon Test", :loading="plot.loading", expanded)
   template(#controls)
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Highlight Threshold
@@ -50,7 +50,7 @@ vis-tile-large(v-if="plot", title="Wilcoxon Test", :loading="plot.loading", expa
         v-layout(column)
           v-slider.my-1.minCorrelation(v-model="threshold", label="0", thumb-label="always",
               hide-details, min="0", max="0.1", step="0.001")
-  wilcoxon-plot(:data="plot.data", :threshold="threshold", v-model="selected")
+  wilcoxon-plot(v-if="plot.data", :data="plot.data", :threshold="threshold", v-model="selected")
 </template>
 
 <style scoped>
