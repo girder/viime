@@ -40,6 +40,10 @@ export default {
 
   .logo.v-btn--icon {
     font-size: 150%;
+    color: transparent;
+    background: url("../assets/favicon.svg") no-repeat center center;
+    background-size: 80%;
+    border-radius: unset;
   }
 
   .v-breadcrumbs li {
@@ -49,6 +53,7 @@ export default {
       color: inherit
     }
   }
+
   .grow-overflow {
     flex: 1 1 0;
     overflow: auto;
