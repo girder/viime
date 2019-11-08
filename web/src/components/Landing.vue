@@ -177,7 +177,8 @@ v-app.viime-landing
             | extended across academia and industry with no restrictions. This includes deploying
             | VIIME at your institution for your internal research team. If you'd like to partner
             | with us to deploy or extend VIIME
-          v-btn.mt-3.mx-0.px-3(href="https://github.com/girder/viime", depressed, large)
+          v-btn.mt-3.mx-0.px-3(href="https://github.com/girder/viime", depressed, large,
+              target="_blank", rel="noopener noreferrer")
             v-icon.mr-2(left) $vuetify.icons.github
             | View on GitHub
         v-flex(pa-3, sm6)
