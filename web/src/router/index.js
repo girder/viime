@@ -22,6 +22,14 @@ export const routes = [
     component: Upload,
   },
   {
+    path: '/try',
+    name: 'Try Data',
+    component: Upload,
+    meta: {
+      try: true,
+    },
+  },
+  {
     path: '/pretreatment/merge',
     component: NewMerge,
     props: true,

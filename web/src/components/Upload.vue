@@ -51,7 +51,7 @@ export default {
       sampleTypes,
       snackbar: false,
       snackbarContent: '',
-      browseSamples: false,
+      browseSamples: this.$route.meta.try === true,
     };
   },
   computed: {
@@ -82,6 +82,11 @@ export default {
     },
     deleteDialog() {
       return this.deleteCount > 0;
+    },
+  },
+  watch: {
+    $route(newVal) {
+      this.browseSamples = newVal.meta.try === true;
     },
   },
   methods: {
@@ -170,10 +175,10 @@ v-layout.upload-component(column, fill-height)
           template(v-slot:activator="{ on }")
             v-btn(flat, small, v-on="on")
               v-icon.pr-1 {{ $vuetify.icons.tablePlus }}
-              | add sample
+              | try example data source
           v-card
             v-card-title
-              h3.headline Sample Datasets
+              h3.headline Examples
             v-card-text
               sample-browser(@close="browseSamples = false")
             v-card-actions
