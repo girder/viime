@@ -1,9 +1,26 @@
 <script>
+export default {
+  props: {
+    small: {
+      type: Boolean,
+      required: false,
+    },
+  },
+  computed: {
+    src() {
+      if (this.small) {
+        return 'https://placekitten.com/1000/1040';
+      }
+      return 'https://placekitten.com/2000/2081';
+    },
+  },
+};
+
 </script>
 
 <template lang="pug">
 .highlight-image
-  img.inner(alt="VIIME", src="https://placekitten.com/2000/2081")
+  img.inner(alt="VIIME", :src="src")
 </template>
 
 <style scoped lang="scss">
@@ -14,7 +31,7 @@
 }
 
 .inner {
-  mask-image: url('../assets/mask.svg');
+  mask-image: url('../assets/viime_mask.svg');
   mask-repeat: no-repeat;
   mask-size: contain;
   mask-position: center center;

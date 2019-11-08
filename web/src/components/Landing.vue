@@ -30,7 +30,7 @@ v-app.viime-landing
           highlight-image.img
       v-flex.banner-content-wrap.primary.darken-4(md7)
         v-card.banner-content(color="transparent", dark, flat)
-          highlight-image.img
+          highlight-image.img(small)
           v-card-title.banner-title.px-0
             h1 Combine your metabolomics data. Interact with the results.
           v-card-text.banner-text.px-0
