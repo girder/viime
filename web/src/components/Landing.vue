@@ -22,10 +22,12 @@ v-app.viime-landing
     v-layout(row, reverse)
       v-flex(md5, pa-0)
         v-card.banner-image(color="white", flat)
-          img(alt="VIIME", src="../assets/viime_mask.svg")
+          .mask-wrapper
+            img.masked(alt="VIIME", src="https://placekitten.com/2000/2081")
       v-flex.banner-content-wrap.primary.darken-4(md7)
         v-card.banner-content(color="transparent", dark, flat)
-          img(alt="VIIME", src="../assets/viime_mask.svg", height="auto", width="100%")
+          .mask-wrapper
+            img.masked(alt="VIIME", src="https://placekitten.com/2000/2081")
           v-card-title.banner-title.px-0
             h1 Combine your metabolomics data. Interact with the results.
           v-card-text.banner-text.px-0
@@ -195,6 +197,23 @@ v-app.viime-landing
   position: relative;
   z-index: 2;
 }
+
+.mask-wrapper {
+  position: relative;
+  filter: drop-shadow(2px 2px 3px black);
+
+  > img {
+    mask-image: url('../assets/mask.svg');
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    mask-position: center center;
+
+    position: relative;
+    height: auto;
+    width: 100%;
+  }
+}
+
 .banner-area {
   box-sizing: border-box;
   height: 100vh;
@@ -242,17 +261,19 @@ v-app.viime-landing
     height: 100%;
     position: relative;
     width: 100%;
-    img {
-      height: auto;
-      left:-130px;
-      max-height: 100%;
+
+    .mask-wrapper {
       position: absolute;
+      left: -130px;
       top: 50%;
       transform: translatey(-50%);
+      max-height: 100%;
       max-width: 98%;
     }
   }
 }
+
+
 .capabilities {
   background: #f5f5f5;
   .capability {
