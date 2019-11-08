@@ -24,15 +24,22 @@ export const routes = [
     name: 'App',
     component: ViimeApp,
     redirect: { name: 'Upload Data' },
+    meta: {
+      hidden: true,
+    },
     children: [
       {
         path: 'select',
         name: 'Upload Data',
         component: Upload,
+        meta: {
+          hidden: true,
+        },
       },
       {
         path: 'pretreatment/merge',
         component: NewMerge,
+        name: 'Merge Data',
         props: true,
       },
       {
