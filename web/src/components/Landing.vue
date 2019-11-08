@@ -22,10 +22,10 @@ v-app.viime-landing
     v-layout(row, reverse)
       v-flex(md5, pa-0)
         v-card.banner-image(color="white", flat)
-          img(alt="VIIME", src="../assets/viime_logo_screenshot.png")
+          img(alt="VIIME", src="../assets/viime_mask.svg")
       v-flex.banner-content-wrap.primary.darken-4(md7)
         v-card.banner-content(color="transparent", dark, flat)
-          img(alt="VIIME", src="../assets/viime_logo_screenshot.png", height="auto", width="100%")
+          img(alt="VIIME", src="../assets/viime_mask.svg", height="auto", width="100%")
           v-card-title.banner-title.px-0
             h1 Combine your metabolomics data. Interact with the results.
           v-card-text.banner-text.px-0
