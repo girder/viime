@@ -5,6 +5,7 @@ import CorrelationTile from './CorrelationTile.vue';
 import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
 import { plot_types } from '../../utils/constants';
 import { correlation_methods } from './constants';
+import vuetify from '../../utils/vuetifyConfig';
 
 export default [
   {
@@ -24,6 +25,7 @@ export default [
     component: WilcoxonPlotTile,
     args: {},
     type: plot_types.ANALYSIS,
+    icon: vuetify.icons.metaboliteTable,
   },
   {
     path: 'anova',
@@ -33,6 +35,7 @@ export default [
     component: AnovaTableTile,
     args: {},
     type: plot_types.ANALYSIS,
+    icon: vuetify.icons.metaboliteTable,
   },
   {
     path: 'heatmap',
@@ -47,6 +50,7 @@ export default [
       row_filter: null,
     },
     type: plot_types.ANALYSIS,
+    icon: vuetify.icons.heatmap,
   },
   {
     path: 'correlation',
@@ -59,5 +63,6 @@ export default [
       method: correlation_methods[0].value,
     },
     type: plot_types.ANALYSIS,
+    icon: vuetify.icons.graph,
   },
 ];
