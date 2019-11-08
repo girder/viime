@@ -10,6 +10,10 @@ export default {
       type: String,
       default: null,
     },
+    id: {
+      type: String,
+      default: null,
+    },
   },
   data() {
     return {
@@ -28,12 +32,13 @@ export default {
       return this.$store.getters.isMerged(dataset.id);
     },
     problemNav(problem) {
+      const { id } = this;
       if (problem.multi) {
-        this.$router.push({ name: 'Problem', params: { id: this.id, problem: problem.type } });
+        this.$router.push({ name: 'Problem', params: { id, problem: problem.type } });
       } else {
-        this.$router.push({ name: 'Clean Up Table' });
+        this.$router.push({ name: 'Clean Up Table', params: { id } });
         this.$store.commit(SET_SELECTION, {
-          key: this.id,
+          key: id,
           event: {},
           axis: problem.context,
           idx: problem[`${problem.context}_index`],
@@ -64,7 +69,7 @@ v-layout.pretreatment-component(row, fill-height)
               v-icon(color="success", v-else)
                 | {{ $vuetify.icons.check }}
 
-        v-list-tile.top-level(:to="{ name: 'Clean Up Table' }", exact)
+        v-list-tile.top-level(:to="{ name: 'Clean Up Table', params: { id: dataset.id } }", exact)
           v-list-tile-title
             v-icon.drawericon {{ $vuetify.icons.tableEdit }}
             | Clean Up Table
@@ -84,12 +89,13 @@ v-layout.pretreatment-component(row, fill-height)
                 v-icon(small, @click="", v-on="on") {{ $vuetify.icons.info }}
               span {{ problemData.description }}
 
-        v-list-tile.sub-level(:to="{ name: 'Impute Table' }", v-show="!isMerged(dataset)")
+        v-list-tile.sub-level(:to="{ name: 'Impute Table', params: { id: dataset.id } }",
+            v-show="!isMerged(dataset)")
           v-list-tile-title
             v-icon.drawericon {{ $vuetify.icons.tableEdit }}
             | Impute Table
 
-        v-list-tile.top-level(:to="{ name: 'Transform Table' }",
+        v-list-tile.top-level(:to="{ name: 'Transform Table', params: { id: dataset.id } }",
             :disabled="!valid(dataset)", v-show="!isMerged(dataset)")
           v-list-tile-title
             v-icon.pr-1.drawericon {{ $vuetify.icons.bubbles }}
@@ -99,27 +105,26 @@ v-layout.pretreatment-component(row, fill-height)
             :class="{ active: $route.name === 'Analyze Data' && dataset.id === id}",
             value="true")
           template(#activator)
-            v-list-tile.top-level(:to="{ name: 'Analyze Data' }", exact,
+            v-list-tile.top-level(:to="{ name: 'Analyze Data', params: { id: dataset.id } }", exact,
                 :disabled="!valid(dataset)",
                 @click="stopPropagation")
               v-list-tile-title
                 v-icon.drawericon {{ $vuetify.icons.cogs }}
                 | Analyze Table
           v-list-tile.sub-level(v-for="a in analyses", :key="a.path",
-              :to="{ name: a.shortName }",
+              :to="{ name: a.shortName, params: { id: dataset.id } }",
               :disabled="!valid(dataset)")
             v-list-tile-title
               v-icon.drawericon {{ $vuetify.icons.compare }}
               | {{a.shortName}}
 
-        v-list-tile.top-level(:to="{ name: 'Download Data' }",
+        v-list-tile.top-level(:to="{ name: 'Download Data', params: { id: dataset.id } }",
             :disabled="!valid(dataset)")
           v-list-tile-title
             v-icon.pr-1.drawericon {{ $vuetify.icons.fileDownload }}
             | Download Data
 
-  keep-alive
-    router-view
+  router-view
 </template>
 
 <style lang="scss">

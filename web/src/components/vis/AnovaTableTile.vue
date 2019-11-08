@@ -78,7 +78,7 @@ vis-tile-large(v-if="plot", title="Anova Table", :loading="plot.loading", expand
         v-layout(column)
           v-slider.my-1.minCorrelation(v-model="threshold", label="0", thumb-label="always",
               hide-details, min="0", max="0.1", step="0.001")
-  anova-table(:data="tableData", :threshold="threshold", v-model="selected")
+  anova-table(v-if="plot.data", :data="tableData", :threshold="threshold", v-model="selected")
 </template>
 
 <style scoped>

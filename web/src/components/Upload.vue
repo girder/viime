@@ -130,7 +130,7 @@ export default {
     },
     async next() {
       const id = Object.keys(this.datasets)[0];
-      this.$router.push({ path: `/pretreatment/${id}/cleanup` });
+      this.$router.push({ name: 'Clean Up Table', params: { id } });
     },
     async remove(file) {
       if (file.status === 'done' && file.meta.id) {
@@ -221,7 +221,7 @@ v-layout.upload-component(column, fill-height)
                     v-icon {{ $vuetify.icons.warningCircle }}
                   span Dataset processed with {{ file.meta.validation.length }} validation failures
                 v-btn(small, outline, color="primary", round,
-                    :to="`/pretreatment/${file.meta.id}/cleanup`")
+                    :to="{ name: 'Clean Up Table', params: { id: file.meta.id } }")
                   v-icon.pr-1 {{ $vuetify.icons.eye }}
                   |  View Data
             v-list-tile-content.px-2.shrink(
