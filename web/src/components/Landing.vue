@@ -34,7 +34,7 @@ v-app.viime-landing
               |  provides a new workflow for metabolomics research by offering state-of-the-art
               | integration algorithms and visualizations.
           v-card-actions.banner-buttons.px-0
-            v-btn(color="accent", depressed, large, :to="{ name: 'App' }") Try it now
+            v-btn(color="accent", depressed, large, :to="{ name: 'Try Data' }") Try it now
       .scroll-down
         .scroll-down-wrap
           span

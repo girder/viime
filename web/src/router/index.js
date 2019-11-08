@@ -42,6 +42,7 @@ export const routes = [
         component: Upload,
         meta: {
           try: true,
+          hidden: true,
         },
       },
       {
