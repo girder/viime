@@ -1,7 +1,7 @@
 <template lang="pug">
 v-app.viime-app
   v-toolbar.darken-3(dense, dark, color="primary")
-    v-toolbar-side-icon.logo(@click="$router.push('/')") V
+    v-toolbar-side-icon.logo(:to="{name: 'Root'}") V
     v-breadcrumbs(:items="breadcrumbs", divider="»")
       template(#item="props")
         v-breadcrumbs-item(:to="props.item.to", exact) {{props.item.text}}
@@ -18,7 +18,7 @@ export default {
       return [
         {
           text: 'VIIME',
-          to: { name: 'Root' },
+          to: { name: 'Upload Data' },
         },
         ...this.$route.matched.filter(route => !route.meta.hidden).map((route) => {
           const b = route.meta.breadcrumb;
