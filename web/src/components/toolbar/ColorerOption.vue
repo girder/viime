@@ -53,7 +53,15 @@ div(v-if="hasOptions")
           hide-details, :disabled="disabled",
           @change="$emit('input', $event)",
           :items="options", item-text="name")
-      .my-0(v-for="o in filterOptions", :key="o.name")
+      .my-0.option(v-for="o in filterOptions", :key="o.name", :title="o.name")
         v-icon(:color="o.color") {{ $vuetify.icons.square }}
         | {{ o.name }}
 </template>
+
+<style scoped>
+.option {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
