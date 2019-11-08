@@ -66,5 +66,8 @@ export default {
     minusMultiple: 'mdi-checkbox-multiple-blank-outline',
     square: 'mdi-square',
     openInNew: 'mdi-open-in-new',
+    heatmap: 'mdi-grid',
+    metaboliteTable: 'mdi-view-list',
+    graph: 'mdi-graphql',
   },
 };
