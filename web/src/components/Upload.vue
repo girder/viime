@@ -184,7 +184,7 @@ v-layout.upload-component(column, fill-height)
             v-card-actions
               v-spacer
               v-btn(@click="browseSamples = false") Close
-        v-btn(flat, small, to="/pretreatment/merge", :disabled="files.length < 2")
+        v-btn(flat, small, :to="{ name: 'Merge Data'}", :disabled="files.length < 2")
           v-icon.pr-1 {{ $vuetify.icons.tablePlus }}
           | merge data sources
         v-btn(flat, small, @click="deleteCount = files.length; doDelete = removeAll")
