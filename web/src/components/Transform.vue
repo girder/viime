@@ -157,7 +157,8 @@ v-layout.transform-component(row, fill-height)
   v-container(v-else-if="ready", fill-height)
     v-layout(column)
       .display-2 Error: Cannot show transform table
-      a.headline(:href="`#/pretreatment/${dataset.id}/cleanup`") Correct validation error(s)
+      a.headline(:to="{ name: 'Clean Up Table', params: { id: dataset.id }}")
+        | Correct validation error(s)
 </template>
 
 <style scoped lang="scss">

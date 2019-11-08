@@ -100,6 +100,11 @@ export default {
       type: Array,
       validator: prop => prop.every(val => typeof val === 'string'),
     },
+    colors: {
+      required: true,
+      type: Array,
+      validator: prop => prop.every(val => ['name', 'color'].every(key => Object.prototype.hasOwnProperty.call(val, key))),
+    },
     groupLabels: {
       required: true,
       type: Object,
@@ -178,6 +183,19 @@ export default {
       return column.column_header;
     },
 
+    colorMapping() {
+      const {
+        colors,
+      } = this;
+
+      const mapping = {};
+      colors.forEach((color) => {
+        mapping[color.name] = color.color;
+      });
+
+      return mapping;
+    },
+
     valid() {
       const {
         pcCoords,
@@ -196,6 +214,7 @@ export default {
 
     update() {
       const {
+        colorMapping,
         pcPoints,
         pcX,
         pcY,
@@ -263,6 +282,9 @@ export default {
         columns,
         xs,
       });
+
+      // Set the colors.
+      this.chart.data.colors(colorMapping);
 
       // Draw the data ellipses.
       const scaleX = this.chart.internal.x;
