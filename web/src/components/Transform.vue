@@ -157,7 +157,7 @@ v-layout.transform-component(row, fill-height)
   v-container(v-else-if="ready", fill-height)
     v-layout(column)
       .display-2 Error: Cannot show transform table
-      a.headline(:to="{ name: 'Clean Up Table', params: {id: dataset.id}}")
+      a.headline(:to="{ name: 'Clean Up Table', params: { id: dataset.id }}")
         | Correct validation error(s)
 </template>
 
