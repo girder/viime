@@ -126,11 +126,12 @@ v-app.viime-landing
               h2 Kitware, Inc.
             v-card-text.pa-0
               v-list.team-members
-                v-list-tile(href="https://www.kitware.com/data-analytics/")
+                v-list-tile(href="https://www.kitware.com/data-analytics/",
+                    target="_blank", rel="noopener noreferrer")
                   v-list-tile-content
                     v-list-tile-title Data and Analytics team
                   v-list-tile-action
-                    v-icon(color="accent lighten-1") $vuetify.icons.link
+                    v-icon(color="accent lighten-1") $vuetify.icons.openInNew
         v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
             v-card-title.partner-title.pt-3(primary-title)
@@ -138,11 +139,12 @@ v-app.viime-landing
               h2 Indiana University
             v-card-text.pa-0
               v-list.team-members
-                v-list-tile(href="https://medicine.iu.edu/research/faculty-labs/oconnell/")
+                v-list-tile(href="https://medicine.iu.edu/research/faculty-labs/oconnell/",
+                    target="_blank", rel="noopener noreferrer")
                   v-list-tile-content
                     v-list-tile-title Thomas O'Connell
                   v-list-tile-action
-                    v-icon(color="accent lighten-1") $vuetify.icons.link
+                    v-icon(color="accent lighten-1") $vuetify.icons.openInNew
                 v-divider
                 v-list-tile
                   v-list-tile-content
@@ -159,11 +161,12 @@ v-app.viime-landing
               h2 University of Washington
             v-card-text.pa-0
               v-list.team-members
-                v-list-tile(href="https://sites.uw.edu/mmcslu/faculty/daniel-raftery-phd/")
+                v-list-tile(href="https://sites.uw.edu/mmcslu/faculty/daniel-raftery-phd/",
+                    target="_blank", rel="noopener noreferrer")
                   v-list-tile-content
                     v-list-tile-title Daniel Raftery
                   v-list-tile-action
-                    v-icon(color="accent lighten-1") $vuetify.icons.link
+                    v-icon(color="accent lighten-1") $vuetify.icons.openInNew
 
   .collaboration
     v-container
