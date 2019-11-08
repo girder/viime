@@ -15,7 +15,7 @@ v-app.viime-app
 </template>
 
 <script>
-import SaveStatus from './components/SaveStatus.vue';
+import SaveStatus from './SaveStatus.vue';
 
 export default {
   name: 'App',
