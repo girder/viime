@@ -5,8 +5,6 @@ from flask import current_app, Response
 import pandas
 import requests
 
-from viime.cache import persistent_region
-
 
 class OpenCPUException(Exception):
     def __init__(self, msg, method, response):
@@ -20,7 +18,6 @@ class OpenCPUException(Exception):
                         mimetype='text/plain')
 
 
-@persistent_region.cache_on_arguments()
 def opencpu_request(method, files=None, params=None, return_type='csv'):
     files = files or {}
     params = params or {}
