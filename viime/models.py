@@ -98,6 +98,7 @@ class CSVFile(db.Model):
     imputation_mnar = db.Column(db.String, nullable=False)
     imputation_mcar = db.Column(db.String, nullable=False)
     meta = db.Column(JSONType, nullable=False)
+    sample_group = db.Column(db.String, nullable=True)
     selected_columns = db.Column(db.PickleType, nullable=True)
     group_levels = relationship('GroupLevel', cascade='all, delete, delete-orphan')
 
@@ -274,11 +275,11 @@ class CSVFile(db.Model):
         return impute_missing(table, self.groups,
                               mnar=self.imputation_mnar, mcar=self.imputation_mcar)
 
-    def save_table(self, table):
+    def save_table(self, table, **kwargs):
         # TODO: Delete cache entries if a file at self.uri exists already
         # For now, there is no API for changing the data contained in an uploaded
         # file, so this is not important.
-        return self._save_csv_file_data(self.uri, table.to_csv())
+        return self._save_csv_file_data(self.uri, table.to_csv(**kwargs))
 
     @property
     def _stats(self):
@@ -353,6 +354,8 @@ class CSVFileSchema(BaseSchema):
 
     selected_columns = fields.List(fields.Str(), dump_only=True, missing=list)
     group_levels = fields.List(fields.Nested('GroupLevelSchema'))
+
+    # don't add `sample_group` since it is hidden internal property
 
     table_validation = fields.Nested('ValidationSchema', many=True, dump_only=True)
     # imputed measurements
