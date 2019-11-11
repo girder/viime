@@ -6,21 +6,22 @@ export default {
       required: false,
     },
   },
-  computed: {
-    src() {
-      if (this.small) {
-        return 'https://placekitten.com/1000/1040';
-      }
-      return 'https://placekitten.com/2000/2081';
-    },
-  },
 };
 
 </script>
 
 <template lang="pug">
 .highlight-image
-  img.inner(alt="VIIME", :src="src")
+  img.inner(alt="VIIME", v-if="small",
+      src="../assets/banner_0_5k.jpg",
+      srcset="../assets/banner_0_5k.jpg 0.5x,\
+            ../assets/banner_1k.jpg 1x,\
+            ../assets/banner_2k.jpg 2x")
+  img.inner(alt="VIIME", v-else,
+      src="../assets/banner_1k.jpg",
+      srcset="../assets/banner_0_5k.jpg 0.5x,\
+            ../assets/banner_1k.jpg 1x,\
+            ../assets/banner_2k.jpg 2x")
 </template>
 
 <style scoped lang="scss">
