@@ -395,33 +395,31 @@ const actions = {
   },
 
   async [IMPORT_SAMPLE]({ state, commit, dispatch }, { sampleId }) {
-    commit(SET_LOADING, true);
+    commit(SET_SAVING, true);
     try {
       const { data } = await SampleService.importSample(sampleId);
       const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
       await Promise.all(promiseList);
       state.store.save(state, state.session_id);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, false);
       return data;
     } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, err);
       throw err;
     }
   },
 
   async [IMPORT_SAMPLE_GROUP]({ state, commit, dispatch }, { group }) {
-    commit(SET_LOADING, true);
+    commit(SET_SAVING, true);
     try {
       const { data } = await SampleService.importSampleGroup(group);
       const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
       await Promise.all(promiseList);
       state.store.save(state, state.session_id);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, false);
       return data;
     } catch (err) {
-      commit(SET_LAST_ERROR, err);
-      commit(SET_LOADING, false);
+      commit(SET_SAVING, err);
       throw err;
     }
   },
