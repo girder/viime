@@ -46,7 +46,6 @@ export default {
     dataset() { return this.$store.getters.dataset(this.id); },
     ready() { return this.$store.getters.ready(this.id); },
     valid() { return this.$store.getters.valid(this.id); },
-    loading() { return this.$store.getters.waiting; },
     norm() { return this.$store.getters.txType(this.id, 'normalization'); },
     norm_arg() { return this.$store.getters.txType(this.id, 'normalization_argument'); },
     trans() { return this.$store.getters.txType(this.id, 'transformation'); },
