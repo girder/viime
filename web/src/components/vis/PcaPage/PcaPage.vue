@@ -83,18 +83,18 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
       v-card-actions
         v-layout(column)
           v-text-field.py-2(
-            :disabled="!showScree",
-            hide-details,
-            type="number",
-            label="Number of PCs",
-            min="1",
-            outline,
-            v-model="numComponentsVal")
+              :disabled="!showScree",
+              hide-details,
+              type="number",
+              label="Number of PCs",
+              min="1",
+              outline,
+              v-model="numComponentsVal")
           v-switch.ma-0.py-2(
-            v-model="showCutoffs",
-            label="Cutoff lines",
-            :disabled="!showScree",
-            hide-details)
+              v-model="showCutoffs",
+              label="Cutoff lines",
+              :disabled="!showScree",
+              hide-details)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title.switch-title Score Plot
