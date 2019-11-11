@@ -56,22 +56,5 @@ vis-tile(v-if="plot", title="PCA Scree Plot", :loading="plot.loading", svg-downl
               v-model="numComponentsText")
           v-switch.py-2(v-model="showCutoffs", label="Diagnostic cutoffs", hide-details)
   template(v-slot:help)
-    p.
-      This chart shows a Principal Component Analysis (PCA) scree plot. By
-      default, it displays ten components.
-
-    p.
-      Hovering the mouse pointer over the points in the chart shows a tooltip
-      displaying the eigenvalue for that component, along with the percentage of
-      total variance accounted for by that component, as well as the cumulative
-      percentage of total variance taken up by that component and all those
-      preceding it.
-
-    p.
-      Vertical diagnostic cutoff lines are also plotted after the components
-      providing a cumulative percentage of total variance of 50%, 80%, and 90%.
-
-    p.
-      The settings menu enables selection of how many principal components to
-      plot, as well as whether the diagnostic cutoff lines are displayed.
+    include help/ScreePlotHelp.pug
 </template>

@@ -2,12 +2,23 @@ import WilcoxonPlotTile from './WilcoxonPlotTile.vue';
 import AnovaTableTile from './AnovaTableTile.vue';
 import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
+import PcaPage from './PcaPage/PcaPage.vue';
 import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
 import { plot_types } from '../../utils/constants';
 import { correlation_methods } from './constants';
 import vuetify from '../../utils/vuetifyConfig';
 
 export default [
+  {
+    path: 'pcapage',
+    name: 'Principal Component Analysis',
+    shortName: 'PCA',
+    description: 'TODO',
+    component: PcaPage,
+    args: {},
+    type: plot_types.ANALYSIS,
+    icon: vuetify.icons.pca,
+  },
   {
     path: 'boxplot',
     name: 'Boxplots',
@@ -16,6 +27,10 @@ export default [
     component: BoxPlotLargeTile,
     args: {},
     type: plot_types.ANALYSIS,
+    icon: vuetify.icons.boxplot,
+    iconStyle: {
+      transform: 'rotate(90deg)scale(-1,1)',
+    },
   },
   {
     path: 'wilcoxon',

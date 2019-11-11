@@ -53,6 +53,7 @@ export default {
     more: 'mdi-dots-horizontal',
     menuDown: 'mdi-menu-down',
     metadata: 'mdi-tag',
+    pca: 'mdi-chart-bell-curve',
     key: 'mdi-key-variant',
     save: 'mdi-content-save',
     settings: 'mdi-settings',
@@ -69,6 +70,7 @@ export default {
     heatmap: 'mdi-grid',
     metaboliteTable: 'mdi-view-list',
     graph: 'mdi-graphql',
+    boxplot: 'mdi-chart-bar',
     feedback: 'mdi-comment-outline',
   },
 };
