@@ -3,6 +3,7 @@ import { mapState } from 'vuex';
 import { sizeFormatter } from '@girder/components/src/utils/mixins';
 import Dropzone from '@girder/components/src/components/Presentation/Dropzone.vue';
 import FileList from '@girder/components/src/components/Presentation/FileUploadList.vue';
+import SampleBrowser from './SampleBrowser.vue';
 import { UPLOAD_CSV, UPLOAD_EXCEL } from '@/store/actions.type';
 import { REMOVE_DATASET } from '@/store/mutations.type';
 
@@ -22,6 +23,7 @@ export default {
   components: {
     FileList,
     Dropzone,
+    SampleBrowser,
   },
   mixins: [sizeFormatter],
   data() {
@@ -31,6 +33,7 @@ export default {
       pendingFiles: [],
       snackbar: false,
       snackbarContent: '',
+      browseSamples: this.$route.meta.try === true,
     };
   },
   computed: {
@@ -62,6 +65,11 @@ export default {
     },
     deleteDialog() {
       return this.deleteCount > 0;
+    },
+  },
+  watch: {
+    $route(newVal) {
+      this.browseSamples = newVal.meta.try === true;
     },
   },
   methods: {
@@ -125,9 +133,6 @@ export default {
     removeAll() {
       this.readyFiles.concat(this.pendingFiles).forEach(f => this.remove(f));
     },
-    createMergedDataset() {
-      // TODO
-    },
   },
 };
 </script>
@@ -152,10 +157,23 @@ v-layout.upload-component(column, fill-height)
       h3.headline.font-weight-bold.primary--text.text--darken-3 Upload your data (csv, xlsx, or txt)
       p.secondary--text.text--lighten-1 Choose a file from your computer
 
-    .mx-4.mb-4(v-if="files.length")
+    .mx-4.mb-4
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title All Data Sources
         v-spacer
+        v-dialog(v-model="browseSamples", max-width="33vw")
+          template(v-slot:activator="{ on }")
+            v-btn(flat, small, v-on="on")
+              v-icon.pr-1 {{ $vuetify.icons.tablePlus }}
+              | try example data source
+          v-card
+            v-card-title
+              h3.headline Examples
+            v-card-text
+              sample-browser(@close="browseSamples = false")
+            v-card-actions
+              v-spacer
+              v-btn(@click="browseSamples = false") Close
         v-btn(flat, small, :to="{ name: 'Merge Data' }", :disabled="files.length < 2")
           v-icon.pr-1 {{ $vuetify.icons.tablePlus }}
           | merge data sources

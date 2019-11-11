@@ -25,7 +25,7 @@ place, you will need to initialize the tables by running
 
 ```sh
 mkdir viime_sqlite
-viime-create-tables
+viime-cli create-tables
 ```
 
 This will create a data directory according to the `SQLALCHEMY_DATABASE_URI` and

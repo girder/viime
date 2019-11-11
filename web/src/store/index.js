@@ -7,7 +7,7 @@ import {
 } from '../utils';
 import analyses from '../components/vis/analyses';
 import { plot_types } from '../utils/constants';
-import ApiService, { CSVService, ExcelService } from '../common/api.service';
+import ApiService, { CSVService, ExcelService, SampleService } from '../common/api.service';
 
 import {
   CHANGE_AXIS_LABEL,
@@ -24,6 +24,8 @@ import {
   CREATE_MERGED_DATASET,
   REMERGE_DATASET,
   SET_DATASET_GROUP_LEVELS,
+  IMPORT_SAMPLE,
+  IMPORT_SAMPLE_GROUP,
 } from './actions.type';
 
 import {
@@ -388,6 +390,38 @@ const actions = {
       return data;
     } catch (err) {
       commit(SET_SAVING, err);
+      throw err;
+    }
+  },
+
+  async [IMPORT_SAMPLE]({ state, commit, dispatch }, { sampleId }) {
+    commit(SET_LOADING, true);
+    try {
+      const { data } = await SampleService.importSample(sampleId);
+      const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
+      await Promise.all(promiseList);
+      state.store.save(state, state.session_id);
+      commit(SET_LOADING, false);
+      return data;
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
+  },
+
+  async [IMPORT_SAMPLE_GROUP]({ state, commit, dispatch }, { group }) {
+    commit(SET_LOADING, true);
+    try {
+      const { data } = await SampleService.importSampleGroup(group);
+      const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
+      await Promise.all(promiseList);
+      state.store.save(state, state.session_id);
+      commit(SET_LOADING, false);
+      return data;
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
       throw err;
     }
   },

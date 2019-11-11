@@ -37,6 +37,15 @@ export const routes = [
         },
       },
       {
+        path: 'try',
+        name: 'Try Data',
+        component: Upload,
+        meta: {
+          try: true,
+          hidden: true,
+        },
+      },
+      {
         path: 'pretreatment/merge',
         component: NewMerge,
         name: 'Merge Data',

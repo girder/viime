@@ -1,0 +1,99 @@
+{
+  "meta": {},
+  "imputation_mnar": "zero",
+  "description": null,
+  "table": ",g2,a,b,d\nR1,a1,3,2,1\nR2,a2,234,3,3\nR3,a2,25,6,4\n",
+  "imputation_mcar": "random-forest",
+  "columns": [
+    {
+      "meta": {},
+      "subtype": null,
+      "column_index": 0,
+      "column_type": "key",
+      "column_header": "nan"
+    },
+    {
+      "meta": {},
+      "subtype": null,
+      "column_index": 1,
+      "column_type": "group",
+      "column_header": "g2"
+    },
+    {
+      "meta": {},
+      "subtype": null,
+      "column_index": 2,
+      "column_type": "measurement",
+      "column_header": "a"
+    },
+    {
+      "meta": {},
+      "subtype": null,
+      "column_index": 3,
+      "column_type": "measurement",
+      "column_header": "b"
+    },
+    {
+      "meta": {},
+      "subtype": null,
+      "column_index": 4,
+      "column_type": "measurement",
+      "column_header": "d"
+    }
+  ],
+  "name": "dummy1.csv",
+  "selected_columns": null,
+  "group_levels": [
+    {
+      "color": "#1f77b4",
+      "description": null,
+      "label": "a1",
+      "name": "a1"
+    },
+    {
+      "color": "#2ca02c",
+      "description": null,
+      "label": "a2",
+      "name": "a2"
+    }
+  ],
+  "rows": [
+    {
+      "row_name": "nan",
+      "meta": {},
+      "subtype": null,
+      "row_type": "header",
+      "row_index": 0
+    },
+    {
+      "row_name": "R1",
+      "meta": {},
+      "subtype": null,
+      "row_type": "sample",
+      "row_index": 1
+    },
+    {
+      "row_name": "R2",
+      "meta": {},
+      "subtype": null,
+      "row_type": "sample",
+      "row_index": 2
+    },
+    {
+      "row_name": "R3",
+      "meta": {},
+      "subtype": null,
+      "row_type": "sample",
+      "row_index": 3
+    }
+  ],
+  "sample_group": "Default",
+  "normalization": null,
+  "imputation_info": {
+    "mcar": [],
+    "mnar": []
+  },
+  "normalization_argument": null,
+  "scaling": null,
+  "transformation": null
+}
