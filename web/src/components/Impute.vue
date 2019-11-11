@@ -8,12 +8,14 @@ import {
   colors,
 } from '../utils/constants';
 import { formatter, textColor } from '../utils';
+import HelpDialog from './toolbar/HelpDialog.vue';
 
 
 export default {
   components: {
     DataTable,
     ToolbarOption,
+    HelpDialog,
   },
   props: {
     id: {
@@ -161,12 +163,24 @@ v-layout.impute-component(row, fill-height)
           @change="changeImputationSettings({mnar: $event})", :disabled="noMissing",
           :options="mnar_imputation_methods")
         v-icon(:color="colors.mnarMethod") {{ $vuetify.icons.square }}
-        | MNAR imputation method
+        | MNAR
+        help-dialog(title="MNAR imputation method")
+          | Missing Not at Random (MNAR) are defined as variables with any one group
+          | with more or equal than 70% of missing data, Missing Completely at Random
+          | (MCAR) Variables with all group with less or equal than 40% of missing data.
+          | Missing at Random (MAR) Rest of variables, variables with missing data between
+          | 40% and 70% of missing data.
       toolbar-option(title="MCAR imputation method", :value="dataset.imputationMCAR",
           @change="changeImputationSettings({mcar: $event})", :disabled="noMissing",
           :options="mcar_imputation_methods")
         v-icon(:color="colors.mcarMethod") {{ $vuetify.icons.square }}
-        | MCAR imputation method
+        | MCAR
+        help-dialog(title="MNAR imputation method")
+          | Missing Not at Random (MNAR) are defined as variables with any one group
+          | with more or equal than 70% of missing data, Missing Completely at Random
+          | (MCAR) Variables with all group with less or equal than 40% of missing data.
+          | Missing at Random (MAR) Rest of variables, variables with missing data between
+          | 40% and 70% of missing data.
 
   v-layout(v-if="!dataset || !ready", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")

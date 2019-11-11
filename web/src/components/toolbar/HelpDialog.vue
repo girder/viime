@@ -25,8 +25,9 @@ export default {
 <template lang="pug">
 v-dialog(v-model="showHelp", max-width="33vw")
   template(v-slot:activator="{ on }")
-    v-btn(v-on="on", icon)
-      v-icon {{ outline ? $vuetify.icons.helpOutline : $vuetify.icons.help }}
+    v-btn.ma-0(v-on="on", icon, small, depressed, flat)
+      v-icon(:color="outline ? 'rgba(0,0,0,0.25)' : undefined", small)
+        | {{ outline ? $vuetify.icons.helpOutline : $vuetify.icons.help }}
   v-card
     v-card-title
       h3.headline {{ title }}

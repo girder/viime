@@ -38,10 +38,16 @@ div
       v-radio-group.my-0(:value="value",
           hide-details, :disabled="disabled",
           @change="$emit('change', $event)")
-        v-radio(v-for="m in options",
+        v-radio.wide.mr-0(v-for="m in options",
             :value="m.value", :key="m.value")
           template(#label)
-            | {{ m.label }}
+            span.grow {{ m.label }}
             help-dialog(v-if="m.helpText", :title="`${m.label} ${title}`",
-                :text="m.helpText")
+                :text="m.helpText", outline)
 </template>
+
+<style scoped>
+.wide >>> .v-label {
+  flex: 1 1 0;
+}
+</style>
