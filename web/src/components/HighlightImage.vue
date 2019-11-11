@@ -50,6 +50,7 @@ export default {
   }
   .inner {
     max-height: 275px;
+    width: auto;
   }
 }
 </style>
