@@ -2,7 +2,7 @@ from functools import wraps
 from io import BytesIO
 import json
 from pathlib import PurePath
-from typing import Callable, cast, Dict, List, Optional
+from typing import Any, Callable, cast, Dict, List, Optional
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
@@ -10,7 +10,7 @@ import pandas
 from webargs.flaskparser import use_kwargs
 from werkzeug import FileStorage
 
-from viime import opencpu
+from viime import opencpu, samples
 from viime.analyses import anova_test, hierarchical_clustering, pairwise_correlation, wilcoxon_test
 from viime.cache import csv_file_cache
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
@@ -165,13 +165,17 @@ def merge_csv_files(name: str, description: str, method: str, datasets: List[str
         if row_types:
             # update the row types
             for row, row_type in zip(csv_file.rows, row_types):
-                row.row_type = row_type
+                row.row_type = row_type['type']
+                row.subtype = row_type.get('subtype')
+                row.meta = row_type.get('meta')
                 db.session.add(row)
 
         if column_types:
             # update the row types
             for column, column_type in zip(csv_file.columns, column_types):
-                column.column_type = column_type
+                column.column_type = column_type['type']
+                column.subtype = column_type.get('subtype')
+                column.meta = column_type.get('meta')
                 db.session.add(column)
 
         # need to call it manually since we might have changed the column types
@@ -443,7 +447,7 @@ def get_row(csv_id, row_index):
     ))
 
 
-def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
+def _update_row_types(csv_file: CSVFile, row_types: Optional[List[Dict[str, Any]]]):
     if row_types is None:
         return
 
@@ -451,7 +455,9 @@ def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
     count_current = len(csv_file.rows)
     # update the row types
     for row, row_type in zip(csv_file.rows, row_types):
-        row.row_type = row_type
+        row.row_type = row_type['type']
+        row.subtype = row_type.get('subtype')
+        row.meta = row_type.get('meta')
         db.session.add(row)
 
     if count_target > count_current:
@@ -469,7 +475,7 @@ def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
             db.session.delete(row)
 
 
-def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
+def _update_column_types(csv_file: CSVFile, column_types: Optional[List[Dict[str, Any]]]):
     if column_types is None:
         return
 
@@ -479,7 +485,9 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
     # update the column types
 
     for column, column_type in zip(csv_file.columns, column_types):
-        column.column_type = column_type
+        column.column_type = column_type['type']
+        column.subtype = column_type.get('subtype')
+        column.meta = column_type.get('meta')
         db.session.add(column)
 
     if count_target > count_current:
@@ -494,7 +502,7 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
 
     elif count_target < count_current:
         # delete extra
-        for column in csv_file.column[count_target:]:
+        for column in csv_file.columns[count_target:]:
             db.session.delete(column)
 
 
@@ -767,21 +775,39 @@ def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Opti
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/heatmap', methods=['GET'])
 @use_kwargs({
-    'columns': fields.Str(required=False, missing=None,
-                          validate=validate.OneOf(['selected', 'not-selected']))
+    'column': fields.Str(required=False, missing=None),
+    'column_filter': fields.Str(required=False, missing=''),
+    'row': fields.Str(required=False, missing=None),
+    'row_filter': fields.Str(required=False, missing=''),
 })
 @load_validated_csv_file
 def get_hierarchical_clustering_heatmap(validated_table: ValidatedMetaboliteTable,
-                                        columns: Optional[str]):
+                                        column: Optional[str], column_filter: str,
+                                        row: Optional[str], row_filter: str):
     table = validated_table.measurements
 
-    if columns:
+    if column:
+        cfilters = set(column_filter.split(','))
         csv_file: CSVFile = CSVFile.query.get_or_404(validated_table.csv_file_id)
-        if columns == 'selected':
-            table = table.loc[:, csv_file.selected_columns or []]
-        elif columns == 'not-selected' and csv_file.selected_columns:
-            non_selected = [c for c in table if str(c) not in csv_file.selected_columns]
-            table = table.loc[:, non_selected]
+        if column == 'selection':
+
+            def is_selected(c):
+                return csv_file.selected_columns and c in csv_file.selected_columns
+
+            cdata = ['selected' if is_selected(str(c)) else 'not-selected' for c in table]
+        else:
+            cmeta: pandas.DataFrame = validated_table.measurement_metadata.T
+            cdata = [str(v) for v in cmeta[column]]
+
+        table = table.loc[:, [d in cfilters for d in cdata]]
+
+    if row:
+        rfilters = set(row_filter.split(','))
+        rmeta: pandas.DataFrame = validated_table.sample_metadata
+        rgroups: pandas.DataFrame = validated_table.groups
+        rdata = [str(v) for v in (rmeta[row] if row in rmeta else rgroups[row])]
+
+        table = table.loc[[d in rfilters for d in rdata], :]
 
     return hierarchical_clustering(table)
 
@@ -800,3 +826,93 @@ def get_correlation(validated_table: ValidatedMetaboliteTable,
     data = pairwise_correlation(table, min_correlation, method)
 
     return jsonify(data), 200
+
+
+#
+# sample related
+#
+
+def _sample_import(files: List[CSVFile]):
+    imported: List[CSVFile] = []
+    try:
+        imported = samples.import_files(files)
+        db.session.flush()
+
+        serialized = [_serialize_csv_file(f) for f in imported]
+
+        db.session.commit()
+
+        return jsonify(serialized), 201
+    except Exception:
+        for f in imported:
+            if f.uri.is_file():
+                f.uri.unlink()
+        db.session.rollback()
+        raise
+
+
+@csv_bp.route('/sample/import/<uuid:csv_id>', methods=['POST'])
+def sample_import(csv_id: str):
+    csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
+    if not samples.is_sample_file(csv_file):
+        raise ValidationError('not a sample')
+    return _sample_import([csv_file])
+
+
+@csv_bp.route('/sample/importgroup/<group_id>', methods=['POST'])
+def sample_import_all(group_id: str):
+    files = list(CSVFile.query.filter(CSVFile.sample_group == group_id).all())
+    if not files:
+        raise ValidationError('no members found')
+    return _sample_import(files)
+
+
+@csv_bp.route('/sample/sample', methods=['GET'])
+def sample_list():
+    r = samples.list_samples()
+    return jsonify(r), 200
+
+
+@csv_bp.route('/sample/sample/<uuid:csv_id>', methods=['GET'])
+def sample_get(csv_id: str):
+    csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
+    if not samples.is_sample_file(csv_file):
+        raise ValidationError('not a sample')
+
+    dump = samples.dump(csv_file)
+    return jsonify(dump), 200
+
+
+@csv_bp.route('/sample/sample', methods=['POST'])
+def sample_upload():
+    csv = samples.upload(request.json)
+    dump = samples.dump(csv)
+    db.session.commit()
+    return jsonify(dump), 200
+
+
+@csv_bp.route('/sample/sample/<uuid:csv_id>', methods=['PUT'])
+@use_kwargs({
+    'group': fields.Str(required=False, missing=None)
+})
+def sample_enable(csv_id: str, group: Optional[str]):
+    csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
+
+    csv_file = samples.enable_sample(csv_file, group)
+
+    db.session.add(csv_file)
+    db.session.commit()
+
+    return jsonify(dict(message='OK')), 200
+
+
+@csv_bp.route('/sample/sample/<uuid:csv_id>', methods=['DELETE'])
+def sample_disable(csv_id: str):
+    csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
+
+    csv_file = samples.disable_sample(csv_file)
+
+    db.session.add(csv_file)
+    db.session.commit()
+
+    return jsonify(dict(message='OK')), 200

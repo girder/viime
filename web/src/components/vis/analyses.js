@@ -2,9 +2,14 @@ import WilcoxonPlotTile from './WilcoxonPlotTile.vue';
 import AnovaTableTile from './AnovaTableTile.vue';
 import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
+<<<<<<< HEAD
 import PcaPage from './PcaPage/PcaPage.vue';
+=======
+import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
+>>>>>>> origin/master
 import { plot_types } from '../../utils/constants';
 import { correlation_methods } from './constants';
+import vuetify from '../../utils/vuetifyConfig';
 
 export default [
   {
@@ -17,6 +22,19 @@ export default [
     type: plot_types.ANALYSIS,
   },
   {
+    path: 'boxplot',
+    name: 'Boxplots',
+    shortName: 'Boxplots',
+    description: 'show me the boxplots!',
+    component: BoxPlotLargeTile,
+    args: {},
+    type: plot_types.ANALYSIS,
+    icon: vuetify.icons.boxplot,
+    iconStyle: {
+      transform: 'rotate(90deg)scale(-1,1)',
+    },
+  },
+  {
     path: 'wilcoxon',
     name: 'Wilcoxon test',
     shortName: 'Wilcoxon Test',
@@ -24,6 +42,7 @@ export default [
     component: WilcoxonPlotTile,
     args: {},
     type: plot_types.ANALYSIS,
+    icon: vuetify.icons.metaboliteTable,
   },
   {
     path: 'anova',
@@ -33,6 +52,7 @@ export default [
     component: AnovaTableTile,
     args: {},
     type: plot_types.ANALYSIS,
+    icon: vuetify.icons.metaboliteTable,
   },
   {
     path: 'heatmap',
@@ -41,9 +61,13 @@ export default [
     description: 'cool stuff',
     component: HeatmapTile,
     args: {
-      columns: null,
+      column: null,
+      column_filter: null,
+      row: null,
+      row_filter: null,
     },
     type: plot_types.ANALYSIS,
+    icon: vuetify.icons.heatmap,
   },
   {
     path: 'correlation',
@@ -56,5 +80,6 @@ export default [
       method: correlation_methods[0].value,
     },
     type: plot_types.ANALYSIS,
+    icon: vuetify.icons.graph,
   },
 ];

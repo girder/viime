@@ -208,49 +208,72 @@ def test_merge_files(client):
     expected_column_types = [{
         'column_header': 'nan',
         'column_index': 0,
-        'column_type': 'key'
+        'column_type': 'key',
+        'subtype': None,
+        'meta': None
     }, {
         'column_header': 'g',
         'column_index': 1,
-        'column_type': 'group'
+        'column_type': 'group',
+        'subtype': None,
+        'meta': None
     }, {
         'column_header': 'g_1',
         'column_index': 2,
-        'column_type': 'group'
+        'column_type': 'group',
+        'subtype': None,
+        'meta': None
     }, {
         'column_header': 'col1',
         'column_index': 3,
-        'column_type': 'measurement'
+        'column_type': 'measurement',
+        'subtype': None,
+        'meta': None
     }, {
         'column_header': 'col2',
         'column_index': 4,
-        'column_type': 'measurement'
+        'column_type': 'measurement',
+        'subtype': None,
+        'meta': None
     }, {
         'column_header': 'col3',
         'column_index': 5,
-        'column_type': 'measurement'
+        'column_type': 'measurement',
+        'subtype': None,
+        'meta': None
     }, {
         'column_header': 'col4',
         'column_index': 6,
-        'column_type': 'measurement'
+        'column_type': 'measurement',
+        'subtype': None,
+        'meta': None
     }]
 
     expected_row_types = [{
         'row_index': 0,
         'row_name': 'nan',
-        'row_type': 'header'
+        'row_type': 'header',
+        'subtype': None,
+        'meta': None
     }, {
         'row_index': 1,
         'row_name': 'Data Source',
-        'row_type': 'metadata'
+        'row_type': 'metadata',
+        'subtype': 'categorical',
+        'meta': dict(levels=[dict(name='DS1', label='test_csv_file1.csv', color='#8dd3c7'),
+                             dict(name='DS2', label='test_csv_file2.csv', color='#ffffb3')])
     }, {
         'row_index': 2,
         'row_name': 'row1',
-        'row_type': 'sample'
+        'row_type': 'sample',
+        'subtype': None,
+        'meta': None
     }, {
         'row_index': 3,
         'row_name': 'row2',
-        'row_type': 'sample'
+        'row_type': 'sample',
+        'subtype': None,
+        'meta': None
     }]
 
     assert resp.json['columns'] == expected_column_types

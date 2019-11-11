@@ -139,7 +139,7 @@ v-form(v-model="valid", ref="form", @submit="submit")
 
     v-btn.right(type="submit", :disabled="!valid",
         color="primary") create
-    v-btn.right(to="/") cancel
+    v-btn.right(:to="{name: 'App'}") cancel
 </template>
 
 <style scoped>

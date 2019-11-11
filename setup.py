@@ -47,13 +47,13 @@ setup(
     ],
     extras_require={
         'memcached': ['pylibmc'],
-        'sentry': ['sentry-sdk[flask]']
+        'sentry': ['sentry-sdk[flask]>=0.13']
     },
     license='Apache Software License 2.0',
     data_files=data_files,
     entry_points={
         'console_scripts': [
-            'viime-create-tables=viime.cli:create_tables'
+            'viime-cli=viime.cli:cli'
         ],
         'dogpile.cache': [
             'flask_request_local = viime.cache:FlaskRequestLocalBackend'

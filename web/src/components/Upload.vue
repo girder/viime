@@ -3,24 +3,9 @@ import { mapState } from 'vuex';
 import { sizeFormatter } from '@girder/components/src/utils/mixins';
 import Dropzone from '@girder/components/src/components/Presentation/Dropzone.vue';
 import FileList from '@girder/components/src/components/Presentation/FileUploadList.vue';
+import SampleBrowser from './SampleBrowser.vue';
 import { UPLOAD_CSV, UPLOAD_EXCEL } from '@/store/actions.type';
 import { REMOVE_DATASET } from '@/store/mutations.type';
-
-const sampleTypes = [
-  { name: 'Serum', value: 'serum' },
-  { name: 'Urine', value: 'urine' },
-  { name: 'Tissue Extract', value: 'tissueextract' },
-  { name: 'Media', value: 'media' },
-  { name: 'Other', value: 'other' },
-];
-
-const dataTypes = [
-  { name: 'NMR Concentrations', value: 'nmr' },
-  { name: 'conc', value: 'conc' },
-  { name: 'GC/MS', value: 'gcms' },
-  { name: 'LC/MS', value: 'lcms' },
-  { name: 'Other', value: 'other' },
-];
 
 function isExcelFile(file) {
   return file.name.match(/\.xlsx$/i);
@@ -38,6 +23,7 @@ export default {
   components: {
     FileList,
     Dropzone,
+    SampleBrowser,
   },
   mixins: [sizeFormatter],
   data() {
@@ -45,10 +31,9 @@ export default {
       deleteCount: 0,
       doDelete: () => {},
       pendingFiles: [],
-      dataTypes,
-      sampleTypes,
       snackbar: false,
       snackbarContent: '',
+      browseSamples: this.$route.meta.try === true,
     };
   },
   computed: {
@@ -64,6 +49,7 @@ export default {
       return Object.keys(datasets).map((id) => {
         const d = datasets[id];
         return {
+          id: d.id,
           file: {
             name: d.name,
             size: d.size, // TODO: fix when server implements this.
@@ -75,14 +61,23 @@ export default {
       });
     },
     files() {
-      return this.readyFiles.concat(this.pendingFiles.filter(f => f.status !== 'done'));
+      return this.readyFiles.concat(this.pendingFiles);
     },
     deleteDialog() {
       return this.deleteCount > 0;
     },
   },
+  watch: {
+    $route(newVal) {
+      this.browseSamples = newVal.meta.try === true;
+    },
+  },
   methods: {
     async onFileChange(targetFiles) {
+      if (this.$refs.dropzone && this.$refs.dropzone.$el) {
+        const input = this.$refs.dropzone.$el.querySelector('input[type=file]');
+        input.value = ''; // reset file input to proper detect same file changes
+      }
       // filter to valid types only
       const filteredFiles = targetFiles.filter(
         f => isExcelFile(f) || isCSVFile(f) || isTextFile(f),
@@ -98,6 +93,7 @@ export default {
 
       this.pendingFiles = this.pendingFiles.concat([...filteredFiles].map(file => ({
         file,
+        id: `${file.name}-pending`,
         status: 'pending',
         progress: {},
         meta: {},
@@ -119,10 +115,12 @@ export default {
           }
         });
       await Promise.all(promises);
+      // filter out done ones
+      this.pendingFiles = this.pendingFiles.filter(f => f.status !== 'done');
     },
     async next() {
       const id = Object.keys(this.datasets)[0];
-      this.$router.push({ path: `/pretreatment/${id}/cleanup` });
+      this.$router.push({ name: 'Clean Up Table', params: { id } });
     },
     async remove(file) {
       if (file.status === 'done' && file.meta.id) {
@@ -134,9 +132,6 @@ export default {
     },
     removeAll() {
       this.readyFiles.concat(this.pendingFiles).forEach(f => this.remove(f));
-    },
-    createMergedDataset() {
-      // TODO
     },
   },
 };
@@ -162,11 +157,24 @@ v-layout.upload-component(column, fill-height)
       h3.headline.font-weight-bold.primary--text.text--darken-3 Upload your data (csv, xlsx, or txt)
       p.secondary--text.text--lighten-1 Choose a file from your computer
 
-    .mx-4.mb-4(v-if="files.length")
+    .mx-4.mb-4
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title All Data Sources
         v-spacer
-        v-btn(flat, small, to="/pretreatment/merge", :disabled="files.length < 2")
+        v-dialog(v-model="browseSamples", max-width="33vw")
+          template(v-slot:activator="{ on }")
+            v-btn(flat, small, v-on="on")
+              v-icon.pr-1 {{ $vuetify.icons.tablePlus }}
+              | try example data source
+          v-card
+            v-card-title
+              h3.headline Examples
+            v-card-text
+              sample-browser(@close="browseSamples = false")
+            v-card-actions
+              v-spacer
+              v-btn(@click="browseSamples = false") Close
+        v-btn(flat, small, :to="{ name: 'Merge Data' }", :disabled="files.length < 2")
           v-icon.pr-1 {{ $vuetify.icons.tablePlus }}
           | merge data sources
         v-btn(flat, small, @click="deleteCount = files.length; doDelete = removeAll")
@@ -174,7 +182,7 @@ v-layout.upload-component(column, fill-height)
           | clear all
       v-list.upload-list
         template(v-for="(file, idx) in files")
-          v-list-tile.pa-2(:key="file.file.name + file.status")
+          v-list-tile.pa-2(:key="file.id")
             v-list-tile-action
               v-btn(:disabled="file.status === 'uploading'",
                   icon, @click="doDelete = () => { remove(file); }; deleteCount = 1;")
@@ -203,25 +211,15 @@ v-layout.upload-component(column, fill-height)
                     v-icon {{ $vuetify.icons.warningCircle }}
                   span Dataset processed with {{ file.meta.validation.length }} validation failures
                 v-btn(small, outline, color="primary", round,
-                    :to="`/pretreatment/${file.meta.id}/cleanup`")
+                    :to="{ name: 'Clean Up Table', params: { id: file.meta.id } }")
                   v-icon.pr-1 {{ $vuetify.icons.eye }}
                   |  View Data
             v-list-tile-content.px-2.shrink(
                 v-if="file.status === 'uploading' || file.meta.ready === false")
               v-progress-circular(size="24", color="primary", indeterminate)
-            v-spacer
-            v-layout(row, shrink)
-              v-select.pa-2.tag-selection(hide-details,
-                  :disabled="true",
-                  :items="sampleTypes", label="Type of sample",
-                  item-text="name", item-value="value")
-              v-select.pa-2.tag-selection(hide-details,
-                  :disabled="true",
-                  :items="dataTypes", label="Type of data",
-                  item-text="name", item-value="value")
           v-divider(v-if="idx + 1 < files.length", :key="idx")
-    dropzone.filezone.mx-4.mb-4(:multiple="true", :message="message", @change="onFileChange",
-        accept=".csv,.xlsx,.txt")
+    dropzone.filezone.mx-4.mb-4(ref="dropzone", :multiple="true", :message="message",
+        @change="onFileChange", accept=".csv,.xlsx,.txt")
 
   v-toolbar(flat, dense)
     v-spacer
