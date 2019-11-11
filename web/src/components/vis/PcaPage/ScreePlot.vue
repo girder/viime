@@ -73,4 +73,6 @@ vis-tile(title="PCA Scree Plot", :loading="plot.loading", svg-download)
       :pc-y="pcY",
       :num-components="numComponents",
       :show-cutoffs="showCutoffs")
+  template(v-slot:help)
+    include ../help/ScreePlotHelp.pug
 </template>

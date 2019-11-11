@@ -46,4 +46,6 @@ vis-tile(title="PCA Loadings Plot", :loading="plot.loading", svg-download)
       :pc-x="pcX",
       :pc-y="pcY",
       :show-crosshairs="showCrosshairs")
+  template(v-slot:help)
+    include ../help/LoadingsPlotHelp.pug
 </template>
