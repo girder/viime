@@ -14,6 +14,12 @@ import resize from 'vue-resize-directive';
 import 'c3/c3.css';
 import './score-plot.css';
 
+
+function fixCSS(id) {
+  // replace non css stuff to _
+  return id.replace(/[\s!#$%&'()*+,./:;<=>?@[\\\]^`{|}~]+/g, '_');
+}
+
 function covar(xs, ys) {
   const e_xy = mean(xs.map((x, i) => x * ys[i]));
   const e_xx = mean(xs);
@@ -311,7 +317,7 @@ export default {
         .join(
           enter => enter
             .append('ellipse')
-            .attr('class', d => `ellipse-${d.category}`)
+            .attr('class', d => `ellipse-${fixCSS(d.category)}`)
             .classed('ellipse', true)
             .style('fill', 'none')
             .style('stroke', d => cmap(d.category))
@@ -457,7 +463,7 @@ export default {
     },
 
     focusEllipse(which) {
-      const selector = which ? `ellipse.ellipse-${which}` : 'ellipse.ellipse';
+      const selector = which ? `ellipse.ellipse-${fixCSS(which)}` : 'ellipse.ellipse';
 
       this.defocusEllipse();
 
@@ -467,7 +473,7 @@ export default {
     },
 
     defocusEllipse(which) {
-      const selector = which ? `ellipse.ellipse-${which}` : 'ellipse.ellipse';
+      const selector = which ? `ellipse.ellipse-${fixCSS(which)}` : 'ellipse.ellipse';
 
       select(this.$refs.chart)
         .selectAll(selector)
