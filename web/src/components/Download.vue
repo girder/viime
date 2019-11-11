@@ -31,7 +31,7 @@ export default {
     dataset() { return this.$store.getters.dataset(this.id); },
     dataframe() { return this.dataset.validatedMeasurements; },
     ready() { return this.$store.getters.ready(this.id); },
-    loading() { return this.$store.getters.persisting; },
+    loading() { return this.$store.getters.waiting; },
 
     selectionLookup() {
       return new Set((this.dataset && this.dataset.selectedColumns) || []);

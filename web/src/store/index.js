@@ -131,7 +131,7 @@ const getters = {
     && state.datasets[id][category],
   plot: state => (id, name) => getters.ready(state)(id) && state.plots[id][name],
   isMerged: state => id => getters.ready(id) && Array.isArray(state.datasets[id].meta.merged),
-  persisting: state => state.loading || state.saving,
+  waiting: state => state.loading || state.saving,
 };
 
 

@@ -17,7 +17,7 @@ export default function (plotName) {
     deactivated() { this.active = false; },
     mounted() { this.reloadPlot(); },
     computed: {
-      loading() { return this.$store.getters.persisting; },
+      loading() { return this.$store.getters.waiting; },
       dataset() { return this.$store.getters.dataset(this.id); },
       plot() { return this.$store.getters.plot(this.id, plotName); },
     },
