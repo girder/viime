@@ -16,6 +16,10 @@ export default [
     component: BoxPlotLargeTile,
     args: {},
     type: plot_types.ANALYSIS,
+    icon: vuetify.icons.boxplot,
+    iconStyle: {
+      transform: 'rotate(90deg)scale(-1,1)',
+    },
   },
   {
     path: 'wilcoxon',
