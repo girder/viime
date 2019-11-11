@@ -69,5 +69,6 @@ export default {
     heatmap: 'mdi-grid',
     metaboliteTable: 'mdi-view-list',
     graph: 'mdi-graphql',
+    feedback: 'mdi-comment-outline',
   },
 };
