@@ -188,7 +188,9 @@ v-app.viime-landing
           v-btn.mx-0(color="accent lighten-1", depressed, large) join us
 
   .footer
-    p.ma-0.pa-3 &copy; 2019 Kitware, Inc. | &lt; License Info Here &gt;
+    p.ma-0.pa-3 &copy; 2019 Kitware, Inc. |
+      a(href="https://github.com/girder/viime/blob/master/LICENSE",
+          target="_blank", rel="noopener noreferrer") Apache License 2.0
 </template>
 
  <style lang="scss" scoped>
