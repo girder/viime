@@ -2,11 +2,8 @@ import WilcoxonPlotTile from './WilcoxonPlotTile.vue';
 import AnovaTableTile from './AnovaTableTile.vue';
 import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
-<<<<<<< HEAD
 import PcaPage from './PcaPage/PcaPage.vue';
-=======
 import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
->>>>>>> origin/master
 import { plot_types } from '../../utils/constants';
 import { correlation_methods } from './constants';
 import vuetify from '../../utils/vuetifyConfig';
