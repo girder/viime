@@ -16,8 +16,8 @@ import './score-plot.css';
 
 
 function fixCSS(id) {
-  //replace non css stuff to _
-  return id.replace(/[\s!#$%&'()*+,.\/:;<=>?@\[\\\]^`{|}~]+/g, '_');
+  // replace non css stuff to _
+  return id.replace(/[\s!#$%&'()*+,./:;<=>?@[\\\]^`{|}~]+/g, '_');
 }
 
 function covar(xs, ys) {
