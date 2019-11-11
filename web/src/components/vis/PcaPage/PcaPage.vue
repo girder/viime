@@ -59,7 +59,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
+vis-tile-large(title="Principal Component Analysis", :loading="false")
   template(#controls)
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title PC selector
@@ -82,26 +82,6 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
               outline,
               :disabled="!showScore && !showLoadings",
               v-model="pcYval")
-
-    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-      v-toolbar-title.switch-title Scree Plot
-        v-switch.switch(v-model="showScree", color="white", hide-details)
-    v-card.mb-3.mx-3(flat)
-      v-card-actions
-        v-layout(column)
-          v-text-field.py-2(
-              :disabled="!showScree",
-              hide-details,
-              type="number",
-              label="Number of PCs",
-              min="1",
-              outline,
-              v-model="numComponentsVal")
-          v-switch.ma-0.py-2(
-              v-model="showCutoffs",
-              label="Cutoff lines",
-              :disabled="!showScree",
-              hide-details)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title.switch-title Score Plot
@@ -127,30 +107,49 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
               :disabled="!showLoadings",
               hide-details)
 
-  v-container.grow-overflow.ma-0(grid-list-lg, fluid)
-    layout-grid(:cell-size="300", v-if="ready")
-      scree-plot(
-          v-show="showScree",
-          :id="id",
-          :pc-x="pcX",
-          :pc-y="pcY",
-          :num-components="numComponents",
-          :show-cutoffs="showCutoffs")
-      score-plot(
-          v-show="showScore",
-          :id="id",
-          :pc-x="pcX",
-          :pc-y="pcY",
-          :show-ellipses="showEllipses")
-      loadings-plot(
-          v-show="showLoadings",
-          :id="id",
-          :pc-x="pcX",
-          :pc-y="pcY",
-          :show-crosshairs="showCrosshairs")
-    div(v-else)
-      v-progress-circular(indeterminate, size="100", width="5")
-      h4.display-1.pa-3 Loading data...
+    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
+      v-toolbar-title.switch-title Scree Plot
+        v-switch.switch(v-model="showScree", color="white", hide-details)
+    v-card.mb-3.mx-3(flat)
+      v-card-actions
+        v-layout(column)
+          v-text-field.py-2(
+              :disabled="!showScree",
+              hide-details,
+              type="number",
+              label="Number of PCs",
+              min="1",
+              outline,
+              v-model="numComponentsVal")
+          v-switch.ma-0.py-2(
+              v-model="showCutoffs",
+              label="Cutoff lines",
+              :disabled="!showScree",
+              hide-details)
+
+  layout-grid(:cell-size="300", v-if="ready")
+    score-plot(
+        v-show="showScore",
+        :id="id",
+        :pc-x="pcX",
+        :pc-y="pcY",
+        :show-ellipses="showEllipses")
+    loadings-plot(
+        v-show="showLoadings",
+        :id="id",
+        :pc-x="pcX",
+        :pc-y="pcY",
+        :show-crosshairs="showCrosshairs")
+    scree-plot(
+        v-show="showScree",
+        :id="id",
+        :pc-x="pcX",
+        :pc-y="pcY",
+        :num-components="numComponents",
+        :show-cutoffs="showCutoffs")
+  div(v-else)
+    v-progress-circular(indeterminate, size="100", width="5")
+    h4.display-1.pa-3 Loading data...
 </template>
 
 <style lang="scss" scoped>
