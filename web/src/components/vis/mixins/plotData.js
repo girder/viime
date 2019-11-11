@@ -1,4 +1,4 @@
-import { mapState, mapActions, mapMutations } from 'vuex';
+import { mapActions, mapMutations } from 'vuex';
 import { LOAD_PLOT } from '../../../store/actions.type';
 import { SET_PLOT } from '../../../store/mutations.type';
 
@@ -17,7 +17,6 @@ export default function (plotName) {
     deactivated() { this.active = false; },
     mounted() { this.reloadPlot(); },
     computed: {
-      ...mapState(['loading']),
       dataset() { return this.$store.getters.dataset(this.id); },
       plot() { return this.$store.getters.plot(this.id, plotName); },
     },

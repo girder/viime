@@ -9,7 +9,7 @@ export default {
     },
     loading: {
       type: Boolean,
-      required: true,
+      default: false,
     },
     download: {
       default: false,
