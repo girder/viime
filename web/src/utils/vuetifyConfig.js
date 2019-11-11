@@ -70,5 +70,6 @@ export default {
     metaboliteTable: 'mdi-view-list',
     graph: 'mdi-graphql',
     boxplot: 'mdi-chart-bar',
+    feedback: 'mdi-comment-outline',
   },
 };

@@ -33,11 +33,11 @@ export default {
   data() {
     return {
       colors,
-      column: {
+      row: {
         dendogram: true,
         colorer: this.columnColor,
       },
-      row: {
+      column: {
         dendogram: true,
         colorer: this.rowColor,
       },
@@ -53,7 +53,11 @@ export default {
 
   computed: {
     values() {
-      return this.dataset.validatedMeasurements;
+      if (!this.plot.data) {
+        return [];
+      }
+      // TODO swap
+      return this.plot.data ? this.plot.data.values : [];
     },
   },
   watch: {
@@ -105,7 +109,7 @@ export default {
 
 <template lang="pug">
 vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl="download",
-    :loading="plot.loading || !dataset.ready || !values || values.data.length === 0")
+    :loading="plot.loading || !dataset.ready || !values || values.length === 0")
   template(#controls)
     metabolite-filter(:dataset="dataset", v-model="metaboliteFilter")
     sample-filter(:dataset="dataset", v-model="sampleFilter")
@@ -117,17 +121,16 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl=
       v-toolbar-title Dendogram
     v-card.mx-3(flat)
       v-card-actions(:style="{display: 'block'}")
-        v-checkbox.my-0(v-model="column.dendogram", label="Metabolite", hide-details)
-        v-checkbox.my-0(v-model="row.dendogram", label="Sample", hide-details)
-
+        v-checkbox.my-0(v-model="row.dendogram", label="Metabolite", hide-details)
+        v-checkbox.my-0(v-model="column.dendogram", label="Sample", hide-details)
     toolbar-option(title="Layout", :value="layout",
         :options="layouts",
         @change="layout = $event")
 
   heatmap(ref="heatmap",
       v-if="plot && plot.data && dataset.ready && values",
-      :values="values",
+      :values="values", transposed,
       :column-config="column", :row-config="row", :layout="layout",
-      :column-clustering="plot.data ? plot.data.column : null",
-      :row-clustering="plot.data ? plot.data.row : null")
+      :row-clustering="plot.data ? plot.data.column : null",
+      :column-clustering="plot.data ? plot.data.row : null")
 </template>

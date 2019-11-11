@@ -53,7 +53,7 @@ setup(
     data_files=data_files,
     entry_points={
         'console_scripts': [
-            'viime-create-tables=viime.cli:create_tables'
+            'viime-cli=viime.cli:cli'
         ],
         'dogpile.cache': [
             'flask_request_local = viime.cache:FlaskRequestLocalBackend'

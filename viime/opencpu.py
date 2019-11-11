@@ -29,6 +29,8 @@ def opencpu_request(method, files=None, params=None, return_type='csv'):
         url += '/csv?row.names=true'
     elif return_type == 'png':
         url += '/png'
+    elif return_type == 'json':
+        url += '/json'
     else:
         raise Exception('Unknown return type')
 
@@ -44,6 +46,8 @@ def opencpu_request(method, files=None, params=None, return_type='csv'):
     result = resp.content
     if return_type == 'csv':
         result = pandas.read_csv(BytesIO(resp.content), index_col=0)
+    elif return_type == 'json':
+        result = json.loads(result)
     return result
 
 

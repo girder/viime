@@ -220,9 +220,11 @@ export default {
       const localEdges = this.edges.map(d => Object.assign({}, d));
       const edges = svg.select('g.edges').selectAll('g').data(localEdges)
         .join(enter => enter.append('g').html('<title></title><line></line><text></text>'));
-      edges.select('line').style('stroke-width', d => this.strokeScale(d.value));
-      edges.select('title').text(d => `${d.source} - ${d.target}: ${d.value.toFixed(3)}`);
-      edges.select('text').text(d => d.value.toFixed(3));
+      edges.select('line')
+        .style('stroke-width', d => this.strokeScale(d.value))
+        .style('stroke', d => d.color);
+      edges.select('title').text(d => `${d.source} - ${d.target}: ${d.ori.toFixed(3)}`);
+      edges.select('text').text(d => d.ori.toFixed(3));
 
       // towards center of screen
       simulation.nodes(localNodes);
