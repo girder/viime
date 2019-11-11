@@ -84,26 +84,6 @@ vis-tile-large(title="Principal Component Analysis", :loading="false")
               v-model="pcYval")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-      v-toolbar-title.switch-title Scree Plot
-        v-switch.switch(v-model="showScree", color="white", hide-details)
-    v-card.mb-3.mx-3(flat)
-      v-card-actions
-        v-layout(column)
-          v-text-field.py-2(
-              :disabled="!showScree",
-              hide-details,
-              type="number",
-              label="Number of PCs",
-              min="1",
-              outline,
-              v-model="numComponentsVal")
-          v-switch.ma-0.py-2(
-              v-model="showCutoffs",
-              label="Cutoff lines",
-              :disabled="!showScree",
-              hide-details)
-
-    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title.switch-title Score Plot
         v-switch.switch(v-model="showScore", color="white", hide-details)
     v-card.mb-3.mx-3(flat)
@@ -125,6 +105,26 @@ vis-tile-large(title="Principal Component Analysis", :loading="false")
               v-model="showCrosshairs",
               label="Crosshairs",
               :disabled="!showLoadings",
+              hide-details)
+
+    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
+      v-toolbar-title.switch-title Scree Plot
+        v-switch.switch(v-model="showScree", color="white", hide-details)
+    v-card.mb-3.mx-3(flat)
+      v-card-actions
+        v-layout(column)
+          v-text-field.py-2(
+              :disabled="!showScree",
+              hide-details,
+              type="number",
+              label="Number of PCs",
+              min="1",
+              outline,
+              v-model="numComponentsVal")
+          v-switch.ma-0.py-2(
+              v-model="showCutoffs",
+              label="Cutoff lines",
+              :disabled="!showScree",
               hide-details)
 
   layout-grid(:cell-size="300", v-if="ready")
