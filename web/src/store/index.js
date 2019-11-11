@@ -7,7 +7,7 @@ import {
 } from '../utils';
 import analyses from '../components/vis/analyses';
 import { plot_types } from '../utils/constants';
-import ApiService, { CSVService, ExcelService } from '../common/api.service';
+import ApiService, { CSVService, ExcelService, SampleService } from '../common/api.service';
 
 import {
   CHANGE_AXIS_LABEL,
@@ -24,6 +24,8 @@ import {
   CREATE_MERGED_DATASET,
   REMERGE_DATASET,
   SET_DATASET_GROUP_LEVELS,
+  IMPORT_SAMPLE,
+  IMPORT_SAMPLE_GROUP,
 } from './actions.type';
 
 import {
@@ -169,6 +171,7 @@ const mutations = {
     } = data;
     const { data: sourcerows } = convertCsvToRows(data.table);
     const measurement_table = parsePandasDataFrame(data.measurement_table);
+
     const oldData = state.datasets[id];
     Vue.set(state.datasets, id, {
       ...oldData,
@@ -212,10 +215,27 @@ const mutations = {
     const ds = state.datasets[data.csv_file_id];
     // the imputed table index are column can be used for all the other ones
     const base = ds.measurement_table;
+
+    const toMeta = ({ meta, subtype }) => ({ ...(meta || {}), subtype });
+
+    base.columnMetaData = ds.column.data.filter(d => d.column_type === 'measurement').map(toMeta);
+    base.rowMetaData = ds.row.data.filter(d => d.row_type === 'sample').map(toMeta);
+
     const validatedMeasurements = parsePandasDataFrame(data.measurements, base);
     const validatedGroups = parsePandasDataFrame(data.groups, base);
     const validatedMeasurementsMetaData = parsePandasDataFrame(data.measurement_metadata, base);
     const validatedSampleMetaData = parsePandasDataFrame(data.sample_metadata, base);
+
+    // inject meta data
+
+    validatedGroups.columnMetaData = ds.column.data.filter(d => d.column_type === 'group').map(toMeta);
+
+    if (ds.groupLevels && validatedGroups.columnMetaData.length > 0) {
+      validatedGroups.columnMetaData[0].levels = ds.groupLevels;
+    }
+
+    validatedSampleMetaData.columnMetaData = ds.column.data.filter(d => d.column_type === 'metadata').map(toMeta);
+    validatedMeasurementsMetaData.rowMetaData = ds.row.data.filter(d => d.row_type === 'metadata').map(toMeta);
 
     const delta = {
       imputationInfo: data.imputation_info || { mcar: [], mnar: [] },
@@ -247,17 +267,19 @@ const mutations = {
     dataset_id, rows, columns,
     group_levels,
   }) {
+    const ds = state.datasets[dataset_id];
     const rowsSorted = rows.sort((a, b) => a.row_index - b.row_index);
     const colsSorted = columns.sort((a, b) => a.column_index - b.column_index);
-    Vue.set(state.datasets[dataset_id], 'row', {
+
+    Vue.set(ds, 'row', {
       labels: rowsSorted.map(r => r.row_type),
       data: rowsSorted,
     });
-    Vue.set(state.datasets[dataset_id], 'column', {
+    Vue.set(ds, 'column', {
       labels: colsSorted.map(c => c.column_type),
       data: colsSorted,
     });
-    Vue.set(state.datasets[dataset_id], 'groupLevels', group_levels);
+    Vue.set(ds, 'groupLevels', group_levels);
   },
 
   [REMOVE_DATASET](state, { dataset_id }) {
@@ -357,6 +379,38 @@ const actions = {
     commit(SET_LOADING, true);
     try {
       const { data } = await ExcelService.upload(file);
+      const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
+      await Promise.all(promiseList);
+      state.store.save(state, state.session_id);
+      commit(SET_LOADING, false);
+      return data;
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
+  },
+
+  async [IMPORT_SAMPLE]({ state, commit, dispatch }, { sampleId }) {
+    commit(SET_LOADING, true);
+    try {
+      const { data } = await SampleService.importSample(sampleId);
+      const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
+      await Promise.all(promiseList);
+      state.store.save(state, state.session_id);
+      commit(SET_LOADING, false);
+      return data;
+    } catch (err) {
+      commit(SET_LAST_ERROR, err);
+      commit(SET_LOADING, false);
+      throw err;
+    }
+  },
+
+  async [IMPORT_SAMPLE_GROUP]({ state, commit, dispatch }, { group }) {
+    commit(SET_LOADING, true);
+    try {
+      const { data } = await SampleService.importSampleGroup(group);
       const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
       await Promise.all(promiseList);
       state.store.save(state, state.session_id);

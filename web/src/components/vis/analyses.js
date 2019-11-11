@@ -2,11 +2,21 @@ import WilcoxonPlotTile from './WilcoxonPlotTile.vue';
 import AnovaTableTile from './AnovaTableTile.vue';
 import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
+import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
 import { plot_types } from '../../utils/constants';
 import { correlation_methods } from './constants';
 import vuetify from '../../utils/vuetifyConfig';
 
 export default [
+  {
+    path: 'boxplot',
+    name: 'Boxplots',
+    shortName: 'Boxplots',
+    description: 'show me the boxplots!',
+    component: BoxPlotLargeTile,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
   {
     path: 'wilcoxon',
     name: 'Wilcoxon test',
@@ -34,7 +44,10 @@ export default [
     description: 'cool stuff',
     component: HeatmapTile,
     args: {
-      columns: null,
+      column: null,
+      column_filter: null,
+      row: null,
+      row_filter: null,
     },
     type: plot_types.ANALYSIS,
     icon: vuetify.icons.heatmap,

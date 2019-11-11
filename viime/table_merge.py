@@ -1,10 +1,11 @@
 """
 This module contains methods related to mergind dataset
 """
-from typing import Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set
 
 import pandas as pd
 
+from .colors import scheme_set3
 from .models import TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     ValidatedMetaboliteTable
 from .opencpu import opencpu_request
@@ -15,10 +16,10 @@ def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
                                       pd.DataFrame]] = None):
     used_column_names: Set[str] = set()
     tables: List[pd.DataFrame] = []
-    column_types: List[str] = [
-        TABLE_COLUMN_TYPES.INDEX
+    column_types: List[Dict[str, Any]] = [
+        dict(type=TABLE_COLUMN_TYPES.INDEX)
     ]
-    measurement_metadata: List[int] = []
+    measurement_metadata: List[str] = []
 
     def append_table(column_type: str, df: pd.DataFrame, index: int):
         count = df.shape[1]
@@ -39,8 +40,8 @@ def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
 
         used_column_names.update(list(df))
         tables.append(df)
-        column_types.extend([column_type] * count)
-        measurement_metadata.extend([index + 1] * count)
+        column_types.extend([dict(type=column_type)] * count)
+        measurement_metadata.extend([f'DS{index + 1}'] * count)
 
     def append_tables(column_type: str, attr: str, do_transform=False):
         for index, table in enumerate(validated_tables):
@@ -60,10 +61,14 @@ def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
     metadata.columns = list(merged)
     metadata.index = ['Data Source']
 
+    levels = [dict(name=f'DS{i + 1}', label=t.name, color=color)
+              for i, (t, color) in enumerate(zip(validated_tables, scheme_set3()))]
+    source_meta = dict(levels=levels)
+
     row_types = [
-        TABLE_ROW_TYPES.INDEX,
-        TABLE_ROW_TYPES.METADATA  # data source
-    ] + ([TABLE_ROW_TYPES.DATA] * merged.shape[0])
+        dict(type=TABLE_ROW_TYPES.INDEX),
+        dict(type=TABLE_ROW_TYPES.METADATA, subtype='categorical', meta=source_meta)  # data source
+    ] + ([dict(type=TABLE_ROW_TYPES.DATA)] * merged.shape[0])
 
     table = pd.concat([metadata, merged])
 
@@ -84,7 +89,7 @@ def _clean_pca_transformer(measurements: pd.DataFrame, index: int) -> pd.DataFra
         'measurements': measurements.to_csv().encode()
     }
     params = {
-        'prefix': 'DS%d' % (index + 1)
+        'prefix': f'DS{index + 1}'
     }
     return opencpu_request('compute_clean_pca', files, params)
 

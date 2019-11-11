@@ -5,14 +5,22 @@ v-app.viime-app
     v-breadcrumbs(:items="breadcrumbs", divider="»")
       template(#item="props")
         v-breadcrumbs-item(:to="props.item.to", exact) {{props.item.text}}
+
+    v-spacer
+
+    feedback-button
   v-container.pa-0.d-flex(fluid)
     router-view.grow
 </template>
 
 <script>
+import FeedbackButton from './FeedbackButton.vue';
 
 export default {
   name: 'App',
+  components: {
+    FeedbackButton,
+  },
   computed: {
     breadcrumbs() {
       return [
