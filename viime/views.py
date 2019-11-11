@@ -2,7 +2,7 @@ from functools import wraps
 from io import BytesIO
 import json
 from pathlib import PurePath
-from typing import Callable, cast, Dict, List, Optional
+from typing import Any, Callable, cast, Dict, List, Optional
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
@@ -165,13 +165,17 @@ def merge_csv_files(name: str, description: str, method: str, datasets: List[str
         if row_types:
             # update the row types
             for row, row_type in zip(csv_file.rows, row_types):
-                row.row_type = row_type
+                row.row_type = row_type['type']
+                row.subtype = row_type.get('subtype')
+                row.meta = row_type.get('meta')
                 db.session.add(row)
 
         if column_types:
             # update the row types
             for column, column_type in zip(csv_file.columns, column_types):
-                column.column_type = column_type
+                column.column_type = column_type['type']
+                column.subtype = column_type.get('subtype')
+                column.meta = column_type.get('meta')
                 db.session.add(column)
 
         # need to call it manually since we might have changed the column types
@@ -443,7 +447,7 @@ def get_row(csv_id, row_index):
     ))
 
 
-def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
+def _update_row_types(csv_file: CSVFile, row_types: Optional[List[Dict[str, Any]]]):
     if row_types is None:
         return
 
@@ -451,7 +455,9 @@ def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
     count_current = len(csv_file.rows)
     # update the row types
     for row, row_type in zip(csv_file.rows, row_types):
-        row.row_type = row_type
+        row.row_type = row_type['type']
+        row.subtype = row_type.get('subtype')
+        row.meta = row_type.get('meta')
         db.session.add(row)
 
     if count_target > count_current:
@@ -469,7 +475,7 @@ def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
             db.session.delete(row)
 
 
-def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
+def _update_column_types(csv_file: CSVFile, column_types: Optional[List[Dict[str, Any]]]):
     if column_types is None:
         return
 
@@ -479,7 +485,9 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
     # update the column types
 
     for column, column_type in zip(csv_file.columns, column_types):
-        column.column_type = column_type
+        column.column_type = column_type['type']
+        column.subtype = column_type.get('subtype')
+        column.meta = column_type.get('meta')
         db.session.add(column)
 
     if count_target > count_current:
@@ -767,21 +775,39 @@ def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Opti
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/heatmap', methods=['GET'])
 @use_kwargs({
-    'columns': fields.Str(required=False, missing=None,
-                          validate=validate.OneOf(['selected', 'not-selected']))
+    'column': fields.Str(required=False, missing=None),
+    'column_filter': fields.Str(required=False, missing=''),
+    'row': fields.Str(required=False, missing=None),
+    'row_filter': fields.Str(required=False, missing=''),
 })
 @load_validated_csv_file
 def get_hierarchical_clustering_heatmap(validated_table: ValidatedMetaboliteTable,
-                                        columns: Optional[str]):
+                                        column: Optional[str], column_filter: str,
+                                        row: Optional[str], row_filter: str):
     table = validated_table.measurements
 
-    if columns:
+    if column:
+        cfilters = set(column_filter.split(','))
         csv_file: CSVFile = CSVFile.query.get_or_404(validated_table.csv_file_id)
-        if columns == 'selected':
-            table = table.loc[:, csv_file.selected_columns or []]
-        elif columns == 'not-selected' and csv_file.selected_columns:
-            non_selected = [c for c in table if str(c) not in csv_file.selected_columns]
-            table = table.loc[:, non_selected]
+        if column == 'selection':
+
+            def is_selected(c):
+                return csv_file.selected_columns and c in csv_file.selected_columns
+
+            cdata = ['selected' if is_selected(str(c)) else 'not-selected' for c in table]
+        else:
+            cmeta: pandas.DataFrame = validated_table.measurement_metadata.T
+            cdata = [str(v) for v in cmeta[column]]
+
+        table = table.loc[:, [d in cfilters for d in cdata]]
+
+    if row:
+        rfilters = set(row_filter.split(','))
+        rmeta: pandas.DataFrame = validated_table.sample_metadata
+        rgroups: pandas.DataFrame = validated_table.groups
+        rdata = [str(v) for v in (rmeta[row] if row in rmeta else rgroups[row])]
+
+        table = table.loc[[d in rfilters for d in rdata], :]
 
     return hierarchical_clustering(table)
 

@@ -45,6 +45,9 @@ def _do_clustering(arr: np.ndarray, columns) -> Optional[Dict[str, Any]]:
     if len(arr) == 0:
         return None
 
+    if len(arr) == 1:
+        return dict(name=columns[0], index=0)
+
     r = linkage(arr, optimal_ordering=True)
     df = pd.DataFrame(r.astype(np.int))
     df = df.rename(columns={

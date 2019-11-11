@@ -21,6 +21,7 @@ from sqlalchemy_utils.types.uuid import UUIDType
 from werkzeug.utils import secure_filename
 
 from viime.cache import clear_cache, csv_file_cache, region
+from viime.colors import category10
 from viime.imputation import IMPUTE_MCAR_METHODS, impute_missing, IMPUTE_MNAR_METHODS
 from viime.normalization import NORMALIZATION_METHODS, normalize
 from viime.scaling import scale, SCALING_METHODS
@@ -42,9 +43,11 @@ db = SQLAlchemy(metadata=metadata)
 AxisNameTypes = namedtuple('AxisNameTypes', ['ROW', 'COLUMN'])
 TableColumnTypes = namedtuple('TableTypes', ['INDEX', 'METADATA', 'DATA', 'MASK', 'GROUP'])
 TableRowTypes = namedtuple('TableTypes', ['INDEX', 'METADATA', 'DATA', 'MASK'])
+MetaDataTypes = namedtuple('MetaDataTypes', ['CATEGORICAL', 'NUMERICAL', 'ORDINAL'])
 TABLE_COLUMN_TYPES = TableColumnTypes('key', 'metadata', 'measurement', 'masked', 'group')
 TABLE_ROW_TYPES = TableRowTypes('header', 'metadata', 'sample', 'masked')
 AXIS_NAME_TYPES = AxisNameTypes('row', 'column')
+METADATA_TYPES = MetaDataTypes('categorical', 'numerical', 'ordinal')
 
 
 def _guess_table_structure(table):
@@ -249,11 +252,8 @@ class CSVFile(db.Model):
             self.group_levels = []
             return
         levels = sorted([str(v) for v in groups.iloc[:, 0].unique()])
-        # d3 scheme category 10
-        colors = ['#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
-                  '#7f7f7f', '#bcbd22', '#17becf', '#ff7f0e']
-        self.group_levels = [GroupLevel(name=l, label=l, color=colors[i % len(colors)])
-                             for i, l in enumerate(levels)]
+        self.group_levels = [GroupLevel(name=l, label=l, color=color)
+                             for i, (l, color) in enumerate(zip(levels, category10()))]
 
     @property
     def keys(self):
@@ -388,6 +388,8 @@ class TableColumn(db.Model):
     csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     column_index = db.Column(db.Integer, primary_key=True)
     column_type = db.Column(db.String, nullable=False)
+    subtype = db.Column(db.String, nullable=True)
+    meta = db.Column(JSONType, nullable=True)
 
     csv_file = db.relationship(
         CSVFile, backref=db.backref('columns', lazy=True, order_by='TableColumn.column_index'))
@@ -420,6 +422,8 @@ class TableColumnSchema(BaseSchema):
     column_header = fields.Str(dump_only=True)
     column_index = fields.Int(required=True, validate=validate.Range(min=0))
     column_type = fields.Str(required=True, validate=validate.OneOf(TABLE_COLUMN_TYPES))
+    subtype = fields.Str(required=False, validate=validate.OneOf(METADATA_TYPES))
+    meta = fields.Dict(missing=dict)
 
     csv_file = fields.Nested(
         CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
@@ -430,6 +434,8 @@ class TableRow(db.Model):
         UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     row_index = db.Column(db.Integer, primary_key=True)
     row_type = db.Column(db.String, nullable=False)
+    subtype = db.Column(db.String, nullable=True)
+    meta = db.Column(JSONType, nullable=True)
 
     csv_file = db.relationship(
         CSVFile, backref=db.backref('rows', lazy=True, order_by='TableRow.row_index'))
@@ -460,6 +466,8 @@ class TableRowSchema(BaseSchema):
     row_name = fields.Str(dump_only=True)
     row_index = fields.Int(required=True, validate=validate.Range(min=0))
     row_type = fields.Str(required=True, validate=validate.OneOf(TABLE_ROW_TYPES))
+    subtype = fields.Str(required=False, validate=validate.OneOf(METADATA_TYPES))
+    meta = fields.Dict(missing=dict)
 
     csv_file = fields.Nested(
         CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
