@@ -22,7 +22,7 @@ store.dispatch(LOAD_SESSION, new SessionStore(window));
 
 if (process.env.NODE_ENV === 'production') {
   SentryInit({
-    dsn: 'https://9c7281f0dfc5402a953698256bd067e0@sentry.io/1437129',
+    dsn: 'https://8a16de58c96648daa122b63a5db9b404@sentry.io/1814179',
     release: COMMITHASH,
     environment: process.env.NODE_ENV,
     integrations: [new SentryVue({ Vue })],

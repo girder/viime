@@ -1,5 +1,10 @@
 <script>
+import FeedbackButton from './FeedbackButton.vue';
+
 export default {
+  components: {
+    FeedbackButton,
+  },
   data() {
     return {
       capabilityClasses: {
@@ -126,11 +131,12 @@ v-app.viime-landing
               h2 Kitware, Inc.
             v-card-text.pa-0
               v-list.team-members
-                v-list-tile(href="https://www.kitware.com/data-analytics/")
+                v-list-tile(href="https://www.kitware.com/data-analytics/",
+                    target="_blank", rel="noopener noreferrer")
                   v-list-tile-content
                     v-list-tile-title Data and Analytics team
                   v-list-tile-action
-                    v-icon(color="accent lighten-1") $vuetify.icons.link
+                    v-icon(color="accent lighten-1") $vuetify.icons.openInNew
         v-flex.partner(sm4)
           v-card.pa-3(color="transparent", flat)
             v-card-title.partner-title.pt-3(primary-title)
@@ -138,11 +144,12 @@ v-app.viime-landing
               h2 Indiana University
             v-card-text.pa-0
               v-list.team-members
-                v-list-tile(href="https://medicine.iu.edu/research/faculty-labs/oconnell/")
+                v-list-tile(href="https://medicine.iu.edu/research/faculty-labs/oconnell/",
+                    target="_blank", rel="noopener noreferrer")
                   v-list-tile-content
                     v-list-tile-title Thomas O'Connell
                   v-list-tile-action
-                    v-icon(color="accent lighten-1") $vuetify.icons.link
+                    v-icon(color="accent lighten-1") $vuetify.icons.openInNew
                 v-divider
                 v-list-tile
                   v-list-tile-content
@@ -159,32 +166,37 @@ v-app.viime-landing
               h2 University of Washington
             v-card-text.pa-0
               v-list.team-members
-                v-list-tile(href="https://sites.uw.edu/mmcslu/faculty/daniel-raftery-phd/")
+                v-list-tile(href="https://sites.uw.edu/mmcslu/faculty/daniel-raftery-phd/",
+                    target="_blank", rel="noopener noreferrer")
                   v-list-tile-content
                     v-list-tile-title Daniel Raftery
                   v-list-tile-action
-                    v-icon(color="accent lighten-1") $vuetify.icons.link
+                    v-icon(color="accent lighten-1") $vuetify.icons.openInNew
 
   .collaboration
     v-container
-      v-layout(row)
-        v-flex(pa-3, sm6)
+      v-layout(row, wrap)
+        v-flex(md8, xs12)
           h2.mb-3.pa-0 Ready for Collaboration
           p The code for VIIME is in a permissive open source library, meaning it can be used and
             | extended across academia and industry with no restrictions. This includes deploying
             | VIIME at your institution for your internal research team. If you'd like to partner
             | with us to deploy or extend VIIME
-          v-btn.mt-3.mx-0.px-3(href="https://github.com/girder/viime", depressed, large)
-            v-icon.mr-2(left) $vuetify.icons.github
-            | View on GitHub
-        v-flex(pa-3, sm6)
-          v-text-field(label="text field", placeholder="Placeholder", solo, dense)
-          v-text-field(label="text field", placeholder="Placeholder", solo, dense)
-          v-text-field(label="text field", placeholder="Placeholder", solo, dense)
-          v-btn.mx-0(color="accent lighten-1", depressed, large) join us
+        v-flex.contacts(md4, xs12)
+          div
+            feedback-button(front)
+            v-btn(href="https://github.com/girder/viime", depressed, large,
+                target="_blank", rel="noopener noreferrer")
+              v-icon.mr-2(left) $vuetify.icons.github
+              | View on GitHub
 
   .footer
-    p.ma-0.pa-3 &copy; 2019 Kitware, Inc. | &lt; License Info Here &gt;
+    p.ma-0.pa-3 &copy; 2019 Kitware, Inc. |&nbsp;
+      a(href="https://github.com/girder/viime/blob/master/LICENSE",
+          target="_blank", rel="noopener noreferrer") Apache License 2.0
+      | &nbsp;|&nbsp;
+      a(href="https://www.kitware.com/privacy",
+          target="_blank", rel="noopener noreferrer") Privacy Notice
 </template>
 
  <style lang="scss" scoped>
@@ -342,6 +354,18 @@ v-app.viime-landing
     top: 0;
     transform: translateX(-50%);
     width: 0;
+  }
+}
+
+.contacts {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
   }
 }
 

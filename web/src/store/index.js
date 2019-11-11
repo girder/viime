@@ -170,6 +170,7 @@ const mutations = {
     } = data;
     const { data: sourcerows } = convertCsvToRows(data.table);
     const measurement_table = parsePandasDataFrame(data.measurement_table);
+
     const oldData = state.datasets[id];
     Vue.set(state.datasets, id, {
       ...oldData,
@@ -213,10 +214,27 @@ const mutations = {
     const ds = state.datasets[data.csv_file_id];
     // the imputed table index are column can be used for all the other ones
     const base = ds.measurement_table;
+
+    const toMeta = ({ meta, subtype }) => ({ ...(meta || {}), subtype });
+
+    base.columnMetaData = ds.column.data.filter(d => d.column_type === 'measurement').map(toMeta);
+    base.rowMetaData = ds.row.data.filter(d => d.row_type === 'sample').map(toMeta);
+
     const validatedMeasurements = parsePandasDataFrame(data.measurements, base);
     const validatedGroups = parsePandasDataFrame(data.groups, base);
     const validatedMeasurementsMetaData = parsePandasDataFrame(data.measurement_metadata, base);
     const validatedSampleMetaData = parsePandasDataFrame(data.sample_metadata, base);
+
+    // inject meta data
+
+    validatedGroups.columnMetaData = ds.column.data.filter(d => d.column_type === 'group').map(toMeta);
+
+    if (ds.groupLevels && validatedGroups.columnMetaData.length > 0) {
+      validatedGroups.columnMetaData[0].levels = ds.groupLevels;
+    }
+
+    validatedSampleMetaData.columnMetaData = ds.column.data.filter(d => d.column_type === 'metadata').map(toMeta);
+    validatedMeasurementsMetaData.rowMetaData = ds.row.data.filter(d => d.row_type === 'metadata').map(toMeta);
 
     const delta = {
       imputationInfo: data.imputation_info || { mcar: [], mnar: [] },
@@ -248,17 +266,19 @@ const mutations = {
     dataset_id, rows, columns,
     group_levels,
   }) {
+    const ds = state.datasets[dataset_id];
     const rowsSorted = rows.sort((a, b) => a.row_index - b.row_index);
     const colsSorted = columns.sort((a, b) => a.column_index - b.column_index);
-    Vue.set(state.datasets[dataset_id], 'row', {
+
+    Vue.set(ds, 'row', {
       labels: rowsSorted.map(r => r.row_type),
       data: rowsSorted,
     });
-    Vue.set(state.datasets[dataset_id], 'column', {
+    Vue.set(ds, 'column', {
       labels: colsSorted.map(c => c.column_type),
       data: colsSorted,
     });
-    Vue.set(state.datasets[dataset_id], 'groupLevels', group_levels);
+    Vue.set(ds, 'groupLevels', group_levels);
   },
 
   [REMOVE_DATASET](state, { dataset_id }) {

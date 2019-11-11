@@ -10,17 +10,20 @@ v-app.viime-app
 
     save-status
 
+    feedback-button
   v-container.pa-0.d-flex(fluid)
     router-view.grow
 </template>
 
 <script>
 import SaveStatus from './SaveStatus.vue';
+import FeedbackButton from './FeedbackButton.vue';
 
 export default {
   name: 'App',
   components: {
     SaveStatus,
+    FeedbackButton,
   },
   computed: {
     breadcrumbs() {

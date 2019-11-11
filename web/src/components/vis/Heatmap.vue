@@ -1,26 +1,40 @@
 <script>
 import resize from 'vue-resize-directive';
+import { format } from 'd3-format';
 import { hierarchy, cluster } from 'd3-hierarchy';
 import { scaleSequential } from 'd3-scale';
-import { interpolateBlues } from 'd3-scale-chromatic';
+import { interpolateRdBu, schemeRdBu } from 'd3-scale-chromatic';
 import { select, event } from 'd3-selection';
 import { svg2url } from '../../utils/exporter';
 
-function extent(arr) {
-  let min = Number.POSITIVE_INFINITY;
+function domain(arr) {
+  // let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
   arr.forEach(row => row.forEach((v) => {
-    if (v < min) {
-      min = v;
-    }
-    if (v > max) {
-      max = v;
+    // if (v < min) {
+    //   min = v;
+    // }
+    // if (v > max) {
+    //   max = v;
+    // }
+    const av = Math.abs(v);
+    if (av > max) {
+      max = av;
     }
   }));
-  return [min, max];
+  return [-max, max];
+  // return [min, max];
 }
 
-function aggregate(arr, is, js) {
+function aggregate(arr, rs, cs, transposed) {
+  let is = rs;
+  let js = cs;
+
+  if (transposed) {
+    is = cs;
+    js = rs;
+  }
+
   if (is.length === 1 && js.length === 1) {
     return arr[is[0]][js[0]];
   }
@@ -49,9 +63,9 @@ export default {
     resize,
   },
   props: {
-    values: { // {columnNames: string[], rowNames: string[], data: number[][]}
-      type: Object,
-      default: () => ({ columnNames: [], rowNames: [], data: [] }),
+    values: { // number[][]
+      type: Array,
+      default: () => [],
     },
     columnClustering: { // ITreeNode
       type: Object,
@@ -74,9 +88,16 @@ export default {
       validate: v => heatmapLayouts.find(d => d.value === v),
       default: heatmapLayouts[0].value,
     },
+    transposed: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
+      format: format('.4e'),
+      legendGradient: `linear-gradient(to right, ${schemeRdBu[5][4]} 0%, ${schemeRdBu[5][2]} 50%, ${schemeRdBu[5][0]} 100%)`,
       padding: 8,
       width: 0,
       height: 0,
@@ -162,7 +183,10 @@ export default {
       return root;
     },
     valueScale() {
-      return scaleSequential(interpolateBlues).domain(extent(this.values.data));
+      return scaleSequential(t => interpolateRdBu(1 - t)).domain(domain(this.values));
+    },
+    legendDomain() {
+      return this.valueScale.domain().map(this.format);
     },
     columnLeaves() {
       return this.columnTree ? this.columnTree.leaves() : [];
@@ -395,12 +419,12 @@ export default {
 
 
       // work on copy for speed
-      const data = values.data.map(r => r.slice());
+      const data = values.map(r => r.slice());
 
       rows.forEach((rnode, i) => {
         const rowSelected = rnode.data.indices.some(s => hoveredRow.has(s));
         columns.forEach((cnode, j) => {
-          const v = aggregate(data, rnode.data.indices, cnode.data.indices);
+          const v = aggregate(data, rnode.data.indices, cnode.data.indices, this.transposed);
           ctx.fillStyle = valueScale(v);
           ctx.fillRect(j * w, i * h, w, h);
         });
@@ -446,7 +470,7 @@ export default {
         this.cnode = cnode;
         this.row.hovered = new Set(rnode.indices);
         this.column.hovered = new Set(cnode.indices);
-        canvas.title = `${rnode.name} x ${cnode.name} = ${aggregate(this.values.data, rnode.indices, cnode.indices)}`;
+        canvas.title = `${rnode.name} x ${cnode.name} = ${this.format(aggregate(this.values, rnode.indices, cnode.indices, this.transposed))}`;
       }
     },
     canvasMouseLeave() {
@@ -577,6 +601,9 @@ export default {
   .rowlabel(ref="rowlabel",
       :style="{fontSize: fontSize+'px', width: LABEL_WIDTH+'px', height: this.matrixHeight+'px'}",
       :data-update="reactiveRowLabelUpdate")
+  .legend-wrapper(v-show="columnConfig.dendogram && rowConfig.dendogram")
+    .legend(:data-from="legendDomain[0]", :data-to="legendDomain[1]",
+        :style="{background: legendGradient}")
 </template>
 
 <style scoped>
@@ -587,7 +614,7 @@ export default {
   right: 8px;
   bottom: 8px;
   display: grid;
-  grid-template-areas: "d column dl"
+  grid-template-areas: "legend column dl"
     "row matrix rlabel"
     "rc clabel ll";
   justify-content: center;
@@ -603,11 +630,39 @@ export default {
 .matrix {
   grid-area: matrix;
 }
+
+.legend-wrapper {
+  grid-area: legend;
+  display: flex;
+  flex-direction: column;
+}
+
+.legend {
+  height: 1.5em;
+  margin: 2em;
+  position: relative;
+}
+
+.legend::before {
+  content: attr(data-from);
+  position: absolute;
+  top: 100%;
+}
+
+.legend::after {
+  content: attr(data-to);
+  position: absolute;
+  top: 100%;
+  right: 0;
+}
+
+
 .collabel {
   grid-area: clabel;
   display: flex;
   justify-content: center;
   overflow: hidden;
+  line-height: normal;
 }
 
 .collabel >>> div {
@@ -631,6 +686,7 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  line-height: normal;
 }
 
 

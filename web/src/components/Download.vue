@@ -1,6 +1,6 @@
 <script>
 import DataTable from './DataTable.vue';
-import ToolbarOption from './ToolbarOption.vue';
+import ToolbarOption from './toolbar/ToolbarOption.vue';
 import { textColor } from '../utils';
 import { downloadCSV, download } from '../utils/exporter';
 import { CSVService } from '../common/api.service';

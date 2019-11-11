@@ -84,3 +84,39 @@ anova_tukey_adjustment <- function(measurements, groups) {
 
   OUT
 }
+
+
+#' clustered_heatmap
+#'
+#' @export
+clustered_heatmap <- function(measurements) {
+  Metab = read.csv(measurements, row.names=1)
+
+  scaled = scale(as.matrix(Metab), center = TRUE, scale = TRUE)
+
+  OUT = as.data.frame(scaled)
+  colnames(OUT) = colnames(Metab)
+  rownames(OUT) = rownames(Metab)
+  
+  x = as.matrix(OUT)
+
+  Rowv = rowMeans(x)
+  distr = dist(x)
+  hcr = hclust(distr)
+  ddr = as.dendrogram(hcr)
+  ddr = reorder(ddr, Rowv)
+  # rowInd = order.dendrogram(ddr)
+  
+  Colv = colMeans(x)
+  distc = dist(t(x))
+  hcc = hclust(distc)
+  ddc = as.dendrogram(hcc)
+  ddc = reorder(ddc, Colv)
+  # colInd = order.dendrogram(ddc)
+  
+  f <- textConnection('OUT_CSV', 'w')
+  write.csv(OUT, f)
+  close(f)
+
+  list(data=OUT_CSV, row=unclass(ddr), col=unclass(ddc))
+}

@@ -1,7 +1,9 @@
 <script>
 import ForceDirectedGraph from './ForceDirectedGraph.vue';
 import VisTileLarge from './VisTileLarge.vue';
-import ToolbarOption from '../ToolbarOption.vue';
+import ToolbarOption from '../toolbar/ToolbarOption.vue';
+import MetaboliteFilter from '../toolbar/MetaboliteFilter.vue';
+import MetaboliteColorer from '../toolbar/MetaboliteColorer.vue';
 import plotData from './mixins/plotData';
 import { correlation_methods } from './constants';
 import { colors } from '../../utils/constants';
@@ -11,6 +13,8 @@ export default {
     ForceDirectedGraph,
     ToolbarOption,
     VisTileLarge,
+    MetaboliteFilter,
+    MetaboliteColorer,
   },
 
   mixins: [plotData('correlation')],
@@ -29,8 +33,8 @@ export default {
       showEdgeLabels: false,
       linkDistance: 50,
       correlation_methods,
-      showSelected: true,
-      showNotSelected: true,
+      metaboliteFilter: null,
+      metaboliteColor: null,
     };
   },
 
@@ -42,36 +46,32 @@ export default {
       return parseInt(this.linkDistance, 10);
     },
     nodes() {
-      const selected = new Set(this.dataset.selectedColumns || []);
-      const { showSelected, showNotSelected } = this;
-      return !this.plot.data ? []
-        : this.plot.data.columns
-          .map(d => ({
-            id: d,
-            highlighted: selected.has(d),
-          })).filter(d => (d.highlighted ? showSelected : showNotSelected));
+      if (!this.plot.data) {
+        return [];
+      }
+
+      const nodes = this.plot.data.columns.map(d => ({
+        id: d,
+        color: this.metaboliteColor ? this.metaboliteColor.apply(d) : null,
+      }));
+
+      if (!this.metaboliteFilter) {
+        return nodes;
+      }
+      return nodes.filter(n => this.metaboliteFilter.apply(n.id));
     },
     edges() {
-      const selected = new Set(this.dataset.selectedColumns || []);
-      const { showSelected, showNotSelected } = this;
-      const show = id => (selected.has(id) ? showSelected : showNotSelected);
+      const show = !this.metaboliteFilter ? (() => true) : this.metaboliteFilter.apply;
       return !this.plot.data ? []
         : this.plot.data.correlations
           .filter(d => Math.abs(d.value) > this.min_correlation && show(d.x) && show(d.y))
           .map(d => ({
             source: d.x,
             target: d.y,
+            color: d.value < 0 ? colors.negativeCorrelation : colors.positiveCorrelation,
+            ori: d.value,
             value: Math.abs(d.value),
           }));
-    },
-    countSelected() {
-      return (this.dataset.selectedColumns || []).length;
-    },
-    countNotSelected() {
-      if (!this.plot.data) {
-        return 0;
-      }
-      return this.plot.data.columns.length - this.countSelected;
     },
   },
 };
@@ -92,14 +92,10 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
           v-slider.my-1.minCorrelation(:value="min_correlation", label="0", thumb-label="always",
               hide-details, min="0", max="1", step="0.01",
               @change="changePlotArgs({min_correlation: $event})")
-    v-toolbar.darken-3(color="primary", dark, flat, dense)
-      v-toolbar-title Node Filter
-    v-card.mx-3(flat)
-      v-card-actions.checkboxlist
-        v-checkbox.my-0(v-model="showSelected", :label="`Selected (${countSelected})`",
-            hide-details, :color="colors.selected")
-        v-checkbox.my-0(v-model="showNotSelected", :label="`Not Selected (${countNotSelected})`",
-            hide-details, :color="colors.correlationNode")
+    metabolite-filter(title="Node Filter", :dataset="dataset", v-model="metaboliteFilter",
+        :not-selected-color="colors.correlationNode", selection-last)
+    metabolite-colorer(title="Node Color", :dataset="dataset", v-model="metaboliteColor",
+        :not-selected-color="colors.correlationNode", selection-last)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Advanced Options
@@ -115,8 +111,7 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     force-directed-graph(:edges="edges", :nodes="nodes",
         :link-distance="linkDistanceAsNumber", :show-node-labels="showNodeLabels",
         :show-edge-labels="showEdgeLabels",
-        :min-stroke-value="min_correlation",
-        :highlight-color="colors.selected", :color="colors.correlationNode")
+        :min-stroke-value="min_correlation")
 </template>
 
 <style scoped>
