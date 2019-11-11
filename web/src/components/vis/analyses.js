@@ -17,6 +17,7 @@ export default [
     component: PcaPage,
     args: {},
     type: plot_types.ANALYSIS,
+    icon: vuetify.icons.pca,
   },
   {
     path: 'boxplot',

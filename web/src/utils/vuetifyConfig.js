@@ -53,6 +53,7 @@ export default {
     more: 'mdi-dots-horizontal',
     menuDown: 'mdi-menu-down',
     metadata: 'mdi-tag',
+    pca: 'mdi-chart-bell-curve',
     key: 'mdi-key-variant',
     save: 'mdi-content-save',
     settings: 'mdi-settings',
