@@ -2,7 +2,11 @@
 import Heatmap, { heatmapLayouts } from './Heatmap.vue';
 import VisTileLarge from './VisTileLarge.vue';
 import plotData from './mixins/plotData';
-import ToolbarOption from '../ToolbarOption.vue';
+import ToolbarOption from '../toolbar/ToolbarOption.vue';
+import MetaboliteFilter from '../toolbar/MetaboliteFilter.vue';
+import SampleFilter from '../toolbar/SampleFilter.vue';
+import MetaboliteColorer from '../toolbar/MetaboliteColorer.vue';
+import SampleColorer from '../toolbar/SampleColorer.vue';
 import { download } from '../../utils/exporter';
 import { colors } from '../../utils/constants';
 
@@ -11,6 +15,10 @@ export default {
     Heatmap,
     VisTileLarge,
     ToolbarOption,
+    MetaboliteFilter,
+    SampleFilter,
+    MetaboliteColorer,
+    SampleColorer,
   },
 
   mixins: [plotData('heatmap')],
@@ -27,15 +35,19 @@ export default {
       colors,
       row: {
         dendogram: true,
-        colorer: this.isSelectedColor,
+        colorer: this.columnColor,
       },
       column: {
         dendogram: true,
-        colorer: this.groupColor,
+        colorer: this.rowColor,
       },
       dummy: false,
       layout: 'auto',
       layouts: heatmapLayouts,
+      metaboliteFilter: null,
+      sampleFilter: null,
+      metaboliteColor: null,
+      sampleColor: null,
     };
   },
 
@@ -47,64 +59,41 @@ export default {
       // TODO swap
       return this.plot.data ? this.plot.data.values : [];
     },
-    countSelected() {
-      return !this.dataset ? 0 : (this.dataset.selectedColumns || []).length;
-    },
-    countNotSelected() {
-      if (!this.dataset) {
-        return 0;
+  },
+  watch: {
+    metaboliteFilter(newValue) {
+      if (newValue && newValue.option) {
+        this.changePlotArgs({
+          column: newValue.option,
+          column_filter: newValue.filter.join(','),
+        });
+      } else {
+        this.changePlotArgs({
+          column: null,
+          column_filter: null,
+        });
       }
-      return this.dataset.measurement_table.columnNames.length - this.countSelected;
     },
-    showSetting() {
-      return this.plot.args.columns;
-    },
-    showSelected: {
-      get() {
-        return !this.showSetting || this.showSetting === 'selected';
-      },
-      set(value) {
-        let columns = '';
-        if (value) {
-          columns = this.showSetting === 'not-selected' ? null : 'selected';
-        } else {
-          columns = 'not-selected'; // always show at least one
-        }
-        this.changePlotArgs({ columns });
-      },
-    },
-    showNotSelected: {
-      get() {
-        return !this.showSetting || this.showSetting === 'not-selected';
-      },
-      set(value) {
-        let columns = '';
-        if (value) {
-          columns = this.showSetting === 'selected' ? null : 'not-selected';
-        } else {
-          columns = 'selected';
-        }
-        this.changePlotArgs({ columns });
-      },
-    },
-    selectionLookup() {
-      return new Set((this.dataset && this.dataset.selectedColumns) || []);
-    },
-    groupLookup() {
-      if (!this.dataset.validatedGroups || !this.dataset.groupLevels) {
-        return new Map();
+    sampleFilter(newValue) {
+      if (newValue && newValue.option) {
+        this.changePlotArgs({
+          row: newValue.option,
+          row_filter: newValue.filter.join(','),
+        });
+      } else {
+        this.changePlotArgs({
+          row: null,
+          row_filter: null,
+        });
       }
-      const levelLookup = new Map(this.dataset.groupLevels.map(({ name, color }) => [name, color]));
-      const groups = this.dataset.validatedGroups;
-      return new Map(groups.rowNames.map((row, i) => [row, levelLookup.get(groups.data[i][0])]));
     },
   },
   methods: {
-    isSelectedColor(column) {
-      return this.selectionLookup.has(column) ? colors.selected : colors.notSelected;
+    columnColor(column) {
+      return this.metaboliteColor ? this.metaboliteColor.apply(column) : null;
     },
-    groupColor(row) {
-      return this.groupLookup.get(row);
+    rowColor(row) {
+      return this.sampleColor ? this.sampleColor.apply(row) : null;
     },
     async download() {
       if (!this.$refs.heatmap) {
@@ -122,15 +111,12 @@ export default {
 vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl="download",
     :loading="plot.loading || !dataset.ready || !values || values.length === 0")
   template(#controls)
-    v-toolbar.darken-3(color="primary", dark, flat, dense)
-      v-toolbar-title Metabolite Filter
-    v-card.mx-3(flat)
-      v-card-actions(:style="{display: 'block'}")
-        v-checkbox.my-0(v-model="showSelected",
-            :label="`Selected (${countSelected})`", hide-details, :color="colors.selected")
-        v-checkbox.my-0(v-model="showNotSelected",
-            :label="`Not Selected (${countNotSelected})`", hide-details,
-            :color="colors.notSelected")
+    metabolite-filter(:dataset="dataset", v-model="metaboliteFilter")
+    sample-filter(:dataset="dataset", v-model="sampleFilter")
+
+    metabolite-colorer(:dataset="dataset", v-model="metaboliteColor")
+    sample-colorer(:dataset="dataset", v-model="sampleColor")
+
     v-toolbar.darken-3(color="primary", dark, flat, dense)
       v-toolbar-title Dendogram
     v-card.mx-3(flat)
@@ -140,6 +126,7 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl=
     toolbar-option(title="Layout", :value="layout",
         :options="layouts",
         @change="layout = $event")
+
   heatmap(ref="heatmap",
       v-if="plot && plot.data && dataset.ready && values",
       :values="values", transposed,

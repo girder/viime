@@ -50,14 +50,26 @@ function parsePandasDataFrame(toSplitDictResult, baseDataFrame) {
   if (!toSplitDictResult) {
     return {
       columnNames: [],
+      columnMetaData: [],
       rowNames: [],
+      rowMetaData: [],
       data: [],
     };
   }
+
+  const dummyMeta = (arr) => {
+    if (!arr) {
+      return null;
+    }
+    return arr.map(() => ({ subtype: null }));
+  };
+
   return {
     columnNames: toSplitDictResult.columns || baseDataFrame.columnNames,
+    columnMetaData: dummyMeta(toSplitDictResult.columns) || baseDataFrame.columnMetaData,
     data: toSplitDictResult.data,
     rowNames: toSplitDictResult.index || baseDataFrame.rowNames,
+    rowMetaData: dummyMeta(toSplitDictResult.index) || baseDataFrame.rowMetaData,
   };
 }
 

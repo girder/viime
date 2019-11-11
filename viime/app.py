@@ -39,8 +39,13 @@ def handle_webargs_error(error, req, schema, status_code, headers):
 def load_sentry(dsn):
     import sentry_sdk
     from sentry_sdk.integrations.flask import FlaskIntegration
+    from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
-    sentry_sdk.init(dsn=dsn, integrations=[FlaskIntegration(transaction_style='url')])
+    integrations = [
+        FlaskIntegration(transaction_style='url'),
+        SqlalchemyIntegration()
+    ]
+    sentry_sdk.init(dsn=dsn, integrations=integrations)
 
 
 def create_app(config=None):

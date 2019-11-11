@@ -1,9 +1,8 @@
 from functools import wraps
 from io import BytesIO
 import json
-import math
 from pathlib import PurePath
-from typing import Callable, cast, Dict, List, Optional
+from typing import Any, Callable, cast, Dict, List, Optional
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
@@ -166,13 +165,17 @@ def merge_csv_files(name: str, description: str, method: str, datasets: List[str
         if row_types:
             # update the row types
             for row, row_type in zip(csv_file.rows, row_types):
-                row.row_type = row_type
+                row.row_type = row_type['type']
+                row.subtype = row_type.get('subtype')
+                row.meta = row_type.get('meta')
                 db.session.add(row)
 
         if column_types:
             # update the row types
             for column, column_type in zip(csv_file.columns, column_types):
-                column.column_type = column_type
+                column.column_type = column_type['type']
+                column.subtype = column_type.get('subtype')
+                column.meta = column_type.get('meta')
                 db.session.add(column)
 
         # need to call it manually since we might have changed the column types
@@ -218,6 +221,7 @@ def get_csv_file(csv_id):
     if validated_table is not None:
         transformation_schema = ValidatedMetaboliteTableSchema(
             only=['normalization', 'normalization_argument', 'scaling',
+                  'imputation_info',
                   'scaling', 'transformation']
         )
         transformation = transformation_schema.dump(validated_table)
@@ -443,7 +447,7 @@ def get_row(csv_id, row_index):
     ))
 
 
-def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
+def _update_row_types(csv_file: CSVFile, row_types: Optional[List[Dict[str, Any]]]):
     if row_types is None:
         return
 
@@ -451,7 +455,9 @@ def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
     count_current = len(csv_file.rows)
     # update the row types
     for row, row_type in zip(csv_file.rows, row_types):
-        row.row_type = row_type
+        row.row_type = row_type['type']
+        row.subtype = row_type.get('subtype')
+        row.meta = row_type.get('meta')
         db.session.add(row)
 
     if count_target > count_current:
@@ -469,7 +475,7 @@ def _update_row_types(csv_file: CSVFile, row_types: Optional[str]):
             db.session.delete(row)
 
 
-def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
+def _update_column_types(csv_file: CSVFile, column_types: Optional[List[Dict[str, Any]]]):
     if column_types is None:
         return
 
@@ -479,7 +485,9 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[str]):
     # update the column types
 
     for column, column_type in zip(csv_file.columns, column_types):
-        column.column_type = column_type
+        column.column_type = column_type['type']
+        column.subtype = column_type.get('subtype')
+        column.meta = column_type.get('meta')
         db.session.add(column)
 
     if count_target > count_current:
@@ -707,38 +715,14 @@ def get_pca_plot(validated_table):
 
 
 def _get_loadings_data(validated_table):
-    def mean(x):
-        return sum(x) / len(x)
-
-    def sq(x):
-        return x * x
-
-    def cor(xs, ys):
-        if xs.equals(ys):
-            return 1.0
-
-        x_mean = mean(xs)
-        y_mean = mean(ys)
-
-        x_stddev = math.sqrt(sum(map(lambda x: sq(x - x_mean), xs)))
-        y_stddev = math.sqrt(sum(map(lambda y: sq(y - y_mean), ys)))
-
-        if x_stddev == 0 or y_stddev == 0:
-            return 0.0
-
-        prod_sum = sum(map(lambda x, y: (x - x_mean) * (y - y_mean), xs, ys))
-        return prod_sum / (x_stddev * y_stddev)
-
     table = validated_table.measurements
     pca_data = _get_pca_data(validated_table)
+    loadings = pca_data['rotation']
 
-    # Transpose the PCA values.
-    pca_data = [list(x) for x in zip(*pca_data['x'])]
-
-    # Compute correlations between each metabolite and both PC1 and PC2.
+    # Extract the correlations between each metabolite and all PCs.
     return [{'col': k,
-             'cor': [cor(v, pc) for pc in pca_data]}
-            for (k, v) in table.items()]
+             'loadings': loadings[i]}
+            for i, k in enumerate(table)]
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/plot/loadings', methods=['GET'])
@@ -791,21 +775,39 @@ def get_anova_test(validated_table: ValidatedMetaboliteTable, group_column: Opti
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/heatmap', methods=['GET'])
 @use_kwargs({
-    'columns': fields.Str(required=False, missing=None,
-                          validate=validate.OneOf(['selected', 'not-selected']))
+    'column': fields.Str(required=False, missing=None),
+    'column_filter': fields.Str(required=False, missing=''),
+    'row': fields.Str(required=False, missing=None),
+    'row_filter': fields.Str(required=False, missing=''),
 })
 @load_validated_csv_file
 def get_hierarchical_clustering_heatmap(validated_table: ValidatedMetaboliteTable,
-                                        columns: Optional[str]):
+                                        column: Optional[str], column_filter: str,
+                                        row: Optional[str], row_filter: str):
     table = validated_table.measurements
 
-    if columns:
+    if column:
+        cfilters = set(column_filter.split(','))
         csv_file: CSVFile = CSVFile.query.get_or_404(validated_table.csv_file_id)
-        if columns == 'selected':
-            table = table.loc[:, csv_file.selected_columns or []]
-        elif columns == 'not-selected' and csv_file.selected_columns:
-            non_selected = [c for c in table if str(c) not in csv_file.selected_columns]
-            table = table.loc[:, non_selected]
+        if column == 'selection':
+
+            def is_selected(c):
+                return csv_file.selected_columns and c in csv_file.selected_columns
+
+            cdata = ['selected' if is_selected(str(c)) else 'not-selected' for c in table]
+        else:
+            cmeta: pandas.DataFrame = validated_table.measurement_metadata.T
+            cdata = [str(v) for v in cmeta[column]]
+
+        table = table.loc[:, [d in cfilters for d in cdata]]
+
+    if row:
+        rfilters = set(row_filter.split(','))
+        rmeta: pandas.DataFrame = validated_table.sample_metadata
+        rgroups: pandas.DataFrame = validated_table.groups
+        rdata = [str(v) for v in (rmeta[row] if row in rmeta else rgroups[row])]
+
+        table = table.loc[[d in rfilters for d in rdata], :]
 
     return hierarchical_clustering(table)
 
