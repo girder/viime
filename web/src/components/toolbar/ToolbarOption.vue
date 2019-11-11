@@ -1,5 +1,10 @@
 <script>
+import HelpDialog from './HelpDialog.vue';
+
 export default {
+  components: {
+    HelpDialog,
+  },
   props: {
     title: {
       type: String,
@@ -14,7 +19,7 @@ export default {
       type: Boolean,
       required: false,
     },
-    options: {
+    options: { // {label: string, value: string, helpText?: string}
       type: Array,
       required: true,
     },
@@ -33,6 +38,10 @@ div
       v-radio-group.my-0(:value="value",
           hide-details, :disabled="disabled",
           @change="$emit('change', $event)")
-        v-radio(v-for="m in options", :label="m.label",
+        v-radio(v-for="m in options",
             :value="m.value", :key="m.value")
+          template(#label)
+            | {{ m.label }}
+            help-dialog(v-if="m.helpText", :title="`${m.label} ${title}`")
+              | {{ m.helpText }}
 </template>

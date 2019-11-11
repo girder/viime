@@ -36,7 +36,7 @@ export default [
     path: 'wilcoxon',
     name: 'Wilcoxon test',
     shortName: 'Wilcoxon Test',
-    description: ' Non-parametric test to compare two groups',
+    description: 'Non-parametric test to compare two groups',
     component: WilcoxonPlotTile,
     args: {},
     type: plot_types.ANALYSIS,
