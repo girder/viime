@@ -21,7 +21,7 @@ export default [
     path: 'wilcoxon',
     name: 'Wilcoxon test',
     shortName: 'Wilcoxon Test',
-    description: 'TODO R custom code',
+    description: ' Non-parametric test to compare two groups',
     component: WilcoxonPlotTile,
     args: {},
     type: plot_types.ANALYSIS,
@@ -31,7 +31,7 @@ export default [
     path: 'anova',
     name: 'ANOVA',
     shortName: 'ANOVA',
-    description: 'TODO R custom code',
+    description: 'Test to compare 3 or more groups assuming normal distribution, the group pairwise comparisons are adjusted with Tukey HSD',
     component: AnovaTableTile,
     args: {},
     type: plot_types.ANALYSIS,
@@ -41,7 +41,7 @@ export default [
     path: 'heatmap',
     name: 'Heatmap',
     shortName: 'Heatmap',
-    description: 'cool stuff',
+    description: 'Is a graphical representation of the concentration differences between variables and samples',
     component: HeatmapTile,
     args: {
       column: null,
@@ -56,7 +56,9 @@ export default [
     path: 'correlation',
     name: 'Correlation Network',
     shortName: 'Correlation Network',
-    description: 'TODO',
+    description: `Is a graphical representation of the pairwise correlations between variables.
+    The different colors of the connections show the direction of the correlation and the wider
+    the connection, the stronger the correlation`,
     component: CorrelationTile,
     args: {
       min_correlation: 0.6,

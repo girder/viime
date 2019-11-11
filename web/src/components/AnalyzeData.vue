@@ -20,15 +20,33 @@ export default {
 v-layout.analyze-component(row, fill-height)
   v-container.grow-overflow.ma-0(grid-list-lg, fluid)
     v-container.pa-2(fluid)
-      v-layout(row)
+      v-layout(row, wrap)
         v-flex(v-for="card in analyses", :key="card.path", md3)
-          v-card
+          v-card.card
             v-card-title(primary-title)
-              div
-                .headline(v-text="card.name")
-                | {{card.description}}
+              .headline {{ card.name }}
+            p
+              | {{card.description}}
             v-card-actions
               v-btn(text,
                   @click="$router.push({ name: card.shortName, params: { id } })")
                 | Analyze
 </template>
+
+<style lang="scss" scoped>
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  > p {
+    flex: 1 1 0;
+    padding: 0 1em;
+  }
+
+  > .v-card__actions {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+}
+</style>
