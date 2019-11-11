@@ -87,4 +87,6 @@ vis-tile(title="PCA Score Plot", :loading="plot.loading", svg-download)
       :pc-x="pcX",
       :pc-y="pcY",
       :show-ellipses="showEllipses")
+  template(v-slot:help)
+    include ../help/ScorePlotHelp.pug
 </template>
