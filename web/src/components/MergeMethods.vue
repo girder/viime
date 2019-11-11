@@ -39,7 +39,7 @@ v-radio-group(v-model="method", label="Merge Method")
           | PCA is then performed on the concatenated table.
         cite
           a(href="https://doi.org/10.1002/wics.1246",
-            target="_blank", rel="noopener noreferrer")
+              target="_blank", rel="noopener noreferrer")
             | Abdi H, Williams LJ, Dominique V.: Multiple factor analysis: principal component
             |  analysis for multitable and multiblock data sets. WIREs Comput Stat 2013.
   v-radio(value="clean")
@@ -52,7 +52,7 @@ v-radio-group(v-model="method", label="Merge Method")
           | common major effects are observed. PCA is then performed on the concatenated table.
         cite
           a(href="https://doi.org/10.1007/s00216-016-9538-4",
-            target="_blank", rel="noopener noreferrer")
+              target="_blank", rel="noopener noreferrer")
             | Spiteri M, Dubin E, Cotton J et al.:
             | Data fusion between high resolution 1H-NMR and mass spectrometry: a synergetic
             | approach to honey botanical origin characterization.
