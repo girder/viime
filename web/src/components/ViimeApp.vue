@@ -8,9 +8,8 @@ v-app.viime-app
 
     v-spacer
 
-    save-status
-
     feedback-button
+    save-status
   v-container.pa-0.d-flex(fluid)
     router-view.grow
 </template>
