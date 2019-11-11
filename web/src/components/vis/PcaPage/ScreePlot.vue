@@ -66,14 +66,11 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(title="PCA Scree Plot", :loading="plot.loading", svg-download, v-if="plot")
+vis-tile(title="PCA Scree Plot", :loading="plot.loading", svg-download)
   scree-plot(
       :eigenvalues="eigenvalues",
       :pc-x="pcX",
       :pc-y="pcY",
       :num-components="numComponents",
       :show-cutoffs="showCutoffs")
-div(v-else)
-  v-progress-circular(indeterminate, size="100", width="5")
-  h4.display-1.pa-3 Loading Scree Plot
 </template>

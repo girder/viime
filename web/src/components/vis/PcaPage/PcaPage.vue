@@ -47,6 +47,13 @@ export default {
     numComponents() {
       return Number.parseInt(this.numComponentsVal, 10);
     },
+
+    ready() {
+      const pcaReady = this.$store.getters.ready(this.id, 'pca');
+      const loadingsReady = this.$store.getters.ready(this.id, 'loadings');
+
+      return pcaReady && loadingsReady;
+    },
   },
 };
 </script>
@@ -121,7 +128,7 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
               hide-details)
 
   v-container.grow-overflow.ma-0(grid-list-lg, fluid)
-    layout-grid(:cell-size="300")
+    layout-grid(:cell-size="300", v-if="ready")
       scree-plot(
           v-show="showScree",
           :id="id",
@@ -141,6 +148,9 @@ vis-tile-large(title="Principal Component Analysis", :loading="false", expanded)
           :pc-x="pcX",
           :pc-y="pcY",
           :show-crosshairs="showCrosshairs")
+    div(v-else)
+      v-progress-circular(indeterminate, size="100", width="5")
+      h4.display-1.pa-3 Loading data...
 </template>
 
 <style lang="scss" scoped>

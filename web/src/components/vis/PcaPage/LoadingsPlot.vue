@@ -40,13 +40,10 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(title="PCA Loadings Plot", :loading="plot.loading", svg-download, v-if="plot")
+vis-tile(title="PCA Loadings Plot", :loading="plot.loading", svg-download)
   loadings-plot(
       :points="plot.data",
       :pc-x="pcX",
       :pc-y="pcY",
       :show-crosshairs="showCrosshairs")
-div(v-else)
-  v-progress-circular(indeterminate, size="100", width="5")
-  h4.display-1.pa-3 Loading Score Plot
 </template>

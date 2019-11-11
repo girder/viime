@@ -76,7 +76,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(title="PCA Score Plot", :loading="plot.loading", svg-download, v-if="plot")
+vis-tile(title="PCA Score Plot", :loading="plot.loading", svg-download)
   score-plot(
       :pc-coords="pcCoords",
       :row-labels="rowLabels",
@@ -87,7 +87,4 @@ vis-tile(title="PCA Score Plot", :loading="plot.loading", svg-download, v-if="pl
       :pc-x="pcX",
       :pc-y="pcY",
       :show-ellipses="showEllipses")
-div(v-else)
-  v-progress-circular(indeterminate, size="100", width="5")
-  h4.display-1.pa-3 Loading Score Plot
 </template>
