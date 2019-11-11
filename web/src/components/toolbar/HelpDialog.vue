@@ -5,6 +5,10 @@ export default {
       type: String,
       default: '',
     },
+    text: {
+      type: String,
+      default: '',
+    },
     outline: {
       type: Boolean,
       default: false,
@@ -28,6 +32,7 @@ v-dialog(v-model="showHelp", max-width="33vw")
       h3.headline {{ title }}
     v-card-text
       slot
+        | {{ text }}
     v-card-actions
       v-spacer
       v-btn(@click="showHelp = false") Close

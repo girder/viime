@@ -25,8 +25,7 @@ v-layout.analyze-component(row, fill-height)
           v-card.card
             v-card-title(primary-title)
               .headline {{ card.name }}
-            p
-              | {{card.description}}
+            p(v-html="card.description")
             v-card-actions
               v-btn(text,
                   @click="$router.push({ name: card.shortName, params: { id } })")

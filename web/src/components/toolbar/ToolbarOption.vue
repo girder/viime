@@ -42,6 +42,6 @@ div
             :value="m.value", :key="m.value")
           template(#label)
             | {{ m.label }}
-            help-dialog(v-if="m.helpText", :title="`${m.label} ${title}`")
-              | {{ m.helpText }}
+            help-dialog(v-if="m.helpText", :title="`${m.label} ${title}`",
+                :text="m.helpText")
 </template>

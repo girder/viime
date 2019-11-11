@@ -36,7 +36,17 @@ export default [
     path: 'wilcoxon',
     name: 'Wilcoxon test',
     shortName: 'Wilcoxon Test',
-    description: 'Non-parametric test to compare two groups',
+    description: `<p>Non-parametric test to compare two groups.</p>
+<p><strong>Bonferoni</strong>:
+  It is a correction of multiple comparisons for independent statistical test made simultaneously.
+  (It sets the critical p-value as <code>alpha/n</code>,
+  where n is the number of tests and alpha is the probability of rejecting the null hypothesis when it is true, also called type I error rate).
+</p>
+<p><strong>Hochberg</strong>:
+  It is a correction of multiple comparisons for independent statistical test made simultaneously.
+  (It sets the critical value as <code>(i/m)Q</code> where i is the rank of the p-values when ordered
+  from smallest to largest, m is the number of tests and Q is the false discovery rate)
+</p>`,
     component: WilcoxonPlotTile,
     args: {},
     type: plot_types.ANALYSIS,
