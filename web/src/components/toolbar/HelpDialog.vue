@@ -5,6 +5,10 @@ export default {
       type: String,
       default: '',
     },
+    outline: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -18,7 +22,7 @@ export default {
 v-dialog(v-model="showHelp", max-width="33vw")
   template(v-slot:activator="{ on }")
     v-btn(v-on="on", icon)
-      v-icon {{ $vuetify.icons.help }}
+      v-icon {{ outline ? $vuetify.icons.helpOutline : $vuetify.icons.help }}
   v-card
     v-card-title
       h3.headline {{ title }}
