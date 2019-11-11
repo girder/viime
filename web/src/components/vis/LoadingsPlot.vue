@@ -94,8 +94,8 @@ export default {
       // Plot the vectors as a scatter plot.
       const svg = select(this.$refs.svg);
       this.axisPlot(svg);
-      this.setXLabel('PC1 correlation');
-      this.setYLabel('PC2 correlation');
+      this.setXLabel(`PC${pcX} correlation`);
+      this.setYLabel(`PC${pcY} correlation`);
       const tooltip = select(this.$refs.tooltip);
       const coordFormat = format('.2f');
       const radius = 4;
