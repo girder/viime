@@ -104,4 +104,6 @@ vis-tile(title="PCA Score Plot", svg-download)
               outline,
               v-model="pcYval")
           v-switch.py-2(v-model="showEllipses", label="Data ellipses", hide-details)
+  template(v-slot:help)
+    include help/ScorePlotHelp.pug
 </template>

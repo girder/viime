@@ -77,7 +77,7 @@ v-flex.white.rounded.main(shrink=1, :class="scaleClass")
     v-toolbar-items
       v-btn(@click="setScaleIndex(scaleIndex - 1)", :disabled="scaleIndex === 0", icon)
         v-icon {{ $vuetify.icons.magnifyMinus }}
-      v-select.scaleFactor(:value="scaleIndex", @change="setScaleIndex($event)",
+      v-select.scaleFactor.pt-1(:value="scaleIndex", @change="setScaleIndex($event)",
           :items="scaleOptions", hide-details, item-text="text", item-value="value")
       v-btn(@click="setScaleIndex(scaleIndex + 1)",
           :disabled="scaleIndex === scales.length - 1", icon)
