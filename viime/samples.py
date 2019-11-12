@@ -114,7 +114,7 @@ def dump(csv: CSVFile):
         only=_validation_keys).dump(v)
 
     if csv.sample_group:
-        out['sample_group'] = csv.sample_group.name
+        out['sample_group'] = csv.sample_group
     out.update(v_out)
 
     return out
@@ -207,5 +207,5 @@ def disable_sample(csv: CSVFile):
     csv.sample_group = None
     if old_group and not old_group.files:
         # delete group
-        db.session.remove(old_group)
+        db.session.delete(old_group)
     return csv
