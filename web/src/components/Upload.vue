@@ -118,10 +118,6 @@ export default {
       // filter out done ones
       this.pendingFiles = this.pendingFiles.filter(f => f.status !== 'done');
     },
-    async next() {
-      const id = Object.keys(this.datasets)[0];
-      this.$router.push({ name: 'Clean Up Table', params: { id } });
-    },
     async remove(file) {
       if (file.status === 'done' && file.meta.id) {
         this.$store.commit(REMOVE_DATASET, { dataset_id: file.meta.id });
@@ -146,7 +142,8 @@ v-layout.upload-component(column, fill-height)
 
   v-dialog(v-model="deleteDialog", persistent, width="600")
     v-card
-      v-card-title.headline Really delete {{ deleteCount }} dataset(s)?
+      v-card-title.headline
+        | Really delete {{ deleteCount }} dataset{{ deleteCount !== 1 ? 's' : ''}}?
       v-card-actions
         v-spacer
         v-btn(@click="doDelete = () => {}; deleteCount = 0;", flat) Cancel
@@ -220,12 +217,6 @@ v-layout.upload-component(column, fill-height)
           v-divider(v-if="idx + 1 < files.length", :key="idx")
     dropzone.filezone.mx-4.mb-4(ref="dropzone", :multiple="true", :message="message",
         @change="onFileChange", accept=".csv,.xlsx,.txt")
-
-  v-toolbar(flat, dense)
-    v-spacer
-    v-btn.ma-0(:disabled="readyFiles.length === 0", depressed, color="accent", @click="next")
-      | Continue
-      v-icon.pl-1 {{ $vuetify.icons.arrowRight }}
 </template>
 
 <style lang="scss", scoped>
