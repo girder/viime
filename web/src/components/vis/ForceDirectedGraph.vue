@@ -138,6 +138,48 @@ export default {
       edges.select('text')
         .attr('transform', d => `translate(${t.applyX((d.source.x + d.target.x) / 2)},${t.applyY((d.source.y + d.target.y) / 2)})`);
     },
+    tick250() {
+      const sim = this.simulation.alpha(1).restart().stop();
+
+      if (!window.requestIdleCallback) {
+        sim.tick(250); // forward 250 ticks
+        this.tick();
+        this.startTicker();
+        return;
+      }
+
+      let initialTicks = 250;
+
+      const finishStatic = () => {
+        window.requestAnimationFrame(() => {
+          this.tick();
+          this.startTicker();
+        });
+      };
+      const tickStatic = (deadline) => {
+        let oneTickDone = false;
+        while ((!oneTickDone || deadline.timeRemaining() > 0) && initialTicks > 0) {
+          initialTicks -= 1;
+          sim.tick(1);
+          oneTickDone = true;
+        }
+
+        if (initialTicks > 0) {
+          window.requestIdleCallback(tickStatic, {
+            // latest in a second
+            timeout: 250,
+          });
+        } else {
+          finishStatic();
+        }
+      };
+
+      window.requestIdleCallback(tickStatic, {
+        // latest in a second
+        timeout: 250,
+      });
+    },
+
     updateBounds() {
       const { simulation } = this;
 
@@ -230,9 +272,7 @@ export default {
       simulation.force('link').distance(this.linkDistance);
       simulation.force('link').links(localEdges);
 
-      simulation.alpha(1).restart().stop().tick(250); // forward 250 ticks
-      this.tick();
-      this.startTicker();
+      this.tick250();
     },
     onResize() {
       const bb = this.$el.getBoundingClientRect();
