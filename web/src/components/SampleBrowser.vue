@@ -48,6 +48,10 @@ export default {
         span {{ group.name }}
         v-btn.import(color="primary", @click="importGroup(group.name, $event)") Import All
 
+      v-card
+        v-card-text
+          | {{ group.description || 'no description available' }}
+
       v-expansion-panel
         v-expansion-panel-content.file(v-for="file in group.files", :key="file.id")
           template(#header)
