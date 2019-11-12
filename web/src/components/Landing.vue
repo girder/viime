@@ -54,20 +54,6 @@ v-app.viime-landing
   .capabilities
     v-container(fluid, pa-0)
       v-layout.capability
-        v-container(:class="capabilityClasses", py-5)
-          v-layout(align-center, pa-0, row, wrap)
-            v-flex.capability-col(px-3, py-2, sm4)
-              v-card(color="transparent", flat, pa-0)
-                v-img(src="https://placehold.it/750x450")
-            v-flex.capability-col(px-3, py-2, sm8)
-              v-card(color="transparent", flat)
-                v-card-title.capability-title.py-0(primary-title)
-                  h1.primary--text.text--darken-3 Modern integration methods
-                v-card-text.capability-text
-                  | Run algorithms like PCA and Block PCA to obtain more accurate results using data
-                  |  from multiple measurement platforms (NMR, MS) or tissues (serum, urine, etc.)
-
-      v-layout.capability
         v-container(:class="capabilityClasses", py-2x)
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
@@ -91,10 +77,10 @@ v-app.viime-landing
             v-flex.capability-col(px-3, py-2, sm8)
               v-card(color="transparent", flat)
                 v-card-title.capability-title.py-0(primary-title)
-                  h1.primary--text.text--darken-3 Relevant Analyses
+                  h1.primary--text.text--darken-3 Immediate visual feedback
                 v-card-text.capability-text
-                  | Run algorithms like Wilcoxon and ANOVA to highlight metabolites for further
-                  |  investigation, and export resulting data and charts
+                  | See how ingestion, pretreatment, and analysis options affect results live as you
+                  |  make adjustments
 
       v-layout.capability
         v-container(:class="capabilityClasses", py-5)
@@ -105,10 +91,24 @@ v-app.viime-landing
             v-flex.capability-col(px-3, py-2, sm8)
               v-card(color="transparent", flat)
                 v-card-title.capability-title.py-0(primary-title)
-                  h1.primary--text.text--darken-3 Immediate visual feedback
+                  h1.primary--text.text--darken-3 Modern integration methods
                 v-card-text.capability-text
-                  | See how ingestion, pretreatment, and analysis options affect results live as you
-                  |  make adjustments
+                  | Run algorithms like PCA and Block PCA to obtain more accurate results using data
+                  |  from multiple measurement platforms (NMR, MS) or tissues (serum, urine, etc.)
+
+      v-layout.capability
+        v-container(:class="capabilityClasses", py-5)
+          v-layout(align-center, pa-0, row, wrap)
+            v-flex.capability-col(px-3, py-2, sm4)
+              v-card(color="transparent", flat, pa-0)
+                v-img(src="https://placehold.it/750x450")
+            v-flex.capability-col(px-3, py-2, sm8)
+              v-card(color="transparent", flat)
+                v-card-title.capability-title.py-0(primary-title)
+                  h1.primary--text.text--darken-3 Relevant Analyses
+                v-card-text.capability-text
+                  | Run algorithms like Wilcoxon and ANOVA to highlight metabolites for further
+                  |  investigation, and export resulting data and charts
 
       v-layout.capability
         v-container(:class="capabilityClasses", py-5)
