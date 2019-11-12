@@ -208,10 +208,10 @@ imputation <- function(table, groups,
 
     # find column names which have some NA inside
     any_missing = names(which(sapply(table, anyNA)))
-    # since it checks <= ... so also values with no missing values at all
-    done_mcar = intersect(row.names(var_keep_mcar), any_missing)
+    # all other missing columns are either mcar or mar
+    done_mcar_mar = setdiff(any_missing, done_mnar)
 
-    with_meta_info[base %in% done_mcar] = paste0('C-', base[base %in% done_mcar])
+    with_meta_info[base %in% done_mcar_mar] = paste0('C-', base[base %in% done_mcar_mar])
 
     colnames(out) <- with_meta_info
   }
