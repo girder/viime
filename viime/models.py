@@ -98,9 +98,10 @@ class CSVFile(db.Model):
     imputation_mnar = db.Column(db.String, nullable=False)
     imputation_mcar = db.Column(db.String, nullable=False)
     meta = db.Column(JSONType, nullable=False)
-    sample_group = db.Column(db.String, nullable=True)
     selected_columns = db.Column(db.PickleType, nullable=True)
-    group_levels = relationship('GroupLevel', cascade='all, delete, delete-orphan')
+    group_levels = relationship('GroupLevel', cascade='all, delete, delete-orphan, expunge')
+
+    sample_group = relationship('SampleGroup', back_populates='children')
 
     @property
     def table_validation(self):
@@ -385,6 +386,20 @@ class CSVFileSchema(BaseSchema):
         db.session.add(csv_file)
         db.session.add_all(rows + columns)
         return csv_file
+
+
+class SampleGroup(db.Model):
+    name = db.Column(db.String, primary_key=True)
+    description = db.Column(db.String, nullable=True)
+    files = relationship(CSVFile, back_populates='sample_group')
+
+
+class SampleGroupSchema(BaseSchema):
+    __model__ = SampleGroup
+
+    name = fields.String(required=True)
+    description = fields.Str(allow_none=True)
+    files = fields.List(fields.Nested(CSVFileSchema, include=['id', 'name', 'description']))
 
 
 class TableColumn(db.Model):
