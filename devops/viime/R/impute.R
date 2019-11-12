@@ -189,14 +189,15 @@ imputation <- function(table, groups,
   comp_imp <- cbind(imp_mnar, imp_mcar)
 
   # replace in the input table
-  table[colnames(comp_imp)] < comp_imp[colnames(comp_imp)]
+  out = table
+  out[colnames(comp_imp)] <- comp_imp[colnames(comp_imp)]
 
   # impute mnar on colnames(new_metab_dat_mcar)
   # impute mcar on colnames(new_metab_dat_mcar)
   # imput mcar on all afterwards
 
   # impute MAR
-  out <- f_mcar(table)
+  out <- f_mcar(out)
 
   if (add_info) {
     # encode the type of imputation in the column: A- ... as is, N- ... MNAR, C- ... MCAR
