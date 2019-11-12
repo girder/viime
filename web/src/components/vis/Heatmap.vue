@@ -47,9 +47,9 @@ function aggregate(arr, rs, cs, transposed) {
 const DENDOGRAM_RATIO = 0.2;
 const LABEL_WIDTH = 150;
 
-const MDI_PLUS_CIRCLE = '&#xF417;';
-const MDI_MINUS_CIRCLE = '&#xF376;';
-const MDI_STAR_CIRCLE = '&#xF4CF;';
+const MDI_PLUS_CIRCLE = '\uF417;';
+const MDI_MINUS_CIRCLE = '\uF376;';
+const MDI_STAR_CIRCLE = '\uF4CF;';
 
 export const heatmapLayouts = [
   { label: 'Auto', value: 'auto' },
@@ -57,6 +57,28 @@ export const heatmapLayouts = [
   { label: 'Square Matrix', value: 'squareMatrix' },
 ];
 
+function changeHovered(wrapper, arr) {
+  if (!arr) {
+    if (wrapper.hovered.size > 0) {
+      wrapper.hovered = new Set();
+      return true;
+    }
+    return false;
+  }
+
+  const old = wrapper.hovered;
+
+  if (old.size !== arr.length) {
+    wrapper.hovered = new Set(arr);
+    return true;
+  }
+  if (old.size === 0 || ((arr.length === 1 && old.has(arr[0])) || arr.every(d => old.has(d)))) {
+    return false;
+  }
+
+  wrapper.hovered = new Set(arr);
+  return true;
+}
 
 export default {
   directives: {
@@ -112,8 +134,6 @@ export default {
         collapsed: new Set(),
         focus: null,
       },
-      rnode: null,
-      cnode: null,
       DENDOGRAM_RATIO,
       LABEL_WIDTH,
     };
@@ -284,9 +304,9 @@ export default {
       const edges = svg.select('g.edges').selectAll('path').data(root.links()).join((enter) => {
         const r = enter.append('path');
         r.on('mouseenter', (d) => {
-          wrapper.hovered = new Set(d.target.data.indices);
+          changeHovered(wrapper, d.target.data.indices);
         }).on('mouseleave', () => {
-          wrapper.hovered = new Set();
+          changeHovered(wrapper, null);
         });
         return r;
       });
@@ -326,14 +346,14 @@ export default {
             wrapper.collapsed = new Set(wrapper.collapsed);
           }
         }).on('mouseenter', (d) => {
-          wrapper.hovered = new Set(d.data.indices);
+          changeHovered(wrapper, d.data.indices);
         }).on('mouseleave', () => {
-          wrapper.hovered = new Set();
+          changeHovered(wrapper, null);
         });
         return r;
       });
 
-      inner.select('text').html((d) => {
+      inner.select('text').text((d) => {
         if (wrapper.focus === d.data) {
           return MDI_STAR_CIRCLE;
         }
@@ -376,16 +396,20 @@ export default {
         return;
       }
       const div = select(ref);
-      const text = div.selectAll('div').data(labels).join('div');
+      const text = div.selectAll('div').data(labels).join((enter) => {
+        const l = enter.append('div');
+        l.append('span').classed('color', true);
+        l.append('span').classed('label', true);
+        return l;
+      });
       const { hovered } = wrapper;
 
       text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
 
-      if (colorer) {
-        text.html(d => `<span class="color" style="background: ${this.combineColor(d.data.names, colorer)}"></span><span class="label">${d.data.name}</span>`);
-      } else {
-        text.span(d => `<span class="label">${d.data.name}</span>`);
-      }
+      text.select('.label').text(d => d.data.name);
+      text.select('.color')
+        .classed('hidden', !colorer)
+        .style('background', colorer ? (d => this.combineColor(d.data.names, colorer)) : null);
     },
     updateColumnLabel() {
       this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves,
@@ -408,6 +432,7 @@ export default {
       const {
         valueScale,
         values,
+        transposed,
       } = this;
       const hoveredRow = this.row.hovered;
       const hoveredColumn = this.column.hovered;
@@ -421,10 +446,13 @@ export default {
       // work on copy for speed
       const data = values.map(r => r.slice());
 
+      const cnodeIndices = columns.map(n => n.data.indices);
+
       rows.forEach((rnode, i) => {
-        const rowSelected = rnode.data.indices.some(s => hoveredRow.has(s));
-        columns.forEach((cnode, j) => {
-          const v = aggregate(data, rnode.data.indices, cnode.data.indices, this.transposed);
+        const rnodeIndices = rnode.data.indices;
+        const rowSelected = rnodeIndices.some(s => hoveredRow.has(s));
+        cnodeIndices.forEach((indices, j) => {
+          const v = aggregate(data, rnodeIndices, indices, transposed);
           ctx.fillStyle = valueScale(v);
           ctx.fillRect(j * w, i * h, w, h);
         });
@@ -439,8 +467,8 @@ export default {
         }
       });
 
-      columns.forEach((cnode, j) => {
-        const columnSelected = cnode.data.indices.some(s => hoveredColumn.has(s));
+      cnodeIndices.forEach((indices, j) => {
+        const columnSelected = indices.some(s => hoveredColumn.has(s));
         if (columnSelected) {
           ctx.beginPath();
           ctx.moveTo(j * w, 0);
@@ -465,19 +493,16 @@ export default {
       const i = Math.floor(evt.offsetY / h);
       const rnode = this.rowLeaves[i].data;
       const cnode = this.columnLeaves[j].data;
-      if (rnode !== this.rnode || cnode !== this.cnode) {
-        this.rnode = rnode;
-        this.cnode = cnode;
-        this.row.hovered = new Set(rnode.indices);
-        this.column.hovered = new Set(cnode.indices);
+      const rowChanged = changeHovered(this.row, rnode.indices);
+      const colChanged = changeHovered(this.column, cnode.indices);
+
+      if (rowChanged || colChanged) {
         canvas.title = `${rnode.name} x ${cnode.name} = ${this.format(aggregate(this.values, rnode.indices, cnode.indices, this.transposed))}`;
       }
     },
     canvasMouseLeave() {
-      this.row.hovered = new Set();
-      this.column.hovered = new Set();
-      this.rnode = null;
-      this.cnode = null;
+      changeHovered(this.row, null);
+      changeHovered(this.column, null);
     },
 
     generateImage() {
@@ -695,6 +720,10 @@ export default {
   width: 5px;
   min-width: 5px;
   margin-right: 2px;
+}
+
+.rowlabel >>> .color.hidden {
+  display: none;
 }
 
 .collabel >>> div,
