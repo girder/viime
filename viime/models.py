@@ -101,7 +101,10 @@ class CSVFile(db.Model):
     selected_columns = db.Column(db.PickleType, nullable=True)
     group_levels = relationship('GroupLevel', cascade='all, delete, delete-orphan, expunge')
 
-    sample_group = relationship('SampleGroup', back_populates='children')
+    sample_group = db.Column(db.String, nullable=True)
+    sample_group_obj = relationship('SampleGroup', back_populates='files',
+                                    primaryjoin='foreign(CSVFile.sample_group) == '
+                                                'remote(SampleGroup.name)')
 
     @property
     def table_validation(self):
@@ -391,7 +394,9 @@ class CSVFileSchema(BaseSchema):
 class SampleGroup(db.Model):
     name = db.Column(db.String, primary_key=True)
     description = db.Column(db.String, nullable=True)
-    files = relationship(CSVFile, back_populates='sample_group')
+    files = relationship(CSVFile, back_populates='sample_group_obj',
+                         primaryjoin='foreign(CSVFile.sample_group) == '
+                         'remote(SampleGroup.name)')
 
 
 class SampleGroupSchema(BaseSchema):

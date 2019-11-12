@@ -90,7 +90,7 @@ def dump_info(csv: CSVFile):
 
 def list_samples():
     schema = SampleGroupSchema()
-    return schema.dump(SampleGroup.query.all(), multiple=True)
+    return schema.dump(SampleGroup.query.all(), many=True)
 
 
 _validation_keys = ['normalization', 'normalization_argument', 'scaling',
@@ -131,7 +131,7 @@ def _ensure_sample_group(name: Optional[str] = None, description: Optional[str] 
     elif description:
         sample_group.description = description
         db.session.add(sample_group)
-    return sample_group
+    return sample_group.name
 
 
 def upload(json: Dict[str, Any]):
@@ -186,6 +186,9 @@ def enable_sample(csv: CSVFile, group: Optional[str] = 'Default', description: O
     return csv
 
 
-def disable_sample(csv: CSVFile, group: Optional[str] = 'Default'):
+def disable_sample(csv: CSVFile):
+    old_group = csv.sample_group_obj
     csv.sample_group = None
+    if old_group:
+        print(old_group.files)
     return csv
