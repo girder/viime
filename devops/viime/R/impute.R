@@ -189,14 +189,15 @@ imputation <- function(table, groups,
   comp_imp <- cbind(imp_mnar, imp_mcar)
 
   # replace in the input table
-  table[colnames(comp_imp)] < comp_imp[colnames(comp_imp)]
+  out = table
+  out[colnames(comp_imp)] <- comp_imp[colnames(comp_imp)]
 
   # impute mnar on colnames(new_metab_dat_mcar)
   # impute mcar on colnames(new_metab_dat_mcar)
   # imput mcar on all afterwards
 
   # impute MAR
-  out <- f_mcar(table)
+  out <- f_mcar(out)
 
   if (add_info) {
     # encode the type of imputation in the column: A- ... as is, N- ... MNAR, C- ... MCAR
@@ -207,10 +208,10 @@ imputation <- function(table, groups,
 
     # find column names which have some NA inside
     any_missing = names(which(sapply(table, anyNA)))
-    # since it checks <= ... so also values with no missing values at all
-    done_mcar = intersect(row.names(var_keep_mcar), any_missing)
+    # all other missing columns are either mcar or mar
+    done_mcar_mar = setdiff(any_missing, done_mnar)
 
-    with_meta_info[base %in% done_mcar] = paste0('C-', base[base %in% done_mcar])
+    with_meta_info[base %in% done_mcar_mar] = paste0('C-', base[base %in% done_mcar_mar])
 
     colnames(out) <- with_meta_info
   }
