@@ -1,7 +1,11 @@
 <script>
 import analyses from './vis/analyses';
+import RenderJsx from '../utils/RenderJsx';
 
 export default {
+  components: {
+    RenderJsx,
+  },
   props: {
     id: {
       type: String,
@@ -25,7 +29,8 @@ v-layout.analyze-component(row, fill-height)
           v-card.card
             v-card-title(primary-title)
               .headline {{ card.name }}
-            p(v-html="card.description")
+            .desc
+              render-jsx(:f="card.description")
             v-card-actions
               v-btn(text,
                   @click="$router.push({ name: card.shortName, params: { id } })")
@@ -38,7 +43,7 @@ v-layout.analyze-component(row, fill-height)
   flex-direction: column;
   height: 100%;
 
-  > p {
+  > .desc {
     flex: 1 1 0;
     padding: 0 1em;
   }
