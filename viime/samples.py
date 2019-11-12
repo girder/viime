@@ -195,7 +195,8 @@ def upload(json: Dict[str, Any]):
     return csv
 
 
-def enable_sample(csv: CSVFile, group: Optional[str] = 'Default', description: Optional[str] = None):
+def enable_sample(csv: CSVFile, group: Optional[str] = 'Default',
+                  description: Optional[str] = None):
     csv.sample_group = _ensure_sample_group(group or 'Default', description)
 
     return csv
