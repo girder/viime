@@ -84,7 +84,7 @@ def import_files(files: List[CSVFile]):
 
 
 def dump_info(csv: CSVFile):
-    schema = CSVFileSchema(include=['id', 'name', 'description'])
+    schema = CSVFileSchema(only=['id', 'name', 'description'])
     return schema.dump(csv)
 
 
@@ -118,6 +118,21 @@ def dump(csv: CSVFile):
     out.update(v_out)
 
     return out
+
+
+def dump_group(group: SampleGroup):
+    schema = SampleGroupSchema()
+    return schema.dump(group)
+
+
+def change_group(group: str, description: Optional[str]):
+    sample_group = SampleGroup.query.get(group)
+    if not sample_group:
+        sample_group = SampleGroup(name=group, description=description)
+    else:
+        sample_group.description = description
+    db.session.add(sample_group)
+    return sample_group
 
 
 def _ensure_sample_group(name: Optional[str] = None, description: Optional[str] = None):

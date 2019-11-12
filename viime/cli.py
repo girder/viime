@@ -14,6 +14,7 @@ from viime.models import CSVFile, db
 
 samples_dir = str(PurePath(__file__).parent.parent / 'samples')
 api_prefix = '/api/v1/sample/sample'
+group_api_prefix = '/api/v1/sample/group'
 
 
 @click.group()
@@ -128,3 +129,21 @@ def unmark_sample(url: str, ids: List[str], local: bool = False):
         click.echo(f'using: {url}{api_prefix}')
         for id in ids:
             requests.delete(f'{url}{api_prefix}/{id}').raise_for_status()
+
+
+@cli.command(help='change sample group description')
+@click.option('--url', default='http://localhost:8080', show_default=True,
+              help='VIIME instance')
+@click.option('--local', is_flag=True, help='instead of the url use the local instance')
+@click.argument('group')
+@click.argument('description')
+def change_group(url: str, group: str, description: Optional[str],
+                 local: bool = False):
+    if local:
+        with create_app().app_context():
+            samples.change_group(group, description)
+            db.session.commit()
+    else:
+        click.echo(f'using: {url}{group_api_prefix}')
+        data = dict(description=description)
+        requests.patch(f'{url}{group_api_prefix}/{group}', json=data).raise_for_status()

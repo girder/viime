@@ -891,6 +891,17 @@ def sample_upload():
     return jsonify(dump), 200
 
 
+@csv_bp.route('/sample/group/<group>', methods=['PATCH'])
+@use_kwargs({
+    'description': fields.Str(required=False, missing=None)
+})
+def change_group(group: str, description: Optional[str]):
+    sample_group = samples.change_group(group, description)
+    dump = samples.dump_group(sample_group)
+    db.session.commit()
+    return jsonify(dump), 200
+
+
 @csv_bp.route('/sample/sample/<uuid:csv_id>', methods=['PUT'])
 @use_kwargs({
     'group': fields.Str(required=False, missing=None),

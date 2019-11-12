@@ -3,6 +3,7 @@ from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 import pickle
+from typing import List
 from uuid import uuid4
 
 from flask import current_app
@@ -102,7 +103,7 @@ class CSVFile(db.Model):
     group_levels = relationship('GroupLevel', cascade='all, delete, delete-orphan, expunge')
 
     sample_group = db.Column(db.String, nullable=True)
-    sample_group_obj = relationship('SampleGroup', back_populates='files',
+    sample_group_obj = relationship('SampleGroup', backref='files',
                                     primaryjoin='foreign(CSVFile.sample_group) == '
                                                 'remote(SampleGroup.name)')
 
@@ -394,9 +395,7 @@ class CSVFileSchema(BaseSchema):
 class SampleGroup(db.Model):
     name = db.Column(db.String, primary_key=True)
     description = db.Column(db.String, nullable=True)
-    files = relationship(CSVFile, back_populates='sample_group_obj',
-                         primaryjoin='foreign(CSVFile.sample_group) == '
-                         'remote(SampleGroup.name)')
+    files: List[CSVFile]
 
 
 class SampleGroupSchema(BaseSchema):
