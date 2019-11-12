@@ -131,17 +131,17 @@ v-layout.data-source(row, fill-height)
         v-text-field(label="File Dimensions", :value="`${dataset.width} x ${dataset.height}`",
             readonly)
 
-        v-list(subheader, two-line, v-if="isMerged")
+        v-list(subheader, v-if="isMerged")
           merge-methods(v-model="method")
           v-subheader
             .grow() Merged Data Sources
             v-btn(:disabled="!allDatasetsValid", @click="remerge()") Remerge
 
-          v-list-tile(v-for="dataset in mergedDatasets", :key="dataset.id")
+          v-list-tile.plain(v-for="dataset in mergedDatasets", :key="dataset.id")
             v-list-tile-content
               v-list-tile-title {{dataset.name}}
               v-list-tile-sub-title(v-if="!dataset.valid", color="error") Invalid Data source
-              v-list-tile-sub-title(v-else) {{dataset.description || 'No Description'}}
+              v-list-tile-sub-title.wrapped(v-else) {{dataset.description || 'No Description'}}
             v-list-tile-action
               v-btn(:to="{name: '', params: {id: dataset.id}}", icon)
                 v-icon {{$vuetify.icons.eye}}
@@ -166,3 +166,14 @@ v-layout.data-source(row, fill-height)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading Data Set
 </template>
+
+<style scoped>
+.plain >>> .v-list__tile {
+  height: unset;
+  align-items: flex-start;
+}
+
+.wrapped {
+  white-space: pre;
+}
+</style>

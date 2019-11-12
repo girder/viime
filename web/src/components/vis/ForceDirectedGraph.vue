@@ -152,7 +152,6 @@ export default {
         .extent([[0, 0], [this.width, this.height]])
         .on('zoom', () => this.tick()));
 
-      simulation.force('link').distance(this.linkDistance);
       simulation.force('x').x(this.width / 2);
       simulation.force('y').y(this.height / 2);
       simulation.force('center').x(this.width / 2).y(this.height / 2);
@@ -228,6 +227,7 @@ export default {
 
       // towards center of screen
       simulation.nodes(localNodes);
+      simulation.force('link').distance(this.linkDistance);
       simulation.force('link').links(localEdges);
 
       simulation.alpha(1).restart().stop().tick(250); // forward 250 ticks

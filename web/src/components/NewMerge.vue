@@ -105,16 +105,16 @@ v-form(v-model="valid", ref="form", @submit="submit")
     v-textarea(label="Description", v-model="description")
     merge-methods(v-model="method")
 
-    v-list(subheader, two-line)
+    v-list(subheader)
       v-subheader Data Sources
-      v-list-tile(v-for="(dataset, index) in datasets", :key="dataset.id")
+      v-list-tile.plain(v-for="(dataset, index) in datasets", :key="dataset.id")
         v-list-tile-action
           v-checkbox.numbered(v-model="selected", :value="dataset.id", :rules="selectedRules",
               :disabled="!dataset.valid", :prepend-icon="rank(dataset)")
         v-list-tile-content
           v-list-tile-title {{dataset.name}}
           v-list-tile-sub-title(v-if="!dataset.valid", color="error") Invalid Data source
-          v-list-tile-sub-title(v-else) {{dataset.description || 'No Description'}}
+          v-list-tile-sub-title.wrapped(v-else) {{dataset.description || 'No Description'}}
     .v-messages.theme--light.error--text(v-if="!(selected.length >= 2)")
       .v-messages__wrapper
         .v-messages__message At least two data sources are required
@@ -142,5 +142,14 @@ v-form(v-model="valid", ref="form", @submit="submit")
 
 .bigger {
   font-size: 16px;
+}
+
+.plain >>> .v-list__tile {
+  height: unset;
+  align-items: flex-start;
+}
+
+.wrapped {
+  white-space: pre;
 }
 </style>

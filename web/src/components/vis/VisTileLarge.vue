@@ -9,7 +9,7 @@ export default {
     },
     loading: {
       type: Boolean,
-      required: true,
+      default: false,
     },
     download: {
       default: false,
@@ -58,8 +58,9 @@ v-layout(v-else, row, fill-height)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading...
 
-  v-container.grow-overflow.ma-0.mainContainer(grid-list-lg, fluid, v-else)
-    slot
+  v-layout(column, v-else)
+    v-container.grow-overflow.ma-0.mainContainer(grid-list-lg, fluid)
+      slot
 </template>
 
 <style lang="scss" scoped>

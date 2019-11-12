@@ -4,8 +4,9 @@ from uuid import uuid4
 
 from sqlalchemy.orm.session import make_transient
 
-from .models import CSVFile, CSVFileSchema, db, GroupLevel, TableColumn, \
-    TableRow, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
+from .models import CSVFile, CSVFileSchema, db, GroupLevel, \
+    SampleGroup, SampleGroupSchema, TableColumn, TableRow, \
+    ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
 
 
 def is_sample_file(csv: CSVFile) -> bool:
@@ -83,14 +84,13 @@ def import_files(files: List[CSVFile]):
 
 
 def dump_info(csv: CSVFile):
-    return dict(name=csv.name, description=csv.description, id=csv.id)
+    schema = CSVFileSchema(only=['id', 'name', 'description'])
+    return schema.dump(csv)
 
 
 def list_samples():
-    groups: Dict[str, List[CSVFile]] = {}
-    for csv in CSVFile.query.filter(CSVFile.sample_group.isnot(None)).all():
-        groups.setdefault(csv.sample_group, []).append(csv)
-    return [dict(name=k, files=[dump_info(csv) for csv in v]) for k, v in groups.items()]
+    schema = SampleGroupSchema()
+    return schema.dump(SampleGroup.query.all(), many=True)
 
 
 _validation_keys = ['normalization', 'normalization_argument', 'scaling',
@@ -118,6 +118,35 @@ def dump(csv: CSVFile):
     out.update(v_out)
 
     return out
+
+
+def dump_group(group: SampleGroup):
+    schema = SampleGroupSchema()
+    return schema.dump(group)
+
+
+def change_group(group: str, description: Optional[str]):
+    sample_group = SampleGroup.query.get(group)
+    if not sample_group:
+        sample_group = SampleGroup(name=group, description=description)
+    else:
+        sample_group.description = description
+    db.session.add(sample_group)
+    return sample_group
+
+
+def _ensure_sample_group(name: Optional[str] = None, description: Optional[str] = None):
+    if not name:
+        return None
+
+    sample_group: Optional[SampleGroup] = SampleGroup.query.get(name)
+    if not sample_group:
+        sample_group = SampleGroup(name=name, description=description)
+        db.session.add(sample_group)
+    elif description:
+        sample_group.description = description
+        db.session.add(sample_group)
+    return sample_group.name
 
 
 def upload(json: Dict[str, Any]):
@@ -154,7 +183,7 @@ def upload(json: Dict[str, Any]):
 
     if group_levels:
         csv.group_levels = [GroupLevel(**g) for g in group_levels]
-    csv.sample_group = sample_group
+    csv.sample_group = _ensure_sample_group(sample_group)
     csv.selected_columns = selected_columns
 
     db.session.add(csv)
@@ -166,11 +195,17 @@ def upload(json: Dict[str, Any]):
     return csv
 
 
-def enable_sample(csv: CSVFile, group: Optional[str] = 'Default'):
-    csv.sample_group = group or 'Default'
+def enable_sample(csv: CSVFile, group: Optional[str] = 'Default',
+                  description: Optional[str] = None):
+    csv.sample_group = _ensure_sample_group(group or 'Default', description)
+
     return csv
 
 
-def disable_sample(csv: CSVFile, group: Optional[str] = 'Default'):
+def disable_sample(csv: CSVFile):
+    old_group = csv.sample_group_obj
     csv.sample_group = None
+    if old_group and not old_group.files:
+        # delete group
+        db.session.delete(old_group)
     return csv

@@ -1,8 +1,10 @@
 <script>
+import HighlightImage from './HighlightImage.vue';
 import FeedbackButton from './FeedbackButton.vue';
 
 export default {
   components: {
+    HighlightImage,
     FeedbackButton,
   },
   data() {
@@ -27,10 +29,10 @@ v-app.viime-landing
     v-layout(row, reverse)
       v-flex(md5, pa-0)
         v-card.banner-image(color="white", flat)
-          img(alt="VIIME", src="../assets/viime_logo_screenshot.png")
+          highlight-image.img
       v-flex.banner-content-wrap.primary.darken-4(md7)
         v-card.banner-content(color="transparent", dark, flat)
-          img(alt="VIIME", src="../assets/viime_logo_screenshot.png", height="auto", width="100%")
+          highlight-image.img(small)
           v-card-title.banner-title.px-0
             h1 Combine your metabolomics data. Interact with the results.
           v-card-text.banner-text.px-0
@@ -207,6 +209,7 @@ v-app.viime-landing
   position: relative;
   z-index: 2;
 }
+
 .banner-area {
   box-sizing: border-box;
   height: 100vh;
@@ -225,7 +228,7 @@ v-app.viime-landing
     height: 100%;
     justify-content: center;
     padding: 0 145px 0 60px;
-    img {
+    .img {
       display: none;
     }
     .layout > * {
@@ -254,17 +257,19 @@ v-app.viime-landing
     height: 100%;
     position: relative;
     width: 100%;
-    img {
-      height: auto;
-      left:-130px;
-      max-height: 100%;
+
+    .img {
       position: absolute;
+      left: -130px;
       top: 50%;
       transform: translatey(-50%);
+      max-height: 100%;
       max-width: 98%;
     }
   }
 }
+
+
 .capabilities {
   background: #f5f5f5;
   .capability {
@@ -401,11 +406,8 @@ v-app.viime-landing
     .banner-content {
       padding: 0 45px;
       text-align: center !important;
-      img {
+      .img {
         display: block;
-        max-height: 275px;
-        margin: 0 auto;
-        width: auto;
       }
       .banner-title {
         h1 {

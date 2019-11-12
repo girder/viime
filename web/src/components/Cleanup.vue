@@ -7,14 +7,12 @@ import {
   defaultColOption,
 } from '@/utils/constants';
 import { base26Converter } from '@/utils';
-import SaveStatus from '@/components/SaveStatus.vue';
 import CleanupDataTable from '@/components/CleanupDataTable.vue';
 
 
 export default {
   components: {
     CleanupDataTable,
-    SaveStatus,
   },
   props: {
     id: {
@@ -97,10 +95,6 @@ v-layout.cleanup-wrapper(row)
             span {{ option.title }}
             v-icon.radio-icon.mdi-light(small, :class="option.color")
               | {{ $vuetify.icons[option.icon] }}
-
-      v-spacer
-
-      save-status
 
     cleanup-data-table.cleanup-table(:dataset="dataset")
 </template>
