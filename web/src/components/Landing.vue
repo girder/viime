@@ -214,7 +214,8 @@ v-app.viime-landing
       v-layout(row, wrap)
         v-flex(md8, xs12)
           h2.mb-3.pa-0 Ready for Collaboration
-          p The code for VIIME is in a permissive open source library, meaning it can be used and
+          p
+            | The code for VIIME is in a permissive open source library, meaning it can be used and
             | extended across academia and industry with no restrictions. This includes deploying
             | VIIME at your institution for your internal research team. If you'd like to partner
             | with us to deploy or extend VIIME
