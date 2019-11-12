@@ -189,6 +189,7 @@ def enable_sample(csv: CSVFile, group: Optional[str] = 'Default', description: O
 def disable_sample(csv: CSVFile):
     old_group = csv.sample_group_obj
     csv.sample_group = None
-    if old_group:
-        print(old_group.files)
+    if old_group and not old_group.files:
+        # delete group
+        db.session.remove(old_group)
     return csv

@@ -404,7 +404,7 @@ class SampleGroupSchema(BaseSchema):
 
     name = fields.String(required=True)
     description = fields.Str(allow_none=True)
-    files = fields.List(fields.Nested(CSVFileSchema, include=['id', 'name', 'description']))
+    files = fields.List(fields.Nested(CSVFileSchema, only=['id', 'name', 'description']))
 
 
 class TableColumn(db.Model):
