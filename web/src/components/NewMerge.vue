@@ -1,22 +1,11 @@
 <script>
 import { CREATE_MERGED_DATASET } from '../store/actions.type';
-
-export const mergeMethods = [
-  {
-    value: 'multi_block',
-    label: 'Multiblock Data Fusion',
-  },
-  {
-    value: 'clean',
-    label: 'PCA Data Fusion',
-  },
-  {
-    value: 'simple',
-    label: 'Simple Data Fusion',
-  },
-];
+import MergeMethods, { DEFAULT_MERGE_METHOD } from './MergeMethods.vue';
 
 export default {
+  components: {
+    MergeMethods,
+  },
   data() {
     return {
       valid: false,
@@ -29,8 +18,7 @@ export default {
       name: 'Unnamed Merged Dataset',
       description: '',
       selected: [],
-      mergeMethods,
-      method: mergeMethods[0].value,
+      method: DEFAULT_MERGE_METHOD,
       error: null,
     };
   },
@@ -115,20 +103,18 @@ v-form(v-model="valid", ref="form", @submit="submit")
     v-text-field(label="Data Source Name", v-model="name", required,
         :rules="requiredRules")
     v-textarea(label="Description", v-model="description")
-    v-radio-group(v-model="method", label="Merge Method")
-      v-radio(v-for="method in mergeMethods", :key="method.value",
-          :label="method.label", :value="method.value")
+    merge-methods(v-model="method")
 
-    v-list(subheader, two-line)
+    v-list(subheader)
       v-subheader Data Sources
-      v-list-tile(v-for="(dataset, index) in datasets", :key="dataset.id")
+      v-list-tile.plain(v-for="(dataset, index) in datasets", :key="dataset.id")
         v-list-tile-action
           v-checkbox.numbered(v-model="selected", :value="dataset.id", :rules="selectedRules",
               :disabled="!dataset.valid", :prepend-icon="rank(dataset)")
         v-list-tile-content
           v-list-tile-title {{dataset.name}}
           v-list-tile-sub-title(v-if="!dataset.valid", color="error") Invalid Data source
-          v-list-tile-sub-title(v-else) {{dataset.description || 'No Description'}}
+          v-list-tile-sub-title.wrapped(v-else) {{dataset.description || 'No Description'}}
     .v-messages.theme--light.error--text(v-if="!(selected.length >= 2)")
       .v-messages__wrapper
         .v-messages__message At least two data sources are required
@@ -156,5 +142,14 @@ v-form(v-model="valid", ref="form", @submit="submit")
 
 .bigger {
   font-size: 16px;
+}
+
+.plain >>> .v-list__tile {
+  height: unset;
+  align-items: flex-start;
+}
+
+.wrapped {
+  white-space: pre;
 }
 </style>

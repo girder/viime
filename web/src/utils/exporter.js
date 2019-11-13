@@ -40,6 +40,17 @@ function fixC3SVG(node) {
   return node;
 }
 
+function findScopedAttr(elem) {
+  let names = [];
+  if (typeof elem.getAttributeNames === 'function') {
+    names = Array.from(elem.getAttributeNames());
+  } else {
+    // like edge
+    names = Array.from(elem.attributes).map(attr => attr.name);
+  }
+  return names.find(d => d.startsWith('data-v-'));
+}
+
 export function svg2url(svgElement, options = {}) {
   const findStyles = options.styles !== false;
   const includeFont = options.font !== false;
@@ -80,7 +91,7 @@ export function svg2url(svgElement, options = {}) {
   }
 
   // find related style sheets
-  const scopedAttr = Array.from(copy.getAttributeNames()).find(d => d.startsWith('data-v-'));
+  const scopedAttr = findScopedAttr(copy);
   if (findStyles && scopedAttr) {
     const key = `[${scopedAttr}]`;
     const rules = [];

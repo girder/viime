@@ -1,8 +1,27 @@
 <script>
+import BrowserSupportBanner from './BrowserSupportBanner.vue';
+import HighlightImage from './HighlightImage.vue';
 import FeedbackButton from './FeedbackButton.vue';
+import analysis_05x from '../assets/capabilities/analysis_05x.png';
+import analysis from '../assets/capabilities/analysis_1x.png';
+import analysis_2x from '../assets/capabilities/analysis_2x.png';
+import feedback_05x from '../assets/capabilities/feedback_05x.png';
+import feedback from '../assets/capabilities/feedback_1x.png';
+import feedback_2x from '../assets/capabilities/feedback_2x.png';
+import ingestion_05x from '../assets/capabilities/ingestion_05x.png';
+import ingestion from '../assets/capabilities/ingestion_1x.png';
+import ingestion_2x from '../assets/capabilities/ingestion_2x.png';
+import integration_05x from '../assets/capabilities/integration_05x.png';
+import integration from '../assets/capabilities/integration_1x.png';
+import integration_2x from '../assets/capabilities/integration_2x.png';
+import visualization_05x from '../assets/capabilities/visualization_05x.png';
+import visualization from '../assets/capabilities/visualization_1x.png';
+import visualization_2x from '../assets/capabilities/visualization_2x.png';
 
 export default {
   components: {
+    BrowserSupportBanner,
+    HighlightImage,
     FeedbackButton,
   },
   data() {
@@ -12,12 +31,27 @@ export default {
         'px-0': this.$vuetify.breakpoint.mdAndUp,
       },
       diclaimerOpen: false,
+      images: {
+        analysis,
+        feedback,
+        ingestion,
+        integration,
+        visualization,
+      },
+      srcset: {
+        analysis: `${analysis} 1x, ${analysis_05x} 0.5x, ${analysis_2x} 2x`,
+        feedback: `${feedback} 1x, ${feedback_05x} 0.5x, ${feedback_2x} 2x`,
+        ingestion: `${ingestion} 1x, ${ingestion_05x} 0.5x, ${ingestion_2x} 2x`,
+        integration: `${integration} 1x, ${integration_05x} 0.5x, ${integration_2x} 2x`,
+        visualization: `${visualization} 1x, ${visualization_05x} 0.5x, ${visualization_2x} 2x`,
+      },
     };
   },
 };
 </script>
 <template lang="pug">
 v-app.viime-landing
+  browser-support-banner
   v-toolbar.main-toolbar.darken-4.py-2(dark, dense, color="transparent", flat)
     v-toolbar-title(style="height: 100%; padding: 10px 0;")
       img(src="../assets/viime_logo_ko.svg", alt="VIIME", height="100%")
@@ -28,10 +62,10 @@ v-app.viime-landing
     v-layout(row, reverse)
       v-flex(md5, pa-0)
         v-card.banner-image(color="white", flat)
-          img(alt="VIIME", src="../assets/viime_logo_screenshot.png")
+          highlight-image.img
       v-flex.banner-content-wrap.primary.darken-4(md7)
         v-card.banner-content(color="transparent", dark, flat)
-          img(alt="VIIME", src="../assets/viime_logo_screenshot.png", height="auto", width="100%")
+          highlight-image.img(small)
           v-card-title.banner-title.px-0
             h1 Combine your metabolomics data. Interact with the results.
           v-card-text.banner-text.px-0
@@ -53,25 +87,12 @@ v-app.viime-landing
   .capabilities
     v-container(fluid, pa-0)
       v-layout.capability
-        v-container(:class="capabilityClasses", py-5)
-          v-layout(align-center, pa-0, row, wrap)
-            v-flex.capability-col(px-3, py-2, sm4)
-              v-card(color="transparent", flat, pa-0)
-                v-img(src="https://placehold.it/750x450")
-            v-flex.capability-col(px-3, py-2, sm8)
-              v-card(color="transparent", flat)
-                v-card-title.capability-title.py-0(primary-title)
-                  h1.primary--text.text--darken-3 Modern integration methods
-                v-card-text.capability-text
-                  | Run algorithms like PCA and Block PCA to obtain more accurate results using data
-                  |  from multiple measurement platforms (NMR, MS) or tissues (serum, urine, etc.)
-
-      v-layout.capability
         v-container(:class="capabilityClasses", py-2x)
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
               v-card(color="transparent", flat, pa-0)
-                v-img(src="https://placehold.it/750x450")
+                v-img.elevation-3(:src="images.ingestion", :aspect-ratio="750 / 450",
+                    :srcset="srcset.ingestion")
             v-flex.capability-col(px-3, py-2, sm8)
               v-card(color="transparent", flat)
                 v-card-title.capability-title.py-0(primary-title)
@@ -86,21 +107,8 @@ v-app.viime-landing
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
               v-card(color="transparent", flat, pa-0)
-                v-img(src="https://placehold.it/750x450")
-            v-flex.capability-col(px-3, py-2, sm8)
-              v-card(color="transparent", flat)
-                v-card-title.capability-title.py-0(primary-title)
-                  h1.primary--text.text--darken-3 Relevant Analyses
-                v-card-text.capability-text
-                  | Run algorithms like Wilcoxon and ANOVA to highlight metabolites for further
-                  |  investigation, and export resulting data and charts
-
-      v-layout.capability
-        v-container(:class="capabilityClasses", py-5)
-          v-layout(align-center, pa-0, row, wrap)
-            v-flex.capability-col(px-3, py-2, sm4)
-              v-card(color="transparent", flat, pa-0)
-                v-img(src="https://placehold.it/750x450")
+                v-img.elevation-3(:src="images.feedback", :aspect-ratio="750 / 650",
+                    :srcset="srcset.feedback")
             v-flex.capability-col(px-3, py-2, sm8)
               v-card(color="transparent", flat)
                 v-card-title.capability-title.py-0(primary-title)
@@ -114,7 +122,38 @@ v-app.viime-landing
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
               v-card(color="transparent", flat, pa-0)
-                v-img(src="https://placehold.it/750x450")
+                v-img.elevation-3(:src="images.integration", :aspect-ratio="750 / 450",
+                    :srcset="srcset.integration")
+            v-flex.capability-col(px-3, py-2, sm8)
+              v-card(color="transparent", flat)
+                v-card-title.capability-title.py-0(primary-title)
+                  h1.primary--text.text--darken-3 Modern integration methods
+                v-card-text.capability-text
+                  | Run algorithms like PCA and Block PCA to obtain more accurate results using data
+                  |  from multiple measurement platforms (NMR, MS) or tissues (serum, urine, etc.)
+
+      v-layout.capability
+        v-container(:class="capabilityClasses", py-5)
+          v-layout(align-center, pa-0, row, wrap)
+            v-flex.capability-col(px-3, py-2, sm4)
+              v-card(color="transparent", flat, pa-0)
+                v-img.elevation-3(:src="images.analysis", :aspect-ratio="750 / 450",
+                    :srcset="srcset.analysis")
+            v-flex.capability-col(px-3, py-2, sm8)
+              v-card(color="transparent", flat)
+                v-card-title.capability-title.py-0(primary-title)
+                  h1.primary--text.text--darken-3 Relevant Analyses
+                v-card-text.capability-text
+                  | Run algorithms like Wilcoxon and ANOVA to highlight metabolites for further
+                  |  investigation, and export resulting data and charts
+
+      v-layout.capability
+        v-container(:class="capabilityClasses", py-5)
+          v-layout(align-center, pa-0, row, wrap)
+            v-flex.capability-col(px-3, py-2, sm4)
+              v-card(color="transparent", flat, pa-0)
+                v-img.elevation-3(:src="images.visualization", :aspect-ratio="750 / 450",
+                    :srcset="srcset.visualization")
             v-flex.capability-col(px-3, py-2, sm8)
               v-card(color="transparent", flat)
                 v-card-title.capability-title.py-0(primary-title)
@@ -179,7 +218,8 @@ v-app.viime-landing
       v-layout(row, wrap)
         v-flex(md8, xs12)
           h2.mb-3.pa-0 Ready for Collaboration
-          p The code for VIIME is in a permissive open source library, meaning it can be used and
+          p
+            | The code for VIIME is in a permissive open source library, meaning it can be used and
             | extended across academia and industry with no restrictions. This includes deploying
             | VIIME at your institution for your internal research team. If you'd like to partner
             | with us to deploy or extend VIIME
@@ -231,6 +271,7 @@ v-app.viime-landing
   position: relative;
   z-index: 2;
 }
+
 .banner-area {
   box-sizing: border-box;
   height: 100vh;
@@ -249,7 +290,7 @@ v-app.viime-landing
     height: 100%;
     justify-content: center;
     padding: 0 145px 0 60px;
-    img {
+    .img {
       display: none;
     }
     .layout > * {
@@ -278,17 +319,19 @@ v-app.viime-landing
     height: 100%;
     position: relative;
     width: 100%;
-    img {
-      height: auto;
-      left:-130px;
-      max-height: 100%;
+
+    .img {
       position: absolute;
+      left: -130px;
       top: 50%;
       transform: translatey(-50%);
+      max-height: 100%;
       max-width: 98%;
     }
   }
 }
+
+
 .capabilities {
   background: #f5f5f5;
   .capability {
@@ -425,11 +468,8 @@ v-app.viime-landing
     .banner-content {
       padding: 0 45px;
       text-align: center !important;
-      img {
+      .img {
         display: block;
-        max-height: 275px;
-        margin: 0 auto;
-        width: auto;
       }
       .banner-title {
         h1 {

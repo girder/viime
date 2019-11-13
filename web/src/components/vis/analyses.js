@@ -23,7 +23,26 @@ export default [
     path: 'boxplot',
     name: 'Boxplots',
     shortName: 'Boxplots',
-    description: 'show me the boxplots!',
+    description() {
+      return (<div>
+        <p>
+          This chart shows the distribution of each metabolite's measurements
+          using a series of box plots.
+        </p>
+        <p>Each metabolite appears along the y-axis, with a horizontal box plot showing
+          the four quartile values, emphasizing
+          the interquartile range (IQR) with solid bars. Individual outliers appear as well:
+          normal ones, falling at
+          least 1.5 IQRs away from the interquartile range, as dots; and "far-out" outliers,
+          falling at least 3 IQRs away from the interquartile range, as larger dots.
+        </p>
+        <p>
+          Hovering the mouse pointer over various parts of the plot will show detailed
+          information in a tooltip.
+          These include details of the different quartile ranges, and the values of outliers.
+        </p>
+      </div>);
+    },
     component: BoxPlotLargeTile,
     args: {},
     type: plot_types.ANALYSIS,
@@ -36,7 +55,27 @@ export default [
     path: 'wilcoxon',
     name: 'Wilcoxon test',
     shortName: 'Wilcoxon Test',
-    description: 'TODO R custom code',
+    description() {
+      return (<div>
+        <p>Non-parametric test to compare two groups.</p>
+        <p>
+          <strong>Bonferoni</strong>:
+          It is a correction of multiple comparisons for independent statistical test
+          made simultaneously.
+          (It sets the critical p-value as <code>alpha/n</code>,
+          where n is the number of tests and alpha is the probability of rejecting the
+          null hypothesis when it is true, also called type I error rate).
+        </p>
+        <p>
+          <strong>Hochberg</strong>:
+          It is a correction of multiple comparisons for independent statistical test made
+          simultaneously. (It sets the critical value as <code>(i/m)Q</code> where i is the
+          rank of the
+          p-values when ordered
+          from smallest to largest, m is the number of tests and Q is the false discovery rate)
+        </p>
+      </div>);
+    },
     component: WilcoxonPlotTile,
     args: {},
     type: plot_types.ANALYSIS,
@@ -46,7 +85,7 @@ export default [
     path: 'anova',
     name: 'ANOVA',
     shortName: 'ANOVA',
-    description: 'TODO R custom code',
+    description: 'Test to compare 3 or more groups assuming normal distribution, the group pairwise comparisons are adjusted with Tukey HSD',
     component: AnovaTableTile,
     args: {},
     type: plot_types.ANALYSIS,
@@ -56,7 +95,7 @@ export default [
     path: 'heatmap',
     name: 'Heatmap',
     shortName: 'Heatmap',
-    description: 'cool stuff',
+    description: 'Is a graphical representation of the concentration differences between variables and samples',
     component: HeatmapTile,
     args: {
       column: null,
@@ -71,7 +110,9 @@ export default [
     path: 'correlation',
     name: 'Correlation Network',
     shortName: 'Correlation Network',
-    description: 'TODO',
+    description: `Is a graphical representation of the pairwise correlations between variables.
+    The different colors of the connections show the direction of the correlation and the wider
+    the connection, the stronger the correlation`,
     component: CorrelationTile,
     args: {
       min_correlation: 0.6,

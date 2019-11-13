@@ -891,14 +891,26 @@ def sample_upload():
     return jsonify(dump), 200
 
 
+@csv_bp.route('/sample/group/<group>', methods=['PATCH'])
+@use_kwargs({
+    'description': fields.Str(required=False, missing=None)
+})
+def change_group(group: str, description: Optional[str]):
+    sample_group = samples.change_group(group, description)
+    dump = samples.dump_group(sample_group)
+    db.session.commit()
+    return jsonify(dump), 200
+
+
 @csv_bp.route('/sample/sample/<uuid:csv_id>', methods=['PUT'])
 @use_kwargs({
-    'group': fields.Str(required=False, missing=None)
+    'group': fields.Str(required=False, missing=None),
+    'description': fields.Str(required=False, missing=None)
 })
-def sample_enable(csv_id: str, group: Optional[str]):
+def sample_enable(csv_id: str, group: Optional[str], description: Optional[str]):
     csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
 
-    csv_file = samples.enable_sample(csv_file, group)
+    csv_file = samples.enable_sample(csv_file, group, description)
 
     db.session.add(csv_file)
     db.session.commit()

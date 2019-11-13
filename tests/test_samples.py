@@ -27,7 +27,7 @@ def test_sample(app, fid):
 
         info = samples.dump_info(csv)
         assert info.get('name') == csv.name
-        assert info.get('id') == csv.id
+        assert info.get('id') == str(csv.id)
 
         groups = samples.list_samples()
         assert len(groups) == 1
@@ -46,5 +46,5 @@ def test_sample(app, fid):
         assert len(icsv) == 1
         # since updated in place
         csv = CSVFile.query.get(sample_id)
-        assert icsv[0].id != csv.id
+        assert icsv[0].id != str(csv.id)
         assert_frame_equal(icsv[0].table, csv.table)

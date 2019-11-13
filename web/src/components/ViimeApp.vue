@@ -1,5 +1,6 @@
 <template lang="pug">
 v-app.viime-app
+  browser-support-banner
   v-toolbar.darken-3(dense, dark, color="primary")
     v-toolbar-side-icon.logo(:to="{name: 'Root'}") V
     v-breadcrumbs(:items="breadcrumbs", divider="»")
@@ -15,12 +16,14 @@ v-app.viime-app
 </template>
 
 <script>
+import BrowserSupportBanner from './BrowserSupportBanner.vue';
 import SaveStatus from './SaveStatus.vue';
 import FeedbackButton from './FeedbackButton.vue';
 
 export default {
   name: 'App',
   components: {
+    BrowserSupportBanner,
     SaveStatus,
     FeedbackButton,
   },

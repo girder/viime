@@ -1,8 +1,12 @@
 <script>
 import { format } from 'd3-format';
 import { downloadSVG } from '../../utils/exporter';
+import HelpDialog from '../toolbar/HelpDialog.vue';
 
 export default {
+  components: {
+    HelpDialog,
+  },
   props: {
     title: {
       type: String,
@@ -67,18 +71,8 @@ v-flex.white.rounded.main(shrink=1, :class="scaleClass")
   v-toolbar.primary.darken-3.top-rounded(dark, flat, dense)
     v-toolbar-title {{ title }}
     v-toolbar-items(v-if="hasHelp()")
-      v-dialog(v-model="showHelp", max-width="33vw")
-        template(v-slot:activator="{ on }")
-          v-btn(v-on="on", icon)
-            v-icon {{ $vuetify.icons.help }}
-        v-card
-          v-card-title
-            h3.headline {{ title }}
-          v-card-text
-            slot(name="help")
-          v-card-actions
-            v-spacer
-            v-btn(@click="showHelp = false") Close
+      help-dialog(:title="title")
+        slot(name="help")
     v-spacer
     v-toolbar-items
       v-btn(@click="setScaleIndex(scaleIndex - 1)", :disabled="scaleIndex === 0", icon)
