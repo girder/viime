@@ -166,8 +166,7 @@ export default {
 
         if (initialTicks > 0) {
           window.requestIdleCallback(tickStatic, {
-            // latest in a second
-            timeout: 250,
+            timeout: 250, // ms
           });
         } else {
           finishStatic();
@@ -175,8 +174,7 @@ export default {
       };
 
       window.requestIdleCallback(tickStatic, {
-        // latest in a second
-        timeout: 250,
+        timeout: 250, // ms
       });
     },
 
