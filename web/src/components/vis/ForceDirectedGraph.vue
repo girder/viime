@@ -223,8 +223,11 @@ export default {
         node.fy = t.invertY(d3Event.y);
       }
 
-      function dragstarted() {
-        select(this).raise();
+      function dragstarted(d) {
+        select(this)
+          .raise()
+          .classed('pinned', true);
+        this.parentElement.querySelector('title').textContent = `${d.id} (pinned, click to unpin)`;
         stopTicker();
         simulation.alphaTarget(0.3).restart();
         dragged();
@@ -233,6 +236,9 @@ export default {
       function resetPinned(d) {
         delete d.fx;
         delete d.fy;
+        select(this)
+          .classed('pinned', false);
+        this.parentElement.querySelector('title').textContent = d.id;
         stopTicker();
         simulation.restart();
       }
@@ -309,6 +315,11 @@ export default {
 .nodes >>> circle {
   cursor: grab;
   fill: steelblue;
+}
+
+.nodes >>> circle.pinned {
+  stroke-width: 2;
+  stroke: black;
 }
 
 .nodes >>> text {
