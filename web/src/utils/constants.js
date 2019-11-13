@@ -78,14 +78,43 @@ const colPrimaryKey = 'key';
 const colGroupKey = 'group';
 
 const mcar_imputation_methods = [
-  { label: 'Random Forest', value: 'random-forest' },
-  { label: 'KNN', value: 'knn' },
-  { label: 'Mean', value: 'mean' },
-  { label: 'Median', value: 'median' },
+  {
+    label: 'Random Forest',
+    value: 'random-forest',
+    helpText: `For each gene with missing values, this method finds the k nearest genes using Euclidean metric
+  and imputes missing elements by averaging those non-missing elements of its neighbors.
+  In metabolomics studies, we applied kNN to find k nearest samples instead and imputed the missing elements.
+  We applied R package impute for this imputation approach.`,
+  },
+  {
+    label: 'KNN',
+    value: 'knn',
+    helpText: `For each variable with missing values,
+    we applied kNN to find k nearest samples and imputed the missing elements.
+    We applied R package impute for this imputation approach.`,
+  },
+  {
+    label: 'Mean',
+    value: 'mean',
+    helpText: 'This method replaces missing elements with an average value of non-missing elements in the corresponding variable.',
+  },
+  {
+    label: 'Median',
+    value: 'median',
+    helpText: 'This method replaces missing elements with a median value of non-missing elements in the corresponding variable.',
+  },
 ];
 const mnar_imputation_methods = [
-  { label: 'Zero', value: 'zero' },
-  { label: 'Half Minimum', value: 'half-minimum' },
+  {
+    label: 'Zero',
+    value: 'zero',
+    helpText: 'This method replaces all missing elements with zero.',
+  },
+  {
+    label: 'Half Minimum',
+    value: 'half-minimum',
+    helpText: 'This method replaces missing elements with half of the minimum of non-missing elements in the corresponding variable.',
+  },
 ];
 
 const normalize_methods = [

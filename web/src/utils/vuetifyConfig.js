@@ -45,6 +45,7 @@ export default {
     group: 'mdi-group',
     header: 'mdi-key-variant',
     help: 'mdi-help-circle',
+    helpOutline: 'mdi-help-circle-outline',
     info: 'mdi-information',
     link: 'mdi-link',
     magnifyMinus: 'mdi-magnify-minus',

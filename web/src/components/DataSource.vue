@@ -4,9 +4,12 @@ import {
   SET_DATASET_NAME, SET_DATASET_DESCRIPTION, SET_DATASET_GROUP_LEVELS, REMERGE_DATASET,
 } from '../store/actions.type';
 import { loadDataset } from '../utils/mixins';
-import { mergeMethods } from './NewMerge.vue';
+import MergeMethods from './MergeMethods.vue';
 
 export default {
+  components: {
+    MergeMethods,
+  },
   mixins: [loadDataset, sizeFormatter],
   data() {
     return {
@@ -37,7 +40,6 @@ export default {
         },
       ],
       method: null,
-      mergeMethods,
     };
   },
   computed: {
@@ -130,9 +132,7 @@ v-layout.data-source(row, fill-height)
             readonly)
 
         v-list(subheader, v-if="isMerged")
-          v-radio-group(v-model="method", label="Merge Method")
-            v-radio(v-for="method in mergeMethods", :key="method.value",
-                :label="method.label", :value="method.value")
+          merge-methods(v-model="method")
           v-subheader
             .grow() Merged Data Sources
             v-btn(:disabled="!allDatasetsValid", @click="remerge()") Remerge

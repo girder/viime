@@ -1,22 +1,11 @@
 <script>
 import { CREATE_MERGED_DATASET } from '../store/actions.type';
-
-export const mergeMethods = [
-  {
-    value: 'multi_block',
-    label: 'Multiblock Data Fusion',
-  },
-  {
-    value: 'clean',
-    label: 'PCA Data Fusion',
-  },
-  {
-    value: 'simple',
-    label: 'Simple Data Fusion',
-  },
-];
+import MergeMethods, { DEFAULT_MERGE_METHOD } from './MergeMethods.vue';
 
 export default {
+  components: {
+    MergeMethods,
+  },
   data() {
     return {
       valid: false,
@@ -29,8 +18,7 @@ export default {
       name: 'Unnamed Merged Dataset',
       description: '',
       selected: [],
-      mergeMethods,
-      method: mergeMethods[0].value,
+      method: DEFAULT_MERGE_METHOD,
       error: null,
     };
   },
@@ -115,9 +103,7 @@ v-form(v-model="valid", ref="form", @submit="submit")
     v-text-field(label="Data Source Name", v-model="name", required,
         :rules="requiredRules")
     v-textarea(label="Description", v-model="description")
-    v-radio-group(v-model="method", label="Merge Method")
-      v-radio(v-for="method in mergeMethods", :key="method.value",
-          :label="method.label", :value="method.value")
+    merge-methods(v-model="method")
 
     v-list(subheader)
       v-subheader Data Sources
