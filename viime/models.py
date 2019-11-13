@@ -724,7 +724,7 @@ def _get_groups(csv_file):
     if groups is None:
         return None
     # ensure groups are strings
-    return groups.astype(str)
+    return groups.fillna('').astype(str)
 
 
 @csv_file_cache
