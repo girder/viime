@@ -169,7 +169,7 @@ v-layout.upload-component(column, fill-height)
           v-card
             v-card-title
               h3.headline Examples
-            v-card-text
+            v-card-text.pa-0
               sample-browser(@close="browseSamples = false")
             v-card-actions
               v-spacer

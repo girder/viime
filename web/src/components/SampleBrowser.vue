@@ -41,22 +41,22 @@ export default {
     v-progress-circular(indeterminate, color="primary")
   v-alert(:value="!loading && samples.length === 0", type="info")
     | No Sample Data Sources available
-  v-expansion-panel(v-if="!loading && samples.length > 0", :value="0")
+  v-expansion-panel.elevation-0(v-if="!loading && samples.length > 0", :value="0")
     v-expansion-panel-content.group(v-for="group,index in samples", :key="group.name",
         :readonly="samples.length === 1")
       template(#header)
         span {{ group.name }}
         v-btn.import(color="primary", @click="importGroup(group.name, $event)") Import All
 
-      v-card
-        v-card-text
+      v-card(color="primary lighten-5")
+        v-card-text.pa-4
           | {{ group.description || 'no description available' }}
 
-      v-expansion-panel
+      v-expansion-panel.pb-3.px-3
         v-expansion-panel-content.file(v-for="file in group.files", :key="file.id")
           template(#header)
             span {{ file.name }}
-            v-btn.import(color="primary", @click="importSample(file.id, $event)") Import
+            v-btn.import(color="primary", @click="importSample(file.id, $event)", flat) Import
 
           v-card
             v-card-text
