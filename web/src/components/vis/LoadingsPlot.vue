@@ -9,8 +9,6 @@
       g.label.y(style="opacity: 0")
         text y
       g.crosshairs
-        line.horz
-        line.vert
       g.plot
   .tooltip(ref="tooltip")
 </template>
@@ -105,34 +103,18 @@ export default {
         color: 'gray',
         width: '2px',
       };
-      if (showCrosshairs) {
-        svg.select('g.crosshairs')
-          .select('line.horz')
-          .style('display', null)
-          .attr('x1', this.scaleX(0) - 10)
-          .attr('x2', this.scaleX(0) + 10)
-          .attr('y1', this.scaleY(0))
-          .attr('y2', this.scaleY(0))
+      svg
+        .select('g.crosshairs')
+        .selectAll('line')
+        .data([{ x: 10, y: 0 }, { x: 0, y: 10 }])
+        .join(enter => enter.append('line')
           .attr('stroke', crosshair.color)
-          .attr('stroke-width', crosshair.width);
-
-        svg.select('g.crosshairs')
-          .select('line.vert')
-          .style('display', null)
-          .attr('x1', this.scaleX(0))
-          .attr('x2', this.scaleX(0))
-          .attr('y1', this.scaleY(0) - 10)
-          .attr('y2', this.scaleY(0) + 10)
-          .attr('stroke', crosshair.color)
-          .attr('stroke-width', crosshair.width);
-      } else {
-        svg.select('g.crosshairs')
-          .select('line.horz')
-          .style('display', 'none');
-        svg.select('g.crosshairs')
-          .select('line.vert')
-          .style('display', 'none');
-      }
+          .attr('stroke-width', crosshair.width))
+        .style('display', showCrosshairs ? null : 'none')
+        .attr('x1', d => this.scaleX(0) - d.x)
+        .attr('x2', d => this.scaleX(0) + d.x)
+        .attr('y1', d => this.scaleY(0) - d.y)
+        .attr('y2', d => this.scaleY(0) + d.y);
 
       svg.select('g.plot')
         .selectAll('circle')
