@@ -90,7 +90,7 @@ v-app.viime-landing
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
               v-card(color="transparent", flat, pa-0)
-                v-img(:src="images.ingestion", :aspect-ratio="750 / 450",
+                v-img.elevation-3(:src="images.ingestion", :aspect-ratio="750 / 450",
                     :srcset="srcset.ingestion")
             v-flex.capability-col(px-3, py-2, sm8)
               v-card(color="transparent", flat)
@@ -106,7 +106,7 @@ v-app.viime-landing
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
               v-card(color="transparent", flat, pa-0)
-                v-img(:src="images.feedback", :aspect-ratio="750 / 450",
+                v-img.elevation-3(:src="images.feedback", :aspect-ratio="750 / 650",
                     :srcset="srcset.feedback")
             v-flex.capability-col(px-3, py-2, sm8)
               v-card(color="transparent", flat)
@@ -121,7 +121,7 @@ v-app.viime-landing
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
               v-card(color="transparent", flat, pa-0)
-                v-img(:src="images.integration", :aspect-ratio="750 / 450",
+                v-img.elevation-3(:src="images.integration", :aspect-ratio="750 / 450",
                     :srcset="srcset.integration")
             v-flex.capability-col(px-3, py-2, sm8)
               v-card(color="transparent", flat)
@@ -136,7 +136,7 @@ v-app.viime-landing
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
               v-card(color="transparent", flat, pa-0)
-                v-img(:src="images.analysis", :aspect-ratio="750 / 450",
+                v-img.elevation-3(:src="images.analysis", :aspect-ratio="750 / 450",
                     :srcset="srcset.analysis")
             v-flex.capability-col(px-3, py-2, sm8)
               v-card(color="transparent", flat)
@@ -151,7 +151,7 @@ v-app.viime-landing
           v-layout(align-center, pa-0, row, wrap)
             v-flex.capability-col(px-3, py-2, sm4)
               v-card(color="transparent", flat, pa-0)
-                v-img(:src="images.visualization", :aspect-ratio="750 / 450",
+                v-img.elevation-3(:src="images.visualization", :aspect-ratio="750 / 450",
                     :srcset="srcset.visualization")
             v-flex.capability-col(px-3, py-2, sm8)
               v-card(color="transparent", flat)
