@@ -138,6 +138,46 @@ export default {
       edges.select('text')
         .attr('transform', d => `translate(${t.applyX((d.source.x + d.target.x) / 2)},${t.applyY((d.source.y + d.target.y) / 2)})`);
     },
+    tick250() {
+      const sim = this.simulation.alpha(1).restart().stop();
+
+      if (!window.requestIdleCallback) {
+        sim.tick(250); // forward 250 ticks
+        this.tick();
+        this.startTicker();
+        return;
+      }
+
+      let initialTicks = 250;
+
+      const finishStatic = () => {
+        window.requestAnimationFrame(() => {
+          this.tick();
+          this.startTicker();
+        });
+      };
+      const tickStatic = (deadline) => {
+        let oneTickDone = false;
+        while ((!oneTickDone || deadline.timeRemaining() > 0) && initialTicks > 0) {
+          initialTicks -= 1;
+          sim.tick(1);
+          oneTickDone = true;
+        }
+
+        if (initialTicks > 0) {
+          window.requestIdleCallback(tickStatic, {
+            timeout: 250, // ms
+          });
+        } else {
+          finishStatic();
+        }
+      };
+
+      window.requestIdleCallback(tickStatic, {
+        timeout: 250, // ms
+      });
+    },
+
     updateBounds() {
       const { simulation } = this;
 
@@ -183,8 +223,11 @@ export default {
         node.fy = t.invertY(d3Event.y);
       }
 
-      function dragstarted() {
-        select(this).raise();
+      function dragstarted(d) {
+        select(this)
+          .raise()
+          .classed('pinned', true);
+        this.parentElement.querySelector('title').textContent = `${d.id} (pinned, click to unpin)`;
         stopTicker();
         simulation.alphaTarget(0.3).restart();
         dragged();
@@ -193,6 +236,9 @@ export default {
       function resetPinned(d) {
         delete d.fx;
         delete d.fy;
+        select(this)
+          .classed('pinned', false);
+        this.parentElement.querySelector('title').textContent = d.id;
         stopTicker();
         simulation.restart();
       }
@@ -230,9 +276,7 @@ export default {
       simulation.force('link').distance(this.linkDistance);
       simulation.force('link').links(localEdges);
 
-      simulation.alpha(1).restart().stop().tick(250); // forward 250 ticks
-      this.tick();
-      this.startTicker();
+      this.tick250();
     },
     onResize() {
       const bb = this.$el.getBoundingClientRect();
@@ -271,6 +315,11 @@ export default {
 .nodes >>> circle {
   cursor: grab;
   fill: steelblue;
+}
+
+.nodes >>> circle.pinned {
+  stroke-width: 2;
+  stroke: black;
 }
 
 .nodes >>> text {
