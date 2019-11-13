@@ -1,4 +1,5 @@
 <script>
+import BrowserSupportBanner from './BrowserSupportBanner.vue';
 import HighlightImage from './HighlightImage.vue';
 import FeedbackButton from './FeedbackButton.vue';
 import analysis_05x from '../assets/capabilities/analysis_05x.png';
@@ -19,6 +20,7 @@ import visualization_2x from '../assets/capabilities/visualization_2x.png';
 
 export default {
   components: {
+    BrowserSupportBanner,
     HighlightImage,
     FeedbackButton,
   },
@@ -48,6 +50,7 @@ export default {
 </script>
 <template lang="pug">
 v-app.viime-landing
+  browser-support-banner
   v-toolbar.main-toolbar.darken-4.py-2(dark, dense, color="transparent", flat)
     v-toolbar-title(style="height: 100%; padding: 10px 0;")
       img(src="../assets/viime_logo_ko.svg", alt="VIIME", height="100%")
