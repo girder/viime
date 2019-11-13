@@ -34,6 +34,22 @@ import 'd3-transition';
 
 import { axisPlot } from './mixins/axisPlot';
 
+function domain(arr) {
+  let min = Number.POSITIVE_INFINITY;
+  let max = Number.NEGATIVE_INFINITY;
+  arr.forEach((v) => {
+    if (v < min) {
+      min = v;
+    }
+    if (v > max) {
+      max = v;
+    }
+  });
+  // return [min, max];
+  const amax = Math.max(Math.abs(max), Math.abs(min));
+  return [-amax, amax];
+}
+
 export default {
   mixins: [
     axisPlot,
@@ -73,6 +89,41 @@ export default {
   computed: {
     pointsInternal() {
       return this.points || [];
+    },
+    pcXRange() {
+      const {
+        pointsInternal,
+        pcX,
+      } = this;
+      const arr = pointsInternal.map(d => d.loadings[pcX - 1]);
+      if (arr.length === 0) {
+        return [-1, 1];
+      }
+      return domain(arr);
+    },
+    pcYRange() {
+      const {
+        pointsInternal,
+        pcY,
+      } = this;
+      const arr = pointsInternal.map(d => d.loadings[pcY - 1]);
+      if (arr.length === 0) {
+        return [-1, 1];
+      }
+      return domain(arr);
+    },
+    pcRange() {
+      const x = this.pcXRange;
+      const y = this.pcYRange;
+      return [Math.min(x[0], y[0]), Math.max(x[1], y[1])];
+    },
+    xrange() {
+      // return [-1, 1];
+      return this.pcRange;
+    },
+    yrange() {
+      // return [-1, 1];
+      return this.pcRange;
     },
   },
   methods: {
