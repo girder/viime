@@ -15,7 +15,7 @@ export default {
       selectedRules: [
         () => this.selected.length >= 2 || 'At least two data sources are required',
       ],
-      name: 'Unnamed Merged Dataset',
+      name: '',
       description: '',
       selected: [],
       method: DEFAULT_MERGE_METHOD,
@@ -31,6 +31,10 @@ export default {
         description: d.description,
         valid: this.$store.getters.valid(d.id),
       }));
+    },
+    selectedDatasets() {
+      const lookup = new Map(this.datasets.map(ds => [ds.id, ds]));
+      return this.selected.map(id => lookup.get(id));
     },
     mergeInfo() {
       const selected = this.datasets.filter(d => this.selected.includes(d.id)
@@ -59,7 +63,15 @@ export default {
         w: (intersection.length / union.size) < 0.8,
       };
     },
-
+  },
+  watch: {
+    selectedDatasets(newValue, oldValue) {
+      const oldName = oldValue.map(d => d.name).join(' + ');
+      if (this.name !== oldName) {
+        return;
+      }
+      this.name = newValue.map(d => d.name).join(' + ');
+    },
   },
   methods: {
     rank(dataset) {
