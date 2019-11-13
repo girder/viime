@@ -30,6 +30,7 @@ export default {
         'px-4': this.$vuetify.breakpoint.smAndDown,
         'px-0': this.$vuetify.breakpoint.mdAndUp,
       },
+      diclaimerOpen: false,
       images: {
         analysis,
         feedback,
@@ -231,12 +232,35 @@ v-app.viime-landing
               | View on GitHub
 
   .footer
-    p.ma-0.pa-3 &copy; 2019 Kitware, Inc. |&nbsp;
+    p.ma-0.pa-3
+      | &copy; 2019 Kitware, Inc. |&nbsp;
+
       a(href="https://github.com/girder/viime/blob/master/LICENSE",
           target="_blank", rel="noopener noreferrer") Apache License 2.0
+
       | &nbsp;|&nbsp;
+
       a(href="https://www.kitware.com/privacy",
           target="_blank", rel="noopener noreferrer") Privacy Notice
+
+      | &nbsp;|&nbsp;
+
+      v-dialog(v-model="diclaimerOpen", max-width="33vw")
+        template(#activator="{ on }")
+          a(v-on="on", href="#/") Disclaimer
+        v-card
+          v-card-title
+            h3.headline Diclaimer
+          v-card-text
+            | This is beta software.
+            | As such, please use at your own risk and validate any analysis result
+            | externally before publication.
+            | For research purposes only. Due to current technical limitations,
+            | data may be stored on our servers
+            | even after data is deleted from the client application.
+          v-card-actions
+            v-spacer
+            v-btn(@click="diclaimerOpen = false") Ok
 </template>
 
  <style lang="scss" scoped>
