@@ -57,6 +57,15 @@ export const heatmapLayouts = [
   { label: 'Square Matrix', value: 'squareMatrix' },
 ];
 
+/**
+ * changes the `wrapper.hovered` value to a set of the given `arr` if needed
+ * if needed ... if the value is different than the current value
+ * this will avoid  unnecessary updates since Vue cannot handle Sets natively
+ *
+ * @param {{hovered: Set<T>}} wrapper wrapper object to update
+ * @param {T[] | null} arr values to set
+ * @returns {boolean} whether the value has changed
+ */
 function changeHovered(wrapper, arr) {
   if (!arr) {
     if (wrapper.hovered.size > 0) {
