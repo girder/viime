@@ -121,18 +121,20 @@ export default {
       const extras = this.extraRowHeaders.map(() => '');
 
       if (!this.transpose && validatedSampleMetaData) {
-        return validatedSampleMetaData.columnNames.map((text, i) => ({
-          index: i,
+        const rows = validatedSampleMetaData.data;
+        return validatedSampleMetaData.columnNames.map((text, j) => ({
+          index: j,
           header: { text, clazz: ['type-metadata'] },
-          values: [...extras, ...validatedSampleMetaData.data.map(row => row[i])],
+          values: [...extras, ...this.filteredRowNames.map(({ i }) => rows[i][j])],
         }));
       }
 
       if (this.transpose && validatedMeasurementsMetaData) {
+        const rows = validatedMeasurementsMetaData.data;
         return validatedMeasurementsMetaData.rowNames.map((text, i) => ({
           index: i,
           header: { text, clazz: ['type-metadata'] },
-          values: [...extras, ...validatedMeasurementsMetaData.data[i]],
+          values: [...extras, ...this.filteredColumnNames.map(({ i: j }) => rows[i][j])],
         }));
       }
       return [];
