@@ -284,6 +284,7 @@ export default {
       this.labels = labels;
 
       // Draw the C3 chart.
+      this.chart.unload();
       this.chart.load({
         columns,
         xs,
