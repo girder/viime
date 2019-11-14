@@ -147,7 +147,8 @@ export default {
 
 <template lang="pug">
 v-layout.impute-component(row, fill-height)
-  v-navigation-drawer.primary.darken-3(permanent, style="width: 200px; min-width: 200px;")
+  v-navigation-drawer.primary.darken-3(permanent, style="width: 200px; min-width: 200px;",
+      touchless, disable-resize-watcher, stateless)
     v-layout(column, fill-height, v-if="dataset && ready")
       v-alert(:value="noMissing", color="transparent", :style="{border: 'none'}")
         | No missing values

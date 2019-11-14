@@ -52,7 +52,8 @@ export default {
 <template lang="pug">
 v-layout.pretreatment-component(row, fill-height)
 
-  v-navigation-drawer.navigation(floating, permanent, style="min-width: 220px; width: 220px;")
+  v-navigation-drawer.navigation(floating, permanent, style="min-width: 220px; width: 220px;",
+      touchless, disable-resize-watcher, stateless)
     v-list
       v-list-group.root-level(v-for="(dataset, index) in datasets",
           :key="dataset.id",
