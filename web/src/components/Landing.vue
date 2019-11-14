@@ -70,7 +70,7 @@ v-app.viime-landing
             h1 Combine your metabolomics data. Interact with the results.
           v-card-text.banner-text.px-0
             p.primary--text.text--lighten-2
-              span.white--text VIIME (Visualization and Integration of Metabolomics Experiments)
+              span.white--text VIIME (VIsualization and Integration of Metabolomics Experiments)
               |  provides a new workflow for metabolomics research by offering state-of-the-art
               | integration algorithms and visualizations.
           v-card-actions.banner-buttons.px-0
@@ -369,10 +369,10 @@ v-app.viime-landing
 }
 .scroll-down {
   align-items: flex-end;
-  bottom: 60px;
-  color: var(--v-primary-darken1);
+  bottom: 50px;
+  color: var(--v-primary-lighten2);
   display: inline-flex;
-  font-size: 12px;
+  font-size: 18px;
   left: 75px;
   line-height: 1.1em;
   position: absolute;
@@ -381,8 +381,8 @@ v-app.viime-landing
     width: 15px;
     span {
       animation: animate 2.2s infinite;
-      border-bottom: 2px solid #fff;
-      border-right: 2px solid #fff;
+      border-bottom: 2px solid var(--v-primary-lighten2);
+      border-right: 2px solid var(--v-primary-lighten2);
       display: block;
       height: 10px;
       margin: -10px;
@@ -438,6 +438,10 @@ v-app.viime-landing
 
 .footer {
   text-align: center;
+
+  a {
+    color: rgba(0,0,0,0.87);
+  }
 }
 
 @keyframes animate {
@@ -445,11 +449,11 @@ v-app.viime-landing
     opacity: 0;
   }
   50% {
-    opacity: .2;
+    opacity: 0.5;
     transform: rotate(45deg) translate(30px, 30px);
   }
   80% {
-    opacity: .4;
+    opacity: 1;
     transform: rotate(45deg) translate(30px, 30px);
   }
   100% {
