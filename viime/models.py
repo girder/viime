@@ -105,7 +105,8 @@ class CSVFile(db.Model):
     sample_group = db.Column(db.String, nullable=True)
     sample_group_obj = relationship('SampleGroup', backref='files',
                                     primaryjoin='foreign(CSVFile.sample_group) == '
-                                                'remote(SampleGroup.name)')
+                                                'remote(SampleGroup.name)',
+                                    order_by='CSVFile.name')
 
     @property
     def table_validation(self):
@@ -395,6 +396,7 @@ class CSVFileSchema(BaseSchema):
 class SampleGroup(db.Model):
     name = db.Column(db.String, primary_key=True)
     description = db.Column(db.String, nullable=True)
+    order = db.Column(db.Integer, nullable=True)
     files: List[CSVFile]
 
 

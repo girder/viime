@@ -90,7 +90,7 @@ def dump_info(csv: CSVFile):
 
 def list_samples():
     schema = SampleGroupSchema()
-    return schema.dump(SampleGroup.query.all(), many=True)
+    return schema.dump(SampleGroup.query.order_by(SampleGroup.order).all(), many=True)
 
 
 _validation_keys = ['normalization', 'normalization_argument', 'scaling',
@@ -125,17 +125,19 @@ def dump_group(group: SampleGroup):
     return schema.dump(group)
 
 
-def change_group(group: str, description: Optional[str]):
+def change_group(group: str, description: Optional[str], order: Optional[int]):
     sample_group = SampleGroup.query.get(group)
     if not sample_group:
-        sample_group = SampleGroup(name=group, description=description)
+        sample_group = SampleGroup(name=group, description=description, order=order)
     else:
         sample_group.description = description
+        sample_group.order = order
     db.session.add(sample_group)
     return sample_group
 
 
-def _ensure_sample_group(name: Optional[str] = None, description: Optional[str] = None):
+def _ensure_sample_group(name: Optional[str] = None, description: Optional[str] = None,
+                         order: Optional[int] = None):
     if not name:
         return None
 
@@ -143,9 +145,13 @@ def _ensure_sample_group(name: Optional[str] = None, description: Optional[str] 
     if not sample_group:
         sample_group = SampleGroup(name=name, description=description)
         db.session.add(sample_group)
-    elif description:
-        sample_group.description = description
-        db.session.add(sample_group)
+    else:
+        if description:
+            sample_group.description = description
+            db.session.add(sample_group)
+        if order is not None:
+            sample_group.order = order
+            db.session.add(sample_group)
     return sample_group.name
 
 
@@ -196,8 +202,8 @@ def upload(json: Dict[str, Any]):
 
 
 def enable_sample(csv: CSVFile, group: Optional[str] = 'Default',
-                  description: Optional[str] = None):
-    csv.sample_group = _ensure_sample_group(group or 'Default', description)
+                  description: Optional[str] = None, order: Optional[int] = None):
+    csv.sample_group = _ensure_sample_group(group or 'Default', description, order)
 
     return csv
 
