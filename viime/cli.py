@@ -97,19 +97,20 @@ def dump_samples(url: str, dir: str, local: bool = False, ids: Optional[List[str
 @click.option('--local', is_flag=True, help='instead of the url use the local instance')
 @click.option('--group', default='Default', show_default=True, help='sample group name')
 @click.option('--description', default=None, show_default=True, help='sample group description')
+@click.option('--order', default=None, type=int, help='sample group order')
 @click.argument('ids', nargs=-1)
 def mark_sample(url: str, group: str, description: Optional[str], ids: List[str],
-                local: bool = False):
+                local: bool = False, order: Optional[int] = None):
     if local:
         with create_app().app_context():
             for id in ids:
-                csv = samples.enable_sample(CSVFile.query.get(id), group, description)
+                csv = samples.enable_sample(CSVFile.query.get(id), group, description, order)
                 db.session.add(csv)
             db.session.commit()
     else:
         click.echo(f'using: {url}{api_prefix}')
         for id in ids:
-            data = dict(group=group, description=description)
+            data = dict(group=group, description=description, order=order)
             requests.put(f'{url}{api_prefix}/{id}', json=data).raise_for_status()
 
 
@@ -135,15 +136,16 @@ def unmark_sample(url: str, ids: List[str], local: bool = False):
 @click.option('--url', default='http://localhost:8080', show_default=True,
               help='VIIME instance')
 @click.option('--local', is_flag=True, help='instead of the url use the local instance')
+@click.option('--order', default=None, type=int, help='sample group order')
 @click.argument('group')
 @click.argument('description')
 def change_group(url: str, group: str, description: Optional[str],
-                 local: bool = False):
+                 local: bool = False, order: Optional[int] = None):
     if local:
         with create_app().app_context():
-            samples.change_group(group, description)
+            samples.change_group(group, description, order)
             db.session.commit()
     else:
         click.echo(f'using: {url}{group_api_prefix}')
-        data = dict(description=description)
+        data = dict(description=description, order=order)
         requests.patch(f'{url}{group_api_prefix}/{group}', json=data).raise_for_status()
