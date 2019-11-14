@@ -90,7 +90,8 @@ def dump_info(csv: CSVFile):
 
 def list_samples():
     schema = SampleGroupSchema()
-    return schema.dump(SampleGroup.query.order_by(SampleGroup.order).all(), many=True)
+    return schema.dump(SampleGroup.query.order_by(SampleGroup.order, SampleGroup.name).all(),
+                       many=True)
 
 
 _validation_keys = ['normalization', 'normalization_argument', 'scaling',
