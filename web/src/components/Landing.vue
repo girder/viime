@@ -70,7 +70,7 @@ v-app.viime-landing
             h1 Combine your metabolomics data. Interact with the results.
           v-card-text.banner-text.px-0
             p.primary--text.text--lighten-2
-              span.white--text VIIME (Visualization and Integration of Metabolomics Experiments)
+              span.white--text VIIME (VIsualization and Integration of Metabolomics Experiments)
               |  provides a new workflow for metabolomics research by offering state-of-the-art
               | integration algorithms and visualizations.
           v-card-actions.banner-buttons.px-0
