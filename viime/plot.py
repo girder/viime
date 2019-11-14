@@ -1,5 +1,5 @@
 from numpy import sqrt
-from pandas import pd
+import pandas as pd
 from sklearn.decomposition import PCA
 
 

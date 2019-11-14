@@ -6,10 +6,9 @@ from collections import namedtuple
 from typing import List, Optional
 
 from marshmallow import fields, post_dump, Schema, validate
-from pandas import Dataframe, Index, Series, to_numeric
+from pandas import DataFrame, Index, Series, to_numeric
 
 from viime.cache import region
-from viime.models import CSVFile
 
 SEVERITY_VALUES = ['error', 'warning']
 CONTEXT_VALUES = ['table', 'column', 'row']
@@ -153,7 +152,7 @@ class ValidationSchema(Schema):
         return {k: v for k, v in data.items() if v is not None}
 
 
-def get_validation_list(csv_file: CSVFile) -> List[ValidationTuple]:
+def get_validation_list(csv_file: 'CSVFile') -> List[ValidationTuple]:
     errors = get_fatal_index_errors(csv_file)
 
     if not errors:
@@ -162,7 +161,7 @@ def get_validation_list(csv_file: CSVFile) -> List[ValidationTuple]:
     return errors
 
 
-def get_missing_index_errors(csv_file: CSVFile) -> List[ValidationTuple]:
+def get_missing_index_errors(csv_file: 'CSVFile') -> List[ValidationTuple]:
     errors: List[ValidationTuple] = []
     if csv_file.key_column_index is None:
         errors.append(PrimaryKeyMissing())
@@ -174,7 +173,7 @@ def get_missing_index_errors(csv_file: CSVFile) -> List[ValidationTuple]:
 
 
 @region.cache_on_arguments()
-def get_fatal_index_errors(csv_file: CSVFile) -> List[ValidationTuple]:
+def get_fatal_index_errors(csv_file: 'CSVFile') -> List[ValidationTuple]:
     errors = get_missing_index_errors(csv_file)
     if not errors:
         errors = get_invalid_index_errors(csv_file)
@@ -193,14 +192,14 @@ def check_valid_index(series: Series) -> Optional[str]:
     return None
 
 
-def check_valid_groups(groups: Dataframe) -> Optional[str]:
+def check_valid_groups(groups: DataFrame) -> Optional[str]:
     index = Index(groups.iloc[:, 0])
     if index.hasnans or '' in index:
         return 'Contains empty values'
     return None
 
 
-def get_invalid_index_errors(csv_file: CSVFile) -> List[ValidationTuple]:
+def get_invalid_index_errors(csv_file: 'CSVFile') -> List[ValidationTuple]:
     from viime.models import TABLE_COLUMN_TYPES, TABLE_ROW_TYPES
 
     errors: List[ValidationTuple] = []
@@ -223,7 +222,7 @@ def get_invalid_index_errors(csv_file: CSVFile) -> List[ValidationTuple]:
     return errors
 
 
-def get_non_numeric_errors(csv_file: CSVFile) -> List[ValidationTuple]:
+def get_non_numeric_errors(csv_file: 'CSVFile') -> List[ValidationTuple]:
     errors: List[ValidationTuple] = []
     raw_table = csv_file.raw_measurement_table
 
@@ -258,14 +257,14 @@ def _count_non_numeric(value) -> int:
 
 
 @region.cache_on_arguments()
-def get_warnings(csv_file: CSVFile) -> List[ValidationTuple]:
+def get_warnings(csv_file: 'CSVFile') -> List[ValidationTuple]:
     warnings = get_non_numeric_warnings(csv_file)
     warnings.extend(get_missing_percent_warnings(csv_file))
     warnings.extend(get_low_variance_warnings(csv_file))
     return warnings
 
 
-def get_non_numeric_warnings(csv_file: CSVFile) -> List[ValidationTuple]:
+def get_non_numeric_warnings(csv_file: 'CSVFile') -> List[ValidationTuple]:
     warnings: List[ValidationTuple] = []
     non_numeric_count = int(csv_file.raw_measurement_table.applymap(_count_non_numeric).sum().sum())
     if non_numeric_count > 0:
@@ -276,7 +275,7 @@ def get_non_numeric_warnings(csv_file: CSVFile) -> List[ValidationTuple]:
     return warnings
 
 
-def get_missing_percent_warnings(csv_file: CSVFile) -> List[ValidationTuple]:
+def get_missing_percent_warnings(csv_file: 'CSVFile') -> List[ValidationTuple]:
     table = csv_file.raw_measurement_table
     groups = csv_file.groups
 
@@ -301,7 +300,7 @@ def get_missing_percent_warnings(csv_file: CSVFile) -> List[ValidationTuple]:
     return warnings
 
 
-def get_low_variance_warnings(csv_file: CSVFile) -> List[ValidationTuple]:
+def get_low_variance_warnings(csv_file: 'CSVFile') -> List[ValidationTuple]:
     table = csv_file.raw_measurement_table
     warnings: List[ValidationTuple] = []
 

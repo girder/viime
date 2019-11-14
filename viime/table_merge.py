@@ -1,7 +1,7 @@
 """
 This module contains methods related to mergind dataset
 """
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 import pandas as pd
 
@@ -10,10 +10,12 @@ from .models import TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     ValidatedMetaboliteTable
 from .opencpu import opencpu_request
 
+MergeResult = Tuple[pd.DataFrame, List[Dict[str, Any]], List[Dict[str, Any]]]
+
 
 def _merge_impl(validated_tables: List[ValidatedMetaboliteTable],
                 transformer: Optional[Callable[[pd.DataFrame, int],
-                                      pd.DataFrame]] = None):
+                                               pd.DataFrame]] = None) -> MergeResult:
     used_column_names: Set[str] = set()
     tables: List[pd.DataFrame] = []
     column_types: List[Dict[str, Any]] = [
@@ -109,5 +111,8 @@ def multi_block_merge(validated_tables: List[ValidatedMetaboliteTable]):
     return _merge_impl(validated_tables, _multi_block_transformer)
 
 
-merge_methods = dict(simple=simple_merge, clean=clean_pca_merge,
-                     multi_block=multi_block_merge)
+merge_methods: Dict[str, Callable[[List[ValidatedMetaboliteTable]], MergeResult]] = {
+    'simple': simple_merge,
+    'clean': clean_pca_merge,
+    'multi_block': multi_block_merge
+}
