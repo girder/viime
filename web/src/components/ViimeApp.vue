@@ -1,8 +1,7 @@
 <template lang="pug">
 v-app.viime-app
   browser-support-banner
-  v-toolbar.darken-3(dense, dark, color="primary")
-    v-toolbar-side-icon.logo(:to="{name: 'Root'}") V
+  v-toolbar.main-toolbar.darken-3(dense, dark, color="primary")
     v-breadcrumbs(:items="breadcrumbs", divider="»")
       template(#item="props")
         v-breadcrumbs-item(:to="props.item.to", exact) {{props.item.text}}
@@ -32,6 +31,10 @@ export default {
       return [
         {
           text: 'VIIME',
+          to: { name: 'Root' },
+        },
+        {
+          text: 'Data',
           to: { name: 'Upload Data' },
         },
         ...this.$route.matched.filter(route => !route.meta.hidden).map((route) => {
@@ -52,16 +55,19 @@ export default {
 .viime-app {
   min-width: 900px;
 
-  .logo.v-btn--icon {
-    font-size: 150%;
-    color: transparent;
-    background: url("../assets/favicon.svg") no-repeat center center;
-    background-size: 80%;
-    border-radius: unset;
+  .main-toolbar > .v-toolbar__content {
+    padding-left: 2px;
   }
 
   .v-breadcrumbs li {
     font-size: 20px;
+
+    &:first-of-type {
+      color: transparent;
+      background: url("../assets/viime_logo_ko.svg") no-repeat center center;
+      background-size: auto 22px;
+      width: 65px;
+    }
 
     > a {
       color: inherit
