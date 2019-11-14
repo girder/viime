@@ -45,7 +45,6 @@ function domain(arr) {
       max = v;
     }
   });
-  // return [min, max];
   const amax = Math.max(Math.abs(max), Math.abs(min));
   return [-amax, amax];
 }
@@ -118,11 +117,9 @@ export default {
       return [Math.min(x[0], y[0]), Math.max(x[1], y[1])];
     },
     xrange() {
-      // return [-1, 1];
       return this.pcRange;
     },
     yrange() {
-      // return [-1, 1];
       return this.pcRange;
     },
   },
