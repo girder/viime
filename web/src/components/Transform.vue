@@ -87,7 +87,8 @@ export default {
 
 <template lang="pug">
 v-layout.transform-component(row, fill-height)
-  v-navigation-drawer.primary.darken-3(permanent, style="width: 200px; min-width: 200px;")
+  v-navigation-drawer.primary.darken-3(permanent, style="width: 200px; min-width: 200px;",
+      touchless, disable-resize-watcher, stateless)
     v-layout(column, fill-height, v-if="dataset && ready")
       v-toolbar.primary.darken-3(dark, flat, dense, :card="false")
         v-toolbar-title Normalize

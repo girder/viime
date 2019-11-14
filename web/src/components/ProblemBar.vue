@@ -56,7 +56,8 @@ export default {
 
 <template lang="pug">
 v-navigation-drawer.primary.darken-3.problem-bar-component(v-if="dataset && problemData",
-    touchless, permanent, floating, style="width: 230px; min-width: 220px;")
+    permanent, style="width: 230px; min-width: 220px;",
+    touchless, disable-resize-watcher, stateless)
 
   v-layout(column, fill-height)
     v-btn(large, color="error", @click="maskAll") Mask all
