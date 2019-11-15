@@ -9,9 +9,9 @@ export interface IOptionGroup {
 
 @Component
 export default class FilterOption extends Vue {
-   @Prop({
-     default: '',
-   })
+  @Prop({
+    default: '',
+  })
   readonly title!: string;
 
   @Prop({
