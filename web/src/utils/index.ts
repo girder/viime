@@ -1,19 +1,21 @@
 import papa from 'papaparse';
 import { hsl } from 'd3-color';
-import { validationMeta } from './constants';
+import { validationMeta, IValidationMetaInfo } from './constants';
 import RangeList from './rangelist';
 import SessionStore from './sessionStore';
+import { ITableColumn } from '@/store/model';
 
 /**
  * A function to group an array of objects
  * by a given key
  * https://stackoverflow.com/questions/14446511/most-efficient-method-to-groupby-on-a-array-of-objects
  */
-function groupBy(xs, key) {
+function groupBy<T>(xs: T[], key: keyof T) {
   return xs.reduce((rv, x) => {
-    (rv[x[key]] = rv[x[key]] || []).push(x);
+    const v = x[key] as unknown as string;
+    (rv[v] = rv[v] || []).push(x);
     return rv;
-  }, {});
+  }, {} as { [key: string]: T[]});
 }
 
 /**
@@ -21,7 +23,7 @@ function groupBy(xs, key) {
  * where A = 1, Z = 26, AA = 27, and 0 cannot be encoded.
  * @param {Number} dec a decimal number to convert
  */
-function base26Converter(dec) {
+function base26Converter(dec: number) {
   if (dec < 1) {
     throw new Error('Numbers below 1 cannot be encoded.');
   }
@@ -38,7 +40,7 @@ function base26Converter(dec) {
   return str;
 }
 
-function convertCsvToRows(csvstring) {
+function convertCsvToRows(csvstring: string) {
   if (!csvstring) {
     return { data: [] };
   }
@@ -46,7 +48,28 @@ function convertCsvToRows(csvstring) {
   return { data: data.slice(0, data.length - 1) };
 }
 
-function parsePandasDataFrame(toSplitDictResult, baseDataFrame) {
+export interface IToSplitDictResult {
+  columns?: string[];
+  index?: string[];
+  columnMetaData?: any[];
+  rowMetaData?: any[];
+  data: any[][];
+}
+
+export interface IMetaData {
+  subtype: string | null;
+  [key: string]: any;
+}
+
+export interface IDataFrame<T> {
+  columnNames: string[];
+  columnMetaData: IMetaData[];
+  rowNames: string[];
+  rowMetaData: IMetaData[];
+  data: T[][];
+}
+
+function parsePandasDataFrame<T>(toSplitDictResult: IToSplitDictResult, baseDataFrame: IDataFrame<T>) {
   if (!toSplitDictResult) {
     return {
       columnNames: [],
@@ -57,7 +80,7 @@ function parsePandasDataFrame(toSplitDictResult, baseDataFrame) {
     };
   }
 
-  const dummyMeta = (arr) => {
+  const dummyMeta = (arr?: string[]) => {
     if (!arr) {
       return null;
     }
@@ -73,13 +96,22 @@ function parsePandasDataFrame(toSplitDictResult, baseDataFrame) {
   };
 }
 
+export interface IValidationError extends IValidationMetaInfo {
+  severity: boolean;
+  type: string;
+  context: string;
+  title: string;
+  column_index: number;
+  data: {index: number, info: any, name: string}[]
+}
+
 /**
  * A function to clean up server validation messages into
  * the schema this applicaiton expects.
  * @param {Array<Object>} errors raw response from api
  * @param {Array<Object} columns sorted response from api
  */
-function mapValidationErrors(errors, columns) {
+function mapValidationErrors(errors: any[], columns: ITableColumn[]) {
   const grouped = groupBy(errors, 'type');
   const keys = Object.keys(grouped);
   return keys.map((errorType) => {
@@ -93,13 +125,14 @@ function mapValidationErrors(errors, columns) {
       column_index,
       data,
     } = errorsOfType[0];
-    const error = {
+    const error: IValidationError = {
       severity,
       type,
       context,
       title,
       column_index,
       ...errorMeta,
+      data: [],
     };
     if (errorMeta.multi === true) {
       error.description = errorMeta.description;
@@ -117,7 +150,7 @@ function mapValidationErrors(errors, columns) {
   });
 }
 
-function textColor(backgroundColor) {
+function textColor(backgroundColor: string | null) {
   if (!backgroundColor) {
     return 'black';
   }
@@ -125,9 +158,9 @@ function textColor(backgroundColor) {
   return c.l < 0.5 ? 'white' : 'black';
 }
 
-function formatter(v) {
-  const nf = n => (n.toPrecision(6).length <= 10 ? n.toPrecision(6) : n.toExponential(4));
-  return typeof v === 'number' || (v && !Number.isNaN(+v)) ? nf(parseFloat(v)) : v;
+function formatter(v: string | number) {
+  const nf = (n: number) => (n.toPrecision(6).length <= 10 ? n.toPrecision(6) : n.toExponential(4));
+  return typeof v === 'number' || (v && !Number.isNaN(+v)) ? nf(typeof v === 'number' ? v : parseFloat(v)) : v;
 }
 
 export {

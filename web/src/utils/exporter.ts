@@ -5,11 +5,11 @@ import iconFont from '!url-loader?limit=undefined!@mdi/font/fonts/materialdesign
 import { unparse } from 'papaparse';
 
 
-function isC3(node) {
+function isC3(node: SVGSVGElement) {
   return node.querySelector('.c3-chart') != null;
 }
 
-function fixC3SVG(node) {
+function fixC3SVG(node: SVGSVGElement) {
   // See
   // https://stackoverflow.com/questions/37701361/exporting-c3-js-line-charts-to-png-images-does-not-work.
   node.insertAdjacentHTML('afterbegin', `<style>
@@ -32,7 +32,7 @@ function fixC3SVG(node) {
   return node;
 }
 
-function findScopedAttr(elem) {
+function findScopedAttr(elem: Element) {
   let names = [];
   if (typeof elem.getAttributeNames === 'function') {
     names = Array.from(elem.getAttributeNames());
@@ -43,13 +43,19 @@ function findScopedAttr(elem) {
   return names.find(d => d.startsWith('data-v-'));
 }
 
-export function svg2url(svgElement, options = {}) {
+export interface IExporterOptions {
+  styles: boolean;
+  font: boolean;
+  icons: boolean;
+}
+
+export function svg2url(svgElement: SVGSVGElement, options: Partial<IExporterOptions> = {}) {
   const findStyles = options.styles !== false;
   const includeFont = options.font !== false;
   const includeIconFont = options.icons;
 
   // based on http://bl.ocks.org/biovisualize/8187844
-  let copy = svgElement.cloneNode(true);
+  let copy = svgElement.cloneNode(true) as SVGSVGElement;
   // proper bg
   copy.style.backgroundColor = 'white';
   // inject font
@@ -86,7 +92,7 @@ export function svg2url(svgElement, options = {}) {
   const scopedAttr = findScopedAttr(copy);
   if (findStyles && scopedAttr) {
     const key = `[${scopedAttr}]`;
-    const rules = [];
+    const rules: string[] = [];
     Array.from(document.styleSheets).forEach((sheet) => {
       if (sheet instanceof CSSStyleSheet) {
         try {
@@ -113,15 +119,15 @@ export function svg2url(svgElement, options = {}) {
   return URL.createObjectURL(svg);
 }
 
-export function renderImage(imgUrl, bb) {
+export function renderImage(imgUrl: string, bb: DOMRect | ClientRect) {
   const canvas = document.createElement('canvas');
 
   canvas.width = bb.width;
   canvas.height = bb.height;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d')!;
   const img = new Image(canvas.width, canvas.height);
 
-  return new Promise((resolve) => {
+  return new Promise<string>((resolve) => {
     img.onload = () => {
       ctx.drawImage(img, 0, 0);
       const png = canvas.toDataURL('image/png');
@@ -131,7 +137,7 @@ export function renderImage(imgUrl, bb) {
   });
 }
 
-export function svg2png(svgElement, options) {
+export function svg2png(svgElement: SVGSVGElement, options: Partial<IExporterOptions> = {}) {
   const svgUrl = svg2url(svgElement, options);
 
   return renderImage(svgUrl, svgElement.getBoundingClientRect()).then((img) => {
@@ -140,7 +146,7 @@ export function svg2png(svgElement, options) {
   });
 }
 
-export function download(url, title) {
+export function download(url: string, title: string) {
   const a = document.createElement('a');
   a.href = url;
   a.style.position = 'absolute';
@@ -152,7 +158,7 @@ export function download(url, title) {
   a.remove();
 }
 
-export function downloadCSV(content, title) {
+export function downloadCSV(content: string, title: string) {
   let data = content;
   if (typeof content !== 'string') {
     data = unparse(content);
@@ -163,7 +169,7 @@ export function downloadCSV(content, title) {
   URL.revokeObjectURL(csvUrl);
 }
 
-export async function downloadSVG(svgElement, title = 'Image') {
+export async function downloadSVG(svgElement: SVGSVGElement, title = 'Image') {
   const url = await svg2png(svgElement);
   download(url, `${title}.png`);
 }

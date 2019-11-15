@@ -2,7 +2,10 @@ class SessionStore {
   /**
    * @param {WindowLocalStorage} provider localStorageApi provider
    */
-  constructor(provider) {
+  private provider: WindowLocalStorage;
+
+
+  constructor(provider: WindowLocalStorage) {
     this.provider = provider;
   }
 
@@ -21,9 +24,9 @@ class SessionStore {
     }
   }
 
-  save(state, sessionId = 'default') {
+  save(state: any, sessionId = 'default') {
     const rawDatasetIDs = Object.keys(state.datasets);
-    const datasets = {};
+    const datasets: {[key: string]: any} = {};
     rawDatasetIDs.forEach((id) => {
       // the keys from dataset to cache in localStorage;
       const d = state.datasets[id];

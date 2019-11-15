@@ -140,7 +140,13 @@ const transform_methods = [
   { label: 'Cube Root', value: 'cuberoot' },
 ];
 
-const validationMeta = {
+export interface IValidationMetaInfo {
+  description: string;
+  clickable: boolean;
+  multi: boolean;
+}
+
+const validationMeta: {[key: string]: IValidationMetaInfo} = {
   'group-missing': {
     // A static description string
     description: 'Select a column to contain group data',
