@@ -3,7 +3,7 @@ import { hsl } from 'd3-color';
 import { validationMeta, IValidationMetaInfo } from './constants';
 import RangeList from './rangelist';
 import SessionStore from './sessionStore';
-import { ITableColumn } from '@/store/model';
+import { ITableColumn, IDataFrame } from '@/store/model';
 
 /**
  * A function to group an array of objects
@@ -54,19 +54,6 @@ export interface IToSplitDictResult {
   columnMetaData?: any[];
   rowMetaData?: any[];
   data: any[][];
-}
-
-export interface IMetaData {
-  subtype: string | null;
-  [key: string]: any;
-}
-
-export interface IDataFrame<T> {
-  columnNames: string[];
-  columnMetaData: IMetaData[];
-  rowNames: string[];
-  rowMetaData: IMetaData[];
-  data: T[][];
 }
 
 function parsePandasDataFrame<T>(toSplitDictResult: IToSplitDictResult,

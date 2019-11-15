@@ -22,12 +22,12 @@ export default class FilterOption extends Vue {
   @Prop({
     default: false,
   })
-  disabled!: boolean;
+  readonly disabled!: boolean;
 
   @Prop({
     required: true,
   })
-  options!: IOptionGroup[];
+  readonly options!: IOptionGroup[];
 
   get showSelect() {
     return !this.value || this.options.length > 1;

@@ -73,6 +73,7 @@
     "@vue/eslint-config-typescript": "^4.0.0",
     "@vue/test-utils": "^1.0.0-beta.29",
     "eslint": "^5.8.0",
+    "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-vue": "^5.0.0",
     "git-revision-webpack-plugin": "^3.0.3",
     "node-sass": "^4.11.0",
@@ -94,7 +95,8 @@
     "extends": [
       "plugin:vue/recommended",
       "@vue/airbnb",
-      "@vue/typescript"
+      "@vue/typescript",
+      "plugin:import/typescript"
     ],
     "rules": {
       "camelcase": 0,

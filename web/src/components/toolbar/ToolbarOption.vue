@@ -1,30 +1,33 @@
-<script>
+<script lang="ts">
+import { Component, Vue, Prop } from 'vue-property-decorator';
 import HelpDialog from './HelpDialog.vue';
 
-export default {
+@Component({
   components: {
-    HelpDialog,
-  },
-  props: {
-    title: {
-      type: String,
-      required: false,
-      default: '',
-    },
-    value: {
-      type: String,
-      required: true,
-    },
-    disabled: {
-      type: Boolean,
-      required: false,
-    },
-    options: { // {label: string, value: string, helpText?: string}
-      type: Array,
-      required: true,
-    },
-  },
-};
+    HelpDialog
+  }
+})
+export default class ToolbarOption extends Vue {
+  @Prop({
+    default: '',
+  })
+  readonly title!: string;
+
+  @Prop({
+    required: true
+  })
+  readonly value!: string;
+
+  @Prop({
+    default: false,
+  })
+  readonly disabled!: boolean;
+
+  @Prop({
+    required: true
+  })
+  readonly options!: {label: string, value: string, helpText?: string}[];
+}
 </script>
 
 <template lang="pug">
