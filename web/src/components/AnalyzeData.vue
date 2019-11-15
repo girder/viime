@@ -1,23 +1,21 @@
-<script>
+<script lang="ts">
+import { Component, Vue, Prop } from 'vue-property-decorator';
 import analyses from './vis/analyses';
 import RenderJsx from '../utils/RenderJsx';
 
-export default {
+@Component({
   components: {
     RenderJsx,
   },
-  props: {
-    id: {
-      type: String,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      analyses,
-    };
-  },
-};
+})
+export default class AnalyzeData extends Vue {
+  @Prop({
+    required: true,
+  })
+  readonly id!: string;
+
+  readonly analyses = analyses;
+}
 </script>
 
 <template lang="pug">

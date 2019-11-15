@@ -1,6 +1,6 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 
-interface IRenderJsxContext {
+export interface IRenderJsxContext {
   $createElement: Vue.CreateElement;
 }
 

@@ -151,6 +151,48 @@ function formatter(v: string | number) {
   return typeof v === 'number' || (v && !Number.isNaN(+v)) ? nf(typeof v === 'number' ? v : parseFloat(v)) : v;
 }
 
+// Adapted from https://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser
+declare const opr: any;
+declare const safari: any;
+declare const InstallTrigger: any;
+
+export function getBrowser() {
+  const w: any = window;
+  // Opera 8.0+
+  // eslint-disable-next-line no-undef
+  const isOpera = (!!w.opr && !!opr.addons) || !!w.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+
+  // Firefox 1.0+
+  const isFirefox = typeof InstallTrigger !== 'undefined';
+
+  // Safari 3.0+ "[object HTMLElementConstructor]"
+  // eslint-disable-next-line wrap-iife,func-names,quotes,dot-notation,no-undef
+  const isSafari = /constructor/i.test(w.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!w.safari || (typeof safari !== 'undefined' && safari.pushNotification));
+
+  // Internet Explorer 6-11
+  // eslint-disable-next-line spaced-comment
+  const isIE = /*@cc_on!@*/false || !!(document as any).documentMode;
+
+  // Edge 20+
+  const isEdge = !isIE && !!w.StyleMedia;
+
+  // Chrome 1 - 71
+  const isChrome = !!w.chrome && (!!w.chrome.webstore || !!w.chrome.runtime);
+
+  // Blink engine detection
+  const isBlink = (isChrome || isOpera) && !!w.CSS;
+
+  return {
+    isOpera,
+    isFirefox,
+    isSafari,
+    isIE,
+    isEdge,
+    isChrome,
+    isBlink,
+  };
+}
+
 export {
   base26Converter,
   convertCsvToRows,

@@ -1,11 +1,12 @@
-<script>
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator';
 import { mapState } from 'vuex';
 
-export default {
-  computed: {
-    ...mapState(['loading', 'saving', 'lasterror']),
-  },
-};
+@Component({
+  computed: mapState(['loading', 'saving', 'lasterror']),
+})
+export default class SaveStatus extends Vue {
+}
 </script>
 
 <template lang="pug">

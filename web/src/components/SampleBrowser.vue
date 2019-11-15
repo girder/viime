@@ -1,38 +1,35 @@
-<script>
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator';
 import { IMPORT_SAMPLE, IMPORT_SAMPLE_GROUP } from '../store/actions.type';
 import { SampleService } from '../common/api.service';
+import { ISampleGroup } from '../store/model';
 
+@Component
+export default class SampleBrowser extends Vue {
+  loading = true;
 
-export default {
-  data() {
-    return {
-      loading: true,
-      samples: [],
-    };
-  },
-  computed: {
+  samples: ISampleGroup[] = [];
 
-  },
   async created() {
     this.loading = true;
     this.samples = (await SampleService.list()).data;
     this.loading = false;
-  },
-  methods: {
-    async importGroup(group, evt) {
-      evt.preventDefault();
-      evt.stopPropagation();
-      await this.$store.dispatch(IMPORT_SAMPLE_GROUP, { group });
-      this.$emit('close');
-    },
-    async importSample(sampleId, evt) {
-      evt.preventDefault();
-      evt.stopPropagation();
-      await this.$store.dispatch(IMPORT_SAMPLE, { sampleId });
-      this.$emit('close');
-    },
-  },
-};
+  }
+
+  async importGroup(group: string, evt: MouseEvent) {
+    evt.preventDefault();
+    evt.stopPropagation();
+    await this.$store.dispatch(IMPORT_SAMPLE_GROUP, { group });
+    this.$emit('close');
+  }
+
+  async importSample(sampleId: string, evt: MouseEvent) {
+    evt.preventDefault();
+    evt.stopPropagation();
+    await this.$store.dispatch(IMPORT_SAMPLE, { sampleId });
+    this.$emit('close');
+  }
+}
 </script>
 
 <template lang="pug">

@@ -35,3 +35,16 @@ export interface IDataSet {
   validatedSampleMetaData: IDataFrame<string | number>;
   validatedGroups: IDataFrame<string>;
 }
+
+export interface ISampleFile {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface ISampleGroup {
+  name: string;
+  description?: string;
+
+  files: ISampleFile[];
+}

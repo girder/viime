@@ -1,30 +1,28 @@
-<script>
+<script lang="ts">
+import { Component, Vue, Prop } from 'vue-property-decorator';
 import HelpDialog from './toolbar/HelpDialog.vue';
 
 export const DEFAULT_MERGE_METHOD = 'multi_block';
 
-export default {
+@Component({
   components: {
     HelpDialog,
   },
-  props: {
-    value: {
-      type: String,
-      required: false,
-      default: null,
-    },
-  },
-  computed: {
-    method: {
-      get() {
-        return this.value;
-      },
-      set(value) {
-        this.$emit('input', value);
-      },
-    },
-  },
-};
+})
+export default class MergeMethods extends Vue {
+  @Prop({
+    default: null,
+  })
+  readonly value!: string;
+
+  get method() {
+    return this.value;
+  }
+
+  set method(value: string) {
+    this.$emit('input', value);
+  }
+}
 </script>
 <template lang="pug">
 v-radio-group(v-model="method", label="Merge Method")
