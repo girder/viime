@@ -4,7 +4,9 @@ import Vue from 'vue';
  * because there shouldn't be a large fragmented list of ranges.
  */
 export default class RangeList {
-  constructor(initial = []) {
+  private members_: { [key: string]: boolean };
+
+  constructor(initial: number[] = []) {
     this.members_ = {};
     initial.forEach(i => this.add(i));
   }
@@ -20,7 +22,7 @@ export default class RangeList {
    * @param {Number} a first index
    * @param {Number} b optional last index
    */
-  add(a, b = null) {
+  add(a: number, b: number|null = null) {
     let nin = a;
     let nout = b !== null ? b : a;
     if (nout < nin) {
@@ -38,7 +40,7 @@ export default class RangeList {
    * @param {Number} a
    * @returns Object<{member: Boolean, first: Boolean, last:Boolean}>
    */
-  includes(a) {
+  includes(a: number) {
     const member = this.members_[a] || false;
     const first = !this.members_[a - 1] && member;
     const last = !this.members_[a + 1] && member;

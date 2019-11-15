@@ -1,5 +1,16 @@
+import { Component, Prop, Vue } from 'vue-property-decorator';
+
+interface IRenderJsxContext {
+  $createElement: Vue.CreateElement;
+}
+
+interface IJSXProps {
+  f: string | ((this: IRenderJsxContext, ...args: unknown[]) => Vue.VNode);
+  args: unknown[];
+}
+
 export default {
-  functional: true,
+  functiona: true,
   props: {
     f: {
       required: true,
@@ -12,7 +23,7 @@ export default {
       },
     },
   },
-  render(createElement, context) {
+  render(createElement: Vue.CreateElement, context: Vue.RenderContext<IJSXProps>) {
     const { f } = context.props;
     if (typeof f === 'string') {
       return createElement('div', {}, [f]);
@@ -21,4 +32,4 @@ export default {
       $createElement: createElement,
     }, context.props.args);
   },
-};
+}
