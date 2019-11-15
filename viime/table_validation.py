@@ -1,6 +1,6 @@
 """
 This module contains methods related to validation of csv data contained
-in the CSVFile model.
+in the models.CSVFile model.
 """
 from collections import namedtuple
 from typing import List, Optional
@@ -8,6 +8,7 @@ from typing import List, Optional
 from marshmallow import fields, post_dump, Schema, validate
 from pandas import DataFrame, Index, Series, to_numeric
 
+from viime import models
 from viime.cache import region
 
 SEVERITY_VALUES = ['error', 'warning']
@@ -152,7 +153,7 @@ class ValidationSchema(Schema):
         return {k: v for k, v in data.items() if v is not None}
 
 
-def get_validation_list(csv_file: 'CSVFile') -> List[ValidationTuple]:
+def get_validation_list(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     errors = get_fatal_index_errors(csv_file)
 
     if not errors:
@@ -161,7 +162,7 @@ def get_validation_list(csv_file: 'CSVFile') -> List[ValidationTuple]:
     return errors
 
 
-def get_missing_index_errors(csv_file: 'CSVFile') -> List[ValidationTuple]:
+def get_missing_index_errors(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     errors: List[ValidationTuple] = []
     if csv_file.key_column_index is None:
         errors.append(PrimaryKeyMissing())
@@ -173,7 +174,7 @@ def get_missing_index_errors(csv_file: 'CSVFile') -> List[ValidationTuple]:
 
 
 @region.cache_on_arguments()
-def get_fatal_index_errors(csv_file: 'CSVFile') -> List[ValidationTuple]:
+def get_fatal_index_errors(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     errors = get_missing_index_errors(csv_file)
     if not errors:
         errors = get_invalid_index_errors(csv_file)
@@ -199,7 +200,7 @@ def check_valid_groups(groups: DataFrame) -> Optional[str]:
     return None
 
 
-def get_invalid_index_errors(csv_file: 'CSVFile') -> List[ValidationTuple]:
+def get_invalid_index_errors(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     from viime.models import TABLE_COLUMN_TYPES, TABLE_ROW_TYPES
 
     errors: List[ValidationTuple] = []
@@ -222,7 +223,7 @@ def get_invalid_index_errors(csv_file: 'CSVFile') -> List[ValidationTuple]:
     return errors
 
 
-def get_non_numeric_errors(csv_file: 'CSVFile') -> List[ValidationTuple]:
+def get_non_numeric_errors(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     errors: List[ValidationTuple] = []
     raw_table = csv_file.raw_measurement_table
 
@@ -257,14 +258,14 @@ def _count_non_numeric(value) -> int:
 
 
 @region.cache_on_arguments()
-def get_warnings(csv_file: 'CSVFile') -> List[ValidationTuple]:
+def get_warnings(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     warnings = get_non_numeric_warnings(csv_file)
     warnings.extend(get_missing_percent_warnings(csv_file))
     warnings.extend(get_low_variance_warnings(csv_file))
     return warnings
 
 
-def get_non_numeric_warnings(csv_file: 'CSVFile') -> List[ValidationTuple]:
+def get_non_numeric_warnings(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     warnings: List[ValidationTuple] = []
     non_numeric_count = int(csv_file.raw_measurement_table.applymap(_count_non_numeric).sum().sum())
     if non_numeric_count > 0:
@@ -275,7 +276,7 @@ def get_non_numeric_warnings(csv_file: 'CSVFile') -> List[ValidationTuple]:
     return warnings
 
 
-def get_missing_percent_warnings(csv_file: 'CSVFile') -> List[ValidationTuple]:
+def get_missing_percent_warnings(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     table = csv_file.raw_measurement_table
     groups = csv_file.groups
 
@@ -300,7 +301,7 @@ def get_missing_percent_warnings(csv_file: 'CSVFile') -> List[ValidationTuple]:
     return warnings
 
 
-def get_low_variance_warnings(csv_file: 'CSVFile') -> List[ValidationTuple]:
+def get_low_variance_warnings(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     table = csv_file.raw_measurement_table
     warnings: List[ValidationTuple] = []
 
