@@ -29,6 +29,9 @@ module.exports = {
     ],
   },
   chainWebpack: (config) => {
+    // clear the existing entry point
+    config.entry('app').clear();
+    config.entry('app').add('./src/main.js');
     config.resolve.set('symlinks', false);
   },
 };
