@@ -69,7 +69,8 @@ export interface IDataFrame<T> {
   data: T[][];
 }
 
-function parsePandasDataFrame<T>(toSplitDictResult: IToSplitDictResult, baseDataFrame: IDataFrame<T>) {
+function parsePandasDataFrame<T>(toSplitDictResult: IToSplitDictResult,
+  baseDataFrame: IDataFrame<T>) {
   if (!toSplitDictResult) {
     return {
       columnNames: [],

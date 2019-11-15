@@ -32,4 +32,4 @@ export default {
       $createElement: createElement,
     }, context.props.args);
   },
-}
+};
