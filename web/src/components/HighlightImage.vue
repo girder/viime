@@ -1,12 +1,13 @@
-<script>
-export default {
-  props: {
-    small: {
-      type: Boolean,
-      required: false,
-    },
-  },
-};
+<script lang="ts">
+import { Component, Vue, Prop } from 'vue-property-decorator';
+
+@Component
+export default class HighlightImage extends Vue {
+  @Prop({
+    default: false,
+  })
+  readonly small!: boolean;
+}
 
 </script>
 

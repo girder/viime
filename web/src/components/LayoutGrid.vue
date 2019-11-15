@@ -1,31 +1,29 @@
-<script>
-export default {
-  props: {
-    cellSize: {
-      type: Number,
-      required: true,
-    },
-  },
-  data() {
+<script lang="ts">
+import { Component, Vue, Prop } from 'vue-property-decorator';
+
+@Component
+export default class LayoutGrid extends Vue {
+  @Prop({
+    required: true,
+  })
+  readonly cellSize!: number;
+
+  gridHint = 4;
+
+  get gridStyle() {
     return {
-      gridHint: 4,
+      gridTemplateColumns: `repeat(${this.gridHint}, ${this.cellSize}px)`,
+      gridAutoColumns: `${this.cellSize}px`,
+      gridAutoRows: `${this.cellSize}px`,
     };
-  },
-  computed: {
-    gridStyle() {
-      return {
-        gridTemplateColumns: `repeat(${this.gridHint}, ${this.cellSize}px)`,
-        gridAutoColumns: `${this.cellSize}px`,
-        gridAutoRows: `${this.cellSize}px`,
-      };
-    },
-  },
+  }
+
   mounted() {
     const available = this.$el.getBoundingClientRect().width;
     // compute the number of horizontal cells based on the container width
     this.gridHint = Math.floor(available / this.cellSize);
-  },
-};
+  }
+}
 </script>
 
 <template lang="pug">

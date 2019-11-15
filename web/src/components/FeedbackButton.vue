@@ -1,25 +1,25 @@
-<script>
-export default {
-  props: {
-    front: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  data() {
-    return {
-      visible: false,
-      form: 'https://docs.google.com/forms/d/e/1FAIpQLScWccZqTF_b6nQkfkAvLNf7XGV9k7Rqf8V_Mid-oZLY47g_IQ/viewform',
-      width: 640,
-      height: 930,
-    };
-  },
-  computed: {
-    src() {
-      return `${this.form}?embedded=true`;
-    },
-  },
-};
+<script lang="ts">
+import { Component, Vue, Prop } from 'vue-property-decorator';
+
+@Component
+export default class FeedbackButton extends Vue {
+  @Prop({
+    default: false,
+  })
+  readonly front!: boolean;
+
+  visible = false;
+
+  form = 'https://docs.google.com/forms/d/e/1FAIpQLScWccZqTF_b6nQkfkAvLNf7XGV9k7Rqf8V_Mid-oZLY47g_IQ/viewform';
+
+  width = 640;
+
+  height = 930;
+
+  get src() {
+    return `${this.form}?embedded=true`;
+  }
+}
 </script>
 
 <template lang="pug">

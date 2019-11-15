@@ -27,6 +27,8 @@ export interface IDataFrame<T> {
 
 export interface IDataSet {
   id: string;
+  name: string;
+  groupLevels: ILevel[];
   selectedColumns: string[];
   validatedMeasurements: IDataFrame<number>;
   validatedMeasurementsMetaData: IDataFrame<string | number>;
