@@ -1,5 +1,7 @@
 <script lang="ts">
-import { Component, Vue, Prop, Mixins, Watch } from 'vue-property-decorator';
+import {
+  Component, Vue, Prop, Mixins, Watch,
+} from 'vue-property-decorator';
 import ColorerOption from './ColorerOption.vue';
 import MetaboliteMixin from './mixins/metaboliteMixin';
 import { colors } from '../../utils/constants';
@@ -12,8 +14,8 @@ export interface IMetaboliteColorerValue {
 
 @Component({
   components: {
-    ColorerOption
-  }
+    ColorerOption,
+  },
 })
 export default class MetaboliteColorer extends Mixins(MetaboliteMixin) {
   @Prop({
@@ -22,7 +24,7 @@ export default class MetaboliteColorer extends Mixins(MetaboliteMixin) {
   readonly title!: string;
 
   @Prop({
-    default: null
+    default: null,
   })
   readonly value!: IMetaboliteColorerValue;
 
@@ -75,7 +77,7 @@ export default class MetaboliteColorer extends Mixins(MetaboliteMixin) {
     };
     this.$emit('input', wrapper);
   }
-};
+}
 </script>
 
 <template lang="pug">

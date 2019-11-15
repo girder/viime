@@ -1,5 +1,7 @@
 <script lang="ts">
-import { Component, Vue, Prop, Mixins, Watch } from 'vue-property-decorator';
+import {
+  Component, Vue, Prop, Mixins, Watch,
+} from 'vue-property-decorator';
 import FilterOption from './FilterOption.vue';
 import MetaboliteMixin from './mixins/metaboliteMixin';
 
@@ -24,16 +26,17 @@ export interface IMetaboliteFilterValue {
 
 @Component({
   components: {
-    FilterOption
-  }
+    FilterOption,
+  },
 })
 export default class MetaboliteColorer extends Mixins(MetaboliteMixin) {
   @Prop({
     default: 'Metabolite Filter',
   })
   readonly title!: string;
+
   @Prop({
-    default: null
+    default: null,
   })
   readonly value!: IMetaboliteFilterValue;
 
@@ -133,12 +136,13 @@ export default class MetaboliteColorer extends Mixins(MetaboliteMixin) {
       };
     });
   }
+
   changeValue(value: Partial<IMetaboliteFilterValue> & IFilterValueBase) {
     value.apply = this.generateFilter(value);
     value.groupBy = this.generateGroupBy(value);
     this.$emit('input', value);
   }
-};
+}
 </script>
 
 <template lang="pug">

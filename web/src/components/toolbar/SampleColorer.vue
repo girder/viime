@@ -1,5 +1,7 @@
 <script lang="ts">
-import { Component, Vue, Prop, Mixins } from 'vue-property-decorator';
+import {
+  Component, Vue, Prop, Mixins,
+} from 'vue-property-decorator';
 import ColorerOption from './ColorerOption.vue';
 import SampleMixin from './mixins/sampleMixin';
 
@@ -11,8 +13,8 @@ export interface ISampleColorerValue {
 
 @Component({
   components: {
-    ColorerOption
-  }
+    ColorerOption,
+  },
 })
 export default class SampleColorer extends Mixins(SampleMixin) {
   @Prop({
@@ -21,7 +23,7 @@ export default class SampleColorer extends Mixins(SampleMixin) {
   readonly title!: string;
 
   @Prop({
-    default: null
+    default: null,
   })
   readonly value!: ISampleColorerValue;
 
@@ -46,12 +48,14 @@ export default class SampleColorer extends Mixins(SampleMixin) {
     const toIndex = this.rowToIndex;
     return (row: string) => lookup.get(String(meta.data[toIndex(row)]))!;
   }
+
   generateLevels(value: string | null) {
     if (!value || value === this.emptyOption) {
       return [];
     }
     return this.options.find(d => d.value === value)!.options;
   }
+
   changeValue(value: string | null) {
     const wrapper = {
       option: value,
@@ -60,7 +64,7 @@ export default class SampleColorer extends Mixins(SampleMixin) {
     };
     this.$emit('input', wrapper);
   }
-};
+}
 </script>
 
 <template lang="pug">

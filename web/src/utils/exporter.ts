@@ -1,8 +1,8 @@
+import { unparse } from 'papaparse';
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import font from '!url-loader?limit=undefined!@openfonts/barlow-condensed_all/files/barlow-condensed-all-400.woff2';
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import iconFont from '!url-loader?limit=undefined!@mdi/font/fonts/materialdesignicons-webfont.woff2';
-import { unparse } from 'papaparse';
 
 
 function isC3(node: SVGSVGElement) {

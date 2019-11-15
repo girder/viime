@@ -4,8 +4,8 @@ import HelpDialog from './HelpDialog.vue';
 
 @Component({
   components: {
-    HelpDialog
-  }
+    HelpDialog,
+  },
 })
 export default class ToolbarOption extends Vue {
   @Prop({
@@ -14,7 +14,7 @@ export default class ToolbarOption extends Vue {
   readonly title!: string;
 
   @Prop({
-    required: true
+    required: true,
   })
   readonly value!: string;
 
@@ -24,7 +24,7 @@ export default class ToolbarOption extends Vue {
   readonly disabled!: boolean;
 
   @Prop({
-    required: true
+    required: true,
   })
   readonly options!: {label: string, value: string, helpText?: string}[];
 }

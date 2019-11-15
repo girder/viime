@@ -1,5 +1,7 @@
 <script lang="ts">
-import { Component, Vue, Prop, Mixins, Watch } from 'vue-property-decorator';
+import {
+  Component, Vue, Prop, Mixins, Watch,
+} from 'vue-property-decorator';
 import FilterOption from './FilterOption.vue';
 import SampleMixin from './mixins/sampleMixin';
 
@@ -23,8 +25,8 @@ export interface ISampleFilterValue {
 
 @Component({
   components: {
-    FilterOption
-  }
+    FilterOption,
+  },
 })
 export default class SampleFilter extends Mixins(SampleMixin) {
   @Prop({
@@ -33,7 +35,7 @@ export default class SampleFilter extends Mixins(SampleMixin) {
   readonly title!: string;
 
   @Prop({
-    default: null
+    default: null,
   })
   readonly value!: ISampleFilterValue;
 
@@ -56,6 +58,7 @@ export default class SampleFilter extends Mixins(SampleMixin) {
     this.changeValue(v);
     return v;
   }
+
   generateFilter(value: IFilterValueBase): ((row: string) => boolean) {
     if (!value.option) {
       return () => true;
@@ -65,6 +68,7 @@ export default class SampleFilter extends Mixins(SampleMixin) {
     const toIndex = this.rowToIndex;
     return row => lookup.has(String(meta.data[toIndex(row)]));
   }
+
   generateGroupBy(value: IFilterValueBase): ((rows: string[]) => IGroup[]) {
     if (!value.option) {
       return (rows: string[]) => [{
@@ -88,12 +92,13 @@ export default class SampleFilter extends Mixins(SampleMixin) {
       };
     });
   }
+
   changeValue(value: Partial<ISampleFilterValue> & IFilterValueBase) {
     value.apply = this.generateFilter(value);
     value.groupBy = this.generateGroupBy(value);
     this.$emit('input', value);
   }
-};
+}
 </script>
 
 <template lang="pug">
