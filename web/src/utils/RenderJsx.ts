@@ -10,7 +10,7 @@ interface IJSXProps {
 }
 
 export default {
-  functiona: true,
+  functional: true,
   props: {
     f: {
       required: true,
