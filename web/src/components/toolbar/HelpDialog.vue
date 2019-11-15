@@ -1,25 +1,25 @@
-<script>
-export default {
-  props: {
-    title: {
-      type: String,
-      default: '',
-    },
-    text: {
-      type: String,
-      default: '',
-    },
-    outline: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  data() {
-    return {
-      showHelp: false,
-    };
-  },
-};
+<script lang="ts">
+import { Component, Vue, Prop } from 'vue-property-decorator';
+
+@Component
+export default class HelpDialog extends Vue {
+  @Prop({
+    default: '',
+  })
+  readonly title!: string;
+
+  @Prop({
+    default: '',
+  })
+  readonly text!: string;
+
+  @Prop({
+    default: false,
+  })
+  readonly outline!: boolean;
+
+  showHelp = false;
+}
 </script>
 
 <template lang="pug">

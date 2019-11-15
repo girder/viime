@@ -1,64 +1,74 @@
-<script>
-export default {
-  props: {
-    title: {
-      type: String,
-      required: false,
-      default: '',
-    },
-    value: { // {option: string | null, filter: string[]}
-      type: Object,
-      required: true,
-    },
-    disabled: {
-      type: Boolean,
-      required: false,
-    },
-    options: { // {name: string, options: {name: string, color?: string, value: string}[]}[]
-      type: Array,
-      required: true,
-    },
-  },
-  computed: {
-    showSelect() {
-      return !this.value || this.options.length > 1;
-    },
-    selected: {
-      get() {
-        return this.value ? this.value.option : null;
-      },
-      set(value) {
-        if (!value) {
-          this.$emit('input', { option: null, filter: [] });
-        } else {
-          const selected = this.options.find(d => d.value === value);
-          this.$emit('input', { option: value, filter: selected.options.map(d => d.value) });
-        }
-      },
-    },
-    filterOptions() {
-      const selected = this.options.find(d => d.value === this.selected);
-      return selected ? selected.options : [];
-    },
-    filter: {
-      get() {
-        return this.value ? this.value.filter : [];
-      },
-      set(values) {
-        this.$emit('input', { ...this.value, filter: values });
-      },
-    },
-    hasOptions() {
-      if (this.options.length === 0) {
-        return false;
-      }
-      if (this.options.length === 1 && !this.options[0].value) {
-        return false;
-      }
-      return true;
-    },
-  },
-};
+<script lang="ts">
+import { Component, Vue, Prop } from 'vue-property-decorator';
+
+export interface IOptionGroup {
+  name: string;
+  value: string;
+  options: {name: string, color?: string, value: string}[];
+}
+
+@Component
+export default class FilterOption extends Vue {
+   @Prop({
+     default: '',
+   })
+  readonly title!: string;
+
+  @Prop({
+    required: true,
+  })
+  readonly value!: {option: string|null, filter: string[]};
+
+  @Prop({
+    default: false,
+  })
+  disabled!: boolean;
+
+  @Prop({
+    required: true,
+  })
+  options!: IOptionGroup[];
+
+  get showSelect() {
+    return !this.value || this.options.length > 1;
+  }
+
+  get selected() {
+    return this.value ? this.value.option : null;
+  }
+
+  set selected(value: string | null) {
+    if (!value) {
+      this.$emit('input', { option: null, filter: [] });
+    } else {
+      const selected = this.options.find(d => d.value === value)!;
+      this.$emit('input', { option: value, filter: selected.options.map(d => d.value) });
+    }
+  }
+
+  get filterOptions() {
+    const selected = this.options.find(d => d.value === this.selected);
+    return selected ? selected.options : [];
+  }
+
+  get filter(): string[] {
+    return this.value ? this.value.filter : [];
+  }
+
+  set filter(values: string[]) {
+    this.$emit('input', { ...this.value, filter: values });
+  }
+
+  get hasOptions() {
+    if (this.options.length === 0) {
+      return false;
+    }
+    if (this.options.length === 1 && !this.options[0].value) {
+      return false;
+    }
+    return true;
+  }
+}
 </script>
 
 <template lang="pug">

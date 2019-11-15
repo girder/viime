@@ -1,44 +1,53 @@
-<script>
-export default {
-  props: {
-    title: {
-      type: String,
-      required: false,
-      default: '',
-    },
-    value: {
-      type: String,
-      required: false,
-      default: null,
-    },
-    disabled: {
-      type: Boolean,
-      required: false,
-    },
-    options: { // {name: string, options: {name: string, color?: string}[]}[]
-      type: Array,
-      required: true,
-    },
-  },
-  computed: {
-    showSelect() {
-      return !this.value || this.options.length > 1;
-    },
-    filterOptions() {
-      const selected = this.options.find(d => d.value === this.value);
-      return selected ? selected.options : [];
-    },
-    hasOptions() {
-      if (this.options.length === 0) {
-        return false;
-      }
-      if (this.options.length === 1 && !this.options[0].value) {
-        return false;
-      }
-      return true;
-    },
-  },
-};
+<script lang="ts">
+import { Component, Vue, Prop } from 'vue-property-decorator';
+
+export interface IOptionGroup {
+  name: string;
+  value: string;
+  options: {name: string, color?: string}[];
+}
+
+@Component
+export default class ColorerOption extends Vue {
+  @Prop({
+    default: '',
+  })
+  readonly title!: string;
+
+  @Prop({
+    default: null,
+  })
+  readonly value!: string|null;
+
+  @Prop({
+    default: false,
+  })
+  disabled!: boolean;
+
+  @Prop({
+    required: true,
+  })
+  options!: IOptionGroup[];
+
+  get showSelect() {
+    return !this.value || this.options.length > 1;
+  }
+
+  get filterOptions() {
+    const selected = this.options.find(d => d.value === this.value);
+    return selected ? selected.options : [];
+  }
+
+  get hasOptions() {
+    if (this.options.length === 0) {
+      return false;
+    }
+    if (this.options.length === 1 && !this.options[0].value) {
+      return false;
+    }
+    return true;
+  }
+}
 </script>
 
 <template lang="pug">
