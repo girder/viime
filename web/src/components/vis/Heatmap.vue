@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+import { Component, Vue, Prop } from 'vue-property-decorator';
 import resize from 'vue-resize-directive';
 import { format } from 'd3-format';
 import { hierarchy, cluster } from 'd3-hierarchy';
@@ -7,7 +8,7 @@ import { interpolateRdBu, schemeRdBu } from 'd3-scale-chromatic';
 import { select, event } from 'd3-selection';
 import { svg2url } from '../../utils/exporter';
 
-function domain(arr) {
+function domain(arr: number[][]): [number, number] {
   // let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
   arr.forEach(row => row.forEach((v) => {
@@ -26,7 +27,7 @@ function domain(arr) {
   // return [min, max];
 }
 
-function aggregate(arr, rs, cs, transposed) {
+function aggregate(arr: number[][], rs: number[], cs: number[], transposed: boolean) {
   let is = rs;
   let js = cs;
 
@@ -66,7 +67,7 @@ export const heatmapLayouts = [
  * @param {T[] | null} arr values to set
  * @returns {boolean} whether the value has changed
  */
-function changeHovered(wrapper, arr) {
+function changeHovered<T>(wrapper: {hovered: Set<T>}, arr: T[] | null) {
   if (!arr) {
     if (wrapper.hovered.size > 0) {
       wrapper.hovered = new Set();
@@ -89,181 +90,183 @@ function changeHovered(wrapper, arr) {
   return true;
 }
 
-export default {
+interface ITreeNode {
+
+}
+
+
+@Component({
   directives: {
     resize,
   },
-  props: {
-    values: { // number[][]
-      type: Array,
-      default: () => [],
-    },
-    columnClustering: { // ITreeNode
-      type: Object,
-      default: null,
-    },
-    rowClustering: { // ITreeNode
-      type: Object,
-      default: null,
-    },
-    rowConfig: { // { dendogram: boolean, colorer?: (name) => string }
-      type: Object,
-      default: () => ({ dendogram: true, colorer: null }),
-    },
-    columnConfig: { // { dendogram: boolean, colorer?: (name) => string }
-      type: Object,
-      default: () => ({ dendogram: true, colorer: null }),
-    },
-    layout: { // { dendogram: boolean }
-      type: String,
-      validate: v => heatmapLayouts.find(d => d.value === v),
-      default: heatmapLayouts[0].value,
-    },
-    transposed: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
-  },
-  data() {
-    return {
-      format: format('.4e'),
-      legendGradient: `linear-gradient(to right, ${schemeRdBu[5][4]} 0%, ${schemeRdBu[5][2]} 50%, ${schemeRdBu[5][0]} 100%)`,
-      padding: 8,
-      width: 0,
-      height: 0,
-      refsMounted: false,
-      column: {
-        hovered: new Set(),
-        collapsed: new Set(),
-        focus: null,
-      },
-      row: {
-        hovered: new Set(),
-        collapsed: new Set(),
-        focus: null,
-      },
-      DENDOGRAM_RATIO,
-      LABEL_WIDTH,
-    };
-  },
-  computed: {
-    padding2() {
-      return this.padding * 2;
-    },
-    reactiveColumnUpdate() {
-      if (!this.refsMounted) {
-        return '';
-      }
-      this.updateColumn();
-      return '';
-    },
-    reactiveRowUpdate() {
-      if (!this.refsMounted) {
-        return '';
-      }
-      this.updateRow();
-      return '';
-    },
-    reactiveMatrixUpdate() {
-      if (!this.refsMounted) {
-        return '';
-      }
-      this.updateMatrix();
-      return '';
-    },
-    reactiveRowLabelUpdate() {
-      if (!this.refsMounted) {
-        return '';
-      }
-      this.updateRowLabel();
-      return '';
-    },
-    reactiveColumnLabelUpdate() {
-      if (!this.refsMounted) {
-        return '';
-      }
-      this.updateColumnLabel();
-      return '';
-    },
+})
+export default class Heatmap extends Vue {
+  @Prop({
+    default: () => []
+  })
+  readonly values!: number[][];
 
-    columnTree() {
-      return this.computeTree(this.columnClustering, this.column);
-    },
+  @Prop({
+    default: null
+  })
+  readonly columnClustering!: ITreeNode;
+  @Prop({
+    default: null
+  })
+  readonly rowClustering!: ITreeNode;
+  @Prop({
+    default: () => ({ dendogram: true, colorer: null })
+  })
+  readonly rowConfig!: {dendogram: boolean, colorer?(name: string): string};
+  @Prop({
+    default: () => ({ dendogram: true, colorer: null })
+  })
+  readonly columnConfig!: {dendogram: boolean, colorer?(name: string): string};
 
-    columnHierarchy() {
-      return this.computeHierarchy(this.columnTree, this.matrixWidth, this.height);
-    },
+  @Prop({
+    default: heatmapLayouts[0].value
+  })
+  readonly layout!: string;
 
-    rowTree() {
-      return this.computeTree(this.rowClustering, this.row);
-    },
+  @Prop({
+    default: false
+  })
+  readonly transposed!: string;
 
-    rowHierarchy() {
-      const root = this.computeHierarchy(this.rowTree, this.matrixHeight, this.width);
-      if (!root) {
-        return root;
-      }
-      root.each((node) => {
-        const t = node.x;
-        node.x = node.y;
-        node.y = t;
-      });
+  readonly format = format('.4e');
+  readonly legendGradient = `linear-gradient(to right, ${schemeRdBu[5][4]} 0%, ${schemeRdBu[5][2]} 50%, ${schemeRdBu[5][0]} 100%)`;
+  readonly padding = 8;
+  width = 0;
+  height = 0;
+  refsMounted = false;
+  column = {
+    hovered: new Set(),
+    collapsed: new Set(),
+    focus: null,
+  };
+  row = {
+    hovered: new Set(),
+    collapsed: new Set(),
+    focus: null,
+  };
+  readonly DENDOGRAM_RATIO = DENDOGRAM_RATIO;
+  readonly LABEL_WIDTH = LABEL_WIDTH;
+
+  get padding2() {
+    return this.padding * 2;
+  }
+  get reactiveColumnUpdate() {
+    if (!this.refsMounted) {
+      return '';
+    }
+    this.updateColumn();
+    return '';
+  }
+  get reactiveRowUpdate() {
+    if (!this.refsMounted) {
+      return '';
+    }
+    this.updateRow();
+    return '';
+  }
+  get reactiveMatrixUpdate() {
+    if (!this.refsMounted) {
+      return '';
+    }
+    this.updateMatrix();
+    return '';
+  }
+  get reactiveRowLabelUpdate() {
+    if (!this.refsMounted) {
+      return '';
+    }
+    this.updateRowLabel();
+    return '';
+  }
+  get reactiveColumnLabelUpdate() {
+    if (!this.refsMounted) {
+      return '';
+    }
+    this.updateColumnLabel();
+    return '';
+  }
+
+  get columnTree() {
+    return this.computeTree(this.columnClustering, this.column);
+  }
+
+  get columnHierarchy() {
+    return this.computeHierarchy(this.columnTree, this.matrixWidth, this.height);
+  }
+
+  get rowTree() {
+    return this.computeTree(this.rowClustering, this.row);
+  }
+
+  get rowHierarchy() {
+    const root = this.computeHierarchy(this.rowTree, this.matrixHeight, this.width);
+    if (!root) {
       return root;
-    },
-    valueScale() {
-      return scaleSequential(t => interpolateRdBu(1 - t)).domain(domain(this.values));
-    },
-    legendDomain() {
-      return this.valueScale.domain().map(this.format);
-    },
-    columnLeaves() {
-      return this.columnTree ? this.columnTree.leaves() : [];
-    },
-    rowLeaves() {
-      return this.rowTree ? this.rowTree.leaves() : [];
-    },
-    columnDendogramHeight() {
-      return this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
-    },
-    rowDendogramWidth() {
-      return this.rowConfig.dendogram ? this.width * DENDOGRAM_RATIO : 0;
-    },
-    matrixDimensions() {
-      let width = this.width - this.rowDendogramWidth - LABEL_WIDTH;
-      let height = this.height - this.columnDendogramHeight - LABEL_WIDTH;
-      if (this.layout === 'squareCells') {
-        const wx = width / this.columnLeaves.length;
-        const hy = height / this.rowLeaves.length;
-        const ci = Math.min(wx, hy);
-        width = ci * this.columnLeaves.length;
-        height = ci * this.rowLeaves.length;
-      } else if (this.layout === 'squareMatrix') {
-        width = Math.min(width, height);
-        height = width;
-      }
-      return { width, height };
-    },
-    matrixWidth() {
-      return this.matrixDimensions.width;
-    },
-    matrixHeight() {
-      return this.matrixDimensions.height;
-    },
-    fontSize() {
-      const wx = this.matrixWidth / this.columnLeaves.length - 2;
-      const hy = this.matrixHeight / this.rowLeaves.length - 2;
+    }
+    root.each((node) => {
+      const t = node.x;
+      node.x = node.y;
+      node.y = t;
+    });
+    return root;
+  }
+  get valueScale() {
+    return scaleSequential<string>(t => interpolateRdBu(1 - t)).domain(domain(this.values));
+  }
+  get legendDomain() {
+    return this.valueScale.domain().map(this.format);
+  }
+  get columnLeaves() {
+    return this.columnTree ? this.columnTree.leaves() : [];
+  }
+  get rowLeaves() {
+    return this.rowTree ? this.rowTree.leaves() : [];
+  }
+  get columnDendogramHeight() {
+    return this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
+  }
+  get rowDendogramWidth() {
+    return this.rowConfig.dendogram ? this.width * DENDOGRAM_RATIO : 0;
+  }
+  get matrixDimensions() {
+    let width = this.width - this.rowDendogramWidth - LABEL_WIDTH;
+    let height = this.height - this.columnDendogramHeight - LABEL_WIDTH;
+    if (this.layout === 'squareCells') {
+      const wx = width / this.columnLeaves.length;
+      const hy = height / this.rowLeaves.length;
+      const ci = Math.min(wx, hy);
+      width = ci * this.columnLeaves.length;
+      height = ci * this.rowLeaves.length;
+    } else if (this.layout === 'squareMatrix') {
+      width = Math.min(width, height);
+      height = width;
+    }
+    return { width, height };
+  }
+  get matrixWidth() {
+    return this.matrixDimensions.width;
+  }
+  get matrixHeight() {
+    return this.matrixDimensions.height;
+  }
+  get fontSize() {
+    const wx = this.matrixWidth / this.columnLeaves.length - 2;
+    const hy = this.matrixHeight / this.rowLeaves.length - 2;
 
-      return Math.min(wx, hy, 12);
-    },
-  },
+    return Math.min(wx, hy, 12);
+  }
+
   mounted() {
     this.onResize();
     this.refsMounted = true;
-  },
+  }
 
-  methods: {
-    computeTree(node, { collapsed, focus }) {
+ computeTree(node, { collapsed, focus }) {
       if (!node) {
         return null;
       }
@@ -296,321 +299,320 @@ export default {
       }
       return root;
     },
-    computeHierarchy(root, layoutWidth, layoutHeight) {
-      if (!root) {
-        return null;
-      }
-      const l = cluster()
-        .size([layoutWidth, layoutHeight * DENDOGRAM_RATIO - this.padding2])
-        .separation(() => 1);
-      return l(root);
-    },
-    updateTree(ref, root, wrapper, config, horizontalLayout) {
-      if (!ref || !config.dendogram || !root) {
-        return;
-      }
-      const svg = select(ref);
-      const edges = svg.select('g.edges').selectAll('path').data(root.links()).join((enter) => {
-        const r = enter.append('path');
-        r.on('mouseenter', (d) => {
-          changeHovered(wrapper, d.target.data.indices);
-        }).on('mouseleave', () => {
-          changeHovered(wrapper, null);
-        });
-        return r;
-      });
-      const { hovered, collapsed } = wrapper;
-      const { padding } = this;
-
-      edges.classed('selected', d => d.target.data.indices.some(l => hovered.has(l)));
-
-      const renderVerticalLinks = d => `
-        M${d.target.x},${d.target.y + (d.target.children ? 0 : padding)}
-        L${d.target.x},${d.source.y}
-        L${d.source.x},${d.source.y}
-      `;
-      const renderHorizontalLinks = d => `
-        M${d.target.x + (d.target.children ? 0 : padding)},${d.target.y}
-        L${d.source.x},${d.target.y}
-        L${d.source.x},${d.source.y}
-      `;
-
-      edges.attr('d', horizontalLayout ? renderVerticalLinks : renderHorizontalLinks);
-
-      const innerNodes = root.descendants().filter(d => d.data.indices.length > 1);
-      const inner = svg.select('g.nodes').selectAll('g').data(innerNodes).join((enter) => {
-        const r = enter.append('g')
-          .html(`<circle r="${padding}"></circle><text><text><title></title>`)
-          .attr('transform', d => `translate(${d.x},${d.y})`);
-        r.on('click', (d) => {
-          if (wrapper.focus === d.data) {
-            wrapper.focus = null;
-          } else if (event.ctrlKey || event.shiftKey) {
-            wrapper.focus = d.data;
-          } else if (wrapper.collapsed.has(d.data)) {
-            wrapper.collapsed.delete(d.data);
-            wrapper.collapsed = new Set(wrapper.collapsed);
-          } else {
-            wrapper.collapsed.add(d.data);
-            wrapper.collapsed = new Set(wrapper.collapsed);
-          }
-        }).on('mouseenter', (d) => {
-          changeHovered(wrapper, d.data.indices);
-        }).on('mouseleave', () => {
-          changeHovered(wrapper, null);
-        });
-        return r;
-      });
-
-      inner.select('text').text((d) => {
-        if (wrapper.focus === d.data) {
-          return MDI_STAR_CIRCLE;
-        }
-        return collapsed.has(d.data) ? MDI_PLUS_CIRCLE : MDI_MINUS_CIRCLE;
-      });
-      inner.select('title').text(d => d.data.name);
-      inner.classed('collapsed', d => collapsed.has(d.data));
-      inner.classed('focused', d => wrapper.focus === d.data);
-
-      inner.attr('transform', d => `translate(${d.x},${d.y})`);
-    },
-    updateColumn() {
-      if (this.columnDendogramHeight === 0) {
-        return;
-      }
-      this.updateTree(this.$refs.column, this.columnHierarchy, this.column,
-        this.columnConfig, true);
-    },
-    updateRow() {
-      if (this.rowDendogramWidth === 0) {
-        return;
-      }
-      this.updateTree(this.$refs.row, this.rowHierarchy, this.row, this.rowConfig, false);
-    },
-
-    combineColor(names, colorer) {
-      if (names.length === 1) {
-        return colorer(names[0]);
-      }
-      const frequencies = new Map();
-      names.forEach((name) => {
-        const color = colorer(name);
-        frequencies.set(color, (frequencies.get(color) || 0) + 1);
-      });
-      // most frequent color
-      return Array.from(frequencies.entries()).sort((a, b) => b[1] - a[1])[0][0];
-    },
-    updateLabel(ref, wrapper, labels, colorer) {
-      if (!ref) {
-        return;
-      }
-      const div = select(ref);
-      const text = div.selectAll('div').data(labels).join((enter) => {
-        const l = enter.append('div');
-        l.append('span').classed('color', true);
-        l.append('span').classed('label', true);
-        return l;
-      });
-      const { hovered } = wrapper;
-
-      text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
-
-      text.select('.label').text(d => d.data.name);
-      text.select('.color')
-        .classed('hidden', !colorer)
-        .style('background', colorer ? (d => this.combineColor(d.data.names, colorer)) : null);
-    },
-    updateColumnLabel() {
-      this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves,
-        this.columnConfig.colorer, true);
-    },
-    updateRowLabel() {
-      this.updateLabel(this.$refs.rowlabel, this.row, this.rowLeaves,
-        this.rowConfig.colorer, false);
-    },
-    updateMatrix() {
-      if (!this.$refs.matrix || !this.values) {
-        return;
-      }
-      const ctx = this.$refs.matrix.getContext('2d');
-      ctx.canvas.width = this.matrixWidth;
-      ctx.canvas.height = this.matrixHeight;
-      ctx.clearRect(0, 0, this.matrixWidth, this.matrixHeight);
-      const rows = this.rowLeaves;
-      const columns = this.columnLeaves;
-      const {
-        valueScale,
-        values,
-        transposed,
-      } = this;
-      const hoveredRow = this.row.hovered;
-      const hoveredColumn = this.column.hovered;
-
-      const w = this.matrixWidth / columns.length;
-      const h = this.matrixHeight / rows.length;
-
-      ctx.strokeStyle = 'orange';
-
-
-      // work on copy for speed
-      const data = values.map(r => r.slice());
-
-      const cnodeIndices = columns.map(n => n.data.indices);
-
-      rows.forEach((rnode, i) => {
-        const rnodeIndices = rnode.data.indices;
-        const rowSelected = rnodeIndices.some(s => hoveredRow.has(s));
-        cnodeIndices.forEach((indices, j) => {
-          const v = aggregate(data, rnodeIndices, indices, transposed);
-          ctx.fillStyle = valueScale(v);
-          ctx.fillRect(j * w, i * h, w, h);
-        });
-
-        if (rowSelected) {
-          ctx.beginPath();
-          ctx.moveTo(0, i * h);
-          ctx.lineTo(ctx.canvas.width, i * h);
-          ctx.moveTo(0, i * h + h);
-          ctx.lineTo(ctx.canvas.width, i * h + h);
-          ctx.stroke();
-        }
-      });
-
-      cnodeIndices.forEach((indices, j) => {
-        const columnSelected = indices.some(s => hoveredColumn.has(s));
-        if (columnSelected) {
-          ctx.beginPath();
-          ctx.moveTo(j * w, 0);
-          ctx.lineTo(j * w, ctx.canvas.height);
-          ctx.moveTo(j * w + w, 0);
-          ctx.lineTo(j * w + w, ctx.canvas.height);
-          ctx.stroke();
-        }
-      });
-    },
-    onResize() {
-      const bb = this.$el.getBoundingClientRect();
-      this.width = bb.width;
-      this.height = bb.height;
-    },
-    canvasMouseMove(evt) {
-      const canvas = evt.currentTarget;
-      const w = canvas.width / this.columnLeaves.length;
-      const h = canvas.height / this.rowLeaves.length;
-
-      const j = Math.floor(evt.offsetX / w);
-      const i = Math.floor(evt.offsetY / h);
-      const rnode = this.rowLeaves[i].data;
-      const cnode = this.columnLeaves[j].data;
-      const rowChanged = changeHovered(this.row, rnode.indices);
-      const colChanged = changeHovered(this.column, cnode.indices);
-
-      if (rowChanged || colChanged) {
-        canvas.title = `${rnode.name} x ${cnode.name} = ${this.format(aggregate(this.values, rnode.indices, cnode.indices, this.transposed))}`;
-      }
-    },
-    canvasMouseLeave() {
-      changeHovered(this.row, null);
-      changeHovered(this.column, null);
-    },
-
-    generateImage() {
-      const canvas = document.createElement('canvas');
-      const columnDendogram = this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
-      const rowDendogram = this.rowConfig.dendogram ? this.width * DENDOGRAM_RATIO : 0;
-
-      canvas.width = rowDendogram + this.matrixWidth + LABEL_WIDTH;
-      canvas.height = columnDendogram + this.matrixHeight + LABEL_WIDTH;
-
-      const ctx = canvas.getContext('2d');
-      // copy matrix first
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(this.$refs.matrix, rowDendogram, columnDendogram);
-
-      const toWait = [];
-
-      if (columnDendogram > 0) {
-        // column dendogram
-        const url = svg2url(this.$refs.column, { font: false, icons: true });
-        const img = new Image(this.width * DENDOGRAM_RATIO, this.matrixHeight);
-        toWait.push(new Promise((resolve) => {
-          img.onload = () => {
-            ctx.drawImage(img, rowDendogram, 0);
-            URL.revokeObjectURL(url);
-            resolve();
-          };
-          img.src = url;
-        }));
-      }
-      if (rowDendogram > 0) {
-        // row dendogram
-        const url = svg2url(this.$refs.row, { font: false, icons: true });
-        const img = new Image(this.matrixWidth, this.height * DENDOGRAM_RATIO);
-        toWait.push(new Promise((resolve) => {
-          img.onload = () => {
-            ctx.drawImage(img, 0, columnDendogram);
-            URL.revokeObjectURL(url);
-            resolve();
-          };
-          img.src = url;
-        }));
-      }
-
-      // row labels
-      {
-        ctx.save();
-        ctx.translate(rowDendogram + this.matrixWidth, columnDendogram);
-        const hi = this.matrixHeight / this.rowLeaves.length;
-        const { colorer } = this.rowConfig;
-        if (colorer) {
-          this.rowLeaves.forEach((d, i) => {
-            ctx.fillStyle = this.combineColor(d.data.names, colorer);
-            ctx.fillRect(0, hi * i, 5, hi);
-          });
-        }
-        const x = colorer ? 7 : 0;
-
-        ctx.font = window.getComputedStyle(this.$refs.rowlabel).font;
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = 'black';
-        this.rowLeaves.forEach((d, i) => {
-          ctx.fillText(d.data.name, x, hi * (i + 0.5));
-        });
-        ctx.restore();
-      }
-      // column labels
-      {
-        ctx.save();
-        ctx.translate(rowDendogram, columnDendogram + this.matrixHeight);
-        const wi = this.matrixWidth / this.columnLeaves.length;
-        const { colorer } = this.columnConfig;
-        if (colorer) {
-          this.columnLeaves.forEach((d, i) => {
-            ctx.fillStyle = this.combineColor(d.data.names, colorer);
-            ctx.fillRect(wi * i, 0, wi, 5);
-          });
-        }
-        const y = colorer ? 7 : 0;
-        ctx.font = window.getComputedStyle(this.$refs.collabel).font;
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = 'black';
-        this.columnLeaves.forEach((d, i) => {
-          ctx.save();
-          ctx.translate(wi * (i + 0.5), y);
-          ctx.rotate(Math.PI * -0.5);
-          ctx.fillText(d.data.name, 0, 0);
-          ctx.restore();
-        });
-        ctx.restore();
-      }
-
-      return Promise.all(toWait).then(() => canvas.toDataURL('image/png'));
-    },
+  computeHierarchy(root, layoutWidth, layoutHeight) {
+    if (!root) {
+      return null;
+    }
+    const l = cluster()
+      .size([layoutWidth, layoutHeight * DENDOGRAM_RATIO - this.padding2])
+      .separation(() => 1);
+    return l(root);
   },
-};
+  updateTree(ref, root, wrapper, config, horizontalLayout) {
+    if (!ref || !config.dendogram || !root) {
+      return;
+    }
+    const svg = select(ref);
+    const edges = svg.select('g.edges').selectAll<SVGPathElement, unknown>('path').data(root.links()).join((enter) => {
+      const r = enter.append('path');
+      r.on('mouseenter', (d) => {
+        changeHovered(wrapper, d.target.data.indices);
+      }).on('mouseleave', () => {
+        changeHovered(wrapper, null);
+      });
+      return r;
+    });
+    const { hovered, collapsed } = wrapper;
+    const { padding } = this;
+
+    edges.classed('selected', d => d.target.data.indices.some(l => hovered.has(l)));
+
+    const renderVerticalLinks = d => `
+      M${d.target.x},${d.target.y + (d.target.children ? 0 : padding)}
+      L${d.target.x},${d.source.y}
+      L${d.source.x},${d.source.y}
+    `;
+    const renderHorizontalLinks = d => `
+      M${d.target.x + (d.target.children ? 0 : padding)},${d.target.y}
+      L${d.source.x},${d.target.y}
+      L${d.source.x},${d.source.y}
+    `;
+
+    edges.attr('d', horizontalLayout ? renderVerticalLinks : renderHorizontalLinks);
+
+    const innerNodes = root.descendants().filter(d => d.data.indices.length > 1);
+    const inner = svg.select('g.nodes').selectAll('g').data(innerNodes).join((enter) => {
+      const r = enter.append('g')
+        .html(`<circle r="${padding}"></circle><text><text><title></title>`)
+        .attr('transform', d => `translate(${d.x},${d.y})`);
+      r.on('click', (d) => {
+        if (wrapper.focus === d.data) {
+          wrapper.focus = null;
+        } else if (event.ctrlKey || event.shiftKey) {
+          wrapper.focus = d.data;
+        } else if (wrapper.collapsed.has(d.data)) {
+          wrapper.collapsed.delete(d.data);
+          wrapper.collapsed = new Set(wrapper.collapsed);
+        } else {
+          wrapper.collapsed.add(d.data);
+          wrapper.collapsed = new Set(wrapper.collapsed);
+        }
+      }).on('mouseenter', (d) => {
+        changeHovered(wrapper, d.data.indices);
+      }).on('mouseleave', () => {
+        changeHovered(wrapper, null);
+      });
+      return r;
+    });
+
+    inner.select('text').text((d) => {
+      if (wrapper.focus === d.data) {
+        return MDI_STAR_CIRCLE;
+      }
+      return collapsed.has(d.data) ? MDI_PLUS_CIRCLE : MDI_MINUS_CIRCLE;
+    });
+    inner.select('title').text(d => d.data.name);
+    inner.classed('collapsed', d => collapsed.has(d.data));
+    inner.classed('focused', d => wrapper.focus === d.data);
+
+    inner.attr('transform', d => `translate(${d.x},${d.y})`);
+  }
+  updateColumn() {
+    if (this.columnDendogramHeight === 0) {
+      return;
+    }
+    this.updateTree(this.$refs.column, this.columnHierarchy, this.column,
+      this.columnConfig, true);
+  }
+  updateRow() {
+    if (this.rowDendogramWidth === 0) {
+      return;
+    }
+    this.updateTree(this.$refs.row, this.rowHierarchy, this.row, this.rowConfig, false);
+  }
+
+  combineColor(names: string[], colorer) {
+    if (names.length === 1) {
+      return colorer(names[0]);
+    }
+    const frequencies = new Map();
+    names.forEach((name) => {
+      const color = colorer(name);
+      frequencies.set(color, (frequencies.get(color) || 0) + 1);
+    });
+    // most frequent color
+    return Array.from(frequencies.entries()).sort((a, b) => b[1] - a[1])[0][0];
+  }
+  updateLabel(ref: HTMLElement, wrapper, labels: string[], colorer) {
+    if (!ref) {
+      return;
+    }
+    const div = select(ref);
+    const text = div.selectAll('div').data(labels).join((enter) => {
+      const l = enter.append('div');
+      l.append('span').classed('color', true);
+      l.append('span').classed('label', true);
+      return l;
+    });
+    const { hovered } = wrapper;
+
+    text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
+
+    text.select('.label').text(d => d.data.name);
+    text.select('.color')
+      .classed('hidden', !colorer)
+      .style('background', colorer ? (d => this.combineColor(d.data.names, colorer)) : null);
+  }
+  updateColumnLabel() {
+    this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves,
+      this.columnConfig.colorer);
+  }
+  updateRowLabel() {
+    this.updateLabel(this.$refs.rowlabel, this.row, this.rowLeaves,
+      this.rowConfig.colorer);
+  }
+  updateMatrix() {
+    if (!this.$refs.matrix || !this.values) {
+      return;
+    }
+    const ctx = this.$refs.matrix.getContext('2d')!;
+    ctx.canvas.width = this.matrixWidth;
+    ctx.canvas.height = this.matrixHeight;
+    ctx.clearRect(0, 0, this.matrixWidth, this.matrixHeight);
+    const rows = this.rowLeaves;
+    const columns = this.columnLeaves;
+    const {
+      valueScale,
+      values,
+      transposed,
+    } = this;
+    const hoveredRow = this.row.hovered;
+    const hoveredColumn = this.column.hovered;
+
+    const w = this.matrixWidth / columns.length;
+    const h = this.matrixHeight / rows.length;
+
+    ctx.strokeStyle = 'orange';
+
+
+    // work on copy for speed
+    const data = values.map(r => r.slice());
+
+    const cnodeIndices = columns.map(n => n.data.indices);
+
+    rows.forEach((rnode, i) => {
+      const rnodeIndices = rnode.data.indices;
+      const rowSelected = rnodeIndices.some(s => hoveredRow.has(s));
+      cnodeIndices.forEach((indices, j) => {
+        const v = aggregate(data, rnodeIndices, indices, transposed);
+        ctx.fillStyle = valueScale(v);
+        ctx.fillRect(j * w, i * h, w, h);
+      });
+
+      if (rowSelected) {
+        ctx.beginPath();
+        ctx.moveTo(0, i * h);
+        ctx.lineTo(ctx.canvas.width, i * h);
+        ctx.moveTo(0, i * h + h);
+        ctx.lineTo(ctx.canvas.width, i * h + h);
+        ctx.stroke();
+      }
+    });
+
+    cnodeIndices.forEach((indices, j) => {
+      const columnSelected = indices.some(s => hoveredColumn.has(s));
+      if (columnSelected) {
+        ctx.beginPath();
+        ctx.moveTo(j * w, 0);
+        ctx.lineTo(j * w, ctx.canvas.height);
+        ctx.moveTo(j * w + w, 0);
+        ctx.lineTo(j * w + w, ctx.canvas.height);
+        ctx.stroke();
+      }
+    });
+  }
+  onResize() {
+    const bb = this.$el.getBoundingClientRect();
+    this.width = bb.width;
+    this.height = bb.height;
+  }
+  canvasMouseMove(evt: MouseEvent) {
+    const canvas = evt.currentTarget as HTMLCanvasElement;
+    const w = canvas.width / this.columnLeaves.length;
+    const h = canvas.height / this.rowLeaves.length;
+
+    const j = Math.floor(evt.offsetX / w);
+    const i = Math.floor(evt.offsetY / h);
+    const rnode = this.rowLeaves[i].data;
+    const cnode = this.columnLeaves[j].data;
+    const rowChanged = changeHovered(this.row, rnode.indices);
+    const colChanged = changeHovered(this.column, cnode.indices);
+
+    if (rowChanged || colChanged) {
+      canvas.title = `${rnode.name} x ${cnode.name} = ${this.format(aggregate(this.values, rnode.indices, cnode.indices, this.transposed))}`;
+    }
+  }
+  canvasMouseLeave() {
+    changeHovered(this.row, null);
+    changeHovered(this.column, null);
+  }
+
+  generateImage() {
+    const canvas = document.createElement('canvas');
+    const columnDendogram = this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
+    const rowDendogram = this.rowConfig.dendogram ? this.width * DENDOGRAM_RATIO : 0;
+
+    canvas.width = rowDendogram + this.matrixWidth + LABEL_WIDTH;
+    canvas.height = columnDendogram + this.matrixHeight + LABEL_WIDTH;
+
+    const ctx = canvas.getContext('2d');
+    // copy matrix first
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(this.$refs.matrix, rowDendogram, columnDendogram);
+
+    const toWait = [];
+
+    if (columnDendogram > 0) {
+      // column dendogram
+      const url = svg2url(this.$refs.column, { font: false, icons: true });
+      const img = new Image(this.width * DENDOGRAM_RATIO, this.matrixHeight);
+      toWait.push(new Promise((resolve) => {
+        img.onload = () => {
+          ctx.drawImage(img, rowDendogram, 0);
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+        img.src = url;
+      }));
+    }
+    if (rowDendogram > 0) {
+      // row dendogram
+      const url = svg2url(this.$refs.row, { font: false, icons: true });
+      const img = new Image(this.matrixWidth, this.height * DENDOGRAM_RATIO);
+      toWait.push(new Promise((resolve) => {
+        img.onload = () => {
+          ctx.drawImage(img, 0, columnDendogram);
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+        img.src = url;
+      }));
+    }
+
+    // row labels
+    {
+      ctx.save();
+      ctx.translate(rowDendogram + this.matrixWidth, columnDendogram);
+      const hi = this.matrixHeight / this.rowLeaves.length;
+      const { colorer } = this.rowConfig;
+      if (colorer) {
+        this.rowLeaves.forEach((d, i) => {
+          ctx.fillStyle = this.combineColor(d.data.names, colorer);
+          ctx.fillRect(0, hi * i, 5, hi);
+        });
+      }
+      const x = colorer ? 7 : 0;
+
+      ctx.font = window.getComputedStyle(this.$refs.rowlabel).font;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'black';
+      this.rowLeaves.forEach((d, i) => {
+        ctx.fillText(d.data.name, x, hi * (i + 0.5));
+      });
+      ctx.restore();
+    }
+    // column labels
+    {
+      ctx.save();
+      ctx.translate(rowDendogram, columnDendogram + this.matrixHeight);
+      const wi = this.matrixWidth / this.columnLeaves.length;
+      const { colorer } = this.columnConfig;
+      if (colorer) {
+        this.columnLeaves.forEach((d, i) => {
+          ctx.fillStyle = this.combineColor(d.data.names, colorer);
+          ctx.fillRect(wi * i, 0, wi, 5);
+        });
+      }
+      const y = colorer ? 7 : 0;
+      ctx.font = window.getComputedStyle(this.$refs.collabel).font;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'black';
+      this.columnLeaves.forEach((d, i) => {
+        ctx.save();
+        ctx.translate(wi * (i + 0.5), y);
+        ctx.rotate(Math.PI * -0.5);
+        ctx.fillText(d.data.name, 0, 0);
+        ctx.restore();
+      });
+      ctx.restore();
+    }
+
+    return Promise.all(toWait).then(() => canvas.toDataURL('image/png'));
+  }
+}
 </script>
 
 <template lang="pug">
