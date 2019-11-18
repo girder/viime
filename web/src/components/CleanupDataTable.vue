@@ -126,6 +126,11 @@ export default {
         color: tColor === 'black' ? null : tColor, // avoid setting default color
       };
     },
+    showTooltip(rowIndex, columnIndex) {
+      const columnType = this.dataset.column.labels[columnIndex];
+      const rowType = this.dataset.row.labels[rowIndex];
+      return columnType !== 'measurement' || rowType !== 'sample';
+    },
   },
 };
 </script>
@@ -133,6 +138,7 @@ export default {
 <template lang="pug">
 data-table(:row-headers="rowHeaders", :columns="columns",
     :cell-classes="cellClasses", :cell-styles="cellStyles",
-    @row-click="onRowClick($event)",
+    @row-click="onRowClick($event)", :show-tooltip="showTooltip",
+    :header-tooltips="false",
     @column-click="onColumnClick($event)", @cell-click="onCellClick($event)")
 </template>
