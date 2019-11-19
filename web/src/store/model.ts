@@ -1,4 +1,19 @@
 
+export interface IValidationMetaInfo {
+  description: string;
+  clickable: boolean;
+  multi: boolean;
+}
+
+export interface IValidationError extends IValidationMetaInfo {
+  severity: boolean;
+  type: string;
+  context: string;
+  title: string;
+  column_index: number;
+  data: { index: number, info: any, name: string }[]
+}
+
 export interface ITableColumn {
   column_index: number;
   column_header: string;
@@ -34,6 +49,8 @@ export interface IDataSet {
   validatedMeasurementsMetaData: IDataFrame<string | number>;
   validatedSampleMetaData: IDataFrame<string | number>;
   validatedGroups: IDataFrame<string>;
+
+  validation: IValidationError[];
 }
 
 export interface ISampleFile {

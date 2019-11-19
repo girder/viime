@@ -1,9 +1,9 @@
 import papa from 'papaparse';
 import { hsl } from 'd3-color';
-import { validationMeta, IValidationMetaInfo } from './constants';
+import { validationMeta } from './constants';
 import RangeList from './rangelist';
 import SessionStore from './sessionStore';
-import { ITableColumn, IDataFrame } from '@/store/model';
+import { ITableColumn, IDataFrame, IValidationError } from '@/store/model';
 
 /**
  * A function to group an array of objects
@@ -84,14 +84,6 @@ function parsePandasDataFrame<T>(toSplitDictResult: IToSplitDictResult,
   };
 }
 
-export interface IValidationError extends IValidationMetaInfo {
-  severity: boolean;
-  type: string;
-  context: string;
-  title: string;
-  column_index: number;
-  data: {index: number, info: any, name: string}[]
-}
 
 /**
  * A function to clean up server validation messages into

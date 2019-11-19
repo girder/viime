@@ -1,3 +1,5 @@
+import { IValidationMetaInfo } from '@/store/model';
+
 const measurementColumnName = 'Metabolite';
 const measurementValueName = 'Measurement';
 
@@ -139,12 +141,6 @@ const transform_methods = [
   { label: 'Square Root', value: 'squareroot' },
   { label: 'Cube Root', value: 'cuberoot' },
 ];
-
-export interface IValidationMetaInfo {
-  description: string;
-  clickable: boolean;
-  multi: boolean;
-}
 
 const validationMeta: {[key: string]: IValidationMetaInfo} = {
   'group-missing': {
