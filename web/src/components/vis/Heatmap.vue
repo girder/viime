@@ -555,11 +555,11 @@ export default class Heatmap extends Vue {
     text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
 
     text.select('.label').text(d => d.data.name);
-    text
+    const color = text
       .select('.color')
       .classed('hidden', !colorer);
     if (colorer) {
-      text.style('background', d => Heatmap.combineColor(d.data.names, colorer))
+      color.style('background', d => Heatmap.combineColor(d.data.names, colorer))
     }
   }
 
