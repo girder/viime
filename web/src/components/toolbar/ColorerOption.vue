@@ -16,6 +16,7 @@ export default class ColorerOption extends Vue {
 
   @Prop({
     default: null,
+    type: String
   })
   readonly value!: string|null;
 
