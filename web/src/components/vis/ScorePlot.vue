@@ -14,6 +14,20 @@ import resize from 'vue-resize-directive';
 import 'c3/c3.css';
 import './score-plot.css';
 
+function sameContents(a, b) {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function fixCSS(id) {
   // replace non css stuff to _
   return id.replace(/[\s!#$%&'()*+,./:;<=>?@[\\\]^`{|}~]+/g, '_');
@@ -466,11 +480,17 @@ export default {
       // eslint-disable-next-line vue/no-side-effects-in-computed-properties
       this.labels = labels;
 
-      // Draw the C3 chart.
-      this.chart.unload();
+      // Collect the existing and incoming column names.
+      const oldCols = this.chart.data().map(d => d.id);
+      const newCols = columns.map(d => d[0])
+        .filter(d => !d.endsWith('_x'));
+
+      // Draw the C3 chart, unloding the existing data first if the column names
+      // have changed.
       this.chart.load({
         columns,
         xs,
+        unload: !sameContents(oldCols, newCols),
       });
 
       // Set the colors.
