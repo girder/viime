@@ -14,41 +14,45 @@ v-app.viime-app
     router-view.grow
 </template>
 
-<script>
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator';
+import { RouteRecord } from 'vue-router';
+import { Dictionary, Store } from 'vuex';
 import BrowserSupportBanner from './BrowserSupportBanner.vue';
 import SaveStatus from './SaveStatus.vue';
 import FeedbackButton from './FeedbackButton.vue';
 
-export default {
+@Component({
   name: 'App',
   components: {
     BrowserSupportBanner,
     SaveStatus,
     FeedbackButton,
   },
-  computed: {
-    breadcrumbs() {
-      return [
-        {
-          text: 'VIIME',
-          to: { name: 'Root' },
-        },
-        {
-          text: 'Data',
-          to: { name: 'Upload Data' },
-        },
-        ...this.$route.matched.filter(route => !route.meta.hidden).map((route) => {
-          const b = route.meta.breadcrumb;
-          return {
-            text: route.name,
-            to: { name: route.name, params: this.$route.params },
-            ...(b ? b.call(route, this.$route.params, this.$store) : {}),
-          };
-        }),
-      ];
-    },
-  },
-};
+})
+export default class SampleBrowser extends Vue {
+  get breadcrumbs() {
+    return [
+      {
+        text: 'VIIME',
+        to: { name: 'Root' },
+      },
+      {
+        text: 'Data',
+        to: { name: 'Upload Data' },
+      },
+      ...this.$route.matched.filter(route => !route.meta.hidden).map((route) => {
+        const b: (this: RouteRecord, params: Dictionary<string>,
+                  store: Store<any>)=>any = route.meta.breadcrumb;
+        return {
+          text: route.name,
+          to: { name: route.name, params: this.$route.params },
+          ...(b ? b.call(route, this.$route.params, this.$store) : {}),
+        };
+      }),
+    ];
+  }
+}
 </script>
 
 <style lang="scss">

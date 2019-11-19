@@ -1,57 +1,58 @@
-<script>
+<script lang="ts">
+import { Component, Prop, Vue } from 'vue-property-decorator';
+import 'vuex';
 import { CHANGE_AXIS_LABEL } from '@/store/actions.type';
 import { SET_SELECTION } from '@/store/mutations.type';
 import { base26Converter } from '@/utils/';
+import { IDataSet } from '../store/model';
 
-export default {
-  props: {
-    id: {
-      type: String,
-      required: true,
-    },
-    problem: {
-      type: String,
-      required: true,
-    },
-  },
-  computed: {
-    dataset() {
-      return this.$store.state.datasets[this.id];
-    },
-    problemData() {
-      return this.dataset.validation.find(v => v.type === this.problem);
-    },
-  },
-  methods: {
-    base26Converter,
-    select(event, item) {
-      const { index } = item;
-      this.$store.commit(SET_SELECTION, {
-        key: this.id,
-        idx: index,
-        axis: 'column',
-        event,
-      });
-    },
-    async mask(index) {
-      const changes = [{
-        context: this.problemData.context,
-        index,
-        label: 'masked',
-      }];
-      await this.$store.dispatch(CHANGE_AXIS_LABEL, { dataset_id: this.id, changes });
-    },
-    async maskAll() {
-      const { problemData } = this;
-      const changes = problemData.data.map(error => ({
-        context: problemData.context,
-        index: error.index,
-        label: 'masked',
-      }));
-      await this.$store.dispatch(CHANGE_AXIS_LABEL, { dataset_id: this.id, changes });
-    },
-  },
-};
+@Component
+export default class ProblemBar extends Vue {
+  @Prop()
+  id!: string;
+
+  @Prop()
+  problem!: string;
+
+  get dataset(): IDataSet {
+    return this.$store.state.datasets[this.id];
+  }
+
+  get problemData() {
+    return this.dataset.validation.find(v => v.type === this.problem)!;
+  }
+
+  base26Converter = base26Converter;
+
+  select(event: MouseEvent, item: { index: number }) {
+    const { index } = item;
+    this.$store.commit(SET_SELECTION, {
+      key: this.id,
+      idx: index,
+      axis: 'column',
+      event,
+    });
+  }
+
+  async mask(index: number) {
+    const changes = [{
+      context: this.problemData.context,
+      index,
+      label: 'masked',
+    }];
+    await this.$store.dispatch(CHANGE_AXIS_LABEL, { dataset_id: this.id, changes });
+  }
+
+  async maskAll() {
+    const { problemData } = this;
+    const changes = problemData.data.map(error => ({
+      context: problemData.context,
+      index: error.index,
+      label: 'masked',
+    }));
+    await this.$store.dispatch(CHANGE_AXIS_LABEL, { dataset_id: this.id, changes });
+  }
+}
 </script>
 
 <template lang="pug">
