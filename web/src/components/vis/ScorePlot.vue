@@ -103,7 +103,7 @@ export default {
     rowLabels: {
       required: true,
       type: Array,
-      validator: prop => prop.every(val => typeof val === 'string'),
+      validator: prop => prop.every(val => typeof val !== 'object'),
     },
     colors: {
       required: true,
