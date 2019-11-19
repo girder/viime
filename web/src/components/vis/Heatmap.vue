@@ -559,7 +559,7 @@ export default class Heatmap extends Vue {
       .select('.color')
       .classed('hidden', !colorer);
     if (colorer) {
-      color.style('background', d => Heatmap.combineColor(d.data.names, colorer))
+      color.style('background', d => Heatmap.combineColor(d.data.names, colorer));
     }
   }
 
