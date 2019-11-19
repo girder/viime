@@ -14,7 +14,6 @@ import resize from 'vue-resize-directive';
 import 'c3/c3.css';
 import './score-plot.css';
 
-
 function fixCSS(id) {
   // replace non css stuff to _
   return id.replace(/[\s!#$%&'()*+,./:;<=>?@[\\\]^`{|}~]+/g, '_');
@@ -218,7 +217,7 @@ export default {
         && eigenvalues.length > 0;
     },
 
-    update() {
+    updateDeps() {
       const {
         colorMapping,
         pcPoints,
@@ -233,115 +232,25 @@ export default {
         height,
       } = this;
 
-      if (!valid) {
-        return '';
-      }
-
-      const fmt = format('.2%');
-      const x = `PC${pcX} (${fmt(pcVariances[0])})`;
-      const y = `PC${pcY} (${fmt(pcVariances[1])})`;
-
-      this.chart.axis.labels({
-        x,
-        y,
-      });
-
-      this.chart.resize({
+      return {
+        colorMapping,
+        pcPoints,
+        pcX,
+        pcY,
+        showEllipses,
+        ellipseVisible,
+        duration,
+        pcVariances,
+        valid,
         width,
         height,
-      });
+      };
+    },
+  },
 
-      const [xData, yData] = pcPoints;
-      const grouped = this.grouped(xData, yData);
-
-      const groups = Object.keys(grouped);
-      const columns = [];
-      const labels = {};
-      const xs = {};
-      groups.forEach((g) => {
-        const xName = `${g}_x`;
-
-        columns.push([xName, ...grouped[g].map(d => d.x)]);
-        columns.push([g, ...grouped[g].map(d => d.y)]);
-
-        labels[g] = [...grouped[g].map(d => d.label)];
-
-        xs[g] = xName;
-      });
-
-      // The following side effect depends on xData and yData in the same way
-      // that the C3 chart itself does, so we disable the linter warning that would
-      // prevent it.
-      //
-      // In general, this is part of the tradeoff of mixing an imperative vis
-      // library like C3 with a reactive framework like Vue. The alternatives are
-      // less attractive than breaking the rules here: for instance, we could set a
-      // series of watchers on the dependencies of this function to explicitly
-      // trigger it, but that presents a serious danger of falling out of sync with
-      // changes in the dependency list.
-      //
-      // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-      this.labels = labels;
-
-      // Draw the C3 chart.
-      this.chart.unload();
-      this.chart.load({
-        columns,
-        xs,
-      });
-
-      // Set the colors.
-      this.chart.data.colors(colorMapping);
-
-      // Draw the data ellipses.
-      const scaleX = this.chart.internal.x;
-      const scaleY = this.chart.internal.y;
-      const cmap = this.chart.internal.color;
-
-      const confidenceEllipses = Object.keys(grouped).map(group => ({
-        ...confidenceEllipse(grouped[group].map(d => d.x), grouped[group].map(d => d.y), 1),
-        category: group,
-      }));
-      confidenceEllipses.forEach((ell) => {
-        if (ellipseVisible[ell.category] === undefined) {
-          ellipseVisible[ell.category] = true;
-        }
-      });
-
-      const xFactor = (scaleX(1e10) - scaleX(0)) / 1e10;
-      const yFactor = (scaleY(1e10) - scaleY(0)) / 1e10;
-      const plotTransform = `translate(${scaleX(0)} ${scaleY(0)}) scale(${xFactor} ${yFactor})`;
-      select(this.$refs.chart)
-        .select('.c3-custom-ellipses')
-        .selectAll('ellipse')
-        .data(confidenceEllipses)
-        .join(
-          enter => enter
-            .append('ellipse')
-            .attr('class', d => `ellipse-${fixCSS(d.category)}`)
-            .classed('ellipse', true)
-            .style('fill', 'none')
-            .style('stroke', d => cmap(d.category))
-            .style('stroke-width', 1)
-            .attr('vector-effect', 'non-scaling-stroke')
-            .attr('rx', d => d.rx)
-            .attr('ry', d => d.ry)
-            .attr('transform', d => `${plotTransform} ${d.transform}`)
-            .style('opacity', 1),
-          update => update
-            .style('display', d => (showEllipses && ellipseVisible[d.category] ? null : 'none'))
-            .transition()
-            .duration(300)
-            .attr('rx', d => d.rx)
-            .attr('ry', d => d.ry)
-            .attr('transform', d => `${plotTransform} ${d.transform}`),
-          exit => exit.transition('exit')
-            .duration(duration)
-            .style('opacity', 0)
-            .remove(),
-        );
-
-      return String(Math.random());
+  watch: {
+    updateDeps() {
+      this.update();
     },
   },
 
@@ -490,6 +399,133 @@ export default {
       const bb = this.$el.getBoundingClientRect();
       this.width = bb.width - 20;
       this.height = bb.height;
+    },
+
+    update() {
+      const {
+        colorMapping,
+        pcPoints,
+        pcX,
+        pcY,
+        showEllipses,
+        ellipseVisible,
+        duration,
+        pcVariances,
+        valid,
+        width,
+        height,
+      } = this.updateDeps;
+
+      if (!valid) {
+        return '';
+      }
+
+      const fmt = format('.2%');
+      const x = `PC${pcX} (${fmt(pcVariances[0])})`;
+      const y = `PC${pcY} (${fmt(pcVariances[1])})`;
+
+      this.chart.axis.labels({
+        x,
+        y,
+      });
+
+      this.chart.resize({
+        width,
+        height,
+      });
+
+      const [xData, yData] = pcPoints;
+      const grouped = this.grouped(xData, yData);
+
+      const groups = Object.keys(grouped);
+      const columns = [];
+      const labels = {};
+      const xs = {};
+      groups.forEach((g) => {
+        const xName = `${g}_x`;
+
+        columns.push([xName, ...grouped[g].map(d => d.x)]);
+        columns.push([g, ...grouped[g].map(d => d.y)]);
+
+        labels[g] = [...grouped[g].map(d => d.label)];
+
+        xs[g] = xName;
+      });
+
+      // The following side effect depends on xData and yData in the same way
+      // that the C3 chart itself does, so we disable the linter warning that would
+      // prevent it.
+      //
+      // In general, this is part of the tradeoff of mixing an imperative vis
+      // library like C3 with a reactive framework like Vue. The alternatives are
+      // less attractive than breaking the rules here: for instance, we could set a
+      // series of watchers on the dependencies of this function to explicitly
+      // trigger it, but that presents a serious danger of falling out of sync with
+      // changes in the dependency list.
+      //
+      // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+      this.labels = labels;
+
+      // Draw the C3 chart.
+      this.chart.unload();
+      this.chart.load({
+        columns,
+        xs,
+      });
+
+      // Set the colors.
+      this.chart.data.colors(colorMapping);
+
+      // Draw the data ellipses.
+      const scaleX = this.chart.internal.x;
+      const scaleY = this.chart.internal.y;
+      const cmap = this.chart.internal.color;
+
+      const confidenceEllipses = Object.keys(grouped).map(group => ({
+        ...confidenceEllipse(grouped[group].map(d => d.x), grouped[group].map(d => d.y), 1),
+        category: group,
+      }));
+
+      confidenceEllipses.forEach((ell) => {
+        if (ellipseVisible[ell.category] === undefined) {
+          ellipseVisible[ell.category] = true;
+        }
+      });
+
+      const xFactor = (scaleX(1e10) - scaleX(0)) / 1e10;
+      const yFactor = (scaleY(1e10) - scaleY(0)) / 1e10;
+      const plotTransform = `translate(${scaleX(0)} ${scaleY(0)}) scale(${xFactor} ${yFactor})`;
+      select(this.$refs.chart)
+        .select('.c3-custom-ellipses')
+        .selectAll('ellipse')
+        .data(confidenceEllipses)
+        .join(
+          enter => enter
+            .append('ellipse')
+            .attr('class', d => `ellipse-${fixCSS(d.category)}`)
+            .classed('ellipse', true)
+            .style('fill', 'none')
+            .style('stroke', d => cmap(d.category))
+            .style('stroke-width', 1)
+            .attr('vector-effect', 'non-scaling-stroke')
+            .attr('rx', d => d.rx)
+            .attr('ry', d => d.ry)
+            .attr('transform', d => `${plotTransform} ${d.transform}`)
+            .style('opacity', 1),
+          update => update
+            .style('display', d => (showEllipses && ellipseVisible[d.category] ? null : 'none'))
+            .transition()
+            .duration(300)
+            .attr('rx', d => d.rx)
+            .attr('ry', d => d.ry)
+            .attr('transform', d => `${plotTransform} ${d.transform}`),
+          exit => exit.transition('exit')
+            .duration(duration)
+            .style('opacity', 0)
+            .remove(),
+        );
+
+      return String(Math.random());
     },
   },
 };
