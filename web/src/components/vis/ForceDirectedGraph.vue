@@ -74,18 +74,18 @@ export default class ForceDirectedGraph extends Vue {
   })
   readonly minStrokeValue!: number;
 
-  width = 0;
+  private width = 0;
 
-  height= 0;
+  private height= 0;
 
-  readonly simulation = this.initSimulation();
+  private readonly simulation = this.initSimulation();
 
-  readonly zoom = zoom<SVGSVGElement, unknown>();
+  private readonly zoom = zoom<SVGSVGElement, unknown>();
 
-  refsMounted = false; // to force an rendering after mounting
+  private refsMounted = false; // to force an rendering after mounting
 
   // not obserable
-  simulationTicker: number|undefined = undefined;
+  private simulationTicker: number|undefined = undefined;
 
   $refs!: {
     svg: SVGSVGElement
@@ -107,7 +107,7 @@ export default class ForceDirectedGraph extends Vue {
     return '';
   }
 
-  get strokeScale() {
+  private get strokeScale() {
     return scalePow().exponent(2).domain([this.minStrokeValue, 1]).range([1, 8])
       .clamp(true);
   }
@@ -121,7 +121,7 @@ export default class ForceDirectedGraph extends Vue {
     this.simulation.stop();
   }
 
-  initSimulation() {
+  private initSimulation() {
     const f = forceSimulation<ISimNode>();
     f.force('many', forceManyBody());
     f.force('x', forceX().strength(0.01));
@@ -133,7 +133,7 @@ export default class ForceDirectedGraph extends Vue {
     return f;
   }
 
-  stopTicker() {
+  private stopTicker() {
     // not a observed data element
     if (this.simulationTicker != null && this.simulationTicker >= 0) {
       window.clearTimeout(this.simulationTicker);
@@ -141,7 +141,7 @@ export default class ForceDirectedGraph extends Vue {
     }
   }
 
-  startTicker() {
+  private startTicker() {
     const ticker = (remaining: number) => {
       if (!this.$refs.svg) {
         return;
@@ -155,7 +155,7 @@ export default class ForceDirectedGraph extends Vue {
     ticker(50);
   }
 
-  tick() {
+  private tick() {
     if (!this.$refs.svg) {
       return;
     }
@@ -179,7 +179,7 @@ export default class ForceDirectedGraph extends Vue {
       .attr('transform', d => `translate(${t.applyX((d.source.x! + d.target.x!) / 2)},${t.applyY((d.source.y! + d.target.y!) / 2)})`);
   }
 
-  tick250() {
+  private tick250() {
     const sim = this.simulation.alpha(1).restart().stop();
 
     const idleCallback = (window as any).requestIdleCallback;
@@ -221,7 +221,7 @@ export default class ForceDirectedGraph extends Vue {
     });
   }
 
-  updateBounds() {
+  private updateBounds() {
     const { simulation } = this;
 
     if (!this.$refs.svg) {
@@ -241,7 +241,7 @@ export default class ForceDirectedGraph extends Vue {
     simulation.force<ForceCollide<ISimNode>>('collide')!.radius(this.radius);
   }
 
-  update() {
+  private update() {
     const { simulation, stopTicker } = this;
 
     simulation.stop();

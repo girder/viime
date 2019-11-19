@@ -59,7 +59,7 @@ export default class SampleFilter extends Mixins(SampleMixin) {
     return v;
   }
 
-  generateFilter(value: IFilterValueBase): ((row: string) => boolean) {
+  private generateFilter(value: IFilterValueBase): ((row: string) => boolean) {
     if (!value.option) {
       return () => true;
     }
@@ -69,7 +69,7 @@ export default class SampleFilter extends Mixins(SampleMixin) {
     return row => lookup.has(String(meta.data[toIndex(row)]));
   }
 
-  generateGroupBy(value: IFilterValueBase): ((rows: string[]) => IGroup[]) {
+  private generateGroupBy(value: IFilterValueBase): ((rows: string[]) => IGroup[]) {
     if (!value.option) {
       return (rows: string[]) => [{
         name: 'default',

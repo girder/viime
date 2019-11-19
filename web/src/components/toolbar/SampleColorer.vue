@@ -39,7 +39,7 @@ export default class SampleColorer extends Mixins(SampleMixin) {
     return v;
   }
 
-  generateColorer(value: string | null) {
+  private generateColorer(value: string | null) {
     if (!value) {
       return () => null;
     }
@@ -49,7 +49,7 @@ export default class SampleColorer extends Mixins(SampleMixin) {
     return (row: string) => lookup.get(String(meta.data[toIndex(row)]))!;
   }
 
-  generateLevels(value: string | null) {
+  private generateLevels(value: string | null) {
     if (!value || value === this.emptyOption) {
       return [];
     }

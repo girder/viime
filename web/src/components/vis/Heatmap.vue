@@ -255,11 +255,11 @@ export default class Heatmap extends Vue {
     return '';
   }
 
-  get columnTree() {
+  private get columnTree() {
     return Heatmap.computeTree(this.columnClustering, this.column);
   }
 
-  get columnHierarchy() {
+  private get columnHierarchy() {
     return this.computeHierarchy(
       this.columnTree,
       this.matrixWidth,
@@ -267,11 +267,11 @@ export default class Heatmap extends Vue {
     );
   }
 
-  get rowTree() {
+  private get rowTree() {
     return Heatmap.computeTree(this.rowClustering, this.row);
   }
 
-  get rowHierarchy() {
+  private get rowHierarchy() {
     const root = this.computeHierarchy(
       this.rowTree,
       this.matrixHeight,
@@ -288,7 +288,7 @@ export default class Heatmap extends Vue {
     return root;
   }
 
-  get valueScale() {
+  private get valueScale() {
     return scaleSequential<string>(t => interpolateRdBu(1 - t)).domain(
       domain(this.values),
     );
@@ -298,23 +298,23 @@ export default class Heatmap extends Vue {
     return this.valueScale.domain().map(this.format);
   }
 
-  get columnLeaves() {
+  private get columnLeaves() {
     return this.columnTree ? this.columnTree.leaves() : [];
   }
 
-  get rowLeaves() {
+  private get rowLeaves() {
     return this.rowTree ? this.rowTree.leaves() : [];
   }
 
-  get columnDendogramHeight() {
+  private get columnDendogramHeight() {
     return this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
   }
 
-  get rowDendogramWidth() {
+  private get rowDendogramWidth() {
     return this.rowConfig.dendogram ? this.width * DENDOGRAM_RATIO : 0;
   }
 
-  get matrixDimensions() {
+  private get matrixDimensions() {
     let width = this.width - this.rowDendogramWidth - LABEL_WIDTH;
     let height = this.height - this.columnDendogramHeight - LABEL_WIDTH;
     if (this.layout === 'squareCells') {
@@ -330,11 +330,11 @@ export default class Heatmap extends Vue {
     return { width, height };
   }
 
-  get matrixWidth() {
+  private get matrixWidth() {
     return this.matrixDimensions.width;
   }
 
-  get matrixHeight() {
+  private get matrixHeight() {
     return this.matrixDimensions.height;
   }
 
@@ -350,7 +350,7 @@ export default class Heatmap extends Vue {
     this.refsMounted = true;
   }
 
-  static computeTree(
+  private static computeTree(
     node: ITreeNode,
     { collapsed, focus }: ITreeState,
   ): IHierarchyNode | null {
@@ -386,7 +386,7 @@ export default class Heatmap extends Vue {
     return root;
   }
 
-  computeHierarchy(
+  private computeHierarchy(
     root: IHierarchyNode | null,
     layoutWidth: number,
     layoutHeight: number,
@@ -400,7 +400,7 @@ export default class Heatmap extends Vue {
     return l(root);
   }
 
-  updateTree(
+  private updateTree(
     ref: SVGSVGElement,
     root: IHierarchyNode | null,
     wrapper: ITreeState,
@@ -492,7 +492,7 @@ export default class Heatmap extends Vue {
     inner.attr('transform', d => `translate(${d.x},${d.y})`);
   }
 
-  updateColumn() {
+  private updateColumn() {
     if (this.columnDendogramHeight === 0) {
       return;
     }
@@ -505,7 +505,7 @@ export default class Heatmap extends Vue {
     );
   }
 
-  updateRow() {
+  private updateRow() {
     if (this.rowDendogramWidth === 0) {
       return;
     }
@@ -518,7 +518,7 @@ export default class Heatmap extends Vue {
     );
   }
 
-  static combineColor(names: string[], colorer: (val: string) => string) {
+  private static combineColor(names: string[], colorer: (val: string) => string) {
     if (names.length === 1) {
       return colorer(names[0]);
     }
@@ -531,7 +531,7 @@ export default class Heatmap extends Vue {
     return Array.from(frequencies.entries()).sort((a, b) => b[1] - a[1])[0][0];
   }
 
-  static updateLabel(
+  private static updateLabel(
     ref: HTMLElement,
     wrapper: ITreeState,
     labels: IHierarchyNode[],
@@ -563,7 +563,7 @@ export default class Heatmap extends Vue {
     }
   }
 
-  updateColumnLabel() {
+  private updateColumnLabel() {
     Heatmap.updateLabel(
       this.$refs.collabel,
       this.column,
@@ -572,7 +572,7 @@ export default class Heatmap extends Vue {
     );
   }
 
-  updateRowLabel() {
+  private updateRowLabel() {
     Heatmap.updateLabel(
       this.$refs.rowlabel,
       this.row,
@@ -581,7 +581,7 @@ export default class Heatmap extends Vue {
     );
   }
 
-  updateMatrix() {
+  private updateMatrix() {
     if (!this.$refs.matrix || !this.values) {
       return;
     }

@@ -23,7 +23,7 @@ export default class SampleMixin extends Vue {
   @Prop()
   readonly value!: any;
 
-  get rowToIndex() {
+  protected get rowToIndex() {
     const df = this.dataset.validatedMeasurements;
     if (!df) {
       return () => -1;
@@ -32,7 +32,7 @@ export default class SampleMixin extends Vue {
     return (row: string) => (m.has(row) ? m.get(row)! : -1);
   }
 
-  get categoricalMetaData() {
+  protected get categoricalMetaData() {
     const metaData = this.dataset.validatedSampleMetaData;
     const groups = this.dataset.validatedGroups;
 

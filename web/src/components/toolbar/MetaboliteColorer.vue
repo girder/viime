@@ -48,7 +48,7 @@ export default class MetaboliteColorer extends Mixins(MetaboliteMixin) {
     }
   }
 
-  generateColorer(value: string | null) {
+  private generateColorer(value: string | null) {
     if (!value || value === this.emptyOption) {
       return () => null;
     }
@@ -62,7 +62,7 @@ export default class MetaboliteColorer extends Mixins(MetaboliteMixin) {
     return (column: string) => lookup.get(String(meta.data[toIndex(column)]));
   }
 
-  generateLevels(value: string | null) {
+  private generateLevels(value: string | null) {
     if (!value || value === this.emptyOption) {
       return [];
     }

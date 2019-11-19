@@ -31,17 +31,17 @@ export default class Download extends Vue {
 
   hiddenGroups: string[] = [];
 
-  get dataset() { return this.$store.getters.dataset(this.id) as IDataSet; }
+  private get dataset() { return this.$store.getters.dataset(this.id) as IDataSet; }
 
-  get dataframe() { return this.dataset.validatedMeasurements; }
+  private get dataframe() { return this.dataset.validatedMeasurements; }
 
   get ready() { return this.$store.getters.ready(this.id) as boolean; }
 
-  get selectionLookup() {
+  private get selectionLookup() {
     return new Set((this.dataset && this.dataset.selectedColumns) || []);
   }
 
-  get groupLookup() {
+  private get groupLookup() {
     if (!this.dataset.validatedGroups || !this.dataset.groupLevels) {
       return new Map();
     }
@@ -72,7 +72,7 @@ export default class Download extends Vue {
     return this.dataframe.columnNames.length - this.countSelected;
   }
 
-  get filteredColumnNames() {
+  private get filteredColumnNames() {
     if (!this.dataset || !this.dataframe) {
       return [];
     }
@@ -85,7 +85,7 @@ export default class Download extends Vue {
     ));
   }
 
-  get filteredRowNames() {
+  private get filteredRowNames() {
     if (!this.dataset || !this.dataframe) {
       return [];
     }
@@ -99,7 +99,7 @@ export default class Download extends Vue {
     ));
   }
 
-  get extraRowHeaders() {
+  private get extraRowHeaders() {
     let extras: string[] = [];
 
     if (!this.transpose && this.dataset.validatedMeasurementsMetaData) {
@@ -128,7 +128,7 @@ export default class Download extends Vue {
     }))];
   }
 
-  get extraColumns() {
+  private get extraColumns() {
     const { validatedSampleMetaData, validatedMeasurementsMetaData } = this.dataset;
     const extras = this.extraRowHeaders.map(() => '');
 

@@ -39,7 +39,7 @@ export default class MetaboliteMixin extends Vue {
   @Prop()
   readonly value!: any;
 
-  get columnToIndex() {
+  protected get columnToIndex() {
     const df = this.dataset.validatedMeasurements;
     if (!df) {
       return () => -1;
@@ -48,7 +48,7 @@ export default class MetaboliteMixin extends Vue {
     return (column: string) => (m.has(column) ? m.get(column)! : -1);
   }
 
-  get selectionLookup() {
+  protected get selectionLookup() {
     const selected = new Set((this.dataset && this.dataset.selectedColumns) || []);
     return (name: string) => selected.has(name);
   }
@@ -64,7 +64,7 @@ export default class MetaboliteMixin extends Vue {
     return this.dataset.validatedMeasurements.columnNames.length - this.countSelected;
   }
 
-  get categoricalMetaData() {
+  protected get categoricalMetaData() {
     const metaData = this.dataset.validatedMeasurementsMetaData;
 
     return metaData ? metaData.rowNames.map((name, i) => ({
@@ -77,7 +77,7 @@ export default class MetaboliteMixin extends Vue {
     })).filter(d => d.subtype === 'categorical') : [];
   }
 
-  get selectedOption() {
+  protected get selectedOption() {
     return this.hideSelection ? [] : [{
       name: 'Selection',
       value: 'selection',

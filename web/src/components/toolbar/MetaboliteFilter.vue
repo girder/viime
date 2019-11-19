@@ -68,7 +68,7 @@ export default class MetaboliteColorer extends Mixins(MetaboliteMixin) {
     }
   }
 
-  generateFilter(value: IFilterValueBase): ((column: string) => boolean) {
+  private generateFilter(value: IFilterValueBase): ((column: string) => boolean) {
     if (!value.option) {
       return () => true;
     }

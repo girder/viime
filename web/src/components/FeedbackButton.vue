@@ -10,11 +10,11 @@ export default class FeedbackButton extends Vue {
 
   visible = false;
 
-  form = 'https://docs.google.com/forms/d/e/1FAIpQLScWccZqTF_b6nQkfkAvLNf7XGV9k7Rqf8V_Mid-oZLY47g_IQ/viewform';
+  readonly form = 'https://docs.google.com/forms/d/e/1FAIpQLScWccZqTF_b6nQkfkAvLNf7XGV9k7Rqf8V_Mid-oZLY47g_IQ/viewform';
 
-  width = 640;
+  readonly width = 640;
 
-  height = 930;
+  readonly height = 930;
 
   get src() {
     return `${this.form}?embedded=true`;
