@@ -1,6 +1,6 @@
 <script lang="ts">
 import {
-  Component, Vue, Prop, Mixins, Watch,
+  Component, Prop, Mixins,
 } from 'vue-property-decorator';
 import FilterOption from './FilterOption.vue';
 import SampleMixin from './mixins/sampleMixin';

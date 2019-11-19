@@ -1,6 +1,6 @@
 <script lang="ts">
 import {
-  Component, Vue, Prop, Mixins,
+  Component, Prop, Mixins,
 } from 'vue-property-decorator';
 import ColorerOption from './ColorerOption.vue';
 import SampleMixin from './mixins/sampleMixin';

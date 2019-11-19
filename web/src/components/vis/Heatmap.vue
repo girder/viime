@@ -118,6 +118,11 @@ declare type IHierarchyNode = HierarchyNode<IExtendedTreeNode> & {
   y?: number;
 };
 
+declare type IHierarchyLink = {
+  source: IHierarchyNode;
+  target: IHierarchyNode;
+}
+
 interface ITreeConfig {
   dendogram: boolean;
   colorer?(name: string): string;
@@ -172,9 +177,9 @@ export default class Heatmap extends Vue {
 
   private readonly format = format('.4e');
 
-  private readonly legendGradient = `linear-gradient(to right, ${schemeRdBu[5][4]} 0%, ${schemeRdBu[5][2]} 50%, ${schemeRdBu[5][0]} 100%)`;
+  readonly legendGradient = `linear-gradient(to right, ${schemeRdBu[5][4]} 0%, ${schemeRdBu[5][2]} 50%, ${schemeRdBu[5][0]} 100%)`;
 
-  private readonly padding = 8;
+  readonly padding = 8;
 
   private width = 0;
 
@@ -194,9 +199,9 @@ export default class Heatmap extends Vue {
     focus: null,
   };
 
-  private readonly DENDOGRAM_RATIO = DENDOGRAM_RATIO;
+  readonly DENDOGRAM_RATIO = DENDOGRAM_RATIO;
 
-  private readonly LABEL_WIDTH = LABEL_WIDTH;
+  readonly LABEL_WIDTH = LABEL_WIDTH;
 
   $refs!: {
     matrix: HTMLCanvasElement;
@@ -352,13 +357,13 @@ export default class Heatmap extends Vue {
     if (!node) {
       return null;
     }
-    const injectIndices = (s: IExtendedTreeNode) => {
+    const injectIndices = (s: IExtendedTreeNode): number[] => {
       if (typeof s.index === 'number') {
         s.indices = [s.index];
         s.names = [s.name];
       } else {
-        s.indices = [].concat(...s.children.map(injectIndices));
-        s.names = [].concat(...s.children.map(c => c.names));
+        s.indices = ([] as number[]).concat(...s.children!.map(injectIndices));
+        s.names = ([] as string[]).concat(...s.children!.map(c => c.names));
         s.name = s.names.join(', ');
       }
       return s.indices;
@@ -368,7 +373,7 @@ export default class Heatmap extends Vue {
 
     let root = hierarchy(node as IExtendedTreeNode, d => (collapsed.has(d) ? [] : d.children || []))
       .count()
-      .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
+      .sort((a, b) => b.height - a.height || b.data.index! - a.data.index!);
 
     if (focus) {
       // find the focus node and it is the new root
@@ -382,7 +387,7 @@ export default class Heatmap extends Vue {
   }
 
   computeHierarchy(
-    root: IHierarchyNode,
+    root: IHierarchyNode | null,
     layoutWidth: number,
     layoutHeight: number,
   ): IHierarchyNode | null {
@@ -397,7 +402,7 @@ export default class Heatmap extends Vue {
 
   updateTree(
     ref: SVGSVGElement,
-    root: IHierarchyNode,
+    root: IHierarchyNode | null,
     wrapper: ITreeState,
     config: ITreeConfig,
     horizontalLayout: boolean,
@@ -424,13 +429,13 @@ export default class Heatmap extends Vue {
 
     edges.classed('selected', d => d.target.data.indices.some(l => hovered.has(l)));
 
-    const renderVerticalLinks = d => `
-      M${d.target.x},${d.target.y + (d.target.children ? 0 : padding)}
+    const renderVerticalLinks = (d: IHierarchyLink) => `
+      M${d.target.x},${d.target.y! + (d.target.children ? 0 : padding)}
       L${d.target.x},${d.source.y}
       L${d.source.x},${d.source.y}
     `;
-    const renderHorizontalLinks = d => `
-      M${d.target.x + (d.target.children ? 0 : padding)},${d.target.y}
+    const renderHorizontalLinks = (d: IHierarchyLink) => `
+      M${d.target.x! + (d.target.children ? 0 : padding)},${d.target.y}
       L${d.source.x},${d.target.y}
       L${d.source.x},${d.source.y}
     `;
@@ -552,11 +557,10 @@ export default class Heatmap extends Vue {
     text.select('.label').text(d => d.data.name);
     text
       .select('.color')
-      .classed('hidden', !colorer)
-      .style(
-        'background',
-        colorer ? d => Heatmap.combineColor(d.data.names, colorer) : null,
-      );
+      .classed('hidden', !colorer);
+    if (colorer) {
+      text.style('background', d => Heatmap.combineColor(d.data.names, colorer))
+    }
   }
 
   updateColumnLabel() {
@@ -675,7 +679,7 @@ export default class Heatmap extends Vue {
     canvas.width = rowDendogram + this.matrixWidth + LABEL_WIDTH;
     canvas.height = columnDendogram + this.matrixHeight + LABEL_WIDTH;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d')!;
     // copy matrix first
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -728,7 +732,7 @@ export default class Heatmap extends Vue {
       }
       const x = colorer ? 7 : 0;
 
-      ctx.font = window.getComputedStyle(this.$refs.rowlabel).font;
+      ctx.font = window.getComputedStyle(this.$refs.rowlabel).font!;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = 'black';
@@ -750,7 +754,7 @@ export default class Heatmap extends Vue {
         });
       }
       const y = colorer ? 7 : 0;
-      ctx.font = window.getComputedStyle(this.$refs.collabel).font;
+      ctx.font = window.getComputedStyle(this.$refs.collabel).font!;
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = 'black';
