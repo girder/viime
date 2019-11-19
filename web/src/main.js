@@ -6,6 +6,7 @@ import './stylus/main.styl';
 import { init as SentryInit } from '@sentry/browser';
 import { Vue as SentryVue } from '@sentry/integrations';
 
+import 'reflect-metadata';
 import ApiService from './common/api.service';
 import App from './App.vue';
 import router from './router';
