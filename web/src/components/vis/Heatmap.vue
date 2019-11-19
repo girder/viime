@@ -2,7 +2,7 @@
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import resize from 'vue-resize-directive';
 import { format } from 'd3-format';
-import { hierarchy, cluster } from 'd3-hierarchy';
+import { hierarchy, cluster, HierarchyNode } from 'd3-hierarchy';
 import { scaleSequential } from 'd3-scale';
 import { interpolateRdBu, schemeRdBu } from 'd3-scale-chromatic';
 import { select, event } from 'd3-selection';
@@ -27,7 +27,12 @@ function domain(arr: number[][]): [number, number] {
   // return [min, max];
 }
 
-function aggregate(arr: number[][], rs: number[], cs: number[], transposed: boolean) {
+function aggregate(
+  arr: number[][],
+  rs: number[],
+  cs: number[],
+  transposed: boolean,
+) {
   let is = rs;
   let js = cs;
 
@@ -41,7 +46,10 @@ function aggregate(arr: number[][], rs: number[], cs: number[], transposed: bool
   }
   // average
   const l = is.length * js.length;
-  const sum = is.reduce((acc, i) => acc + js.reduce((acc2, j) => acc2 + arr[i][j], 0), 0);
+  const sum = is.reduce(
+    (acc, i) => acc + js.reduce((acc2, j) => acc2 + arr[i][j], 0),
+    0,
+  );
   return sum / l;
 }
 
@@ -67,7 +75,7 @@ export const heatmapLayouts = [
  * @param {T[] | null} arr values to set
  * @returns {boolean} whether the value has changed
  */
-function changeHovered<T>(wrapper: {hovered: Set<T>}, arr: T[] | null) {
+function changeHovered<T>(wrapper: { hovered: Set<T> }, arr: T[] | null) {
   if (!arr) {
     if (wrapper.hovered.size > 0) {
       wrapper.hovered = new Set();
@@ -82,7 +90,10 @@ function changeHovered<T>(wrapper: {hovered: Set<T>}, arr: T[] | null) {
     wrapper.hovered = new Set(arr);
     return true;
   }
-  if (old.size === 0 || ((arr.length === 1 && old.has(arr[0])) || arr.every(d => old.has(d)))) {
+  if (
+    old.size === 0
+    || ((arr.length === 1 && old.has(arr[0])) || arr.every(d => old.has(d)))
+  ) {
     return false;
   }
 
@@ -91,9 +102,32 @@ function changeHovered<T>(wrapper: {hovered: Set<T>}, arr: T[] | null) {
 }
 
 interface ITreeNode {
-
+  name: string;
+  index?: number;
+  children?: ITreeNode[];
 }
 
+interface IExtendedTreeNode extends ITreeNode {
+  names: string[];
+  indices: number[];
+  children?: IExtendedTreeNode[];
+}
+
+declare type IHierarchyNode = HierarchyNode<IExtendedTreeNode> & {
+  x?: number;
+  y?: number;
+};
+
+interface ITreeConfig {
+  dendogram: boolean;
+  colorer?(name: string): string;
+}
+
+interface ITreeState {
+  hovered: Set<number>;
+  collapsed: Set<ITreeNode>;
+  focus: ITreeNode | null;
+}
 
 @Component({
   directives: {
@@ -102,59 +136,80 @@ interface ITreeNode {
 })
 export default class Heatmap extends Vue {
   @Prop({
-    default: () => []
+    default: () => [],
   })
   readonly values!: number[][];
 
   @Prop({
-    default: null
+    default: null,
   })
   readonly columnClustering!: ITreeNode;
-  @Prop({
-    default: null
-  })
-  readonly rowClustering!: ITreeNode;
-  @Prop({
-    default: () => ({ dendogram: true, colorer: null })
-  })
-  readonly rowConfig!: {dendogram: boolean, colorer?(name: string): string};
-  @Prop({
-    default: () => ({ dendogram: true, colorer: null })
-  })
-  readonly columnConfig!: {dendogram: boolean, colorer?(name: string): string};
 
   @Prop({
-    default: heatmapLayouts[0].value
+    default: null,
+  })
+  readonly rowClustering!: ITreeNode;
+
+  @Prop({
+    default: () => ({ dendogram: true, colorer: null }),
+  })
+  readonly rowConfig!: { dendogram: boolean; colorer?(name: string): string };
+
+  @Prop({
+    default: () => ({ dendogram: true, colorer: null }),
+  })
+  readonly columnConfig!: ITreeConfig;
+
+  @Prop({
+    default: heatmapLayouts[0].value,
   })
   readonly layout!: string;
 
   @Prop({
-    default: false
+    default: false,
   })
-  readonly transposed!: string;
+  readonly transposed!: boolean;
 
-  readonly format = format('.4e');
-  readonly legendGradient = `linear-gradient(to right, ${schemeRdBu[5][4]} 0%, ${schemeRdBu[5][2]} 50%, ${schemeRdBu[5][0]} 100%)`;
-  readonly padding = 8;
-  width = 0;
-  height = 0;
-  refsMounted = false;
-  column = {
+  private readonly format = format('.4e');
+
+  private readonly legendGradient = `linear-gradient(to right, ${schemeRdBu[5][4]} 0%, ${schemeRdBu[5][2]} 50%, ${schemeRdBu[5][0]} 100%)`;
+
+  private readonly padding = 8;
+
+  private width = 0;
+
+  private height = 0;
+
+  private refsMounted = false;
+
+  private column: ITreeState = {
     hovered: new Set(),
     collapsed: new Set(),
     focus: null,
   };
-  row = {
+
+  private row: ITreeState = {
     hovered: new Set(),
     collapsed: new Set(),
     focus: null,
   };
-  readonly DENDOGRAM_RATIO = DENDOGRAM_RATIO;
-  readonly LABEL_WIDTH = LABEL_WIDTH;
+
+  private readonly DENDOGRAM_RATIO = DENDOGRAM_RATIO;
+
+  private readonly LABEL_WIDTH = LABEL_WIDTH;
+
+  $refs!: {
+    matrix: HTMLCanvasElement;
+    collabel: HTMLElement;
+    rowlabel: HTMLElement;
+    column: SVGSVGElement;
+    row: SVGSVGElement;
+  };
 
   get padding2() {
     return this.padding * 2;
   }
+
   get reactiveColumnUpdate() {
     if (!this.refsMounted) {
       return '';
@@ -162,6 +217,7 @@ export default class Heatmap extends Vue {
     this.updateColumn();
     return '';
   }
+
   get reactiveRowUpdate() {
     if (!this.refsMounted) {
       return '';
@@ -169,6 +225,7 @@ export default class Heatmap extends Vue {
     this.updateRow();
     return '';
   }
+
   get reactiveMatrixUpdate() {
     if (!this.refsMounted) {
       return '';
@@ -176,6 +233,7 @@ export default class Heatmap extends Vue {
     this.updateMatrix();
     return '';
   }
+
   get reactiveRowLabelUpdate() {
     if (!this.refsMounted) {
       return '';
@@ -183,6 +241,7 @@ export default class Heatmap extends Vue {
     this.updateRowLabel();
     return '';
   }
+
   get reactiveColumnLabelUpdate() {
     if (!this.refsMounted) {
       return '';
@@ -192,19 +251,27 @@ export default class Heatmap extends Vue {
   }
 
   get columnTree() {
-    return this.computeTree(this.columnClustering, this.column);
+    return Heatmap.computeTree(this.columnClustering, this.column);
   }
 
   get columnHierarchy() {
-    return this.computeHierarchy(this.columnTree, this.matrixWidth, this.height);
+    return this.computeHierarchy(
+      this.columnTree,
+      this.matrixWidth,
+      this.height,
+    );
   }
 
   get rowTree() {
-    return this.computeTree(this.rowClustering, this.row);
+    return Heatmap.computeTree(this.rowClustering, this.row);
   }
 
   get rowHierarchy() {
-    const root = this.computeHierarchy(this.rowTree, this.matrixHeight, this.width);
+    const root = this.computeHierarchy(
+      this.rowTree,
+      this.matrixHeight,
+      this.width,
+    );
     if (!root) {
       return root;
     }
@@ -215,24 +282,33 @@ export default class Heatmap extends Vue {
     });
     return root;
   }
+
   get valueScale() {
-    return scaleSequential<string>(t => interpolateRdBu(1 - t)).domain(domain(this.values));
+    return scaleSequential<string>(t => interpolateRdBu(1 - t)).domain(
+      domain(this.values),
+    );
   }
+
   get legendDomain() {
     return this.valueScale.domain().map(this.format);
   }
+
   get columnLeaves() {
     return this.columnTree ? this.columnTree.leaves() : [];
   }
+
   get rowLeaves() {
     return this.rowTree ? this.rowTree.leaves() : [];
   }
+
   get columnDendogramHeight() {
     return this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
   }
+
   get rowDendogramWidth() {
     return this.rowConfig.dendogram ? this.width * DENDOGRAM_RATIO : 0;
   }
+
   get matrixDimensions() {
     let width = this.width - this.rowDendogramWidth - LABEL_WIDTH;
     let height = this.height - this.columnDendogramHeight - LABEL_WIDTH;
@@ -248,12 +324,15 @@ export default class Heatmap extends Vue {
     }
     return { width, height };
   }
+
   get matrixWidth() {
     return this.matrixDimensions.width;
   }
+
   get matrixHeight() {
     return this.matrixDimensions.height;
   }
+
   get fontSize() {
     const wx = this.matrixWidth / this.columnLeaves.length - 2;
     const hy = this.matrixHeight / this.rowLeaves.length - 2;
@@ -266,62 +345,80 @@ export default class Heatmap extends Vue {
     this.refsMounted = true;
   }
 
- computeTree(node, { collapsed, focus }) {
-      if (!node) {
-        return null;
+  static computeTree(
+    node: ITreeNode,
+    { collapsed, focus }: ITreeState,
+  ): IHierarchyNode | null {
+    if (!node) {
+      return null;
+    }
+    const injectIndices = (s: IExtendedTreeNode) => {
+      if (typeof s.index === 'number') {
+        s.indices = [s.index];
+        s.names = [s.name];
+      } else {
+        s.indices = [].concat(...s.children.map(injectIndices));
+        s.names = [].concat(...s.children.map(c => c.names));
+        s.name = s.names.join(', ');
       }
-      const injectIndices = (s) => {
-        if (typeof s.index === 'number') {
-          s.indices = [s.index];
-          s.names = [s.name];
-        } else {
-          s.indices = [].concat(...s.children.map(injectIndices));
-          s.names = [].concat(...s.children.map(c => c.names));
-          s.name = s.names.join(', ');
+      return s.indices;
+    };
+
+    injectIndices(node as IExtendedTreeNode);
+
+    let root = hierarchy(node as IExtendedTreeNode, d => (collapsed.has(d) ? [] : d.children || []))
+      .count()
+      .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
+
+    if (focus) {
+      // find the focus node and it is the new root
+      root.each((n) => {
+        if (n.data === focus) {
+          root = n;
         }
-        return s.indices;
-      };
+      });
+    }
+    return root;
+  }
 
-      injectIndices(node);
-
-      let root = hierarchy(node,
-        d => (collapsed.has(d) ? [] : (d.children || [])))
-        .count()
-        .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
-
-      if (focus) {
-        // find the focus node and it is the new root
-        root.each((n) => {
-          if (n.data === focus) {
-            root = n;
-          }
-        });
-      }
-      return root;
-    },
-  computeHierarchy(root, layoutWidth, layoutHeight) {
+  computeHierarchy(
+    root: IHierarchyNode,
+    layoutWidth: number,
+    layoutHeight: number,
+  ): IHierarchyNode | null {
     if (!root) {
       return null;
     }
-    const l = cluster()
+    const l = cluster<IExtendedTreeNode>()
       .size([layoutWidth, layoutHeight * DENDOGRAM_RATIO - this.padding2])
       .separation(() => 1);
     return l(root);
-  },
-  updateTree(ref, root, wrapper, config, horizontalLayout) {
+  }
+
+  updateTree(
+    ref: SVGSVGElement,
+    root: IHierarchyNode,
+    wrapper: ITreeState,
+    config: ITreeConfig,
+    horizontalLayout: boolean,
+  ) {
     if (!ref || !config.dendogram || !root) {
       return;
     }
     const svg = select(ref);
-    const edges = svg.select('g.edges').selectAll<SVGPathElement, unknown>('path').data(root.links()).join((enter) => {
-      const r = enter.append('path');
-      r.on('mouseenter', (d) => {
-        changeHovered(wrapper, d.target.data.indices);
-      }).on('mouseleave', () => {
-        changeHovered(wrapper, null);
+    const edges = svg
+      .select('g.edges')
+      .selectAll<SVGPathElement, unknown>('path')
+      .data(root.links())
+      .join((enter) => {
+        const r = enter.append('path');
+        r.on('mouseenter', (d) => {
+          changeHovered(wrapper, d.target.data.indices);
+        }).on('mouseleave', () => {
+          changeHovered(wrapper, null);
+        });
+        return r;
       });
-      return r;
-    });
     const { hovered, collapsed } = wrapper;
     const { padding } = this;
 
@@ -338,32 +435,44 @@ export default class Heatmap extends Vue {
       L${d.source.x},${d.source.y}
     `;
 
-    edges.attr('d', horizontalLayout ? renderVerticalLinks : renderHorizontalLinks);
+    edges.attr(
+      'd',
+      horizontalLayout ? renderVerticalLinks : renderHorizontalLinks,
+    );
 
-    const innerNodes = root.descendants().filter(d => d.data.indices.length > 1);
-    const inner = svg.select('g.nodes').selectAll('g').data(innerNodes).join((enter) => {
-      const r = enter.append('g')
-        .html(`<circle r="${padding}"></circle><text><text><title></title>`)
-        .attr('transform', d => `translate(${d.x},${d.y})`);
-      r.on('click', (d) => {
-        if (wrapper.focus === d.data) {
-          wrapper.focus = null;
-        } else if (event.ctrlKey || event.shiftKey) {
-          wrapper.focus = d.data;
-        } else if (wrapper.collapsed.has(d.data)) {
-          wrapper.collapsed.delete(d.data);
-          wrapper.collapsed = new Set(wrapper.collapsed);
-        } else {
-          wrapper.collapsed.add(d.data);
-          wrapper.collapsed = new Set(wrapper.collapsed);
-        }
-      }).on('mouseenter', (d) => {
-        changeHovered(wrapper, d.data.indices);
-      }).on('mouseleave', () => {
-        changeHovered(wrapper, null);
+    const innerNodes = root
+      .descendants()
+      .filter(d => d.data.indices.length > 1);
+    const inner = svg
+      .select('g.nodes')
+      .selectAll('g')
+      .data(innerNodes)
+      .join((enter) => {
+        const r = enter
+          .append('g')
+          .html(`<circle r="${padding}"></circle><text><text><title></title>`)
+          .attr('transform', d => `translate(${d.x},${d.y})`);
+        r.on('click', (d) => {
+          if (wrapper.focus === d.data) {
+            wrapper.focus = null;
+          } else if (event.ctrlKey || event.shiftKey) {
+            wrapper.focus = d.data;
+          } else if (wrapper.collapsed.has(d.data)) {
+            wrapper.collapsed.delete(d.data);
+            wrapper.collapsed = new Set(wrapper.collapsed);
+          } else {
+            wrapper.collapsed.add(d.data);
+            wrapper.collapsed = new Set(wrapper.collapsed);
+          }
+        })
+          .on('mouseenter', (d) => {
+            changeHovered(wrapper, d.data.indices);
+          })
+          .on('mouseleave', () => {
+            changeHovered(wrapper, null);
+          });
+        return r;
       });
-      return r;
-    });
 
     inner.select('text').text((d) => {
       if (wrapper.focus === d.data) {
@@ -377,25 +486,38 @@ export default class Heatmap extends Vue {
 
     inner.attr('transform', d => `translate(${d.x},${d.y})`);
   }
+
   updateColumn() {
     if (this.columnDendogramHeight === 0) {
       return;
     }
-    this.updateTree(this.$refs.column, this.columnHierarchy, this.column,
-      this.columnConfig, true);
+    this.updateTree(
+      this.$refs.column,
+      this.columnHierarchy,
+      this.column,
+      this.columnConfig,
+      true,
+    );
   }
+
   updateRow() {
     if (this.rowDendogramWidth === 0) {
       return;
     }
-    this.updateTree(this.$refs.row, this.rowHierarchy, this.row, this.rowConfig, false);
+    this.updateTree(
+      this.$refs.row,
+      this.rowHierarchy,
+      this.row,
+      this.rowConfig,
+      false,
+    );
   }
 
-  combineColor(names: string[], colorer) {
+  static combineColor(names: string[], colorer: (val: string) => string) {
     if (names.length === 1) {
       return colorer(names[0]);
     }
-    const frequencies = new Map();
+    const frequencies = new Map<string, number>();
     names.forEach((name) => {
       const color = colorer(name);
       frequencies.set(color, (frequencies.get(color) || 0) + 1);
@@ -403,34 +525,58 @@ export default class Heatmap extends Vue {
     // most frequent color
     return Array.from(frequencies.entries()).sort((a, b) => b[1] - a[1])[0][0];
   }
-  updateLabel(ref: HTMLElement, wrapper, labels: string[], colorer) {
+
+  static updateLabel(
+    ref: HTMLElement,
+    wrapper: ITreeState,
+    labels: IHierarchyNode[],
+    colorer?: (val: string) => string,
+  ) {
     if (!ref) {
       return;
     }
     const div = select(ref);
-    const text = div.selectAll('div').data(labels).join((enter) => {
-      const l = enter.append('div');
-      l.append('span').classed('color', true);
-      l.append('span').classed('label', true);
-      return l;
-    });
+    const text = div
+      .selectAll('div')
+      .data(labels)
+      .join((enter) => {
+        const l = enter.append('div');
+        l.append('span').classed('color', true);
+        l.append('span').classed('label', true);
+        return l;
+      });
     const { hovered } = wrapper;
 
     text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
 
     text.select('.label').text(d => d.data.name);
-    text.select('.color')
+    text
+      .select('.color')
       .classed('hidden', !colorer)
-      .style('background', colorer ? (d => this.combineColor(d.data.names, colorer)) : null);
+      .style(
+        'background',
+        colorer ? d => Heatmap.combineColor(d.data.names, colorer) : null,
+      );
   }
+
   updateColumnLabel() {
-    this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves,
-      this.columnConfig.colorer);
+    Heatmap.updateLabel(
+      this.$refs.collabel,
+      this.column,
+      this.columnLeaves,
+      this.columnConfig.colorer,
+    );
   }
+
   updateRowLabel() {
-    this.updateLabel(this.$refs.rowlabel, this.row, this.rowLeaves,
-      this.rowConfig.colorer);
+    Heatmap.updateLabel(
+      this.$refs.rowlabel,
+      this.row,
+      this.rowLeaves,
+      this.rowConfig.colorer,
+    );
   }
+
   updateMatrix() {
     if (!this.$refs.matrix || !this.values) {
       return;
@@ -441,11 +587,7 @@ export default class Heatmap extends Vue {
     ctx.clearRect(0, 0, this.matrixWidth, this.matrixHeight);
     const rows = this.rowLeaves;
     const columns = this.columnLeaves;
-    const {
-      valueScale,
-      values,
-      transposed,
-    } = this;
+    const { valueScale, values, transposed } = this;
     const hoveredRow = this.row.hovered;
     const hoveredColumn = this.column.hovered;
 
@@ -453,7 +595,6 @@ export default class Heatmap extends Vue {
     const h = this.matrixHeight / rows.length;
 
     ctx.strokeStyle = 'orange';
-
 
     // work on copy for speed
     const data = values.map(r => r.slice());
@@ -491,11 +632,13 @@ export default class Heatmap extends Vue {
       }
     });
   }
+
   onResize() {
     const bb = this.$el.getBoundingClientRect();
     this.width = bb.width;
     this.height = bb.height;
   }
+
   canvasMouseMove(evt: MouseEvent) {
     const canvas = evt.currentTarget as HTMLCanvasElement;
     const w = canvas.width / this.columnLeaves.length;
@@ -509,9 +652,12 @@ export default class Heatmap extends Vue {
     const colChanged = changeHovered(this.column, cnode.indices);
 
     if (rowChanged || colChanged) {
-      canvas.title = `${rnode.name} x ${cnode.name} = ${this.format(aggregate(this.values, rnode.indices, cnode.indices, this.transposed))}`;
+      canvas.title = `${rnode.name} x ${cnode.name} = ${this.format(
+        aggregate(this.values, rnode.indices, cnode.indices, this.transposed),
+      )}`;
     }
   }
+
   canvasMouseLeave() {
     changeHovered(this.row, null);
     changeHovered(this.column, null);
@@ -519,8 +665,12 @@ export default class Heatmap extends Vue {
 
   generateImage() {
     const canvas = document.createElement('canvas');
-    const columnDendogram = this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
-    const rowDendogram = this.rowConfig.dendogram ? this.width * DENDOGRAM_RATIO : 0;
+    const columnDendogram = this.columnConfig.dendogram
+      ? this.height * DENDOGRAM_RATIO
+      : 0;
+    const rowDendogram = this.rowConfig.dendogram
+      ? this.width * DENDOGRAM_RATIO
+      : 0;
 
     canvas.width = rowDendogram + this.matrixWidth + LABEL_WIDTH;
     canvas.height = columnDendogram + this.matrixHeight + LABEL_WIDTH;
@@ -537,27 +687,31 @@ export default class Heatmap extends Vue {
       // column dendogram
       const url = svg2url(this.$refs.column, { font: false, icons: true });
       const img = new Image(this.width * DENDOGRAM_RATIO, this.matrixHeight);
-      toWait.push(new Promise((resolve) => {
-        img.onload = () => {
-          ctx.drawImage(img, rowDendogram, 0);
-          URL.revokeObjectURL(url);
-          resolve();
-        };
-        img.src = url;
-      }));
+      toWait.push(
+        new Promise((resolve) => {
+          img.onload = () => {
+            ctx.drawImage(img, rowDendogram, 0);
+            URL.revokeObjectURL(url);
+            resolve();
+          };
+          img.src = url;
+        }),
+      );
     }
     if (rowDendogram > 0) {
       // row dendogram
       const url = svg2url(this.$refs.row, { font: false, icons: true });
       const img = new Image(this.matrixWidth, this.height * DENDOGRAM_RATIO);
-      toWait.push(new Promise((resolve) => {
-        img.onload = () => {
-          ctx.drawImage(img, 0, columnDendogram);
-          URL.revokeObjectURL(url);
-          resolve();
-        };
-        img.src = url;
-      }));
+      toWait.push(
+        new Promise((resolve) => {
+          img.onload = () => {
+            ctx.drawImage(img, 0, columnDendogram);
+            URL.revokeObjectURL(url);
+            resolve();
+          };
+          img.src = url;
+        }),
+      );
     }
 
     // row labels
@@ -568,7 +722,7 @@ export default class Heatmap extends Vue {
       const { colorer } = this.rowConfig;
       if (colorer) {
         this.rowLeaves.forEach((d, i) => {
-          ctx.fillStyle = this.combineColor(d.data.names, colorer);
+          ctx.fillStyle = Heatmap.combineColor(d.data.names, colorer);
           ctx.fillRect(0, hi * i, 5, hi);
         });
       }
@@ -591,7 +745,7 @@ export default class Heatmap extends Vue {
       const { colorer } = this.columnConfig;
       if (colorer) {
         this.columnLeaves.forEach((d, i) => {
-          ctx.fillStyle = this.combineColor(d.data.names, colorer);
+          ctx.fillStyle = Heatmap.combineColor(d.data.names, colorer);
           ctx.fillRect(wi * i, 0, wi, 5);
         });
       }
@@ -650,7 +804,8 @@ export default class Heatmap extends Vue {
   right: 8px;
   bottom: 8px;
   display: grid;
-  grid-template-areas: "legend column dl"
+  grid-template-areas:
+    "legend column dl"
     "row matrix rlabel"
     "rc clabel ll";
   justify-content: center;
@@ -692,7 +847,6 @@ export default class Heatmap extends Vue {
   right: 0;
 }
 
-
 .collabel {
   grid-area: clabel;
   display: flex;
@@ -724,7 +878,6 @@ export default class Heatmap extends Vue {
   justify-content: center;
   line-height: normal;
 }
-
 
 .rowlabel >>> .color {
   align-self: stretch;
@@ -795,6 +948,4 @@ export default class Heatmap extends Vue {
 .nodes >>> .focused {
   opacity: 1;
 }
-
-
 </style>
