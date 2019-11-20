@@ -1,6 +1,8 @@
 import Vue from 'vue';
-import axios from 'axios';
+import axios, { AxiosPromise } from 'axios';
 import VueAxios from 'vue-axios';
+import { Dictionary } from 'vuex';
+import { ISampleFile, ISampleGroup, ILevel } from '../store/model';
 
 const ApiService = {
   init() {
@@ -8,7 +10,7 @@ const ApiService = {
     Vue.axios.defaults.baseURL = '/api/v1';
   },
 
-  buildUrl(path, args) {
+  buildUrl(path: string, args: Dictionary<any>) {
     const base = [Vue.axios.defaults.baseURL, path].join('/');
     if (!args) {
       return base;
@@ -20,37 +22,37 @@ const ApiService = {
     return `${base}?${params.toString()}`;
   },
 
-  list(resource, params = {}) {
+  list(resource: string, params: Dictionary<any> = {}) {
     return Vue.axios.get(resource, { params });
   },
 
-  get(resource, path, params = {}) {
+  get(resource: string, path: string, params = {}) {
     return Vue.axios.get(`${resource}/${path}`, { params });
   },
 
-  post(resource, data) {
+  post(resource: string, data: Dictionary<any> = {}) {
     return Vue.axios.post(resource, data);
   },
 
-  put(resource, data) {
+  put(resource: string, data: Dictionary<any> = {}) {
     return Vue.axios.put(resource, data);
   },
 
-  delete(resource) {
+  delete(resource: string) {
     return Vue.axios.delete(resource);
   },
 
-  upload(resource, data) {
+  upload(resource: string, data: FormData | Dictionary<any> = {}) {
     return Vue.axios.post(`${resource}/upload`, data, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
 
-  download(resource, slug) {
+  download(resource: string, slug: string) {
     return Vue.axios.get(`${resource}/${slug}/download`);
   },
 
-  merge(data) {
+  merge(data: FormData | Dictionary<any>) {
     return Vue.axios.post('merge', data);
   },
 };
@@ -59,76 +61,76 @@ export default ApiService;
 
 export const CSVService = {
 
-  get(slug) {
+  get(slug: string) {
     return ApiService.get('csv', slug);
   },
 
-  getPlot(slug, type, params = {}) {
+  getPlot(slug: string, type: string, params = {}) {
     return ApiService.get('csv', `${slug}/plot/${type}`, params);
   },
 
-  getAnalysis(slug, key, params = {}) {
+  getAnalysis(slug: string, key: string, params = {}) {
     return ApiService.get('csv', `${slug}/analyses/${key}`, params);
   },
 
-  post(data) {
+  post(data: Dictionary<any>) {
     return ApiService.post('csv', data);
   },
 
-  upload(file) {
+  upload(file: File) {
     const formData = new FormData();
     formData.append('file', file);
     return ApiService.upload('csv', formData);
   },
 
-  download(slug) {
+  download(slug: string) {
     return ApiService.download('csv', slug);
   },
 
-  remerge(slug, params) {
+  remerge(slug: string, params: Dictionary<any>) {
     return ApiService.post(`csv/${slug}/remerge`, params);
   },
 
-  validatedDownloadUrl(slug, args) {
+  validatedDownloadUrl(slug: string, args: Dictionary<any>) {
     return ApiService.buildUrl(`csv/${slug}/validate/download`, args);
   },
 
-  setName(slug, name) {
+  setName(slug: string, name: string) {
     return ApiService.put(`csv/${slug}/name`, { name });
   },
 
-  setDescription(slug, description) {
+  setDescription(slug: string, description: string) {
     return ApiService.put(`csv/${slug}/description`, { description });
   },
 
-  setGroupLevels(slug, groupLevels) {
+  setGroupLevels(slug: string, groupLevels: ILevel[]) {
     return ApiService.put(`csv/${slug}/group-levels`, { group_levels: groupLevels });
   },
 
-  setSelectedColumns(slug, columns) {
+  setSelectedColumns(slug: string, columns: string[]) {
     return ApiService.put(`csv/${slug}/selected-columns`, { columns });
   },
 
-  setTransform(slug, category, transform_type, argument) {
+  setTransform(slug: string, category: string, transform_type: string, argument: any) {
     return ApiService.put(`csv/${slug}/${category}`, { method: transform_type, argument });
   },
 
-  setImputation(slug, methods) {
+  setImputation(slug: string, methods: {mnar: string, mcar: string}) {
     return ApiService.put(`csv/${slug}/imputation`, methods);
   },
 
-  updateLabel(csvSlug, changes) {
+  updateLabel(csvSlug: string, changes: {context: string, index: number, label: string}[]) {
     return ApiService.put(`csv/${csvSlug}/batch/label`, { changes });
   },
 
-  validateTable(slug) {
+  validateTable(slug: string) {
     return ApiService.post(`csv/${slug}/validate`);
   },
 };
 
 
 export const ExcelService = {
-  upload(file) {
+  upload(file: File) {
     const formData = new FormData();
     formData.append('file', file);
     return ApiService.upload('excel', formData);
@@ -138,19 +140,19 @@ export const ExcelService = {
 
 export const SampleService = {
 
-  get(slug) {
+  get(slug: string): AxiosPromise<ISampleFile> {
     return ApiService.get('sample/sample', slug);
   },
 
-  list() {
+  list(): AxiosPromise<ISampleGroup[]> {
     return ApiService.list('sample/sample');
   },
 
-  importSample(sampleId) {
+  importSample(sampleId: string) {
     return ApiService.post(`sample/import/${sampleId}`);
   },
 
-  importSampleGroup(group) {
+  importSampleGroup(group: string) {
     return ApiService.post(`sample/importgroup/${group}`);
   },
 };
