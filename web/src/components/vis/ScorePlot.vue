@@ -18,7 +18,7 @@ import './score-plot.css';
 // averting the need to place the continuation of the function it's embedded in
 // into the done callback.
 function c3LoadWait(chart, opts) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     chart.load({
       ...opts,
       done: () => resolve(),
@@ -31,7 +31,7 @@ function sameContents(a, b) {
     return false;
   }
 
-  for (let i = 0; i < a.length; i++) {
+  for (let i = 0; i < a.length; i += 1) {
     if (a[i] !== b[i]) {
       return false;
     }
@@ -102,7 +102,7 @@ function confidenceEllipse(x, y, std, xScale, yScale) {
   return {
     rx: ell_radius_x,
     ry: ell_radius_y,
-    transform
+    transform,
   };
 }
 
@@ -493,10 +493,15 @@ export default {
       const scaleY = this.chart.internal.y;
       const cmap = this.chart.internal.color;
 
-      const confidenceEllipses = Object.keys(grouped).map(group => ({
-        ...confidenceEllipse(grouped[group].map(d => d.x), grouped[group].map(d => d.y), 1, scaleX, scaleY),
-        category: group,
-      }));
+      const confidenceEllipses = Object.keys(grouped).map((group) => {
+        const groupx = grouped[group].map(d => d.x);
+        const groupy = grouped[group].map(d => d.y);
+
+        return {
+          ...confidenceEllipse(groupx, groupy, 1, scaleX, scaleY),
+          category: group,
+        };
+      });
 
       confidenceEllipses.forEach((ell) => {
         if (ellipseVisible[ell.category] === undefined) {
@@ -504,8 +509,6 @@ export default {
         }
       });
 
-      const xFactor = (scaleX(1e10) - scaleX(0)) / 1e10;
-      const yFactor = (scaleY(1e10) - scaleY(0)) / 1e10;
       select(this.$refs.chart)
         .select('.c3-custom-ellipses')
         .selectAll('ellipse')
