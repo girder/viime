@@ -164,14 +164,6 @@ export default {
       duration: 500,
       width: 100,
       height: 100,
-
-      // This property is set to `true` in the mounted hook, and is necessary to
-      // prevent reactively calling `update()` before the component has mounted.
-      //
-      // The alternative would be to make `update()` into a method, then set a
-      // series of watchers based on its dependent properties, which results in a
-      // code duplication that would likely become a source of difficulties.
-      hasMounted: false,
     };
   },
 
@@ -237,11 +229,9 @@ export default {
         rowLabels,
         groupLabels,
         eigenvalues,
-        hasMounted,
       } = this;
 
-      return hasMounted
-        && pcCoords.length > 0
+      return pcCoords.length > 0
         && rowLabels.length > 0
         && Object.keys(groupLabels).length > 0
         && eigenvalues.length > 0;
@@ -285,8 +275,6 @@ export default {
   },
 
   mounted() {
-    this.hasMounted = true;
-
     this.chart = c3.generate({
       bindto: this.$refs.chart,
       data: {
