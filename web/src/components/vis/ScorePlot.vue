@@ -544,6 +544,8 @@ export default {
             .attr('transform', d => d.transform)
             .style('opacity', 1),
           update => update
+            .attr('class', d => `ellipse-${fixCSS(d.category)}`)
+            .classed('ellipse', true)
             .style('display', d => (showEllipses && ellipseVisible[d.category] ? null : 'none'))
             .transition()
             .duration(300)
