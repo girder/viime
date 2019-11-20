@@ -447,7 +447,7 @@ export default {
       } = this.updateDeps;
 
       if (!valid) {
-        return '';
+        return;
       }
 
       const fmt = format('.2%');
@@ -561,8 +561,6 @@ export default {
             .style('opacity', 0)
             .remove(),
         );
-
-      return String(Math.random());
     },
   },
 };
