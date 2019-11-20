@@ -14,6 +14,12 @@ import resize from 'vue-resize-directive';
 import 'c3/c3.css';
 import './score-plot.css';
 
+function delay(ms) {
+  return new Promise((resolve, reject) => {
+    window.setTimeout(() => resolve(), ms);
+  });
+}
+
 function sameContents(a, b) {
   if (a.length !== b.length) {
     return false;
@@ -49,7 +55,7 @@ function covar(xs, ys) {
 //
 // Port of Python function from:
 //      https://matplotlib.org/gallery/statistics/confidence_ellipse.html
-function confidenceEllipse(x, y, std) {
+function confidenceEllipse(x, y, std, xScale, yScale) {
   // cov = np.cov(x, y)
   const xdev = deviation(x);
   const ydev = deviation(y);
@@ -85,9 +91,13 @@ function confidenceEllipse(x, y, std) {
   //     .rotate_deg(45) \
   //     .scale(scale_x, scale_y) \
   //     .translate(mean_x, mean_y)
-  const transform = `translate(${mean_x} ${mean_y}) scale(${scale_x} ${scale_y}) rotate(45)`;
+  const transform = `translate(${xScale(mean_x)} ${yScale(mean_y)}) scale(${xScale(scale_x) - xScale(0)} ${yScale(scale_y) - yScale(0)}) rotate(45)`;
 
-  return { rx: ell_radius_x, ry: ell_radius_y, transform };
+  return {
+    rx: ell_radius_x,
+    ry: ell_radius_y,
+    transform
+  };
 }
 
 export default {
@@ -415,7 +425,7 @@ export default {
       this.height = bb.height;
     },
 
-    update() {
+    async update() {
       const {
         colorMapping,
         pcPoints,
@@ -496,13 +506,15 @@ export default {
       // Set the colors.
       this.chart.data.colors(colorMapping);
 
+      await delay(0);
+
       // Draw the data ellipses.
       const scaleX = this.chart.internal.x;
       const scaleY = this.chart.internal.y;
       const cmap = this.chart.internal.color;
 
       const confidenceEllipses = Object.keys(grouped).map(group => ({
-        ...confidenceEllipse(grouped[group].map(d => d.x), grouped[group].map(d => d.y), 1),
+        ...confidenceEllipse(grouped[group].map(d => d.x), grouped[group].map(d => d.y), 1, scaleX, scaleY),
         category: group,
       }));
 
@@ -514,7 +526,6 @@ export default {
 
       const xFactor = (scaleX(1e10) - scaleX(0)) / 1e10;
       const yFactor = (scaleY(1e10) - scaleY(0)) / 1e10;
-      const plotTransform = `translate(${scaleX(0)} ${scaleY(0)}) scale(${xFactor} ${yFactor})`;
       select(this.$refs.chart)
         .select('.c3-custom-ellipses')
         .selectAll('ellipse')
@@ -530,7 +541,7 @@ export default {
             .attr('vector-effect', 'non-scaling-stroke')
             .attr('rx', d => d.rx)
             .attr('ry', d => d.ry)
-            .attr('transform', d => `${plotTransform} ${d.transform}`)
+            .attr('transform', d => d.transform)
             .style('opacity', 1),
           update => update
             .style('display', d => (showEllipses && ellipseVisible[d.category] ? null : 'none'))
@@ -538,7 +549,7 @@ export default {
             .duration(300)
             .attr('rx', d => d.rx)
             .attr('ry', d => d.ry)
-            .attr('transform', d => `${plotTransform} ${d.transform}`),
+            .attr('transform', d => d.transform),
           exit => exit.transition('exit')
             .duration(duration)
             .style('opacity', 0)
