@@ -14,9 +14,15 @@ import resize from 'vue-resize-directive';
 import 'c3/c3.css';
 import './score-plot.css';
 
-function delay(ms) {
+// This function uses C3's `done` API to return a promise that can be awaited,
+// averting the need to place the continuation of the function it's embedded in
+// into the done callback.
+function c3LoadWait(chart, opts) {
   return new Promise((resolve, reject) => {
-    window.setTimeout(() => resolve(), ms);
+    chart.load({
+      ...opts,
+      done: () => resolve(),
+    });
   });
 }
 
@@ -497,7 +503,7 @@ export default {
 
       // Draw the C3 chart, unloding the existing data first if the column names
       // have changed.
-      this.chart.load({
+      await c3LoadWait(this.chart, {
         columns,
         xs,
         unload: !sameContents(oldCols, newCols),
@@ -505,8 +511,6 @@ export default {
 
       // Set the colors.
       this.chart.data.colors(colorMapping);
-
-      await delay(0);
 
       // Draw the data ellipses.
       const scaleX = this.chart.internal.x;
