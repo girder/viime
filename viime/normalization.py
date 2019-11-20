@@ -11,7 +11,7 @@ def validate_normalization_method(args):
     argument = args.get('argument', None)
     if method is not None and method not in NORMALIZATION_METHODS:
         raise ValidationError('Invalid normalization method', data=method)
-    if method == 'reference-sample' and argument is None:
+    if method in ['reference-sample', 'weight-volume'] and argument is None:
         raise ValidationError('Method requires argument', data=argument)
 
 
@@ -41,8 +41,10 @@ def sum(table):
 
 
 def reference_sample(table, argument):
-    return table.loc[argument].sum() * table.div(table.sum(axis=1), axis=0)
+    ref_sample = table.loc[argument]
+    return ref_sample.sum() * table.div(table.sum(axis=1), axis=0)
 
 
 def weight_volume(table, argument, sample_metadata):
-    return 100 * table.div(sample_metadata.loc[:, argument], axis=0)
+    sample_weights = sample_metadata.loc[:, argument]
+    return 100 * table.div(sample_weights, axis=0)

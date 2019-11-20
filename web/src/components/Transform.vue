@@ -63,6 +63,7 @@ export default {
       }
       let arg = argument;
       if (!arg && method.arg) {
+        // take first one
         [arg] = this.getSelectItems(method.arg);
       }
       this.$store.dispatch(MUTEX_TRANSFORM_TABLE, {
@@ -73,13 +74,7 @@ export default {
       });
     },
     getSelectItems(arg) {
-      const opts = arg.split('.');
-      const order = opts[0]; // row or column
-      const _type = opts[1]; // sample, metadata, group, metabolite, etc.
-      const value = opts[2]; // name, header, index, etc.
-      return this.dataset[order]
-        .data.filter(v => v[`${order}_type`] === _type)
-        .map(v => v[`${order}_${value}`]);
+      return arg(this.dataset);
     },
   },
 };
