@@ -482,18 +482,6 @@ export default {
         xs[g] = xName;
       });
 
-      // The following side effect depends on xData and yData in the same way
-      // that the C3 chart itself does, so we disable the linter warning that would
-      // prevent it.
-      //
-      // In general, this is part of the tradeoff of mixing an imperative vis
-      // library like C3 with a reactive framework like Vue. The alternatives are
-      // less attractive than breaking the rules here: for instance, we could set a
-      // series of watchers on the dependencies of this function to explicitly
-      // trigger it, but that presents a serious danger of falling out of sync with
-      // changes in the dependency list.
-      //
-      // eslint-disable-next-line vue/no-side-effects-in-computed-properties
       this.labels = labels;
 
       // Collect the existing and incoming column names.
