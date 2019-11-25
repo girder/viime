@@ -722,7 +722,11 @@ def _get_sample_metadata(csv_file):
 def _get_groups(csv_file):
     if csv_file.group_column_index is None:
         return None
-    return csv_file.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.GROUP)
+    groups = csv_file.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.GROUP)
+    if groups is None:
+        return None
+    # ensure groups are strings
+    return groups.fillna('').astype(str)
 
 
 @csv_file_cache
