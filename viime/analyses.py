@@ -23,7 +23,7 @@ def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series,
     })
 
     return {
-        'groups': list(set(groups)),
+        'groups': sorted(set(groups)),
         'pairs': list(data)[1:],
         'data': clean(data).to_dict(orient='records')
     }
