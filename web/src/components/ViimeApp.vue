@@ -66,7 +66,10 @@ export default {
       color: transparent;
       background: url("../assets/viime_logo_ko.svg") no-repeat center center;
       background-size: auto 22px;
-      width: 65px;
+
+      > * {
+        width: 65px;
+      }
     }
 
     > a {
