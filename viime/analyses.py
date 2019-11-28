@@ -7,6 +7,10 @@ import pandas as pd
 from .opencpu import opencpu_request
 
 
+def clean(df: pd.DataFrame) -> pd.DataFrame:
+    return df.replace([pd.np.nan, pd.np.Inf, -pd.np.Inf], None)
+
+
 def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, Any]:
 
     files = {
@@ -21,7 +25,7 @@ def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, An
     return {
         'groups': list(set(groups)),
         'pairs': list(data)[1:],
-        'data': data.replace({pd.np.nan: None}).to_dict(orient='records')
+        'data': clean(data).to_dict(orient='records')
     }
 
 
@@ -38,7 +42,7 @@ def anova_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, Any]:
     return {
         'groups': list(set(groups)),
         'pairs': list(data)[4:],
-        'data': data.replace({pd.np.nan: None}).to_dict(orient='records')
+        'data': clean(data).to_dict(orient='records')
     }
 
 

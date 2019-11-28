@@ -66,7 +66,7 @@ export default {
         .attr('cy', d => this.scaleY(d.y))
         .style('fill', d => d.color)
         .select('title')
-        .text(d => `${d.name}: ${d.foldChange} x ${d.pValue}`);
+        .text(d => `${d.name}: ${d.log2FoldChange} x ${d.pValue}`);
     },
   },
 };
