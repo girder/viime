@@ -1,4 +1,5 @@
 import WilcoxonPlotTile from './WilcoxonPlotTile.vue';
+import WilcoxonVolcanoPlotTile from './WilcoxonVolcanoPlotTile.vue';
 import AnovaTableTile from './AnovaTableTile.vue';
 import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
@@ -77,6 +78,20 @@ export default [
       </div>);
     },
     component: WilcoxonPlotTile,
+    args: {},
+    type: plot_types.ANALYSIS,
+    icon: vuetify.icons.metaboliteTable,
+  },
+  {
+    path: 'wilcoxon_volacno',
+    name: 'Wilcoxon test (Volcano Plot)',
+    shortName: 'Wilcoxon Volcano Plot',
+    description() {
+      return (<div>
+        <p>Non-parametric test to compare two groups.</p>
+      </div>);
+    },
+    component: WilcoxonVolcanoPlotTile,
     args: {},
     type: plot_types.ANALYSIS,
     icon: vuetify.icons.metaboliteTable,

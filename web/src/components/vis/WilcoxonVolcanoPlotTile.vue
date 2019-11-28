@@ -1,0 +1,83 @@
+<script>
+import VolcanoPlot from './VolcanoPlot.vue';
+import VisTileLarge from './VisTileLarge.vue';
+import MetaboliteFilter from '../toolbar/MetaboliteFilter.vue';
+import MetaboliteColorer from '../toolbar/MetaboliteColorer.vue';
+import plotData from './mixins/plotData';
+
+export default {
+  components: {
+    VolcanoPlot,
+    VisTileLarge,
+    MetaboliteFilter,
+    MetaboliteColorer,
+  },
+
+  mixins: [plotData('wilcoxon')],
+
+  props: {
+    id: {
+      type: String,
+      required: true,
+    },
+  },
+
+  data() {
+    return {
+      metaboliteFilter: null,
+      metaboliteColor: null,
+    };
+  },
+
+  computed: {
+    dataset() { return this.$store.getters.dataset(this.id); },
+
+    chartData() {
+      const base = this.plot.data || { data: [] };
+      let { data } = base;
+
+      data = data.map((row) => ({
+        name: row.Metabolite,
+        pValue: row.Wilcoxon,
+        foldChange: Math.random(), // TODO
+      }));
+
+      if (this.metaboliteFilter && this.metaboliteFilter) {
+        const filter = this.metaboliteFilter.apply;
+        data = data.filter(d => filter(d.Metabolite));
+      }
+      if (this.metaboliteColor) {
+        const colorer = this.metaboliteColor.apply;
+        data = data.map(row => ({ ...row, color: colorer(row.Metabolite) }));
+      }
+
+      return data;
+    },
+  },
+};
+
+</script>
+
+<template lang="pug">
+vis-tile-large(v-if="dataset", title="Metabolite Wilcoxon Volanco Plot", :loading="false",
+    download, expanded)
+  template(#controls)
+    metabolite-filter(:dataset="dataset", v-model="metaboliteFilter")
+    metabolite-colorer(:dataset="dataset", v-model="metaboliteColor",
+        empty-option="No Color")
+
+  volcano-plot.main(
+      v-if="plot.data",
+      :rows="chartData")
+</template>
+
+<style scoped>
+.main {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+}
+</style>
