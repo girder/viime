@@ -1,9 +1,5 @@
 <script>
-import { scalePoint } from 'd3-scale';
-import { select, event } from 'd3-selection';
-import { format } from 'd3-format';
-import { line } from 'd3-shape';
-import 'd3-transition';
+import { select } from 'd3-selection';
 
 import { axisPlot } from './mixins/axisPlot';
 
@@ -14,9 +10,9 @@ export default {
 
   props: {
     rows: {
-      type: Array, //{pValue: number, log2FoldChange: number, name: string, color?: string}[]
-      required: true
-    }
+      type: Array, // {pValue: number, log2FoldChange: number, name: string, color?: string}[]
+      required: true,
+    },
   },
 
   data() {
@@ -39,7 +35,7 @@ export default {
       return this.rows.map(row => ({
         ...row,
         x: row.log2FoldChange,
-        y: -Math.log10(row.pValue)
+        y: -Math.log10(row.pValue),
       }));
     },
     xrange() {
@@ -49,7 +45,7 @@ export default {
     yrange() {
       const max = this.transformedRows.reduce((acc, d) => Math.max(acc, d.y), 0);
       return [0, max];
-    }
+    },
   },
   methods: {
     update() {
@@ -69,7 +65,8 @@ export default {
         .attr('cx', d => this.scaleX(d.x))
         .attr('cy', d => this.scaleY(d.y))
         .style('fill', d => d.color)
-        .select('title').text(d => `${d.name}: ${d.foldChange} x ${d.pValue}`);
+        .select('title')
+        .text(d => `${d.name}: ${d.foldChange} x ${d.pValue}`);
     },
   },
 };

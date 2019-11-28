@@ -35,7 +35,7 @@ export default {
     chartData() {
       let data = this.plot.data && this.plot.data.data ? this.plot.data.data : [];
 
-      data = data.map((row) => ({
+      data = data.map(row => ({
         name: row.Metabolite,
         pValue: row.Wilcoxon,
         log2FoldChange: row.Log2FoldChange,
