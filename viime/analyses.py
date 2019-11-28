@@ -11,15 +11,15 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
     return df.replace([pd.np.nan, pd.np.Inf, -pd.np.Inf], None)
 
 
-def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, Any]:
-
+def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series,
+                  log_transformed=False) -> Dict[str, Any]:
     files = {
         'measurements': measurements.to_csv().encode(),
         'groups': groups.to_csv(header=True).encode()
     }
 
     data = opencpu_request('wilcoxon_test_z_scores', files, {
-        'log_transformed': False  # TODO
+        'log_transformed': log_transformed
     })
 
     return {
