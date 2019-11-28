@@ -94,7 +94,7 @@ export default [
     component: WilcoxonVolcanoPlotTile,
     args: {},
     type: plot_types.ANALYSIS,
-    icon: vuetify.icons.metaboliteTable,
+    icon: vuetify.icons.pca,
   },
   {
     path: 'anova',
