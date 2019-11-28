@@ -136,6 +136,7 @@ const scaling_methods = [
 const transform_methods = [
   { label: 'None', value: null },
   { label: 'Log 10', value: 'log10' },
+  { label: 'Log 2', value: 'log2' },
   { label: 'Square Root', value: 'squareroot' },
   { label: 'Cube Root', value: 'cuberoot' },
 ];
