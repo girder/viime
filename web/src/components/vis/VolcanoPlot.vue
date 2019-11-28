@@ -14,7 +14,7 @@ export default {
 
   props: {
     rows: {
-      type: Array, //{pValue: number, foldChange: number, name: string}[]
+      type: Array, //{pValue: number, log2FoldChange: number, name: string, color?: string}[]
       required: true
     }
   },
@@ -27,7 +27,7 @@ export default {
         bottom: 50,
         left: 50,
       },
-      radius: 4,
+      radius: 3,
       duration: 200,
       xlabel: 'log2(Fold Change)',
       ylabel: '-log10(p-value)',
@@ -38,7 +38,7 @@ export default {
     transformedRows() {
       return this.rows.map(row => ({
         ...row,
-        x: Math.log2(row.foldChange),
+        x: row.log2FoldChange,
         y: -Math.log10(row.pValue)
       }));
     },
@@ -68,6 +68,7 @@ export default {
         })
         .attr('cx', d => this.scaleX(d.x))
         .attr('cy', d => this.scaleY(d.y))
+        .style('fill', d => d.color)
         .select('title').text(d => `${d.name}: ${d.foldChange} x ${d.pValue}`);
     },
   },
@@ -85,7 +86,7 @@ export default {
     text.y.label(:transform="`translate(${10},${margin.top + dheight / 2})rotate(-90)`")
       | {{ylabel}}
 </template>
-<style lang="scss" scoped>
+<style scoped>
 .label.x {
   text-anchor: middle;
 }
@@ -94,8 +95,11 @@ export default {
   dominant-baseline: central;
 }
 
-circle {
+.plot >>> circle {
+  fill: steelblue;
+}
+
+.plot >>> circle:hover {
   stroke: black;
-  fill: white;
 }
 </style>

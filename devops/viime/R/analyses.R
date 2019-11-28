@@ -2,7 +2,7 @@
 #' wilcoxon_test_z_scores
 #'
 #' @export
-wilcoxon_test_z_scores <- function(measurements, groups) {
+wilcoxon_test_z_scores <- function(measurements, groups, log_transformed=FALSE) {
   Metab = read.csv(measurements, row.names=1)
   groups = read.csv(groups, row.names=1)
 
@@ -12,17 +12,27 @@ wilcoxon_test_z_scores <- function(measurements, groups) {
 
   compute <- function(prefix, groupA, groupB) {
     # create a table for p-values
-    result <- data.frame(x=numeric(ncol(Metab)), y=numeric(ncol(Metab)), z=numeric(ncol(Metab)))
-    colnames(result) <- paste0(prefix, c("Wilcoxon", "Bonferroni", "Hochberg"))
+    result <- data.frame(x=numeric(ncol(Metab)), y=numeric(ncol(Metab)), z=numeric(ncol(Metab)), u=numeric(ncol(Metab)))
+    colnames(result) <- paste0(prefix, c("Wilcoxon", "Bonferroni", "Hochberg", "Log2FoldChange"))
 
     # calculate Wilcoxon p-values
     for(i in 1:ncol(Metab)) {
-      result.dat <- wilcox.test(Metab[Group == groupA, i], Metab[Group == groupB, i])
-      result[i,1] <- as.numeric(gsub("$p.value [1]", "", result.dat[3]))
+      a <- Metab[Group == groupA, i]
+      b <- Metab[Group == groupB, i]
+      dat <- wilcox.test(a, b)
+      result[i,1] <- as.numeric(gsub("$p.value [1]", "", dat[3]))
+
+      # calculate fold change
+      if (log_transformed) {
+        result[i,4] <- mean(b) - mean(a)
+      } else {
+        result[i,4] <- log2(mean(b) / mean(a))
+      }
     }
     # calculate adjusted p-value
     result[,2] <- p.adjust(result[,1], method="bonferroni")
     result[,3] <- p.adjust(result[,1], method="hochberg")
+
 
     result
   }
@@ -97,7 +107,7 @@ clustered_heatmap <- function(measurements) {
   OUT = as.data.frame(scaled)
   colnames(OUT) = colnames(Metab)
   rownames(OUT) = rownames(Metab)
-  
+
   x = as.matrix(OUT)
 
   Rowv = rowMeans(x)
@@ -106,14 +116,14 @@ clustered_heatmap <- function(measurements) {
   ddr = as.dendrogram(hcr)
   ddr = reorder(ddr, Rowv)
   # rowInd = order.dendrogram(ddr)
-  
+
   Colv = colMeans(x)
   distc = dist(t(x))
   hcc = hclust(distc)
   ddc = as.dendrogram(hcc)
   ddc = reorder(ddc, Colv)
   # colInd = order.dendrogram(ddc)
-  
+
   f <- textConnection('OUT_CSV', 'w')
   write.csv(OUT, f)
   close(f)

@@ -14,7 +14,9 @@ def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, An
         'groups': groups.to_csv(header=True).encode()
     }
 
-    data = opencpu_request('wilcoxon_test_z_scores', files, {})
+    data = opencpu_request('wilcoxon_test_z_scores', files, {
+        'log_transformed': False  # TODO
+    })
 
     return {
         'groups': list(set(groups)),

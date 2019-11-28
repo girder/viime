@@ -33,13 +33,12 @@ export default {
     dataset() { return this.$store.getters.dataset(this.id); },
 
     chartData() {
-      const base = this.plot.data || { data: [] };
-      let { data } = base;
+      let data = this.plot.data && this.plot.data.data ? this.plot.data.data : [];
 
       data = data.map((row) => ({
         name: row.Metabolite,
         pValue: row.Wilcoxon,
-        foldChange: Math.random(), // TODO
+        log2FoldChange: row.Log2FoldChange,
       }));
 
       if (this.metaboliteFilter && this.metaboliteFilter) {
