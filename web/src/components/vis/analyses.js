@@ -1,6 +1,7 @@
 import WilcoxonPlotTile from './WilcoxonPlotTile.vue';
 import WilcoxonVolcanoPlotTile from './WilcoxonVolcanoPlotTile.vue';
 import AnovaTableTile from './AnovaTableTile.vue';
+import AnovaVolcanoPlotTile from './AnovaVolcanoPlotTile.vue';
 import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
 import PcaPage from './PcaPage/PcaPage.vue';
@@ -105,6 +106,16 @@ export default [
     args: {},
     type: plot_types.ANALYSIS,
     icon: vuetify.icons.metaboliteTable,
+  },
+  {
+    path: 'anova_volcano',
+    name: 'ANOVA (Volcano Plot)',
+    shortName: 'ANOVA (Volcano Plot)',
+    description: 'Test to compare 3 or more groups assuming normal distribution, the group pairwise comparisons are adjusted with Tukey HSD',
+    component: AnovaVolcanoPlotTile,
+    args: {},
+    type: plot_types.ANALYSIS,
+    icon: vuetify.icons.pca,
   },
   {
     path: 'heatmap',

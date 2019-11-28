@@ -740,7 +740,7 @@ def get_pca_overview(validated_table):
 
 
 def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,
-                group_column: Optional[str] = None, **kwargs):
+                group_column: Optional[str] = None):
     measurements = validated_table.measurements
     groups = validated_table.groups
 
@@ -749,7 +749,8 @@ def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,
         raise ValidationError(
             'invalid group column', field_name='group_column', data=group_column)
 
-    data = method(measurements, group, **kwargs)
+    is_log = validated_table.transformation in ['log10', 'log2']
+    data = method(measurements, group, log_transformed=is_log)
 
     return jsonify(data), 200
 
@@ -761,8 +762,7 @@ def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,
 @load_validated_csv_file
 def get_wilcoxon_test(validated_table: ValidatedMetaboliteTable,
                       group_column: Optional[str] = None):
-    is_log = validated_table.transformation in ['log10', 'log2']
-    return _group_test(wilcoxon_test, validated_table, group_column, log_transformed=is_log)
+    return _group_test(wilcoxon_test, validated_table, group_column)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/anova', methods=['GET'])

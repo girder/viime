@@ -63,7 +63,7 @@ wilcoxon_test_z_scores <- function(measurements, groups, log_transformed=FALSE) 
 #' anova_tukey_adjustment
 #'
 #' @export
-anova_tukey_adjustment <- function(measurements, groups) {
+anova_tukey_adjustment <- function(measurements, groups, log_transformed=FALSE) {
   Metab = read.csv(measurements, row.names=1)
   groups = read.csv(groups, row.names=1)
 
@@ -90,6 +90,28 @@ anova_tukey_adjustment <- function(measurements, groups) {
     OUT <- rbind(OUT, x)
     colnames(OUT) <- c("Metabolite", row.names(a), colnames(x2))
     rm(mod,a,b,x1,x2,x)
+  }
+
+  # compute fold changes
+  combinations = combn(levels(Group), 2)
+  for(j in 1:ncol(combinations)) {
+    groupA <- combinations[1, j]
+    groupB <- combinations[2, j]
+
+    sub <- data.frame(x=numeric(ncol(Metab)))
+    colnames(sub) <- c(paste0(groupA, " - ", groupB, " Log2FoldChange"))
+
+    for(i in 1:ncol(Metab)) {
+      a <- Metab[Group == groupA, i]
+      b <- Metab[Group == groupB, i]
+      # calculate fold change
+      if (log_transformed) {
+        sub[i,1] <- mean(b) - mean(a)
+      } else {
+        sub[i,1] <- log2(mean(b) / mean(a))
+      }
+    }
+    OUT = cbind(OUT, sub)
   }
 
   OUT
