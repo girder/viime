@@ -124,6 +124,25 @@ function getSampleNames(dataset) {
   return [];
 }
 
+const IMPORTANT_METABOLITES = new Set(['creatinine']);
+
+function getMetaboliteNames(dataset) {
+  if (dataset.measurement_table) {
+    const r = dataset.measurement_table.columnNames.slice();
+    return r.sort((a, b) => {
+      const isAImportant = IMPORTANT_METABOLITES.has(a.toLowerCase());
+      const isBImportant = IMPORTANT_METABOLITES.has(b.toLowerCase());
+
+      if (isAImportant === isBImportant) {
+        return a.localeCompare(b);
+      }
+      // only one of them is important
+      return isAImportant ? -1 : +1;
+    });
+  }
+  return [];
+}
+
 function getSampleMetaDataColumns(dataset) {
   const df = dataset.validatedSampleMetaData;
   if (!df) {
@@ -152,6 +171,7 @@ const normalize_methods = [
   { label: 'Min Max', value: 'minmax', arg: null },
   { label: 'Sum', value: 'sum', arg: null },
   { label: 'Reference Sample', value: 'reference-sample', arg: getSampleNames },
+  { label: 'Reference Metabolite', value: 'reference-metabolite', arg: getMetaboliteNames },
   { label: 'Weight/Volume', value: 'weight-volume', arg: getSampleMetaDataColumns },
 ];
 

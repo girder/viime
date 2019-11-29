@@ -3,7 +3,13 @@ from sklearn import preprocessing
 
 from viime.cache import persistent_region
 
-NORMALIZATION_METHODS = {'minmax', 'sum', 'reference-sample', 'weight-volume'}
+NORMALIZATION_METHODS = {
+    'minmax',
+    'sum',
+    'reference-sample',
+    'weight-volume',
+    'reference-metabolite'
+}
 
 
 def validate_normalization_method(args):
@@ -11,7 +17,7 @@ def validate_normalization_method(args):
     argument = args.get('argument', None)
     if method is not None and method not in NORMALIZATION_METHODS:
         raise ValidationError('Invalid normalization method', data=method)
-    if method in ['reference-sample', 'weight-volume'] and argument is None:
+    if method in ['reference-sample', 'weight-volume', 'reference-metabolite'] and argument is None:
         raise ValidationError('Method requires argument', data=argument)
 
 
@@ -28,6 +34,8 @@ def normalize(method, table, argument=None, measurement_metadata=None, sample_me
         table = sum(table)
     elif method == 'reference-sample':
         table = reference_sample(table, argument)
+    elif method == 'reference-metabolite':
+        table = reference_metabolite(table, argument)
     elif method == 'weight-volume':
         table = weight_volume(table, argument, sample_metadata)
     else:
@@ -43,6 +51,11 @@ def sum(table):
 def reference_sample(table, argument):
     ref_sample = table.loc[argument]
     return ref_sample.sum() * table.div(table.sum(axis=1), axis=0)
+
+
+def reference_metabolite(table, argument):
+    ref_metabolite = table.loc[:, argument]
+    return 100 * table.div(ref_metabolite, axis=0)
 
 
 def weight_volume(table, argument, sample_metadata):
