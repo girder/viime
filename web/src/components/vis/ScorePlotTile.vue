@@ -1,11 +1,11 @@
 <script>
-import ScorePlot from '@/components/vis/ScorePlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
 import plotData from './mixins/plotData';
 
 export default {
   components: {
-    ScorePlot,
+    // lazy import for better webpack bundles
+    ScorePlot: () => import('@/components/vis/ScorePlot.vue'),
     VisTile,
   },
 

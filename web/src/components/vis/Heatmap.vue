@@ -532,28 +532,30 @@ export default {
 
       if (columnDendogram > 0) {
         // column dendogram
-        const url = svg2url(this.$refs.column, { font: false, icons: true });
-        const img = new Image(this.width * DENDOGRAM_RATIO, this.matrixHeight);
-        toWait.push(new Promise((resolve) => {
-          img.onload = () => {
-            ctx.drawImage(img, rowDendogram, 0);
-            URL.revokeObjectURL(url);
-            resolve();
-          };
-          img.src = url;
+        toWait.push(svg2url(this.$refs.column, { font: false, icons: true }).then((url) => {
+          const img = new Image(this.width * DENDOGRAM_RATIO, this.matrixHeight);
+          return new Promise((resolve) => {
+            img.onload = () => {
+              ctx.drawImage(img, rowDendogram, 0);
+              URL.revokeObjectURL(url);
+              resolve();
+            };
+            img.src = url;
+          });
         }));
       }
       if (rowDendogram > 0) {
         // row dendogram
-        const url = svg2url(this.$refs.row, { font: false, icons: true });
-        const img = new Image(this.matrixWidth, this.height * DENDOGRAM_RATIO);
-        toWait.push(new Promise((resolve) => {
-          img.onload = () => {
-            ctx.drawImage(img, 0, columnDendogram);
-            URL.revokeObjectURL(url);
-            resolve();
-          };
-          img.src = url;
+        toWait.push(svg2url(this.$refs.row, { font: false, icons: true }).then((url) => {
+          const img = new Image(this.matrixWidth, this.height * DENDOGRAM_RATIO);
+          return new Promise((resolve) => {
+            img.onload = () => {
+              ctx.drawImage(img, 0, columnDendogram);
+              URL.revokeObjectURL(url);
+              resolve();
+            };
+            img.src = url;
+          });
         }));
       }
 
