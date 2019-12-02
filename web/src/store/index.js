@@ -1,4 +1,4 @@
-import { cloneDeep } from 'lodash';
+import cloneDeep from 'lodash.clonedeep';
 import Vue from 'vue';
 import Vuex from 'vuex';
 
