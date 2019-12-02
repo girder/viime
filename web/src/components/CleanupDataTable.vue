@@ -33,12 +33,21 @@ export default {
     columns() {
       const rows = this.dataset.sourcerows;
 
+      const rowTypes = this.dataset.row.labels;
+
+      const f = (v, colType, rowType) => {
+        if (colType !== 'measurement' || rowType !== 'sample') {
+          return v;
+        }
+        return formatter(v);
+      };
+
       return this.dataset.column.labels.map((colType, i) => {
         const column = {
           index: i,
           header: this.createHeader(colType, defaultColOption, base26Converter(i + 1)),
           clazz: [`type-${colType}`],
-          values: rows.map(row => formatter(row[i])),
+          values: rows.map((row, r) => f(row[i], colType, rowTypes[r])),
         };
         const selected = this.getSelectionClasses('column', i);
         column.clazz.push(...selected);
@@ -119,7 +128,7 @@ export default {
       if (columnType !== 'group' || rowType !== 'sample') {
         return null;
       }
-      const color = this.groupToColor(value);
+      const color = this.groupToColor(String(value));
       const tColor = textColor(color);
       return {
         backgroundColor: color,
