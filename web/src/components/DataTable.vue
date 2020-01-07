@@ -7,14 +7,31 @@
         .column-header-cell {{corner}}
         .row-header-cell(v-for="(r,i) in rowHeaders", :key="i",
             :class="r.clazz", :style="r.style", @click="onRowClick($event, i)")
-          | {{r.text}}
+          v-tooltip(right, v-if="headerTooltips")
+            template(#activator="{ on }")
+              div(v-on="on") {{r.text}}
+            | {{r.text}}
+          template(v-else)
+            | {{r.text}}
     template(#default="{ item, index }")
       .column(:class="item.clazz", :style="item.style")
         .column-header-cell(:class="item.header.clazz", :style="item.header.style",
             @click="onColumnClick($event, index)")
-          | {{item.header.text}}
+          v-tooltip(bottom, v-if="headerTooltips")
+            template(v-slot:activator="{ on }")
+              div(v-on="on") {{item.header.text}}
+            | {{item.header.text}}
+          template(v-else)
+            | {{item.header.text}}
         .cell(v-for="(r,i) in item.values", :key="i", :class="cellClasses(i, index)",
-            :style="cellStyles(i, index, r)", @click="onCellClick($event, i, index)") {{r}}
+            :style="cellStyles(i, index, r)", @click="onCellClick($event, i, index)")
+          v-tooltip(v-if="showTooltip(i, index, r)",
+              :bottom="i === 0", :right="i > 0")
+            template(#activator="{ on }")
+              div(v-on="on") {{r}}
+            | {{r}}
+          template(v-else)
+            | {{r}}
 </template>
 
 <script>
@@ -43,6 +60,16 @@ export default {
       type: Function,
       required: false,
       default() { return () => null; },
+    },
+    showTooltip: { // (rowIndex: number, columnIndex: number, value: any) => boolean
+      type: Function,
+      required: false,
+      default() { return false; },
+    },
+    headerTooltips: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
     corner: {
       type: String,
