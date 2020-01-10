@@ -37,6 +37,7 @@
     "papaparse": "^4.6.3",
     "vue": "^2.5.22",
     "vue-axios": "^2.1.4",
+    "vue-gtag": "^1.1.2",
     "vue-resize-directive": "^1.2.0",
     "vue-router": "^3.0.2",
     "vue-virtual-scroller": "^1.0.0-rc.2",
