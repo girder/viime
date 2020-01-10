@@ -5,6 +5,7 @@ import Vuetify from 'vuetify';
 import './stylus/main.styl';
 import { init as SentryInit } from '@sentry/browser';
 import { Vue as SentryVue } from '@sentry/integrations';
+import VueGtag from 'vue-gtag';
 
 import ApiService from './common/api.service';
 import App from './App.vue';
@@ -28,6 +29,11 @@ if (process.env.NODE_ENV === 'production') {
     integrations: [new SentryVue({ Vue })],
   });
 }
+
+Vue.use(VueGtag, {
+  config: { id: 'UA-6042509-40' },
+  enabled: process.env.NODE_ENV === 'production',
+}, router);
 
 new Vue({
   router,
