@@ -1,4 +1,5 @@
 <script>
+import { csvFormat } from 'd3-dsv';
 import AnovaTable from './AnovaTable.vue';
 import VisTileLarge from './VisTileLarge.vue';
 import ToolbarOption from '../toolbar/ToolbarOption.vue';
@@ -65,19 +66,7 @@ export default {
 
   methods: {
     downloadTable() {
-      const quote = str => `"${str}"`;
-      const dataRows = this.tableData.data.map(row => [
-        quote(row.Metabolite),
-        row.Group,
-        row.Intercept,
-        ...this.tableData.pairs.map(key => row[key]),
-      ].join(','));
-      downloadCSV([[
-        'Metabolite',
-        'Group',
-        'Intercept',
-        ...this.tableData.pairs.map(quote),
-      ].join(','), ...dataRows].join('\n'), 'ANOVA');
+      downloadCSV(csvFormat(this.tableData.data, ['Metabolite', 'Group', 'Intercept', ...this.tableData.pairs]), 'ANOVA');
     },
   },
 };

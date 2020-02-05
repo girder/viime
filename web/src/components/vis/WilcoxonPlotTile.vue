@@ -1,4 +1,5 @@
 <script>
+import { csvFormat } from 'd3-dsv';
 import WilcoxonPlot from './WilcoxonPlot.vue';
 import VisTileLarge from './VisTileLarge.vue';
 import ToolbarOption from '../toolbar/ToolbarOption.vue';
@@ -64,15 +65,7 @@ export default {
   },
   methods: {
     downloadTable() {
-      const quote = str => `"${str}"`;
-      const dataRows = this.tableData.data.map(row => [
-        quote(row.Metabolite),
-        ...this.tableData.pairs.map(key => row[key]),
-      ].join(','));
-      downloadCSV([[
-        'Metabolite',
-        ...this.tableData.pairs.map(quote),
-      ].join(','), ...dataRows].join('\n'), 'Wilcoxon');
+      downloadCSV(csvFormat(this.tableData.data, ['Metabolite', ...this.tableData.pairs]), 'Wilcoxon');
     },
   },
 };
