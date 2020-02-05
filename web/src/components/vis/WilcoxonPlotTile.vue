@@ -6,6 +6,7 @@ import MetaboliteFilter from '../toolbar/MetaboliteFilter.vue';
 import MetaboliteColorer from '../toolbar/MetaboliteColorer.vue';
 import plotData from './mixins/plotData';
 import { SET_DATASET_SELECTED_COLUMNS } from '../../store/actions.type';
+import { downloadCSV } from '../../utils/exporter';
 
 export default {
   components: {
@@ -61,6 +62,19 @@ export default {
       };
     },
   },
+  methods: {
+    downloadTable() {
+      const quote = str => `"${str}"`;
+      const dataRows = this.tableData.data.map(row => [
+        quote(row.Metabolite),
+        ...this.tableData.pairs.map(key => row[key]),
+      ].join(','));
+      downloadCSV([[
+        'Metabolite',
+        ...this.tableData.pairs.map(quote),
+      ].join(','), ...dataRows].join('\n'), 'Wilcoxon');
+    },
+  },
 };
 </script>
 
@@ -78,6 +92,9 @@ vis-tile-large(title="Wilcoxon Test", :loading="plot.loading", expanded)
         v-layout(column)
           v-slider.my-1.minCorrelation(v-model="threshold", label="0", thumb-label="always",
               hide-details, min="0", max="0.1", step="0.001")
+    v-btn(flat, dark, block, @click="downloadTable")
+      v-icon.mr-2 {{ $vuetify.icons.save }}
+      | Download Table
   wilcoxon-plot(v-if="plot.data", :data="tableData", :threshold="threshold", v-model="selected")
 </template>
 

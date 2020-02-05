@@ -6,6 +6,7 @@ import MetaboliteFilter from '../toolbar/MetaboliteFilter.vue';
 import MetaboliteColorer from '../toolbar/MetaboliteColorer.vue';
 import plotData from './mixins/plotData';
 import { SET_DATASET_SELECTED_COLUMNS } from '../../store/actions.type';
+import { downloadCSV } from '../../utils/exporter';
 
 export default {
   components: {
@@ -61,6 +62,24 @@ export default {
       };
     },
   },
+
+  methods: {
+    downloadTable() {
+      const quote = str => `"${str}"`;
+      const dataRows = this.tableData.data.map(row => [
+        quote(row.Metabolite),
+        row.Group,
+        row.Intercept,
+        ...this.tableData.pairs.map(key => row[key]),
+      ].join(','));
+      downloadCSV([[
+        'Metabolite',
+        'Group',
+        'Intercept',
+        ...this.tableData.pairs.map(quote),
+      ].join(','), ...dataRows].join('\n'), 'ANOVA');
+    },
+  },
 };
 </script>
 
@@ -78,6 +97,9 @@ vis-tile-large(v-if="plot", title="Anova Table", :loading="plot.loading", expand
         v-layout(column)
           v-slider.my-1.minCorrelation(v-model="threshold", label="0", thumb-label="always",
               hide-details, min="0", max="0.1", step="0.001")
+    v-btn(flat, dark, block, @click="downloadTable")
+      v-icon.mr-2 {{ $vuetify.icons.save }}
+      | Download Table
   anova-table(v-if="plot.data", :data="tableData", :threshold="threshold", v-model="selected")
 </template>
 
