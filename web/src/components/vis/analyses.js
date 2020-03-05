@@ -110,7 +110,7 @@ export default [
   {
     path: 'anova_volcano',
     name: 'ANOVA (Volcano Plot)',
-    shortName: 'ANOVA (Volcano Plot)',
+    shortName: 'ANOVA Volcano Plot',
     description: 'Test to compare 3 or more groups assuming normal distribution, the group pairwise comparisons are adjusted with Tukey HSD',
     component: AnovaVolcanoPlotTile,
     args: {},

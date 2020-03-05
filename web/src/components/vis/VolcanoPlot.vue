@@ -13,6 +13,14 @@ export default {
       type: Array, // {pValue: number, log2FoldChange: number, name: string, color?: string}[]
       required: true,
     },
+    minFoldChange: {
+      type: Number,
+      default: 1,
+    },
+    minLogP: {
+      type: Number,
+      default: 1,
+    },
   },
 
   data() {
@@ -47,6 +55,17 @@ export default {
       return [0, max];
     },
   },
+  watch: {
+    rows() {
+      this.update();
+    },
+    minFoldChange() {
+      this.update();
+    },
+    minLogP() {
+      this.update();
+    },
+  },
   methods: {
     update() {
       //
@@ -58,23 +77,43 @@ export default {
         .data(this.transformedRows)
         .join((enter) => {
           const r = enter.append('circle');
-          r.attr('r', this.radius);
           r.append('title');
           return r;
         })
+        .attr('r', d => (Math.abs(d.x) >= this.minFoldChange && d.y >= this.minLogP ? this.radius * 2 : this.radius))
+        .attr('opacity', d => (Math.abs(d.x) >= this.minFoldChange && d.y >= this.minLogP ? 1 : 0.5))
         .attr('cx', d => this.scaleX(d.x))
         .attr('cy', d => this.scaleY(d.y))
         .style('fill', d => d.color)
         .select('title')
         .text(d => `${d.name}: ${d.log2FoldChange} x ${d.pValue}`);
+      svg.select('.plot').selectAll('line.x-threshold')
+        .data([-1, 1])
+        .join('line')
+        .attr('class', 'x-threshold')
+        .style('stroke', 'black')
+        .style('stroke-width', 0.5)
+        .attr('x1', d => this.scaleX(d * this.minFoldChange))
+        .attr('y1', 0)
+        .attr('x2', d => this.scaleX(d * this.minFoldChange))
+        .attr('y2', this.height - this.margin.top - this.margin.bottom);
+      svg.select('.plot').selectAll('line.y-threshold')
+        .data([1])
+        .join('line')
+        .attr('class', 'y-threshold')
+        .style('stroke', 'black')
+        .style('stroke-width', 0.5)
+        .attr('x1', 0)
+        .attr('y1', () => this.scaleY(this.minLogP))
+        .attr('x2', this.width - this.margin.left - this.margin.right)
+        .attr('y2', () => this.scaleY(this.minLogP));
     },
   },
 };
 </script>
 <template lang="pug">
 .main(v-resize:throttle="onResize")
-  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
-      :data-update="reactiveUpdate")
+  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
     g.master
       g.axes
       g.plot

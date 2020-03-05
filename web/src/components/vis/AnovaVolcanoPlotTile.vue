@@ -6,6 +6,7 @@ import MetaboliteFilter from '../toolbar/MetaboliteFilter.vue';
 import MetaboliteColorer from '../toolbar/MetaboliteColorer.vue';
 import ToolbarOption from '../toolbar/ToolbarOption.vue';
 import plotData from './mixins/plotData';
+import { SET_DATASET_SELECTED_COLUMNS } from '../../store/actions.type';
 
 export default {
   components: {
@@ -30,6 +31,8 @@ export default {
       combination: null,
       metaboliteFilter: null,
       metaboliteColor: null,
+      minFoldChange: 1,
+      minLogP: 1,
     };
   },
 
@@ -57,6 +60,15 @@ export default {
       return c.length > 0 ? c[0].value : '';
     },
 
+    selected: {
+      get() {
+        return (this.dataset.selectedColumns || []).slice();
+      },
+      set(columns) {
+        this.$store.dispatch(SET_DATASET_SELECTED_COLUMNS, { dataset_id: this.id, columns });
+      },
+    },
+
     chartData() {
       let data = this.plot.data && this.plot.data.data ? this.plot.data.data : [];
 
@@ -82,6 +94,17 @@ export default {
       return data;
     },
   },
+  methods: {
+    setSelection() {
+      this.selected = this.chartData.map(d => ({
+        name: d.name,
+        x: d.log2FoldChange,
+        y: -Math.log10(d.pValue),
+      }))
+        .filter(d => Math.abs(d.x) >= this.minFoldChange && d.y >= this.minLogP)
+        .map(d => d.name);
+    },
+  },
 };
 
 </script>
@@ -93,13 +116,31 @@ vis-tile-large(v-if="dataset", title="Metabolite Anova Volanco Plot", :loading="
     toolbar-option(v-if="hasMoreThanTwoGroups",
         :value="combination || defaultCombination", @change="combination = $event",
         title="Group Combination", :options="combinations")
-    metabolite-filter(:dataset="dataset", v-model="metaboliteFilter")
+    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
+      v-toolbar-title Min Fold Change
+    v-card.mx-3(flat)
+      v-card-actions
+        v-layout(column)
+          v-slider.my-1.minFoldChange(v-model="minFoldChange", label="0", thumb-label="always",
+              hide-details, min="0", max="3", step="0.05")
+    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
+      v-toolbar-title Min Log P-value
+    v-card.mx-3(flat)
+      v-card-actions
+        v-layout(column)
+          v-slider.my-1.minLogP(v-model="minLogP", label="0", thumb-label="always",
+              hide-details, min="0", max="5", step="0.05")
+    v-btn(flat, dark, block, @click="setSelection")
+      v-icon.mr-2 {{ $vuetify.icons.plusMultiple }}
+      | Select Metabolites
     metabolite-colorer(:dataset="dataset", v-model="metaboliteColor",
         empty-option="No Color")
 
   volcano-plot.main(
       v-if="plot.data",
-      :rows="chartData")
+      :rows="chartData",
+      :min-fold-change="minFoldChange",
+      :min-log-p="minLogP")
 </template>
 
 <style scoped>
@@ -110,5 +151,25 @@ vis-tile-large(v-if="dataset", title="Metabolite Anova Volanco Plot", :loading="
   right: 0;
   bottom: 0;
   display: flex;
+}
+
+.minFoldChange {
+  padding-top: 16px;
+}
+
+.minFoldChange >>> .v-input__slot::after {
+  content: "3";
+  color: rgba(0,0,0,0.54);
+  margin-left: 16px;
+}
+
+.minLogP {
+  padding-top: 16px;
+}
+
+.minLogP >>> .v-input__slot::after {
+  content: "5";
+  color: rgba(0,0,0,0.54);
+  margin-left: 16px;
 }
 </style>
