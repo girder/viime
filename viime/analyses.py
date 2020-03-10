@@ -2,41 +2,51 @@ from io import StringIO
 from itertools import combinations
 from typing import Any, Dict, Optional
 
+import numpy as np
 import pandas as pd
 
 from .opencpu import opencpu_request
 
 
-def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, Any]:
+def clean(df: pd.DataFrame) -> pd.DataFrame:
+    return df.replace([np.nan, np.Inf, -np.Inf], [None, None, None])
 
+
+def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series,
+                  log_transformed=False) -> Dict[str, Any]:
     files = {
         'measurements': measurements.to_csv().encode(),
         'groups': groups.to_csv(header=True).encode()
     }
 
-    data = opencpu_request('wilcoxon_test_z_scores', files, {})
+    data = opencpu_request('wilcoxon_test_z_scores', files, {
+        'log_transformed': log_transformed
+    })
 
     return {
-        'groups': list(set(groups)),
-        'pairs': list(data)[1:],
-        'data': data.replace({pd.np.nan: None}).to_dict(orient='records')
+        'groups': sorted(set(groups)),
+        'pairs': [v for v in list(data)[1:] if not v.endswith('FoldChange')],
+        'data': clean(data).to_dict(orient='records')
     }
 
 
-def anova_test(measurements: pd.DataFrame, groups: pd.Series) -> Dict[str, Any]:
+def anova_test(measurements: pd.DataFrame, groups: pd.Series,
+               log_transformed=False) -> Dict[str, Any]:
     files = {
         'measurements': measurements.to_csv().encode(),
         'groups': groups.to_csv(header=True).encode()
     }
 
-    data = opencpu_request('anova_tukey_adjustment', files, {})
+    data = opencpu_request('anova_tukey_adjustment', files, {
+        'log_transformed': log_transformed
+    })
 
     data = data.rename(columns={'(Intercept)': 'Intercept'})
 
     return {
         'groups': list(set(groups)),
-        'pairs': list(data)[4:],
-        'data': data.replace({pd.np.nan: None}).to_dict(orient='records')
+        'pairs': [v for v in list(data)[4:] if not v.endswith('FoldChange')],
+        'data': clean(data).to_dict(orient='records')
     }
 
 

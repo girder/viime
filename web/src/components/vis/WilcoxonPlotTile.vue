@@ -46,7 +46,7 @@ export default {
     },
     tableData() {
       const base = this.plot.data || { data: [] };
-      let { data } = base;
+      let data = this.plot.data && this.plot.data.data ? this.plot.data.data : [];
 
       if (this.metaboliteFilter) {
         const filter = this.metaboliteFilter.apply;

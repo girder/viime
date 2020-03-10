@@ -82,6 +82,7 @@ export const axisPlot = {
   mounted() {
     this.onResize();
     this.refsMounted = true;
+    this.update();
   },
   methods: {
     axisPlot(svg) {
