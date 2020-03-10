@@ -41,7 +41,7 @@ setup(
         'requests',
         'sklearn',
         'sqlalchemy-utils',
-        'webargs',
+        'webargs >=5.5.3, <6',
         'Werkzeug>=0.15',
         'xlrd>= 1.0.0'
     ],
