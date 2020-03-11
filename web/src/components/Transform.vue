@@ -11,6 +11,7 @@ import ScreePlotTile from '@/components/vis/ScreePlotTile.vue';
 import LoadingsPlotTile from '@/components/vis/LoadingsPlotTile.vue';
 import BoxPlotTile from '@/components/vis/BoxPlotTile.vue';
 import LayoutGrid from './LayoutGrid.vue';
+import ToolbarOption from './toolbar/ToolbarOption.vue';
 import { CSVService } from '../common/api.service';
 
 export default {
@@ -20,6 +21,7 @@ export default {
     ScreePlotTile,
     BoxPlotTile,
     LayoutGrid,
+    ToolbarOption,
   },
   props: {
     id: {
@@ -63,6 +65,7 @@ export default {
       }
       let arg = argument;
       if (!arg && method.arg) {
+        // take first one
         [arg] = this.getSelectItems(method.arg);
       }
       this.$store.dispatch(MUTEX_TRANSFORM_TABLE, {
@@ -73,13 +76,7 @@ export default {
       });
     },
     getSelectItems(arg) {
-      const opts = arg.split('.');
-      const order = opts[0]; // row or column
-      const _type = opts[1]; // sample, metadata, group, metabolite, etc.
-      const value = opts[2]; // name, header, index, etc.
-      return this.dataset[order]
-        .data.filter(v => v[`${order}_type`] === _type)
-        .map(v => v[`${order}_${value}`]);
+      return arg(this.dataset);
     },
   },
 };
@@ -105,25 +102,13 @@ v-layout.transform-component(row, fill-height)
                   @input="transformTable(norm, 'normalization', $event, normalize_methods)",
                   :value="norm_arg || getSelectItems(m.arg)[0]")
 
-      v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-        v-toolbar-title Transform
-      v-card.mx-3(flat)
-        v-card-actions
-          v-radio-group.my-0(:value="trans",
-              @change="transformTable($event, 'transformation', null, transform_methods)",
-              hide-details)
-            v-radio(v-for="m in transform_methods", :label="m.label",
-                :value="m.value", :key="`trans${m.value}`")
+      toolbar-option(title="Transform", :value="trans",
+          @change="transformTable($event, 'transformation', null, transform_methods)",
+          :options="transform_methods")
 
-      v-toolbar.darken-3(color="primary", dark, flat, dense)
-        v-toolbar-title Scale
-      v-card.mx-3(flat)
-        v-card-actions
-          v-radio-group.my-0(:value="scaling",
-              @change="transformTable($event, 'scaling', null, scaling_methods)",
-              hide-details)
-            v-radio(v-for="m in scaling_methods", :label="m.label",
-                :value="m.value", :key="`scale${m.value}`")
+      toolbar-option(title="Scale", :value="scaling",
+          @change="transformTable($event, 'scaling', null, scaling_methods)",
+          :options="scaling_methods")
 
       v-toolbar.darken-3(color="primary", dark, flat, dense)
         v-toolbar-title Plots

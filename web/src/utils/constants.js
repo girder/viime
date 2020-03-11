@@ -117,12 +117,62 @@ const mnar_imputation_methods = [
   },
 ];
 
+function getSampleNames(dataset) {
+  if (dataset.measurement_table) {
+    return dataset.measurement_table.rowNames;
+  }
+  return [];
+}
+
+const IMPORTANT_METABOLITES = new Set(['creatinine']);
+
+function getMetaboliteNames(dataset) {
+  if (dataset.measurement_table) {
+    const r = dataset.measurement_table.columnNames.slice();
+    return r.sort((a, b) => {
+      const isAImportant = IMPORTANT_METABOLITES.has(a.toLowerCase());
+      const isBImportant = IMPORTANT_METABOLITES.has(b.toLowerCase());
+
+      if (isAImportant === isBImportant) {
+        return a.localeCompare(b);
+      }
+      // only one of them is important
+      return isAImportant ? -1 : +1;
+    });
+  }
+  return [];
+}
+
+function getSampleMetaDataColumns(dataset) {
+  const df = dataset.validatedSampleMetaData;
+  if (!df) {
+    // extract from original table
+    return dataset.column.data.filter((c) => {
+      if (c.column_type !== 'metadata' || (c.subtype && c.subtype !== 'numerical')) {
+        return false;
+      }
+      return dataset.sourcerows.length > 0 && !Number.isNaN(dataset.sourcerows[0][c.column_index]);
+    }).map(c => c.column_header);
+  }
+
+  // only numeric sample meta data columns
+  return df.columnNames.filter((_, i) => {
+    // use meta data
+    if (df.columnMetaData[i].subtype === 'numerical') {
+      return true;
+    }
+    // check data
+    return df.data.length > 0 && !Number.isNaN(df.data[0][i]);
+  });
+}
+
 const normalize_methods = [
   { label: 'None', value: null, arg: null },
   { label: 'Min Max', value: 'minmax', arg: null },
   { label: 'Sum', value: 'sum', arg: null },
-  { label: 'Reference Sample', value: 'reference-sample', arg: 'row.sample.name' },
-  { label: 'Weight/Volume', value: 'weight-volume', arg: 'column.metadata.header' },
+  { label: 'Reference Sample', value: 'reference-sample', arg: getSampleNames },
+  { label: 'Reference Metabolite', value: 'reference-metabolite', arg: getMetaboliteNames },
+  { label: 'Weight/Volume', value: 'weight-volume', arg: getSampleMetaDataColumns },
 ];
 
 const scaling_methods = [

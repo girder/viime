@@ -13,7 +13,8 @@ export default {
     },
     value: {
       type: String,
-      required: true,
+      required: false,
+      default: null,
     },
     disabled: {
       type: Boolean,
