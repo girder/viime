@@ -12,7 +12,6 @@ from werkzeug.datastructures import FileStorage
 
 from viime import opencpu, samples
 from viime.analyses import anova_test, hierarchical_clustering, pairwise_correlation, wilcoxon_test
-from viime.cache import csv_file_cache
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
     GroupLevelSchema, ModifyLabelListSchema, \
@@ -48,7 +47,6 @@ def load_validated_csv_file(func):
     return wrapped
 
 
-@csv_file_cache
 def _serialize_csv_file(csv_file):
     csv_file_schema = CSVFileSchema()
     return csv_file_schema.dump(csv_file)

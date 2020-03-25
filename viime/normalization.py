@@ -1,8 +1,6 @@
 from marshmallow import ValidationError
 from sklearn import preprocessing
 
-from viime.cache import persistent_region
-
 NORMALIZATION_METHODS = {'minmax', 'sum', 'reference-sample', 'weight-volume'}
 
 
@@ -15,7 +13,6 @@ def validate_normalization_method(args):
         raise ValidationError('Method requires argument', data=argument)
 
 
-@persistent_region.cache_on_arguments()
 def normalize(method, table, argument=None, measurement_metadata=None, sample_metadata=None):
     if method is None:
         pass
