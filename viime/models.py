@@ -329,6 +329,9 @@ class CSVFile(db.Model):
     def get_column_by_name(self, column_name):
         return self.find_first_entity(lambda c: c.column_header == column_name, self.columns)
 
+    def get_row_by_name(self, row_name):
+        return self.find_first_entity(lambda r: r.row_name == row_name, self.rows)
+
     @classmethod
     def find_first_entity(cls, criterion, iterable):
         for entity in iterable:
