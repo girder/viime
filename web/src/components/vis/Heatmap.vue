@@ -98,6 +98,10 @@ export default {
       type: Array,
       default: () => [],
     },
+    cluster: {
+      type: Boolean,
+      default: true,
+    },
     columnClustering: { // ITreeNode
       type: Object,
       default: null,
@@ -217,12 +221,55 @@ export default {
     legendDomain() {
       return this.valueScale.domain().map(this.format);
     },
+
     columnLeaves() {
+      return this.cluster ? this.columnLeavesSorted : this.columnLeavesOriginal;
+    },
+
+    columnLeavesSorted() {
       return this.columnTree ? this.columnTree.leaves() : [];
     },
+
+    columnLeavesOriginal() {
+      const {
+        columnLeavesSorted,
+        columnClustering,
+      } = this;
+
+      // Make a lookup table of the leaves by leaf name.
+      const lookup = new Map();
+      columnLeavesSorted.forEach((leaf) => {
+        lookup.set(leaf.data.name, leaf);
+      });
+
+      // Reorder the leaves by the order given in the clustering prop.
+      return columnClustering.names.map((name) => lookup.get(name));
+    },
+
     rowLeaves() {
+      return this.cluster ? this.rowLeavesSorted : this.rowLeavesOriginal;
+    },
+
+    rowLeavesSorted() {
       return this.rowTree ? this.rowTree.leaves() : [];
     },
+
+    rowLeavesOriginal() {
+      const {
+        rowLeavesSorted,
+        rowClustering,
+      } = this;
+
+      // Make a lookup table of the leaves by leaf name.
+      const lookup = new Map();
+      rowLeavesSorted.forEach((leaf) => {
+        lookup.set(leaf.data.name, leaf);
+      });
+
+      // Reorder the leaves by the order given in the clustering prop.
+      return rowClustering.names.map((name) => lookup.get(name));
+    },
+
     columnDendogramHeight() {
       return this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
     },

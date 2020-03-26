@@ -33,6 +33,7 @@ export default {
   data() {
     return {
       colors,
+      cluster: true,
       row: {
         dendogram: true,
         colorer: this.columnColor,
@@ -61,6 +62,11 @@ export default {
     },
   },
   watch: {
+    cluster() {
+      if (!this.cluster) {
+        this.row.dendogram = this.column.dendogram = false;
+      }
+    },
     metaboliteFilter(newValue) {
       if (newValue && newValue.option) {
         this.changePlotArgs({
@@ -118,19 +124,35 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl=
     sample-colorer(:dataset="dataset", v-model="sampleColor")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense)
-      v-toolbar-title Dendogram
+      v-toolbar-title.switch-title Dendogram
+        v-switch.switch(v-model="cluster", hide-details)
     v-card.mx-3(flat)
       v-card-actions(:style="{display: 'block'}")
-        v-checkbox.my-0(v-model="row.dendogram", label="Metabolite", hide-details)
-        v-checkbox.my-0(v-model="column.dendogram", label="Sample", hide-details)
+        v-checkbox.my-0(v-model="row.dendogram", label="Metabolite", hide-details, :disabled="!cluster")
+        v-checkbox.my-0(v-model="column.dendogram", label="Sample", hide-details, :disabled="!cluster")
     toolbar-option(title="Layout", :value="layout",
         :options="layouts",
         @change="layout = $event")
 
   heatmap(ref="heatmap",
       v-if="plot && plot.data && dataset.ready && values",
+      :cluster="cluster",
       :values="values", transposed,
       :column-config="column", :row-config="row", :layout="layout",
       :row-clustering="plot.data ? plot.data.column : null",
       :column-clustering="plot.data ? plot.data.row : null")
 </template>
+
+<style lang="scss" scoped>
+.switch-title {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  overflow: visible;
+  width: 100%;
+  .switch {
+    flex-grow: 0;
+    margin-right: -10px;
+  }
+}
+</style>
