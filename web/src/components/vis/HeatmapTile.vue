@@ -35,11 +35,11 @@ export default {
       colors,
       cluster: true,
       row: {
-        dendogram: true,
+        dendrogram: true,
         colorer: this.columnColor,
       },
       column: {
-        dendogram: true,
+        dendrogram: true,
         colorer: this.rowColor,
       },
       dummy: false,
@@ -64,7 +64,7 @@ export default {
   watch: {
     cluster() {
       if (!this.cluster) {
-        this.row.dendogram = this.column.dendogram = false;
+        this.row.dendrogram = this.column.dendrogram = false;
       }
     },
     metaboliteFilter(newValue) {
@@ -124,12 +124,12 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl=
     sample-colorer(:dataset="dataset", v-model="sampleColor")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense)
-      v-toolbar-title.switch-title Dendogram
+      v-toolbar-title.switch-title Dendrogram
         v-switch.switch(v-model="cluster", hide-details)
     v-card.mx-3(flat)
       v-card-actions(:style="{display: 'block'}")
-        v-checkbox.my-0(v-model="row.dendogram", label="Metabolite", hide-details, :disabled="!cluster")
-        v-checkbox.my-0(v-model="column.dendogram", label="Sample", hide-details, :disabled="!cluster")
+        v-checkbox.my-0(v-model="row.dendrogram", label="Metabolite", hide-details, :disabled="!cluster")
+        v-checkbox.my-0(v-model="column.dendrogram", label="Sample", hide-details, :disabled="!cluster")
     toolbar-option(title="Layout", :value="layout",
         :options="layouts",
         @change="layout = $event")
