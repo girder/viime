@@ -64,7 +64,8 @@ export default {
   watch: {
     cluster() {
       if (!this.cluster) {
-        this.row.dendrogram = this.column.dendrogram = false;
+        this.row.dendrogram = false;
+        this.column.dendrogram = false;
       }
     },
     metaboliteFilter(newValue) {
@@ -128,8 +129,16 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl=
         v-switch.switch(v-model="cluster", hide-details)
     v-card.mx-3(flat)
       v-card-actions(:style="{display: 'block'}")
-        v-checkbox.my-0(v-model="row.dendrogram", label="Metabolite", hide-details, :disabled="!cluster")
-        v-checkbox.my-0(v-model="column.dendrogram", label="Sample", hide-details, :disabled="!cluster")
+        v-checkbox.my-0(
+            v-model="row.dendrogram",
+            label="Metabolite",
+            hide-details,
+            :disabled="!cluster")
+        v-checkbox.my-0(
+            v-model="column.dendrogram",
+            label="Sample",
+            hide-details,
+            :disabled="!cluster")
     toolbar-option(title="Layout", :value="layout",
         :options="layouts",
         @change="layout = $event")

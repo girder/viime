@@ -243,7 +243,7 @@ export default {
       });
 
       // Reorder the leaves by the order given in the clustering prop.
-      return columnClustering.names.map((name) => lookup.get(name));
+      return columnClustering.names.map(name => lookup.get(name));
     },
 
     rowLeaves() {
@@ -267,7 +267,7 @@ export default {
       });
 
       // Reorder the leaves by the order given in the clustering prop.
-      return rowClustering.names.map((name) => lookup.get(name));
+      return rowClustering.names.map(name => lookup.get(name));
     },
 
     columnDendrogramHeight() {
