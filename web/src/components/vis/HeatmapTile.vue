@@ -57,8 +57,17 @@ export default {
       if (!this.plot.data) {
         return [];
       }
+
       // TODO swap
       return this.plot.data ? this.plot.data.values : [];
+    },
+
+    original() {
+      if (!this.plot.data) {
+        return {};
+      }
+
+      return this.plot.data ? this.plot.data.original : {};
     },
   },
   watch: {
@@ -146,7 +155,9 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl=
   heatmap(ref="heatmap",
       v-if="plot && plot.data && dataset.ready && values",
       :cluster="cluster",
-      :values="values", transposed,
+      :values="values",
+      :original="original",
+      transposed,
       :column-config="column", :row-config="row", :layout="layout",
       :row-clustering="plot.data ? plot.data.column : null",
       :column-clustering="plot.data ? plot.data.row : null")

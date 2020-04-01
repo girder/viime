@@ -98,6 +98,10 @@ export default {
       type: Array,
       default: () => [],
     },
+    original: { // { columns: string[], rows: string[], values: number[][] }
+      type: Object,
+      default: () => {},
+    },
     cluster: {
       type: Boolean,
       default: true,
@@ -233,7 +237,8 @@ export default {
     columnLeavesOriginal() {
       const {
         columnLeavesSorted,
-        columnClustering,
+        original,
+        transposed,
       } = this;
 
       // Make a lookup table of the leaves by leaf name.
@@ -243,7 +248,8 @@ export default {
       });
 
       // Reorder the leaves by the order given in the clustering prop.
-      return columnClustering.names.map(name => lookup.get(name));
+      const source = transposed ? original.rows : original.columns;
+      return source.map(name => lookup.get(name));
     },
 
     rowLeaves() {
@@ -257,7 +263,8 @@ export default {
     rowLeavesOriginal() {
       const {
         rowLeavesSorted,
-        rowClustering,
+        original,
+        transposed,
       } = this;
 
       // Make a lookup table of the leaves by leaf name.
@@ -267,7 +274,8 @@ export default {
       });
 
       // Reorder the leaves by the order given in the clustering prop.
-      return rowClustering.names.map(name => lookup.get(name));
+      const source = transposed ? original.columns : original.rows;
+      return source.map(name => lookup.get(name));
     },
 
     columnDendrogramHeight() {
