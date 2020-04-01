@@ -9,7 +9,7 @@ from .opencpu import opencpu_request
 
 
 def clean(df: pd.DataFrame) -> pd.DataFrame:
-    return df.replace([np.nan, np.Inf, -np.Inf], [None, None, None])
+    return df.fillna('NaN').replace([np.Inf, -np.Inf], ['Inf', '-Inf'])
 
 
 def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series,
