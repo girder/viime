@@ -127,7 +127,7 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl=
     sample-colorer(:dataset="dataset", v-model="sampleColor")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense)
-      v-toolbar-title.switch-title Dendrogram
+      v-toolbar-title Dendrogram
     v-card.mx-3(flat)
       v-card-actions(:style="{display: 'block'}")
         v-checkbox.my-0(
@@ -151,17 +151,3 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl=
       :row-clustering="plot.data ? plot.data.column : null",
       :column-clustering="plot.data ? plot.data.row : null")
 </template>
-
-<style lang="scss" scoped>
-.switch-title {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  overflow: visible;
-  width: 100%;
-  .switch {
-    flex-grow: 0;
-    margin-right: -10px;
-  }
-}
-</style>
