@@ -44,7 +44,7 @@ function aggregate(arr, rs, cs, transposed) {
   return sum / l;
 }
 
-const DENDOGRAM_RATIO = 0.2;
+const DENDROGRAM_RATIO = 0.2;
 const LABEL_WIDTH = 150;
 
 const MDI_PLUS_CIRCLE = '\uF417;';
@@ -98,6 +98,10 @@ export default {
       type: Array,
       default: () => [],
     },
+    original: { // { columns: string[], rows: string[], values: number[][] }
+      type: Object,
+      default: () => {},
+    },
     columnClustering: { // ITreeNode
       type: Object,
       default: null,
@@ -106,15 +110,15 @@ export default {
       type: Object,
       default: null,
     },
-    rowConfig: { // { dendogram: boolean, colorer?: (name) => string }
+    rowConfig: { // { dendrogram: boolean, colorer?: (name) => string }
       type: Object,
-      default: () => ({ dendogram: true, colorer: null }),
+      default: () => ({ dendrogram: true, colorer: null }),
     },
-    columnConfig: { // { dendogram: boolean, colorer?: (name) => string }
+    columnConfig: { // { dendrogram: boolean, colorer?: (name) => string }
       type: Object,
-      default: () => ({ dendogram: true, colorer: null }),
+      default: () => ({ dendrogram: true, colorer: null }),
     },
-    layout: { // { dendogram: boolean }
+    layout: { // { dendrogram: boolean }
       type: String,
       validate: v => heatmapLayouts.find(d => d.value === v),
       default: heatmapLayouts[0].value,
@@ -143,7 +147,7 @@ export default {
         collapsed: new Set(),
         focus: null,
       },
-      DENDOGRAM_RATIO,
+      DENDROGRAM_RATIO,
       LABEL_WIDTH,
     };
   },
@@ -217,21 +221,68 @@ export default {
     legendDomain() {
       return this.valueScale.domain().map(this.format);
     },
+
     columnLeaves() {
+      return this.columnConfig.dendrogram ? this.columnLeavesSorted : this.columnLeavesOriginal;
+    },
+
+    columnLeavesSorted() {
       return this.columnTree ? this.columnTree.leaves() : [];
     },
+
+    columnLeavesOriginal() {
+      const {
+        columnLeavesSorted,
+        original,
+        transposed,
+      } = this;
+
+      // Make a lookup table of the leaves by leaf name.
+      const lookup = new Map();
+      columnLeavesSorted.forEach((leaf) => {
+        lookup.set(leaf.data.name, leaf);
+      });
+
+      // Reorder the leaves by the order given in the clustering prop.
+      const source = transposed ? original.rows : original.columns;
+      return source.map(name => lookup.get(name));
+    },
+
     rowLeaves() {
+      return this.rowConfig.dendrogram ? this.rowLeavesSorted : this.rowLeavesOriginal;
+    },
+
+    rowLeavesSorted() {
       return this.rowTree ? this.rowTree.leaves() : [];
     },
-    columnDendogramHeight() {
-      return this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
+
+    rowLeavesOriginal() {
+      const {
+        rowLeavesSorted,
+        original,
+        transposed,
+      } = this;
+
+      // Make a lookup table of the leaves by leaf name.
+      const lookup = new Map();
+      rowLeavesSorted.forEach((leaf) => {
+        lookup.set(leaf.data.name, leaf);
+      });
+
+      // Reorder the leaves by the order given in the clustering prop.
+      const source = transposed ? original.columns : original.rows;
+      return source.map(name => lookup.get(name));
     },
-    rowDendogramWidth() {
-      return this.rowConfig.dendogram ? this.width * DENDOGRAM_RATIO : 0;
+
+    columnDendrogramHeight() {
+      return this.columnConfig.dendrogram ? this.height * DENDROGRAM_RATIO : 0;
+    },
+    rowDendrogramWidth() {
+      return this.rowConfig.dendrogram ? this.width * DENDROGRAM_RATIO : 0;
     },
     matrixDimensions() {
-      let width = this.width - this.rowDendogramWidth - LABEL_WIDTH;
-      let height = this.height - this.columnDendogramHeight - LABEL_WIDTH;
+      let width = this.width - this.rowDendrogramWidth - LABEL_WIDTH;
+      let height = this.height - this.columnDendrogramHeight - LABEL_WIDTH;
       if (this.layout === 'squareCells') {
         const wx = width / this.columnLeaves.length;
         const hy = height / this.rowLeaves.length;
@@ -301,12 +352,12 @@ export default {
         return null;
       }
       const l = cluster()
-        .size([layoutWidth, layoutHeight * DENDOGRAM_RATIO - this.padding2])
+        .size([layoutWidth, layoutHeight * DENDROGRAM_RATIO - this.padding2])
         .separation(() => 1);
       return l(root);
     },
     updateTree(ref, root, wrapper, config, horizontalLayout) {
-      if (!ref || !config.dendogram || !root) {
+      if (!ref || !config.dendrogram || !root) {
         return;
       }
       const svg = select(ref);
@@ -375,14 +426,14 @@ export default {
       inner.attr('transform', d => `translate(${d.x},${d.y})`);
     },
     updateColumn() {
-      if (this.columnDendogramHeight === 0) {
+      if (this.columnDendrogramHeight === 0) {
         return;
       }
       this.updateTree(this.$refs.column, this.columnHierarchy, this.column,
         this.columnConfig, true);
     },
     updateRow() {
-      if (this.rowDendogramWidth === 0) {
+      if (this.rowDendrogramWidth === 0) {
         return;
       }
       this.updateTree(this.$refs.row, this.rowHierarchy, this.row, this.rowConfig, false);
@@ -516,40 +567,40 @@ export default {
 
     generateImage() {
       const canvas = document.createElement('canvas');
-      const columnDendogram = this.columnConfig.dendogram ? this.height * DENDOGRAM_RATIO : 0;
-      const rowDendogram = this.rowConfig.dendogram ? this.width * DENDOGRAM_RATIO : 0;
+      const columnDendrogram = this.columnConfig.dendrogram ? this.height * DENDROGRAM_RATIO : 0;
+      const rowDendrogram = this.rowConfig.dendrogram ? this.width * DENDROGRAM_RATIO : 0;
 
-      canvas.width = rowDendogram + this.matrixWidth + LABEL_WIDTH;
-      canvas.height = columnDendogram + this.matrixHeight + LABEL_WIDTH;
+      canvas.width = rowDendrogram + this.matrixWidth + LABEL_WIDTH;
+      canvas.height = columnDendrogram + this.matrixHeight + LABEL_WIDTH;
 
       const ctx = canvas.getContext('2d');
       // copy matrix first
       ctx.fillStyle = 'white';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(this.$refs.matrix, rowDendogram, columnDendogram);
+      ctx.drawImage(this.$refs.matrix, rowDendrogram, columnDendrogram);
 
       const toWait = [];
 
-      if (columnDendogram > 0) {
-        // column dendogram
+      if (columnDendrogram > 0) {
+        // column dendrogram
         const url = svg2url(this.$refs.column, { font: false, icons: true });
-        const img = new Image(this.width * DENDOGRAM_RATIO, this.matrixHeight);
+        const img = new Image(this.width * DENDROGRAM_RATIO, this.matrixHeight);
         toWait.push(new Promise((resolve) => {
           img.onload = () => {
-            ctx.drawImage(img, rowDendogram, 0);
+            ctx.drawImage(img, rowDendrogram, 0);
             URL.revokeObjectURL(url);
             resolve();
           };
           img.src = url;
         }));
       }
-      if (rowDendogram > 0) {
-        // row dendogram
+      if (rowDendrogram > 0) {
+        // row dendrogram
         const url = svg2url(this.$refs.row, { font: false, icons: true });
-        const img = new Image(this.matrixWidth, this.height * DENDOGRAM_RATIO);
+        const img = new Image(this.matrixWidth, this.height * DENDROGRAM_RATIO);
         toWait.push(new Promise((resolve) => {
           img.onload = () => {
-            ctx.drawImage(img, 0, columnDendogram);
+            ctx.drawImage(img, 0, columnDendrogram);
             URL.revokeObjectURL(url);
             resolve();
           };
@@ -560,7 +611,7 @@ export default {
       // row labels
       {
         ctx.save();
-        ctx.translate(rowDendogram + this.matrixWidth, columnDendogram);
+        ctx.translate(rowDendrogram + this.matrixWidth, columnDendrogram);
         const hi = this.matrixHeight / this.rowLeaves.length;
         const { colorer } = this.rowConfig;
         if (colorer) {
@@ -583,7 +634,7 @@ export default {
       // column labels
       {
         ctx.save();
-        ctx.translate(rowDendogram, columnDendogram + this.matrixHeight);
+        ctx.translate(rowDendrogram, columnDendrogram + this.matrixHeight);
         const wi = this.matrixWidth / this.columnLeaves.length;
         const { colorer } = this.columnConfig;
         if (colorer) {
@@ -615,14 +666,14 @@ export default {
 
 <template lang="pug">
 .grid(v-resize:throttle="onResize")
-  svg.column(ref="column", v-show="columnConfig.dendogram",
+  svg.column(ref="column", v-show="columnConfig.dendrogram",
       :width="matrixWidth",
-      :height="height * DENDOGRAM_RATIO", xmlns="http://www.w3.org/2000/svg",
+      :height="height * DENDROGRAM_RATIO", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveColumnUpdate")
     g.edges(:transform="`translate(0,${padding})`")
     g.nodes(:transform="`translate(0,${padding})`")
-  svg.row(ref="row", v-show="rowConfig.dendogram",
-      :width="width * DENDOGRAM_RATIO",
+  svg.row(ref="row", v-show="rowConfig.dendrogram",
+      :width="width * DENDROGRAM_RATIO",
       :height="matrixHeight", xmlns="http://www.w3.org/2000/svg",
       :data-update="reactiveRowUpdate")
     g.edges(:transform="`translate(${padding},0)`")
@@ -635,7 +686,7 @@ export default {
   .rowlabel(ref="rowlabel",
       :style="{fontSize: fontSize+'px', width: LABEL_WIDTH+'px', height: this.matrixHeight+'px'}",
       :data-update="reactiveRowLabelUpdate")
-  .legend-wrapper(v-show="columnConfig.dendogram && rowConfig.dendogram")
+  .legend-wrapper(v-show="columnConfig.dendrogram && rowConfig.dendrogram")
     .legend(:data-from="legendDomain[0]", :data-to="legendDomain[1]",
         :style="{background: legendGradient}")
 </template>
