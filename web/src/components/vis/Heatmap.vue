@@ -102,10 +102,6 @@ export default {
       type: Object,
       default: () => {},
     },
-    cluster: {
-      type: Boolean,
-      default: true,
-    },
     columnClustering: { // ITreeNode
       type: Object,
       default: null,
@@ -227,7 +223,7 @@ export default {
     },
 
     columnLeaves() {
-      return this.cluster ? this.columnLeavesSorted : this.columnLeavesOriginal;
+      return this.columnConfig.dendrogram ? this.columnLeavesSorted : this.columnLeavesOriginal;
     },
 
     columnLeavesSorted() {
@@ -253,7 +249,7 @@ export default {
     },
 
     rowLeaves() {
-      return this.cluster ? this.rowLeavesSorted : this.rowLeavesOriginal;
+      return this.rowConfig.dendrogram ? this.rowLeavesSorted : this.rowLeavesOriginal;
     },
 
     rowLeavesSorted() {
