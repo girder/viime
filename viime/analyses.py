@@ -65,7 +65,10 @@ def hierarchical_clustering(measurements: pd.DataFrame) -> Dict[str, Any]:
 
     return dict(values=values.tolist(),
                 column=create_node(data['col'], list(measurements)),
-                row=create_node(data['row'], list(measurements.index)))
+                row=create_node(data['row'], list(measurements.index)),
+                original={'columns': measurements.columns.tolist(),
+                          'rows': measurements.index.tolist(),
+                          'values': measurements.values.tolist()})
 
 
 def pairwise_correlation(measurements: pd.DataFrame, min_correlation: float = 0,
