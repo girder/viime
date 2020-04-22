@@ -2,14 +2,10 @@ from io import StringIO
 from itertools import combinations
 from typing import Any, Dict, Optional
 
-import numpy as np
 import pandas as pd
 
+from .models import clean
 from .opencpu import opencpu_request
-
-
-def clean(df: pd.DataFrame) -> pd.DataFrame:
-    return df.fillna('NaN').replace([np.Inf, -np.Inf], ['Inf', '-Inf'])
 
 
 def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series,
