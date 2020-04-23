@@ -4,6 +4,7 @@ TRANSFORMATION_METHODS = {'log10', 'squareroot', 'cuberoot', 'log2'}
 
 
 def transform(method, table):
+    table = table.astype(np.float64)
     if method is None:
         table = table
     elif method == 'log10':

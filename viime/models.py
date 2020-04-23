@@ -51,6 +51,11 @@ AXIS_NAME_TYPES = AxisNameTypes('row', 'column')
 METADATA_TYPES = MetaDataTypes('categorical', 'numerical', 'ordinal')
 
 
+def clean(df: pandas.DataFrame) -> pandas.DataFrame:
+    return df.fillna('NaN') \
+        .replace([numpy.Inf, -numpy.Inf], ['Inf', '-Inf'])
+
+
 def _guess_table_structure(table):
     # TODO: Implement this for real, this is just a dumb placeholder
     rows = [TABLE_ROW_TYPES.INDEX] + [
@@ -384,7 +389,7 @@ class CSVFileSchema(BaseSchema):
 
         data['table'] = data['table'].to_csv(header=False, index=False)
         if data.get('measurement_table') is not None:
-            data['measurement_table'] = data['measurement_table'].to_dict(
+            data['measurement_table'] = clean(data['measurement_table']).to_dict(
                 orient='split')
         return data
 
@@ -862,7 +867,7 @@ class ValidatedMetaboliteTableSchema(BaseSchema):
         # don't transfer columns or index depending on the type
         def convert(attr, *drop_columns):
             if attr in data:
-                converted = data[attr].to_dict(orient='split')
+                converted = clean(data[attr]).to_dict(orient='split')
                 for drop_column in drop_columns:
                     if drop_column in converted:
                         del converted[drop_column]

@@ -13,7 +13,7 @@ from werkzeug.datastructures import FileStorage
 from viime import opencpu, samples
 from viime.analyses import anova_test, hierarchical_clustering, pairwise_correlation, wilcoxon_test
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
-from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
+from viime.models import AXIS_NAME_TYPES, clean, CSVFile, CSVFileSchema, db, \
     GroupLevelSchema, ModifyLabelListSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
     TableColumn, TableColumnSchema, TableRow, \
@@ -700,7 +700,7 @@ def _get_pca_data(validated_table):
     # insert per row label metadata information
     labels = validated_table.sample_metadata
     groups = validated_table.groups
-    data['labels'] = pandas.concat([groups, labels], axis=1).to_dict('list')
+    data['labels'] = clean(pandas.concat([groups, labels], axis=1)).to_dict('list')
     data['rows'] = table.index.tolist()
 
     return data
