@@ -67,7 +67,116 @@ fusion and visualization is shown in Figure 1.
 
 TODO: create and insert Figure 1 (showing cleanup steps)
 
-# User Interface
+# User Interface Features and Architecture
+
+## Data Pretreatment
+
+Upload and pretreatment are the most critical and complicated steps of the
+metabolomics workflow, and it is essential to make them easy and general so that
+users are able to ingest and clean their data. The UI begins with presenting the
+user with an upload screen, which shows whether any errors were encountered in
+the file.
+
+The user then is able to correct any errors, designate any column as the primary
+ID, masked/hidden, a factor, the group, or a metabolite concentration column
+(see Figure 1). The table view underwent significant refactoring of the client
+and server to support tables that scale to hundreds of rows and thousands of
+columns.
+ 
+![**Figure 1.** The data ingestion view.](figures/figure1.png)
+
+Any errors encountered during parsing are prompted for correction. Errors that
+are detected include levels of missing data that exceed a default threshold
+within a group or across all samples, non-numeric data in concentration data,
+the lack of a primary ID, non-uniqueness of the primary ID. The UI guides the
+user through each error and warning until the data is ready for analysis. In
+this case, a low-variance metabolite is being flagged for possible omission from
+analysis (see Figure 2).
+
+![**Figure 2.** The ingestion error and warning panel.](figures/figure2.png)
+
+Once errors are corrected, data imputation is automatically performed, and
+options may be adjusted to specify the type of imputation, including random
+forest, KNN, mean, or median imputation modes for completely at random
+missingness (MCAR) and zero or half-minimum imputation for not-at-random
+missingness (MNAR).
+
+![**Figure 3.** Dynamically updating customizable plots which animate to show
+immediate feedback when adjusting pretreatment options.](figures/figure3.png)
+
+## Dataset Details
+
+VIIME includes a dataset details page which includes size, creation time, and
+enables the user to update the name and description for each dataset (see Figure
+4). It is also a central location for assigning colors and descriptions to
+groups, and keeping track of provenance for merged datasets.
+
+![**Figure 4.** Dataset details page.](figures/figure4.png)
+
+A download page enables users to export their cleaned and processed dataset, or
+download the currently selected metabolite list.
+
+## Data Analysis
+
+VIIME supports several downstream analyses. Wilcoxon and ANOVA perform p-value
+computation, and enable threshold highlighting and metabolite selection by
+p-value. Metabolite selections persist through all the interactive analysis
+visualization in order to show the metabolites in many contexts.
+
+A boxplot view gives a quick glance at the data ranges with the option to
+separate and color by groups (see Figure 5).
+
+![**Figure 5.** Boxplots of each metabolite, colored and separated by
+experimental group.](figures/figure5.png)
+
+VIIME also includes a fully interactive heatmap with row and column dendrograms
+(see Figure 6). Selected metabolites are highlighted in orange on the left.
+Sample groups are colored along the bottom to provide additional context.
+
+![**Figure 6.** Heatmap with interactive collapsible clustering dendrograms for
+samples and metabolites.](figures/figure6.png)
+
+Unique to VIIME is a metabolite correlation network diagram (see Figure 7). The
+color in the diagram represents whether the metabolite was significantly
+different across groups (orange) or not (blue). Metabolites are linked if the
+correlation coefficient between them exceeds a configurable value. Negative
+correlations are in red, while positive correlations are in gray. The width of
+the link encodes the strength of the correlation.
+
+![**Figure 7.** Correlation network diagram.](figures/figure7.png)
+
+Volcano plots (see Figure 8) were added to the software to highlight the
+metabolites that meet a specified threshold for fold change and significance
+(p-value). For datasets with only two groups the data from the Wilcoxon analysis
+is plotted. Interactive threshold adjustments for both fold change and p-value
+enable a simplified view. For datasets with more than two groups, the data from
+an ANOVA analysis is used and has options to plot data from selected groups.
+Options include selecting the group combination to analyze, the minimum fold
+change to highlight, and the minimum p-value to highlight. The thresholds are
+live controls which provide immediate feedback showing which metabolites meet
+the criteria. Once the proper thresholds are set, the user may download the
+resulting plot image, and also can save and download the metabolites that fall
+into above the thresholds. When the significant metabolites are selected, the
+user may move to any other plot to see those same metabolites highlighted in a
+different context, such as the heatmap view or correlation network.
+
+![**Figure 8.** Volcano plot with interactive controls.](figures/figure8.png)
+
+## Data Integration
+
+VIIME supports multiple approaches for combining multiple data sources into a
+joint analysis. From the data upload page, the user may initiate a dataset
+merge, selecting the datasets to merge along with the algorithm to perform the
+integration.
+
+Supported algorithms are simple column concatenation, PCA data fusion, and
+multi-block PCA fusion. After choosing an algorithm and two or more datasets,
+the interface indicates how many of the samples will match after the merging
+process. When the integration algorithm completes, the new integrated dataset
+appears in the list of data for the user to perform analyses (see Figure 9).
+
+![**Figure 9.** The interface for selecting the data and algorithm for
+integration.](figures/figure9.png)
 
 # Backend Processing
 
