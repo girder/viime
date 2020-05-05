@@ -65,8 +65,6 @@ open-source, web-based application designed to integrate metabolomics data from
 multiple platforms. The workflow of Viime for data ingestion, pretreatment, data
 fusion and visualization is shown in Figure 1.
 
-TODO: create and insert Figure 1 (showing cleanup steps)
-
 # User Interface Features and Architecture
 
 ## Data Pretreatment
