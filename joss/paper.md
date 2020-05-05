@@ -7,7 +7,7 @@ tags:
 authors:
   - name: Thomas O'Connell
     affiliation: 1
-  - name: Lilian Golzarri Arroyo
+  - name: Lilian Golzarri-Arroyo
     affiliation: 1
   - name: Jun Wan
     affiliation: 1
