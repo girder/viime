@@ -81,7 +81,7 @@ ID, masked/hidden, a factor, the group, or a metabolite concentration column
 and server to support tables that scale to hundreds of rows and thousands of
 columns.
  
-![**Figure 1.** The data ingestion view.](figures/figure1.png)
+![The data ingestion view.](figures/figure1.png)
 
 Any errors encountered during parsing are prompted for correction. Errors that
 are detected include levels of missing data that exceed a default threshold
@@ -91,7 +91,7 @@ user through each error and warning until the data is ready for analysis. In
 this case, a low-variance metabolite is being flagged for possible omission from
 analysis (see Figure 2).
 
-![**Figure 2.** The ingestion error and warning panel.](figures/figure2.png)
+![The ingestion error and warning panel.](figures/figure2.png)
 
 Once errors are corrected, data imputation is automatically performed, and
 options may be adjusted to specify the type of imputation, including random
@@ -99,7 +99,7 @@ forest, KNN, mean, or median imputation modes for completely at random
 missingness (MCAR) and zero or half-minimum imputation for not-at-random
 missingness (MNAR).
 
-![**Figure 3.** Dynamically updating customizable plots which animate to show
+![Dynamically updating customizable plots which animate to show
 immediate feedback when adjusting pretreatment options.](figures/figure3.png)
 
 ## Dataset Details
@@ -109,7 +109,7 @@ enables the user to update the name and description for each dataset (see Figure
 4). It is also a central location for assigning colors and descriptions to
 groups, and keeping track of provenance for merged datasets.
 
-![**Figure 4.** Dataset details page.](figures/figure4.png)
+![Dataset details page.](figures/figure4.png)
 
 A download page enables users to export their cleaned and processed dataset, or
 download the currently selected metabolite list.
@@ -124,14 +124,14 @@ visualization in order to show the metabolites in many contexts.
 A boxplot view gives a quick glance at the data ranges with the option to
 separate and color by groups (see Figure 5).
 
-![**Figure 5.** Boxplots of each metabolite, colored and separated by
+![Boxplots of each metabolite, colored and separated by
 experimental group.](figures/figure5.png)
 
 VIIME also includes a fully interactive heatmap with row and column dendrograms
 (see Figure 6). Selected metabolites are highlighted in orange on the left.
 Sample groups are colored along the bottom to provide additional context.
 
-![**Figure 6.** Heatmap with interactive collapsible clustering dendrograms for
+![Heatmap with interactive collapsible clustering dendrograms for
 samples and metabolites.](figures/figure6.png)
 
 Unique to VIIME is a metabolite correlation network diagram (see Figure 7). The
@@ -141,7 +141,7 @@ correlation coefficient between them exceeds a configurable value. Negative
 correlations are in red, while positive correlations are in gray. The width of
 the link encodes the strength of the correlation.
 
-![**Figure 7.** Correlation network diagram.](figures/figure7.png)
+![Correlation network diagram.](figures/figure7.png)
 
 Volcano plots (see Figure 8) were added to the software to highlight the
 metabolites that meet a specified threshold for fold change and significance
@@ -158,7 +158,7 @@ into above the thresholds. When the significant metabolites are selected, the
 user may move to any other plot to see those same metabolites highlighted in a
 different context, such as the heatmap view or correlation network.
 
-![**Figure 8.** Volcano plot with interactive controls.](figures/figure8.png)
+![Volcano plot with interactive controls.](figures/figure8.png)
 
 ## Data Integration
 
@@ -173,7 +173,7 @@ the interface indicates how many of the samples will match after the merging
 process. When the integration algorithm completes, the new integrated dataset
 appears in the list of data for the user to perform analyses (see Figure 9).
 
-![**Figure 9.** The interface for selecting the data and algorithm for
+![The interface for selecting the data and algorithm for
 integration.](figures/figure9.png)
 
 # Backend Processing
