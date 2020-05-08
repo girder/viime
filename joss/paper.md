@@ -5,26 +5,26 @@ tags:
   - visualization
   - web application
 authors:
-  - name: Thomas O'Connell
-    affiliation: 1
-  - name: Lilian Golzarri-Arroyo
-    affiliation: 1
-  - name: Jun Wan
-    affiliation: 1
-  - name: Daniel Raftery
-    affiliation: 2
+  - name: Roni Choudhury
+    affiliation: 3
   - name: Jon Beezley
     affiliation: 3
   - name: Brandon Davis
     affiliation: 3
-  - name: Roni Choudhury
+  - name: Jared Tomeck
     affiliation: 3
   - name: Samuel Gratzl
     affiliation: 3
+  - name: Lilian Golzarri-Arroyo
+    affiliation: 1
+  - name: Daniel Raftery
+    affiliation: 2
+  - name: Jun Wan
+    affiliation: 1
   - name: Jeff Baumes
     affiliation: 3
-  - name: Jared Tomeck
-    affiliation: 3
+  - name: Thomas O'Connell
+    affiliation: 1
 affiliations:
   - name: Indiana University
     index: 1
