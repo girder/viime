@@ -62,19 +62,22 @@ platforms can be challenging.  This often leads investigators to analyze the
 datasets separately which prevents the observation of potentially interesting
 correlations between metabolites detected on different platforms.  Viime is an
 open-source, web-based application designed to integrate metabolomics data from
-multiple platforms. The workflow of Viime for data ingestion, pretreatment, data
-fusion and visualization is shown in Figure 1.
+multiple platforms. The workflow of Viime for data integration
+and visualization is shown in Figure 1.
 
 # User Interface Features and Architecture
 
-## Data Pretreatment
+## Data Upload
 
-Upload and pretreatment are the most critical and complicated steps of the
-metabolomics workflow, and it is essential to make them easy and general so that
-users are able to ingest and clean their data. The UI begins with presenting the
+Data upload can be a cumbersome step in many data analysis packages.  Often the
+data must be in a specified format in order to be properly read and the details
+of the requisite format are not always clear.  To facilitate the easy import of
+data, we have designed an interactive drag and drop data upload interface which
+currently accepts .xlsx and .csv files.
+
+The UI begins with presenting the
 user with an upload screen, which shows whether any errors were encountered in
 the file.
-
 The user then is able to correct any errors, designate any column as the primary
 ID, masked/hidden, a factor, the group, or a metabolite concentration column
 (see Figure 1). The table view underwent significant refactoring of the client
@@ -93,8 +96,14 @@ analysis (see Figure 2).
 
 ![The ingestion error and warning panel.](figures/figure2.png)
 
-Once errors are corrected, data imputation is automatically performed, and
-options may be adjusted to specify the type of imputation, including random
+## Data Imputation
+
+Once errors are corrected, data imputation is automatically performed,
+For metabolites with missing values, the type of missingness is classified as
+missing completely at random (MCAR) or missing not at random (MNAR).  For each
+type, an imputation mode is automatically performed but the options may be
+adjusted to apply different algorithms, including
+random
 forest, KNN, mean, or median imputation modes for completely at random
 missingness (MCAR) and zero or half-minimum imputation for not-at-random
 missingness (MNAR).
@@ -114,25 +123,103 @@ groups, and keeping track of provenance for merged datasets.
 A download page enables users to export their cleaned and processed dataset, or
 download the currently selected metabolite list.
 
-## Data Analysis
+## Data Treatment
 
-VIIME supports several downstream analyses. Wilcoxon and ANOVA perform p-value
-computation, and enable threshold highlighting and metabolite selection by
-p-value. Metabolite selections persist through all the interactive analysis
-visualization in order to show the metabolites in many contexts.
+The most critical step in the process of integrating multiple datasets is
+setting the optimal data treatment parameters for the individual datasets.  The
+first step in this process is data normalization.  In this step, the measurement
+values of each sample are made consistent with the other samples in the dataset.
+This can be accomplished by normalizing values of each sample to that of a
+reference sample.  In this process, the sum of all metabolite values for the
+reference sample is determine and this value is then used to provide a
+normalization factor for the other samples based on their metabolite sums.
+Similarly, the sum of all values for each sample can be scaled to a set value.
+The default value in Viime is 100.  Other options include normalization based on
+a column containing sample weights or volumes.  The next step is data
+transformation.  Often times, data is transformed to bring the distribution
+closer to normality and to compress the dynamic range.  The options in this step
+are  Log10, Log2, square root and cube root.
 
-A boxplot view gives a quick glance at the data ranges with the option to
-separate and color by groups (see Figure 5).
+Lastly, the data can be scaled.  This also addresses the issue of large dynamic
+range by scaling the variance of the data.  The options here include
+Autoscaling, Pareto scaling, Range scaling, Vast scaling and Level scaling.  
+
+A very important feature of the whole data treatment process is the interactive
+display of the PCA scores and loadings plots.  The scores plot displays how the
+selection of each treatment option affects the separation of the individual
+groups in the data.  The loadings plot shows how each treatment option affects
+the contributions of the metabolites to the separations.  Often data with no
+transformation or scaling may be dominated by only a few of the very high
+concentration metabolites.  In those cases, some separation of the groups may be
+present, but are the result of looking at only those metabolites.  Autoscaling
+is often a default selection in some metabolomics data analysis packages, but
+this runs the risk of increasing the noise in the data.  This is characterized
+by a loadings plot where all of the metabolites display large loading values
+which is typically not a biologically plausible condition.  
+
+## Data Analysis and Visualization
+
+VIIME supports several downstream analyses. Univariate analyses using Wilcoxon
+and ANOVA can be carried out on data with two or more groups, respectively.  For
+the ANOVA, a post-hoc Tukey test is automatically applied so that p-values for
+each of the inter-group comparisons are calculated for all metabolites.,
+Metabolites that are significantly different in each of the intergroup
+comparison can be selected for further analysis with a check box at the top of
+each column.  This enables very large datasets with potentially hundreds of
+metabolites to be easily reduced to datasets containing only significantly
+altered metabolites.  
+
+###Volcano plots
+
+To simultaneously visualize the magnitude of the change in a metabolite along
+with the significance of that change, we have implemented an interactive volcano
+plot option.  As shown in figure X, the horizontal axis is the Log2 Fold change
+and the vertical axis is the -log10 of the p-value.  This type of plot is useful
+when making two-group comparisons and the specific pairs can be selected from
+the Group Combination menu.  The minimum fold change and p-values can be
+interactively adjusted to highlight more or less metabolite changes.    
+
+### Heatmaps
+
+Heatmaps of the data can be generated to help visualize metabolites changes
+(Figure 6).  The metabolite filter option on the Heatmaps page allows the option
+to include all metabolites in the heatmap versus only the significant
+metabolites.  When the dataset is the integration of multiple datasets, the
+metabolite filter option also enables the selection of data from any of the
+separate input datasets.   The Sample Filter option allows only specific groups
+of samples to be included in the heatmap.  The metabolite color option changes
+the color along with vertical axis related to the metabolites.  The options
+include coloring based on significance or based on data source.  Hierarchical
+clustering analysis is carried out on both the samples and metabolites to help
+cluster the most similar sample and metabolite patterns.  Both of these can be
+toggled on or off if it would be beneficial to maintain the order of the samples
+and/or metabolites in the heatmap. 
+
+![Heatmap with interactive collapsible clustering dendrograms for
+samples and metabolites.](figures/figure6.png)
 
 ![Boxplots of each metabolite, colored and separated by
 experimental group.](figures/figure5.png)
 
+### Network Correlation Diagrams
+
+An interactive spring-embedded metabolite network correlation diagram can be
+generated for the data.  The Methods options enable the correlations to be based
+on Pearson, Kendall Tau or Spearman rank correlations.  The plot contains nodes
+for all of the metabolites connected by edges.  The Node Filter and Node Color
+options enables the nodes to be selected or colored based on the data source or
+significance.  The advanced options enable all metabolite nodes or edges to be
+labeled.  The minimum correlation used for visualization can be interactively
+adjusted.  Using the left mouse button the map can be moved and using the wheel,
+the map can be expanded.  To help clean up and interrogate the data, individual
+metabolite can be selected, moved and pinned in the map.  This enables the
+cleaner visualization of selected metabolite groups.  Hovering over nodes or
+edges brings up the metabolite identification information and the strength of
+the correlations respectively.
+
 VIIME also includes a fully interactive heatmap with row and column dendrograms
 (see Figure 6). Selected metabolites are highlighted in orange on the left.
 Sample groups are colored along the bottom to provide additional context.
-
-![Heatmap with interactive collapsible clustering dendrograms for
-samples and metabolites.](figures/figure6.png)
 
 Unique to VIIME is a metabolite correlation network diagram (see Figure 7). The
 color in the diagram represents whether the metabolite was significantly
@@ -228,5 +315,3 @@ normalization (Min Max, Sum, Reference Sample, Weight/Volume), transformation
 Range Scaling, Vast Scaling, Level Scaling). All preprocessing functions were
 programmed in R. After preprocessing, the dataset is ready for input into the
 analysis methods.
-
-# Future Work
