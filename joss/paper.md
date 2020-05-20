@@ -339,3 +339,5 @@ normalization (Min Max, Sum, Reference Sample, Weight/Volume), transformation
 Range Scaling, Vast Scaling, Level Scaling). All preprocessing functions were
 programmed in R. After preprocessing, the dataset is ready for input into the
 analysis methods.
+
+# References
