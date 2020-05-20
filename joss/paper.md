@@ -18,9 +18,7 @@ authors:
   - name: Lilian Golzarri-Arroyo
     affiliation: 2
   - name: Jun Wan
-    affiliation: 3
-    affiliation: 4
-    affiliation: 5
+    affiliation: "3, 4, 5"
   - name: Daniel Raftery
     affiliation: 6
   - name: Jeff Baumes
@@ -184,7 +182,7 @@ each column.  This enables very large datasets with potentially hundreds of
 metabolites to be easily reduced to datasets containing only significantly
 altered metabolites.  
 
-###Volcano plots
+### Volcano plots
 
 To simultaneously visualize the magnitude of the change in a metabolite along
 with the statistical significance of that change, Viime offers an interactive volcano
