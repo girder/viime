@@ -6,32 +6,42 @@ tags:
   - web application
 authors:
   - name: Roni Choudhury
-    affiliation: 3
-  - name: Jon Beezley
-    affiliation: 3
-  - name: Brandon Davis
-    affiliation: 3
-  - name: Jared Tomeck
-    affiliation: 3
-  - name: Samuel Gratzl
-    affiliation: 3
-  - name: Lilian Golzarri-Arroyo
     affiliation: 1
-  - name: Daniel Raftery
+  - name: Jon Beezley
+    affiliation: 1
+  - name: Brandon Davis
+    affiliation: 1
+  - name: Jared Tomeck
+    affiliation: 1
+  - name: Samuel Gratzl
+    affiliation: 1
+  - name: Lilian Golzarri-Arroyo
     affiliation: 2
   - name: Jun Wan
-    affiliation: 1
-  - name: Jeff Baumes
     affiliation: 3
-  - name: Thomas O'Connell
+    affiliation: 4
+    affiliation: 5
+  - name: Daniel Raftery
+    affiliation: 6
+  - name: Jeff Baumes
     affiliation: 1
+  - name: Thomas O'Connell
+    affiliation: 7
 affiliations:
-  - name: Indiana University
-    index: 1
-  - name: University of Washington
-    index: 2
   - name: Kitware Inc.
+    index: 1
+  - name: Department of Epidemiology and Biostatistics, Indiana University School of Public Health
+    index: 2
+  - name: Department of Medical and Molecular Genetics, Indiana University School of Medicine
     index: 3
+  - name: Center for Computational Biology and Bioinformatics, Indiana University School of Medicine
+    index: 4
+  - name: Department of BioHealth Informatics, Indiana University School of Informatics and Computing
+    index: 5
+  - name: Department of Anesthesiology and Pain Medicine, University of Washington School of Medicine
+    index: 6
+  - name: Department of Otolaryngology--Head and Neck Surgery, Indiana University School of Medicine
+    index: 7
 date: 11 March 2020
 bibliography: paper.bib
 
@@ -159,7 +169,7 @@ present, but are the result of looking at only those metabolites.  Autoscaling
 is often a default selection in some metabolomics data analysis packages, but
 this runs the risk of increasing the noise in the data.  This is characterized
 by a loadings plot where all of the metabolites display large loading values
-which is typically not a biologically plausible condition.  
+which is typically not a biologically plausible condition [@vandenberg:2006].
 
 ## Data Analysis and Visualization
 
@@ -178,7 +188,7 @@ altered metabolites.
 
 To simultaneously visualize the magnitude of the change in a metabolite along
 with the statistical significance of that change, Viime offers an interactive volcano
-plot option.  As shown in figure X, the horizontal axis is the Log2 Fold change
+plot option.  As shown in Figure 8, the horizontal axis is the Log2 Fold change
 while the vertical axis is the -log10 of the p-value.  This type of plot is useful
 when making two-group comparisons and the specific pairs can be selected from
 the Group Combination menu.  The minimum fold change and p-values can be
@@ -262,8 +272,16 @@ joint analysis. From the data upload page, the user may initiate a dataset
 merge, selecting the datasets to merge along with the algorithm to perform the
 integration.
 
-Supported algorithms are simple column concatenation, PCA data fusion, and
-multi-block PCA fusion. After choosing an algorithm and two or more datasets,
+Supported algorithms are simple column concatenation, PCA data fusion
+(concatenating the normalized scores of PCAs applied to each data set, keeping
+all variables and avoiding any loss of information, and leaving only
+common major effects [@spiteri:2016]),
+and
+multi-block PCA fusion
+(by normalizing each of the individual data sets so that their first principal
+component has the same length (as measured by the first singular value of each
+data table) and then combining these data tables to a grand table. [@abdi:2013]).
+After choosing an algorithm and two or more datasets,
 the interface indicates how many of the samples will match after the merging
 process. When the integration algorithm completes, the new integrated dataset
 appears in the list of data for the user to perform analyses (see Figure 9).
