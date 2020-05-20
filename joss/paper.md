@@ -60,7 +60,9 @@ range can be more than 6 orders of magnitude. Given the diversity of data
 structures (i.e. magnitude and dynamic range) integrating the data from multiple
 platforms can be challenging.  This often leads investigators to analyze the
 datasets separately which prevents the observation of potentially interesting
-correlations between metabolites detected on different platforms.  Viime is an
+correlations between metabolites detected on different platforms.  Viime
+(VIsualization and Integration of Metabolomics Experiments)
+is an
 open-source, web-based application designed to integrate metabolomics data from
 multiple platforms. The workflow of Viime for data integration
 and visualization is shown in Figure 1.
@@ -98,7 +100,7 @@ analysis (see Figure 2).
 
 ## Data Imputation
 
-Once errors are corrected, data imputation is automatically performed,
+Once errors are corrected, data imputation is automatically performed.
 For metabolites with missing values, the type of missingness is classified as
 missing completely at random (MCAR) or missing not at random (MNAR).  For each
 type, an imputation mode is automatically performed but the options may be
@@ -145,9 +147,11 @@ range by scaling the variance of the data.  The options here include
 Autoscaling, Pareto scaling, Range scaling, Vast scaling and Level scaling.  
 
 A very important feature of the whole data treatment process is the interactive
-display of the PCA scores and loadings plots.  The scores plot displays how the
+use of principal component analysis (PCA) to examine the similarity and
+dissimilarity of individual groups in the dataset for different data treatment
+options. Viime provides an interactive PCA score plot, showing how the
 selection of each treatment option affects the separation of the individual
-groups in the data.  The loadings plot shows how each treatment option affects
+groups in the data.  A loadings plot shows how each treatment option affects
 the contributions of the metabolites to the separations.  Often data with no
 transformation or scaling may be dominated by only a few of the very high
 concentration metabolites.  In those cases, some separation of the groups may be
@@ -159,8 +163,9 @@ which is typically not a biologically plausible condition.
 
 ## Data Analysis and Visualization
 
-VIIME supports several downstream analyses. Univariate analyses using Wilcoxon
-and ANOVA can be carried out on data with two or more groups, respectively.  For
+VIIME supports several downstream analyses and visualizations. Univariate analyses using the Wilcoxon
+rank sum test
+and multivariate ANOVA can be carried out on data with two or more groups, respectively.  For
 the ANOVA, a post-hoc Tukey test is automatically applied so that p-values for
 each of the inter-group comparisons are calculated for all metabolites.,
 Metabolites that are significantly different in each of the intergroup
@@ -172,9 +177,9 @@ altered metabolites.
 ###Volcano plots
 
 To simultaneously visualize the magnitude of the change in a metabolite along
-with the significance of that change, we have implemented an interactive volcano
+with the statistical significance of that change, Viime offers an interactive volcano
 plot option.  As shown in figure X, the horizontal axis is the Log2 Fold change
-and the vertical axis is the -log10 of the p-value.  This type of plot is useful
+while the vertical axis is the -log10 of the p-value.  This type of plot is useful
 when making two-group comparisons and the specific pairs can be selected from
 the Group Combination menu.  The minimum fold change and p-values can be
 interactively adjusted to highlight more or less metabolite changes.    
@@ -204,15 +209,18 @@ experimental group.](figures/figure5.png)
 ### Network Correlation Diagrams
 
 An interactive spring-embedded metabolite network correlation diagram can be
-generated for the data.  The Methods options enable the correlations to be based
-on Pearson, Kendall Tau or Spearman rank correlations.  The plot contains nodes
-for all of the metabolites connected by edges.  The Node Filter and Node Color
+generated for the data.
+The plot contains nodes for all of the metabolites connected by edges when the
+correlation between metabolite pairs is sufficiently high.
+The Methods options enable the correlations to be based
+on Pearson, Kendall Tau or Spearman rank correlations.
+The Node Filter and Node Color
 options enables the nodes to be selected or colored based on the data source or
 significance.  The advanced options enable all metabolite nodes or edges to be
 labeled.  The minimum correlation used for visualization can be interactively
 adjusted.  Using the left mouse button the map can be moved and using the wheel,
 the map can be expanded.  To help clean up and interrogate the data, individual
-metabolite can be selected, moved and pinned in the map.  This enables the
+metabolites can be selected, moved and pinned in the map.  This enables the
 cleaner visualization of selected metabolite groups.  Hovering over nodes or
 edges brings up the metabolite identification information and the strength of
 the correlations respectively.
