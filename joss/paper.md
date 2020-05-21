@@ -23,7 +23,7 @@ authors:
     affiliation: 6
   - name: Jeff Baumes
     affiliation: 1
-  - name: Thomas O'Connell
+  - name: Thomas M. O'Connell
     affiliation: 7
 affiliations:
   - name: Kitware Inc.
