@@ -5,7 +5,7 @@ Getting started
 ---------------
 
 This project includes a `Pipfile` to help set up a virtual environment for
-VIIME. To set up the virtual environment
+VIIME.  Python 3.7 is required. To set up the virtual environment
 
 ```sh
 pipenv install
