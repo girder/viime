@@ -24,6 +24,9 @@ out directory rather than your home directory).  Once the environment is in
 place, you will need to initialize the tables by running
 
 ```sh
+pip3 install -e .
+source .env_pwd # or whatever env file you're using
+
 mkdir viime_sqlite
 viime-cli create-tables
 ```
