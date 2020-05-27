@@ -35,6 +35,9 @@ export default {
       correlation_methods,
       metaboliteFilter: null,
       metaboliteColor: null,
+      search: [], // nodes being searched for
+      currentUserInput: '', // the text currently typed in search box
+      searchBarResults: new Set(), // current results from autocomplete search box
     };
   },
 
@@ -73,6 +76,34 @@ export default {
             value: Math.abs(d.value),
           }));
     },
+    searchResults() {
+      // if input is empty, don't highlight any nodes
+      if (this.currentUserInput === '') {
+        return [];
+      }
+      return Array.from(this.searchBarResults);
+    },
+    nodeCount() {
+      return this.nodes.length;
+    },
+    autoCompleteItems() {
+      // return a list of items for autocomplete search results.
+      // insert newline if item is a certain length to prevent
+      // text running out of search box. TODO: eliminate space in dropdown menu
+      const lineLength = 8;
+      return this.nodes.map(node => (node.id.length > lineLength ? node.id.match(new RegExp(`.{${lineLength}}`, 'g')).join('\n') : node.id));
+    },
+  },
+  methods: {
+    searchFilter(item, queryText, itemText) {
+      const match = itemText.toLocaleLowerCase().indexOf(queryText.toLocaleLowerCase()) > -1;
+      if (match) this.searchBarResults.add(itemText);
+      else this.searchBarResults.delete(itemText);
+      return match;
+    },
+    clearSearch() {
+      this.currentUserInput = '';
+    },
   },
 };
 </script>
@@ -98,6 +129,21 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
         :not-selected-color="colors.correlationNode", selection-last)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
+      v-toolbar-title Search
+    v-card.mx-3(flat)
+      v-autocomplete(v-model="search", disable-resize-watcher, style="padding-left: 6%; maxWidth: 80%",
+          :search-input.sync="currentUserInput",
+          :items="autoCompleteItems",
+          multiple,
+          auto-select-first,
+          :filter="searchFilter"
+          @change="clearSearch")
+        template(v-slot:append-outer='')
+          span(style="min-width: 90%;")
+          v-icon(style="color: red;" @click='search = []', v-text="'mdi-cancel'")
+
+
+    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Advanced Options
     v-card.mx-3(flat)
       v-card-actions
@@ -108,10 +154,14 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
               hide-details, min="0", step="10", type="number")
 
   template(#default)
-    force-directed-graph(:edges="edges", :nodes="nodes",
-        :link-distance="linkDistanceAsNumber", :show-node-labels="showNodeLabels",
+    force-directed-graph(:edges="edges",
+        :nodes="nodes",
+        :link-distance="linkDistanceAsNumber",
+        :show-node-labels="showNodeLabels",
         :show-edge-labels="showEdgeLabels",
-        :min-stroke-value="min_correlation")
+        :min-stroke-value="min_correlation",
+        :search="search",
+        :filtered-items="searchResults")
 </template>
 
 <style scoped>

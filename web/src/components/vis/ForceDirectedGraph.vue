@@ -46,6 +46,14 @@ export default {
       default: 0,
       required: false,
     },
+    search: {
+      type: Array,
+      required: true,
+    },
+    filteredItems: {
+      type: Array,
+      required: true,
+    },
   },
   data() {
     return {
@@ -57,13 +65,6 @@ export default {
     };
   },
   computed: {
-    reactivePlotUpdate() {
-      if (!this.refsMounted) {
-        return '';
-      }
-      this.update();
-      return '';
-    },
     reactivePlotBoundsUpdate() {
       if (!this.refsMounted) {
         return '';
@@ -76,9 +77,23 @@ export default {
         .clamp(true);
     },
   },
+  watch: {
+    search(searchedNodes) {
+      // highlights nodes being searched for
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g');
+      nodes.select('circle').style('fill', d => (searchedNodes.includes(d.id) ? 'red' : d.color));
+    },
+    filteredItems(filteredItems) {
+      // circles nodes in search results
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g');
+      nodes.select('circle').style('stroke', d => (filteredItems.includes(d.id) ? 'red' : d.color));
+      nodes.select('circle').style('stroke-width', d => (filteredItems.includes(d.id) ? '2' : '1'));
+    },
+  },
   mounted() {
     this.onResize();
     this.refsMounted = true;
+    this.update();
   },
   beforeDestroy() {
     this.simulation.stop();
@@ -249,7 +264,7 @@ export default {
 
       nodes.select('circle')
         .attr('r', this.radius)
-        .style('fill', d => d.color)
+        .style('fill', d => (this.search && this.search.includes(d.id) ? 'red' : d.color))
         .on('click', resetPinned)
         .call(drag()
           .container(function container() {
@@ -290,7 +305,7 @@ export default {
 <template lang="pug">
 .main(v-resize:throttle="onResize")
   svg.svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
-      :data-update="reactivePlotUpdate", :data-update-bounds="reactivePlotBoundsUpdate")
+      :data-update-bounds="reactivePlotBoundsUpdate")
     g.zoom
       g.edges(:class="{ hideLabels: !this.showEdgeLabels }")
       g.nodes(:class="{ hideLabels: !this.showNodeLabels }")
@@ -320,6 +335,11 @@ export default {
 .nodes >>> circle.pinned {
   stroke-width: 2;
   stroke: black;
+}
+
+.nodes >>> circle.searched {
+  stroke-width: 2;
+  stroke: red;
 }
 
 .nodes >>> text {
