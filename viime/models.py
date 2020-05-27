@@ -3,11 +3,12 @@ from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 import pickle
-from typing import List
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar
 from uuid import uuid4
 
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy.model import DefaultMeta
 from marshmallow import fields, post_dump, post_load, \
     Schema, validate, validates_schema
 from marshmallow.exceptions import ValidationError
@@ -40,6 +41,7 @@ metadata = MetaData(naming_convention={
     'ck': 'ck_%(table_name)s_%(column_0_name)s',
 })
 db = SQLAlchemy(metadata=metadata)
+BaseModel: DefaultMeta = db.Model
 
 AxisNameTypes = namedtuple('AxisNameTypes', ['ROW', 'COLUMN'])
 TableColumnTypes = namedtuple('TableTypes', ['INDEX', 'METADATA', 'DATA', 'MASK', 'GROUP'])
@@ -50,13 +52,15 @@ TABLE_ROW_TYPES = TableRowTypes('header', 'metadata', 'sample', 'masked')
 AXIS_NAME_TYPES = AxisNameTypes('row', 'column')
 METADATA_TYPES = MetaDataTypes('categorical', 'numerical', 'ordinal')
 
+T = TypeVar('T')
+
 
 def clean(df: pandas.DataFrame) -> pandas.DataFrame:
     return df.fillna('NaN') \
         .replace([numpy.Inf, -numpy.Inf], ['Inf', '-Inf'])
 
 
-def _guess_table_structure(table):
+def _guess_table_structure(table: pandas.DataFrame) -> Tuple[List[str], List[str]]:
     # TODO: Implement this for real, this is just a dumb placeholder
     rows = [TABLE_ROW_TYPES.INDEX] + [
         TABLE_ROW_TYPES.DATA for i in range(table.shape[0] - 1)
@@ -77,7 +81,7 @@ class BaseSchema(Schema):
         return data
 
 
-class GroupLevel(db.Model):
+class GroupLevel(BaseModel):
     csv_file_id = db.Column(
         UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     name = db.Column(db.String, primary_key=True)
@@ -87,7 +91,7 @@ class GroupLevel(db.Model):
 
 
 class GroupLevelSchema(BaseSchema):
-    __model__ = GroupLevel
+    __model__ = GroupLevel  # type: ignore
 
     csv_file_id = fields.UUID(required=True, load_only=True)
     name = fields.Str(required=True)
@@ -96,7 +100,7 @@ class GroupLevelSchema(BaseSchema):
     description = fields.Str(allow_none=True)
 
 
-class CSVFile(db.Model):
+class CSVFile(BaseModel):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     name = db.Column(db.String, nullable=False)
@@ -165,27 +169,27 @@ class CSVFile(db.Model):
         return _get_groups(self)
 
     @property
-    def uri(self):
+    def uri(self) -> Path:
         id = str(self.id)
         return Path(current_app.config['UPLOAD_FOLDER']) / id[:3] / id
 
     @property
-    def size(self):
+    def size(self) -> int:
         return Path(self.uri).stat().st_size
 
     @hybrid_property
     def header_row_index(self):
         return _header_row_index(self)
 
-    @header_row_index.expression
+    @header_row_index.expression  # type: ignore
     def header_row_index(cls):  # noqa: N805
         return TableRow.query\
             .filter_by(csv_file_id=cls.id, row_type=TABLE_ROW_TYPES.INDEX)\
             .with_entities(TableRow.row_index)\
             .scalar()
 
-    @header_row_index.setter
-    def header_row_index(self, value):
+    @header_row_index.setter  # type: ignore
+    def header_row_index(self, value: Optional[int]):
         if self.header_row_index is not None:
             old_row = self.rows[self.header_row_index]
             old_row.row_type = TABLE_ROW_TYPES.METADATA
@@ -208,15 +212,15 @@ class CSVFile(db.Model):
             lambda c: c.column_type == TABLE_COLUMN_TYPES.INDEX, self.columns)
         return column and column.column_index
 
-    @key_column_index.expression
-    def key_column_index(cls):  # noqa: N805
+    @key_column_index.expression  # type: ignore
+    def key_column_index(self):  # noqa: N805
         return TableColumn.query\
-            .filter_by(csv_file_id=cls.id, column_type=TABLE_COLUMN_TYPES.INDEX)\
+            .filter_by(csv_file_id=self.id, column_type=TABLE_COLUMN_TYPES.INDEX)\
             .with_entities(TableColumn.column_index)\
             .scalar()
 
-    @key_column_index.setter
-    def key_column_index(self, value):
+    @key_column_index.setter  # type: ignore
+    def key_column_index(self, value: Optional[int]):
         if self.key_column_index is not None:
             old_column = self.columns[self.key_column_index]
             old_column.column_type = TABLE_COLUMN_TYPES.METADATA
@@ -233,15 +237,15 @@ class CSVFile(db.Model):
     def group_column_index(self):
         return _group_column_index(self)
 
-    @group_column_index.expression
+    @group_column_index.expression  # type: ignore
     def group_column_index(cls):  # noqa: N805
         return TableColumn.query\
             .filter_by(csv_file_id=cls.id, column_type=TABLE_COLUMN_TYPES.GROUP)\
             .with_entities(TableColumn.column_index)\
             .scalar()
 
-    @group_column_index.setter
-    def group_column_index(self, value):
+    @group_column_index.setter  # type: ignore
+    def group_column_index(self, value: Optional[int]):
         if self.group_column_index is not None:
             old_column = self.columns[self.group_column_index]
             old_column.column_type = TABLE_COLUMN_TYPES.METADATA
@@ -275,18 +279,18 @@ class CSVFile(db.Model):
         return _filter_table_by_types(self, row_type, column_type)
 
     @property
-    def missing_cells(self):
+    def missing_cells(self) -> List[Tuple[int, int]]:
         table = _coerce_numeric(self.raw_measurement_table)
         col, row = numpy.nonzero(table.isna().to_numpy())
         return numpy.column_stack((row, col)).astype(int).tolist()
 
-    def apply_transforms(self):
+    def apply_transforms(self) -> pandas.DataFrame:
         table = self.raw_measurement_table
         table = _coerce_numeric(table)
         return impute_missing(table, self.groups,
                               mnar=self.imputation_mnar, mcar=self.imputation_mcar)
 
-    def save_table(self, table, **kwargs):
+    def save_table(self, table: pandas.DataFrame, **kwargs):
         # TODO: Delete cache entries if a file at self.uri exists already
         # For now, there is no API for changing the data contained in an uploaded
         # file, so this is not important.
@@ -297,12 +301,12 @@ class CSVFile(db.Model):
         return _get_csv_file_stats(self)
 
     @classmethod
-    def create_csv_file(cls, id, name, table, **kwargs):
+    def create_csv_file(cls, id: str, name: str, table: str, **kwargs):
         csv_file = cls(id=id, name=name, **kwargs)
         cls._save_csv_file_data(csv_file.uri, table)
         row_types, column_types = _guess_table_structure(csv_file.table)
 
-        rows = []
+        rows: List[TableRow] = []
         table_row_schema = TableRowSchema()
         for index, row_type in enumerate(row_types):
             rows.append(table_row_schema.load({
@@ -311,7 +315,7 @@ class CSVFile(db.Model):
 
         csv_file.rows = rows
 
-        columns = []
+        columns: List[TableColumn] = []
         table_column_schema = TableColumnSchema()
         for index, column_type in enumerate(column_types):
             columns.append(table_column_schema.load({
@@ -324,32 +328,33 @@ class CSVFile(db.Model):
         return csv_file, rows, columns
 
     @classmethod
-    def _save_csv_file_data(cls, uri, table_data):
+    def _save_csv_file_data(cls, uri: Path, table_data: str) -> str:
         uri.parent.mkdir(parents=True, exist_ok=True)
         with open(uri, 'w') as f:
             f.write(table_data)
         clear_cache()
         return table_data
 
-    def get_column_by_name(self, column_name):
+    def get_column_by_name(self, column_name: str):
         return self.find_first_entity(lambda c: c.column_header == column_name, self.columns)
 
     def get_row_by_name(self, row_name):
         return self.find_first_entity(lambda r: r.row_name == row_name, self.rows)
 
     @classmethod
-    def find_first_entity(cls, criterion, iterable):
+    def find_first_entity(cls, criterion: Callable[[T], bool],
+                          iterable: Iterable[T]) -> Optional[T]:
         for entity in iterable:
             if criterion(entity):
                 return entity
         return None
 
 
-def _validate_table_data(table):
+def _validate_table_data(table: str):
     try:
         pandas.read_csv(BytesIO(table.encode()))
     except Exception as e:
-        raise ValidationError(str(e).strip(), data=table, field_name='table') from None
+        raise ValidationError(str(e).strip(), data=dict(table=table), field_name='table') from None
 
 
 class CSVFileSchema(BaseSchema):
@@ -401,7 +406,7 @@ class CSVFileSchema(BaseSchema):
         return csv_file
 
 
-class SampleGroup(db.Model):
+class SampleGroup(BaseModel):
     name = db.Column(db.String, primary_key=True)
     description = db.Column(db.String, nullable=True)
     order = db.Column(db.Integer, nullable=True)
@@ -409,14 +414,14 @@ class SampleGroup(db.Model):
 
 
 class SampleGroupSchema(BaseSchema):
-    __model__ = SampleGroup
+    __model__ = SampleGroup  # type: ignore
 
     name = fields.String(required=True)
     description = fields.Str(allow_none=True)
     files = fields.List(fields.Nested(CSVFileSchema, only=['id', 'name', 'description']))
 
 
-class TableColumn(db.Model):
+class TableColumn(BaseModel):
     csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     column_index = db.Column(db.Integer, primary_key=True)
     column_type = db.Column(db.String, nullable=False)
@@ -435,20 +440,22 @@ class TableColumn(db.Model):
         return self.csv_file.headers[self.column_index]
 
     @property
-    def missing_percent(self):
+    def missing_percent(self) -> Optional[float]:
         if self.column_type == TABLE_COLUMN_TYPES.DATA:
             return self.csv_file._stats and \
                 self.csv_file._stats['columns']['missing'][self.data_column_index]
+        return None
 
     @property
-    def data_variance(self):
+    def data_variance(self) -> Optional[float]:
         if self.column_type == TABLE_COLUMN_TYPES.DATA:
             return self.csv_file._stats and \
                 self.csv_file._stats['columns']['variance'][self.data_column_index]
+        return None
 
 
 class TableColumnSchema(BaseSchema):
-    __model__ = TableColumn
+    __model__ = TableColumn  # type: ignore
 
     csv_file_id = fields.UUID(required=True, load_only=True)
     column_header = fields.Str(dump_only=True)
@@ -461,7 +468,7 @@ class TableColumnSchema(BaseSchema):
         CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
 
 
-class TableRow(db.Model):
+class TableRow(BaseModel):
     csv_file_id = db.Column(
         UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     row_index = db.Column(db.Integer, primary_key=True)
@@ -481,18 +488,20 @@ class TableRow(db.Model):
         return _data_row_index(self)
 
     @property
-    def missing_percent(self):
+    def missing_percent(self) -> Optional[float]:
         if self.row_type == TABLE_ROW_TYPES.DATA:
             return self.csv_file._stats['rows']['missing'][self.data_row_index]
+        return None
 
     @property
-    def data_variance(self):
+    def data_variance(self) -> Optional[float]:
         if self.row_type == TABLE_ROW_TYPES.DATA:
             return self.csv_file._stats['rows']['variance'][self.data_row_index]
+        return None
 
 
 class TableRowSchema(BaseSchema):
-    __model__ = TableRow
+    __model__ = TableRow  # type: ignore
 
     csv_file_id = fields.UUID(required=True, load_only=True)
     row_name = fields.Str(dump_only=True)
@@ -506,7 +515,7 @@ class TableRowSchema(BaseSchema):
 
 
 class ModifyLabelChangesSchema(Schema):
-    context = fields.Str(required=True, validate=validate.OneOf(AXIS_NAME_TYPES))
+    context = fields.Str(required=True, validate=validate.OneOf(AXIS_NAME_TYPES))  # type: ignore
     index = fields.Int(required=True, validate=validate.Range(min=0))
     label = fields.Str(required=True)
 
@@ -539,18 +548,18 @@ listen(TableColumn, 'after_update',
 # These are placed here because dogpile does not allow you
 # to include the class instance in the cache key.  :'(
 @region.cache_on_arguments()
-def _read_csv_file(path, **kwargs):
+def _read_csv_file(path: str, **kwargs):
     return pandas.read_csv(path, **kwargs)
 
 
 @region.cache_on_arguments()
-def _header_row_index(csv_file):
+def _header_row_index(csv_file: CSVFile) -> Optional[int]:
     row = csv_file.find_first_entity(lambda r: r.row_type == TABLE_ROW_TYPES.INDEX, csv_file.rows)
     return row and row.row_index
 
 
 @region.cache_on_arguments()
-def _headers(csv_file):
+def _headers(csv_file: CSVFile) -> List[str]:
     idx = csv_file.header_row_index
     if idx is None:
         return [
@@ -561,14 +570,14 @@ def _headers(csv_file):
 
 
 @region.cache_on_arguments()
-def _group_column_index(csv_file):
+def _group_column_index(csv_file: CSVFile) -> Optional[int]:
     column = csv_file.find_first_entity(
         lambda c: c.column_type == TABLE_COLUMN_TYPES.GROUP, csv_file.columns)
     return column and column.column_index
 
 
 @region.cache_on_arguments()
-def _keys(csv_file):
+def _keys(csv_file: CSVFile) -> List[str]:
     idx = csv_file.key_column_index
     if idx is None:
         return [
@@ -579,7 +588,7 @@ def _keys(csv_file):
 
 
 @region.cache_on_arguments()
-def _get_table_stats(table):
+def _get_table_stats(table: pandas.DataFrame):
     # Get global stats all once because it is more efficient than
     # doing it per row/column.
 
@@ -610,10 +619,11 @@ def _get_table_stats(table):
 
 
 @region.cache_on_arguments()
-def _filter_table_by_types(csv_file, row_type, column_type):
+def _filter_table_by_types(csv_file: CSVFile, row_type: str,
+                           column_type: str) -> Optional[pandas.DataFrame]:
     if csv_file.header_row_index is None or \
             csv_file.key_column_index is None:
-        return
+        return None
     rows = [
         row.row_index for row in csv_file.rows
         if row.row_type == row_type
@@ -641,8 +651,8 @@ def _filter_table_by_types(csv_file, row_type, column_type):
 
 
 @region.cache_on_arguments()
-def _indexed_table(csv_file):
-    kwargs = {}
+def _indexed_table(csv_file: CSVFile) -> pandas.DataFrame:
+    kwargs: Dict[str, Any] = {}
 
     # handle column names
     header_row = csv_file.header_row_index
@@ -671,7 +681,7 @@ def _indexed_table(csv_file):
 
 
 @region.cache_on_arguments()
-def _data_row_index(row):
+def _data_row_index(row: TableRow) -> Optional[int]:
     """Return the index in the measurement table or None if not a data row."""
     if row.row_type != TABLE_ROW_TYPES.DATA:
         return None
@@ -680,7 +690,7 @@ def _data_row_index(row):
 
 
 @region.cache_on_arguments()
-def _data_column_index(column):
+def _data_column_index(column: TableColumn) -> Optional[int]:
     """Return the index in the measurement table or None if not a data column."""
     if column.column_type != TABLE_COLUMN_TYPES.DATA:
         return None
@@ -690,7 +700,7 @@ def _data_column_index(column):
 
 
 @region.cache_on_arguments()
-def _coerce_numeric(table):
+def _coerce_numeric(table: pandas.DataFrame) -> pandas.DataFrame:
     """Coerce a table into numeric values."""
     for i in range(table.shape[1]):
         table.iloc[:, i] = pandas.to_numeric(table.iloc[:, i], errors='coerce')
@@ -700,11 +710,11 @@ def _coerce_numeric(table):
 # The following methods are stored in a persistent cache (memcached) if configured.
 # They are for more complicated functions that could take significant time to execute
 # and are commonly called between multiple rest endpoints with the same value.
-def _get_raw_measurement_table(csv_file):
+def _get_raw_measurement_table(csv_file: CSVFile):
     return csv_file.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.DATA)
 
 
-def _get_measurement_table_and_info(csv_file):
+def _get_measurement_table_and_info(csv_file: CSVFile):
     if not get_fatal_index_errors(csv_file):
         try:
             return csv_file.apply_transforms()
@@ -714,15 +724,15 @@ def _get_measurement_table_and_info(csv_file):
     return None, dict(mcar=[], mnar=[])
 
 
-def _get_measurement_metadata(csv_file):
+def _get_measurement_metadata(csv_file: CSVFile) -> pandas.DataFrame:
     return csv_file.filter_table_by_types(TABLE_ROW_TYPES.METADATA, TABLE_COLUMN_TYPES.DATA)
 
 
-def _get_sample_metadata(csv_file):
+def _get_sample_metadata(csv_file: CSVFile) -> pandas.DataFrame:
     return csv_file.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.METADATA)
 
 
-def _get_groups(csv_file):
+def _get_groups(csv_file: CSVFile) -> Optional[pandas.DataFrame]:
     if csv_file.group_column_index is None:
         return None
     groups = csv_file.filter_table_by_types(TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.GROUP)
@@ -732,12 +742,12 @@ def _get_groups(csv_file):
     return groups.fillna('').astype(str)
 
 
-def _get_csv_file_stats(csv_file):
+def _get_csv_file_stats(csv_file: CSVFile):
     if csv_file.raw_measurement_table is not None:
         return _get_table_stats(csv_file.raw_measurement_table)
 
 
-class ValidatedMetaboliteTable(db.Model):
+class ValidatedMetaboliteTable(BaseModel):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), nullable=False,
@@ -756,15 +766,15 @@ class ValidatedMetaboliteTable(db.Model):
     groups_bytes = db.Column(db.LargeBinary, nullable=False)
 
     @classmethod
-    def serialize_table(cls, table):
+    def serialize_table(cls, table: pandas.DataFrame) -> bytes:
         return pickle.dumps(table)
 
     @classmethod
-    def deserialize_table(cls, blob):
+    def deserialize_table(cls, blob: bytes) -> pandas.DataFrame:
         return pickle.loads(blob)
 
     @classmethod
-    def create_from_csv_file(cls, csv_file, **kwargs):
+    def create_from_csv_file(cls, csv_file: CSVFile, **kwargs):
         table, info = csv_file.measurement_table_and_info
         assert table is not None, 'Invalid csv_file provided'
 
@@ -819,7 +829,7 @@ class ValidatedMetaboliteTable(db.Model):
         return _generate_validated_table(self)
 
 
-def _generate_validated_table(validated_table):
+def _generate_validated_table(validated_table: ValidatedMetaboliteTable) -> pandas.DataFrame:
     # concat rows
     if not validated_table.measurement_metadata.empty:
         table = validated_table.measurement_metadata.copy()
@@ -863,7 +873,7 @@ class ValidatedMetaboliteTableSchema(BaseSchema):
     # raw_measurements = fields.Raw(required=True, load_only=True) if needed in the future
 
     @post_dump
-    def serialize_tables(self, data, **kwargs):
+    def serialize_tables(self, data: Dict[str, Any], **kwargs):
         # don't transfer columns or index depending on the type
         def convert(attr, *drop_columns):
             if attr in data:
