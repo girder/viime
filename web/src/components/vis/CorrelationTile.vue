@@ -35,6 +35,11 @@ export default {
       correlation_methods,
       metaboliteFilter: null,
       metaboliteColor: null,
+      search: [], // nodes being searched for
+      currentUserInput: '', // the text currently typed in search box
+      searchBarResults: new Set(), // current results from autocomplete search box
+      excludedSearchBarResults: [],
+      searchNodeVisibility: 0,
     };
   },
 
@@ -73,6 +78,54 @@ export default {
             value: Math.abs(d.value),
           }));
     },
+    searchResults() {
+      // if input is empty, don't highlight any nodes
+      if (!this.currentUserInput || this.currentUserInput.trim() === '') {
+        return [];
+      }
+      return Array.from(this.searchBarResults);
+    },
+    nodeCount() {
+      return this.nodes.length;
+    },
+    visibleNodes() {
+      if (this.search === []) {
+        return 0;
+      }
+      return this.searchNodeVisibility;
+    },
+  },
+  methods: {
+    searchFilter(item, queryText, itemText) {
+      const match = itemText.toLocaleLowerCase().indexOf(queryText.trim().toLocaleLowerCase()) > -1
+                    && !this.excludedSearchBarResults.includes(itemText);
+      if (match) {
+        this.searchBarResults.add(itemText);
+      } else {
+        this.searchBarResults.delete(itemText);
+      }
+      return match;
+    },
+    clearSearch(event) {
+      event.preventDefault();
+      this.search = [];
+      this.currentUserInput = ''; // clear search box
+      this.searchBarResults = new Set(); // unhighlight search result nodes
+    },
+    clearExcludedNodes() {
+      this.excludedSearchBarResults = [];
+    },
+    removeNodeFromSearchResults(event, data) {
+      event.stopPropagation();
+      this.excludedSearchBarResults.push(data.item);
+      // add char to search box to trigger rerender
+      // of search results.
+      // TODO: find better way to do this
+      if (!this.currentUserInput) {
+        this.currentUserInput = '';
+      }
+      this.currentUserInput = this.currentUserInput.concat('\n');
+    },
   },
 };
 </script>
@@ -98,6 +151,44 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
         :not-selected-color="colors.correlationNode", selection-last)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
+      v-toolbar-title Search
+    v-card.mx-3(flat)
+      span.searchBarContainers
+        v-autocomplete.searchBar(v-model="search",
+            :search-input.sync="currentUserInput",
+            :items="nodes.map(node => node.id)\
+                    .filter(node => !excludedSearchBarResults.includes(node))",
+            chips,
+            multiple,
+            deletable-chips,
+            auto-select-first,
+            hide-selected,
+            :filter="searchFilter",
+            @change="clearSearch")
+          template(v-slot:item="data")
+            v-chip
+              v-icon.closePillButton(v-text="'mdi-alpha-x-circle'",
+                  style="margin-right: 12px; float: right;",
+                  @click="(e) => removeNodeFromSearchResults(e, data)")
+              span(v-text="data.item")
+      span.searchBarContainers
+        v-icon(@click="clearSearch", v-text="'mdi-delete'")
+      v-btn.searchBarContainers(v-text="'Unhide Nodes'",
+          @click="clearExcludedNodes",
+          :disabled="excludedSearchBarResults.length === 0")
+
+      v-radio-group(v-model="searchNodeVisibility",
+          :disabled="search.length === 0")
+        v-radio(:label="'Show all'",
+            :value="0")
+        v-radio(:label="'Show within 1 step'",
+            :value="1")
+        v-radio(:label="'Show within 2 steps'",
+            :value="2")
+        v-radio(:label="'Show all reachable'",
+            :value="Infinity")
+
+    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Advanced Options
     v-card.mx-3(flat)
       v-card-actions
@@ -108,13 +199,33 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
               hide-details, min="0", step="10", type="number")
 
   template(#default)
-    force-directed-graph(:edges="edges", :nodes="nodes",
-        :link-distance="linkDistanceAsNumber", :show-node-labels="showNodeLabels",
+    force-directed-graph(:edges="edges",
+        :nodes="nodes",
+        :link-distance="linkDistanceAsNumber",
+        :show-node-labels="showNodeLabels",
         :show-edge-labels="showEdgeLabels",
-        :min-stroke-value="min_correlation")
+        :min-stroke-value="min_correlation",
+        :search="search",
+        :filtered-items="searchResults.filter(node => !excludedSearchBarResults.has(node))",
+        :excluded-search-results="excludedSearchBarResults",
+        :visible-nodes="visibleNodes")
 </template>
 
 <style scoped>
+
+.closePillButton:hover {
+  color: red;
+}
+
+.searchBarContainers {
+  display: inline-block;
+  margin-left: 1em;
+}
+
+.searchBar {
+  max-width: 100px;
+  overflow: auto;
+}
 
 .minCorrelation {
   padding-top: 16px;
