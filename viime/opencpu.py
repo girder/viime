@@ -37,7 +37,7 @@ def opencpu_request(method, files=None, params=None, return_type='csv'):
     try:
         resp = requests.post(url, files=files, data=params)
     except requests.exceptions.RequestException as e:
-        raise OpenCPUException(f'Error connecting to OpenCPU server', method, e.response)
+        raise OpenCPUException('Error connecting to OpenCPU server', method, e.response)
 
     if not resp.ok:
         current_app.logger.error(resp.content)

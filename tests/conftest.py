@@ -33,7 +33,7 @@ def app():
     with TemporaryDirectory() as upload_folder:
         app = create_app({
             'ENV': 'testing',
-            'SQLALCHEMY_DATABASE_URI': f'sqlite://',
+            'SQLALCHEMY_DATABASE_URI': 'sqlite://',
             'UPLOAD_FOLDER': upload_folder,
             'OPENCPU_API_ROOT': 'http://localhost:8004/ocpu/library'
         })
