@@ -341,6 +341,7 @@ def delete_csv_file(csv_id):
 
     return '', 204
 
+
 # Missing data imputation options
 @csv_bp.route('/csv/<uuid:csv_id>/imputation', methods=['GET'])
 def get_imputation_options(csv_id):
