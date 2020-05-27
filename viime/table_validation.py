@@ -142,7 +142,7 @@ class ValidationSchema(Schema):
     type_ = fields.Str(required=True, data_key='type')
     title = fields.Str(required=True)
     severity = fields.Str(required=True, validate=validate.OneOf(SEVERITY_VALUES))
-    context = fields.Str(required=True, validate=validate.OneOf(CONTEXT_VALUES))
+    context = fields.Str(required=True, validate=validate.OneOf(CONTEXT_VALUES))  # type: ignore
     row_index = fields.Int(required=False)
     column_index = fields.Int(required=False)
     group = fields.Str(required=False)

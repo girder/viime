@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy.model import DefaultMeta
 from marshmallow import fields, post_dump, post_load, \
     Schema, validate, validates_schema
 from marshmallow.exceptions import ValidationError
@@ -40,6 +41,7 @@ metadata = MetaData(naming_convention={
     'ck': 'ck_%(table_name)s_%(column_0_name)s',
 })
 db = SQLAlchemy(metadata=metadata)
+BaseModel: DefaultMeta = db.Model
 
 AxisNameTypes = namedtuple('AxisNameTypes', ['ROW', 'COLUMN'])
 TableColumnTypes = namedtuple('TableTypes', ['INDEX', 'METADATA', 'DATA', 'MASK', 'GROUP'])
@@ -51,6 +53,7 @@ AXIS_NAME_TYPES = AxisNameTypes('row', 'column')
 METADATA_TYPES = MetaDataTypes('categorical', 'numerical', 'ordinal')
 
 T = TypeVar('T')
+
 
 def clean(df: pandas.DataFrame) -> pandas.DataFrame:
     return df.fillna('NaN') \
@@ -78,7 +81,7 @@ class BaseSchema(Schema):
         return data
 
 
-class GroupLevel(db.Model):
+class GroupLevel(BaseModel):
     csv_file_id = db.Column(
         UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     name = db.Column(db.String, primary_key=True)
@@ -88,7 +91,7 @@ class GroupLevel(db.Model):
 
 
 class GroupLevelSchema(BaseSchema):
-    __model__ = GroupLevel
+    __model__ = GroupLevel  # type: ignore
 
     csv_file_id = fields.UUID(required=True, load_only=True)
     name = fields.Str(required=True)
@@ -97,7 +100,7 @@ class GroupLevelSchema(BaseSchema):
     description = fields.Str(allow_none=True)
 
 
-class CSVFile(db.Model):
+class CSVFile(BaseModel):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     name = db.Column(db.String, nullable=False)
@@ -178,14 +181,14 @@ class CSVFile(db.Model):
     def header_row_index(self):
         return _header_row_index(self)
 
-    @header_row_index.expression
+    @header_row_index.expression  # type: ignore
     def header_row_index(cls):  # noqa: N805
         return TableRow.query\
             .filter_by(csv_file_id=cls.id, row_type=TABLE_ROW_TYPES.INDEX)\
             .with_entities(TableRow.row_index)\
             .scalar()
 
-    @header_row_index.setter
+    @header_row_index.setter  # type: ignore
     def header_row_index(self, value: Optional[int]):
         if self.header_row_index is not None:
             old_row = self.rows[self.header_row_index]
@@ -209,14 +212,14 @@ class CSVFile(db.Model):
             lambda c: c.column_type == TABLE_COLUMN_TYPES.INDEX, self.columns)
         return column and column.column_index
 
-    @key_column_index.expression
+    @key_column_index.expression  # type: ignore
     def key_column_index(self):  # noqa: N805
         return TableColumn.query\
             .filter_by(csv_file_id=self.id, column_type=TABLE_COLUMN_TYPES.INDEX)\
             .with_entities(TableColumn.column_index)\
             .scalar()
 
-    @key_column_index.setter
+    @key_column_index.setter  # type: ignore
     def key_column_index(self, value: Optional[int]):
         if self.key_column_index is not None:
             old_column = self.columns[self.key_column_index]
@@ -234,14 +237,14 @@ class CSVFile(db.Model):
     def group_column_index(self):
         return _group_column_index(self)
 
-    @group_column_index.expression
+    @group_column_index.expression  # type: ignore
     def group_column_index(cls):  # noqa: N805
         return TableColumn.query\
             .filter_by(csv_file_id=cls.id, column_type=TABLE_COLUMN_TYPES.GROUP)\
             .with_entities(TableColumn.column_index)\
             .scalar()
 
-    @group_column_index.setter
+    @group_column_index.setter  # type: ignore
     def group_column_index(self, value: Optional[int]):
         if self.group_column_index is not None:
             old_column = self.columns[self.group_column_index]
@@ -403,7 +406,7 @@ class CSVFileSchema(BaseSchema):
         return csv_file
 
 
-class SampleGroup(db.Model):
+class SampleGroup(BaseModel):
     name = db.Column(db.String, primary_key=True)
     description = db.Column(db.String, nullable=True)
     order = db.Column(db.Integer, nullable=True)
@@ -411,14 +414,14 @@ class SampleGroup(db.Model):
 
 
 class SampleGroupSchema(BaseSchema):
-    __model__ = SampleGroup
+    __model__ = SampleGroup  # type: ignore
 
     name = fields.String(required=True)
     description = fields.Str(allow_none=True)
     files = fields.List(fields.Nested(CSVFileSchema, only=['id', 'name', 'description']))
 
 
-class TableColumn(db.Model):
+class TableColumn(BaseModel):
     csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     column_index = db.Column(db.Integer, primary_key=True)
     column_type = db.Column(db.String, nullable=False)
@@ -452,7 +455,7 @@ class TableColumn(db.Model):
 
 
 class TableColumnSchema(BaseSchema):
-    __model__ = TableColumn
+    __model__ = TableColumn  # type: ignore
 
     csv_file_id = fields.UUID(required=True, load_only=True)
     column_header = fields.Str(dump_only=True)
@@ -465,7 +468,7 @@ class TableColumnSchema(BaseSchema):
         CSVFileSchema, exclude=['rows', 'columns'], dump_only=True)
 
 
-class TableRow(db.Model):
+class TableRow(BaseModel):
     csv_file_id = db.Column(
         UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
     row_index = db.Column(db.Integer, primary_key=True)
@@ -498,7 +501,7 @@ class TableRow(db.Model):
 
 
 class TableRowSchema(BaseSchema):
-    __model__ = TableRow
+    __model__ = TableRow  # type: ignore
 
     csv_file_id = fields.UUID(required=True, load_only=True)
     row_name = fields.Str(dump_only=True)
@@ -512,7 +515,7 @@ class TableRowSchema(BaseSchema):
 
 
 class ModifyLabelChangesSchema(Schema):
-    context = fields.Str(required=True, validate=validate.OneOf(AXIS_NAME_TYPES))
+    context = fields.Str(required=True, validate=validate.OneOf(AXIS_NAME_TYPES))  # type: ignore
     index = fields.Int(required=True, validate=validate.Range(min=0))
     label = fields.Str(required=True)
 
@@ -744,7 +747,7 @@ def _get_csv_file_stats(csv_file: CSVFile):
         return _get_table_stats(csv_file.raw_measurement_table)
 
 
-class ValidatedMetaboliteTable(db.Model):
+class ValidatedMetaboliteTable(BaseModel):
     id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), nullable=False,
