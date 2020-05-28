@@ -89,7 +89,8 @@ vis-tile-large(v-if="plot", title="Anova Table", :loading="plot.loading", expand
     v-btn(flat, dark, block, @click="downloadTable")
       v-icon.mr-2 {{ $vuetify.icons.save }}
       | Download Table
-  anova-table.horizontalScrollable(v-if="plot.data",
+  anova-table.horizontalScrollable(
+      v-if="plot.data",
       :data="tableData",
       :threshold="threshold",
       v-model="selected")
