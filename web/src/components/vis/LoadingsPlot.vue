@@ -1,7 +1,6 @@
 <template lang="pug">
 .main(v-resize:throttle="onResize")
-  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
-      :data-update="reactiveUpdate")
+  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
     g.master
       g.axes
       g.label.x(style="opacity: 0")
@@ -121,6 +120,20 @@ export default {
     },
     yrange() {
       return this.pcRange;
+    },
+  },
+  watch: {
+    points() {
+      this.update();
+    },
+    pcX() {
+      this.update();
+    },
+    pcY() {
+      this.update();
+    },
+    showCrosshairs() {
+      this.update();
     },
   },
   methods: {

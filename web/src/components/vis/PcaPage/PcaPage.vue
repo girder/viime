@@ -26,6 +26,9 @@ export default {
       pcXval: '1',
       pcYval: '2',
       numComponentsVal: '10',
+      pcX: 1,
+      pcY: 2,
+      numComponents: 10,
       showEllipses: true,
       showCrosshairs: true,
       showCutoffs: true,
@@ -36,23 +39,43 @@ export default {
   },
 
   computed: {
-    pcX() {
-      return Number.parseInt(this.pcXval, 10);
-    },
-
-    pcY() {
-      return Number.parseInt(this.pcYval, 10);
-    },
-
-    numComponents() {
-      return Number.parseInt(this.numComponentsVal, 10);
-    },
-
     ready() {
       const pcaReady = this.$store.getters.ready(this.id, 'pca');
       const loadingsReady = this.$store.getters.ready(this.id, 'loadings');
 
       return pcaReady && loadingsReady;
+    },
+  },
+  watch: {
+    pcXval: {
+      handler(val) {
+        const pcX = Number.parseInt(val, 10);
+        // eslint-disable-next-line no-restricted-globals
+        if (!isNaN(pcX)) {
+          this.pcX = pcX;
+        }
+      },
+      immediate: true,
+    },
+    pcYval: {
+      handler(val) {
+        const pcY = Number.parseInt(val, 10);
+        // eslint-disable-next-line no-restricted-globals
+        if (!isNaN(pcY)) {
+          this.pcY = pcY;
+        }
+      },
+      immediate: true,
+    },
+    numComponentsVal: {
+      handler(val) {
+        const numComponents = Number.parseInt(val, 10);
+        // eslint-disable-next-line no-restricted-globals
+        if (!isNaN(numComponents)) {
+          this.numComponents = numComponents;
+        }
+      },
+      immediate: true,
     },
   },
 };
