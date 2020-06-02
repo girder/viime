@@ -1,4 +1,5 @@
 import { LOAD_DATASET } from '../store/actions.type';
+import { INTIALIZE_DATASET } from '../store/mutations.type';
 
 /**
  * Load dataset from server for any view where
@@ -19,6 +20,8 @@ const loadDataset = {
   created() {
     const dataset = this.$store.getters.dataset(this.id);
     if (!dataset) {
+      // initialize the dataset to prevent NPE race conditions during slow loads
+      this.$store.commit(INTIALIZE_DATASET, { dataset_id: this.id });
       this.$store.dispatch(LOAD_DATASET, { dataset_id: this.id });
     }
   },
