@@ -76,10 +76,16 @@ export default {
       return !this.groups ? this.scaleY.bandwidth() : this.scaleGroup.bandwidth();
     },
   },
-
+  watch: {
+    rows() {
+      this.update();
+    },
+  },
+  mounted() {
+    this.update();
+  },
   methods: {
     update() {
-      //
       // Compute the total variance in all the PCs.
       const svg = select(this.$refs.svg);
       this.axisPlot(svg);
@@ -122,54 +128,49 @@ export default {
           .attr('transform', d => `translate(0, ${this.scaleGroup(d.group)})`);
       }
 
-      const finished = boxplots
+      boxplots
         .transition()
         .duration(this.duration)
-        .each(function update(...args) {
-          // call separately since boxplot doesn't handle the phases properly
-          layout.call(this, select(this), ...args);
-        })
-        .end();
+        .call(layout)
+        .end()
+        // silently catch any transition interruptions from consecutive updates
+        .catch(() => {})
+        .then(() => {
+          // inject tooltips
+          const f = d => d.toFixed(3);
 
-      finished.then(() => {
-        // inject tooltips
+          // outliers: show the value
+          boxplots.select('g.point').selectAll('.outlier')
+            .html(d => `<title>${f(d.value)}</title>`);
 
-        const f = d => d.toFixed(3);
+          const count = (values, min, max) => values
+            .reduce((acc, v) => acc + (v >= min && v < max ? 1 : 0), 0);
 
-        // outliers: show the value
-        boxplots.select('g.point').selectAll('.outlier')
-          .html(d => `<title>${f(d.value)}</title>`);
+          // inject rect backgrounds for whiskers
+          const whiskers = boxplots.select('.whisker');
 
-        const count = (values, min, max) => values
-          .reduce((acc, v) => acc + (v >= min && v < max ? 1 : 0), 0);
+          boxplots.select('.whisker path')
+            .html(d => `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`);
+          boxplots.select('.box line')
+            .style('stroke', d => d.color)
+            .html(d => `<title>${d.name}: ${f(d.fiveNums[1])} (q1) - ${f(d.fiveNums[2])} (median) = ${count(d.values, d.fiveNums[1], d.fiveNums[2])} Items</title>`);
+          boxplots.select('.box line:last-of-type')
+            .style('stroke', d => d.color)
+            .html(d => `<title>${d.name}: ${f(d.fiveNums[2])} (median) - ${f(d.fiveNums[3])} (q3) = ${count(d.values, d.fiveNums[2], d.fiveNums[3])} Items</title>`);
+          boxplots.select('.whisker path:last-of-type')
+            .html(d => `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`);
 
-        // inject rect backgrounds for whiskers
-        const whisers = boxplots.select('.whisker');
-
-        boxplots.select('.whisker path')
-          .html(d => `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`);
-        boxplots.select('.box line')
-          .style('stroke', d => d.color)
-          .html(d => `<title>${d.name}: ${f(d.fiveNums[1])} (q1) - ${f(d.fiveNums[2])} (median) = ${count(d.values, d.fiveNums[1], d.fiveNums[2])} Items</title>`);
-        boxplots.select('.box line:last-of-type')
-          .style('stroke', d => d.color)
-          .html(d => `<title>${d.name}: ${f(d.fiveNums[2])} (median) - ${f(d.fiveNums[3])} (q3) = ${count(d.values, d.fiveNums[2], d.fiveNums[3])} Items</title>`);
-        boxplots.select('.whisker path:last-of-type')
-          .html(d => `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`);
-
-        const bgs = whisers.selectAll('rect').data(d => [d, d]).join('rect');
-        bgs
-          .attr('x', (d, i) => this.scaleX(Math.min(d.whiskers[i].start, d.whiskers[i].end)))
-          .attr('y', this.boxHeight * -0.5)
-          .attr('width', (d, i) => this.scaleX(Math.abs(d.whiskers[i].start - d.whiskers[i].end)))
-          .attr('height', this.boxHeight)
-          .style('fill', 'transparent')
-          .html((d, i) => (i === 0
-            ? `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`
-            : `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`));
-      }).catch(() => {
-        throw new Error('BoxPlot draw failed');
-      });
+          const bgs = whiskers.selectAll('rect').data(d => [d, d]).join('rect');
+          bgs
+            .attr('x', (d, i) => this.scaleX(Math.min(d.whiskers[i].start, d.whiskers[i].end)))
+            .attr('y', this.boxHeight * -0.5)
+            .attr('width', (d, i) => this.scaleX(Math.abs(d.whiskers[i].start - d.whiskers[i].end)))
+            .attr('height', this.boxHeight)
+            .style('fill', 'transparent')
+            .html((d, i) => (i === 0
+              ? `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`
+              : `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`));
+        });
     },
   },
 };
@@ -177,8 +178,7 @@ export default {
 
 <template lang="pug">
 .main(v-resize:throttle="onResize")
-  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
-      :data-update="reactiveUpdate")
+  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
     g.master
       g.axes
       g.plot
