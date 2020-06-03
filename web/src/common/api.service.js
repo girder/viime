@@ -5,7 +5,7 @@ import VueAxios from 'vue-axios';
 const ApiService = {
   init() {
     Vue.use(VueAxios, axios);
-    Vue.axios.defaults.baseURL = '/api/v1';
+    Vue.axios.defaults.baseURL = `${process.env.VUE_APP_SERVER_ADDRESS}/api/v1`;
   },
 
   buildUrl(path, args) {

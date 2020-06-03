@@ -2,6 +2,7 @@ import os
 
 import dotenv
 from flask import current_app, Flask, jsonify
+from flask_cors import CORS
 from flask_migrate import Migrate
 from marshmallow import ValidationError
 from webargs.flaskparser import parser
@@ -50,6 +51,9 @@ def create_app(config=None):
 
     config = config or {}
     app = Flask(__name__)
+
+    # enable CORS for all API calls
+    CORS(app, resources={'/api/*': {'origins': '*'}})
 
     app.wsgi_app = ProxyFix(app.wsgi_app)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
