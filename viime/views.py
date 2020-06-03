@@ -580,6 +580,8 @@ def save_validated_csv_file(csv_id: str):
 def serialize_validated_table(validated_table: ValidatedMetaboliteTable):
     try:
         return validated_metabolite_table_schema.dump(validated_table)
+    except ValidationError as ve:
+        raise ve
     except Exception as e:
         current_app.logger.exception(e)
         raise ValidationError('Error applying data transformation')

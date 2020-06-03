@@ -4,6 +4,7 @@ from marshmallow import ValidationError
 import pandas as pd
 from sklearn import preprocessing
 
+
 NORMALIZATION_METHODS = {'minmax', 'sum', 'reference-sample', 'weight-volume'}
 
 
@@ -47,4 +48,6 @@ def reference_sample(table: pd.DataFrame, argument) -> pd.DataFrame:
 
 
 def weight_volume(table: pd.DataFrame, argument, sample_metadata: pd.DataFrame):
+    if sample_metadata.dtypes[argument].name != 'float64':
+        raise ValidationError('Column contains non-numeric data')
     return 100 * table.div(sample_metadata.loc[:, argument], axis=0)
