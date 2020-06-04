@@ -23,7 +23,7 @@ const serverURL = (new URL('/api/v1', process.env.VUE_APP_SERVER_ADDRESS)).href;
 ApiService.init(serverURL);
 store.dispatch(LOAD_SESSION, new SessionStore(window));
 
-if (process.env.NODE_ENV === 'production') {
+if (process.env.CONTEXT === 'production') {
   SentryInit({
     dsn: 'https://8a16de58c96648daa122b63a5db9b404@sentry.io/1814179',
     release: COMMITHASH,
