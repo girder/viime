@@ -38,6 +38,7 @@ export default {
       search: [], // nodes being searched for
       currentUserInput: '', // the text currently typed in search box
       searchBarResults: new Set(), // current results from autocomplete search box
+      excludedSearchBarResults: new Set(),
     };
   },
 
@@ -89,13 +90,31 @@ export default {
   },
   methods: {
     searchFilter(item, queryText, itemText) {
-      const match = itemText.toLocaleLowerCase().indexOf(queryText.toLocaleLowerCase()) > -1;
-      if (match) this.searchBarResults.add(itemText);
-      else this.searchBarResults.delete(itemText);
+      const match = itemText.toLocaleLowerCase().indexOf(queryText.toLocaleLowerCase()) > -1
+                    && !this.excludedSearchBarResults.has(itemText);
+      if (match) {
+        this.searchBarResults.add(itemText);
+      } else {
+        this.searchBarResults.delete(itemText);
+      }
       return match;
     },
-    clearSearch() {
-      this.currentUserInput = '';
+    clearSearch(event) {
+      event.stopPropagation();
+      this.search = [];
+      this.currentUserInput = ''; // clear search box
+      this.searchBarResults = new Set(); // unhighlight search result nodes
+    },
+    removeNodeFromSearchResults(event, data) {
+      event.stopPropagation();
+      this.excludedSearchBarResults.add(data.item);
+      // add and remove empty string to trigger
+      // refresh of search results
+      if (this.currentUserInput) {
+        this.currentUserInput = this.currentUserInput.concat(' ');
+      }
+      this.currentUserInput = this.currentUserInput
+        .substring(0, this.currentUserInput.length - 1);
     },
   },
 };
@@ -128,12 +147,20 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
         v-autocomplete.searchBar(v-model="search",
             :search-input.sync="currentUserInput",
             :items="nodes.map(node => node.id)",
+            v-slot:item='data',
+            chips,
             multiple,
             auto-select-first,
             :filter="searchFilter"
             @change="clearSearch")
+          template
+            v-icon.closePillButton(v-text="'mdi-alpha-x-circle'",
+                style="padding-right: 12px;",
+                @click="(e) => removeNodeFromSearchResults(e, data)")
+            span(v-text="data.item")
+
       span.searchBarContainers
-        v-icon(style="color: red;" @click='search = []', v-text="'mdi-cancel'")
+        v-icon(@click='(e) => clearSearch(e)', v-text="'mdi-delete'")
 
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
@@ -158,6 +185,10 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
 </template>
 
 <style scoped>
+
+.closePillButton:hover {
+  color: red;
+}
 
 .searchBarContainers {
   display: inline-block;
