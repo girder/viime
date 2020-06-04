@@ -18,7 +18,9 @@ import { SessionStore } from './utils';
 Vue.use(Vuetify, vuetifyConfig);
 Vue.config.productionTip = false;
 
-ApiService.init();
+const serverURL = (new URL('/api/v1', process.env.VUE_APP_SERVER_ADDRESS)).href;
+
+ApiService.init(serverURL);
 store.dispatch(LOAD_SESSION, new SessionStore(window));
 
 if (process.env.NODE_ENV === 'production') {
