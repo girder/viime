@@ -86,13 +86,6 @@ export default {
     nodeCount() {
       return this.nodes.length;
     },
-    autoCompleteItems() {
-      // return a list of items for autocomplete search results.
-      // insert newline if item is a certain length to prevent
-      // text running out of search box. TODO: eliminate space in dropdown menu
-      const lineLength = 8;
-      return this.nodes.map(node => (node.id.length > lineLength ? node.id.match(new RegExp(`.{${lineLength}}`, 'g')).join('\n') : node.id));
-    },
   },
   methods: {
     searchFilter(item, queryText, itemText) {
@@ -131,16 +124,16 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Search
     v-card.mx-3(flat)
-      v-autocomplete(v-model="search", disable-resize-watcher, style="padding-left: 6%; maxWidth: 80%",
-          :search-input.sync="currentUserInput",
-          :items="autoCompleteItems",
-          multiple,
-          auto-select-first,
-          :filter="searchFilter"
-          @change="clearSearch")
-        template(v-slot:append-outer='')
-          span(style="min-width: 90%;")
-          v-icon(style="color: red;" @click='search = []', v-text="'mdi-cancel'")
+      span.searchBarContainers
+        v-autocomplete.searchBar(v-model="search",
+            :search-input.sync="currentUserInput",
+            :items="nodes.map(node => node.id)",
+            multiple,
+            auto-select-first,
+            :filter="searchFilter"
+            @change="clearSearch")
+      span.searchBarContainers
+        v-icon(style="color: red;" @click='search = []', v-text="'mdi-cancel'")
 
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
@@ -165,6 +158,16 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
 </template>
 
 <style scoped>
+
+.searchBarContainers {
+  display: inline-block;
+  margin-left: 1em;
+}
+
+.searchBar {
+  max-width: 100px;
+  overflow: hidden;
+}
 
 .minCorrelation {
   padding-top: 16px;
