@@ -32,6 +32,7 @@ setup(
         'alembic',
         'dogpile.cache',
         'flask',
+        'flask-cors',
         'flask-migrate',
         'flask-sqlalchemy',
         'marshmallow>=3.0.0',

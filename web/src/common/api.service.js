@@ -3,9 +3,9 @@ import axios from 'axios';
 import VueAxios from 'vue-axios';
 
 const ApiService = {
-  init() {
+  init(serverURL) {
     Vue.use(VueAxios, axios);
-    Vue.axios.defaults.baseURL = '/api/v1';
+    Vue.axios.defaults.baseURL = serverURL;
   },
 
   buildUrl(path, args) {
