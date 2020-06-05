@@ -80,6 +80,23 @@ export default {
       return scalePow().exponent(2).domain([this.minStrokeValue, 1]).range([1, 8])
         .clamp(true);
     },
+    graphAdjacencyList() {
+      // return an adjacency list representation of the correlation network graph
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+      const adjList = [];
+
+      // Initialize empty adjacency list for each node
+      nodes.each((node) => {
+        adjList[node.id] = [];
+      });
+
+      edges.each((edge) => {
+        adjList[edge.source.id].push(edge.target.id);
+        adjList[edge.target.id].push(edge.source.id);
+      });
+      return adjList;
+    },
   },
   watch: {
     search(searchedNodes) {
@@ -100,6 +117,8 @@ export default {
         this.showOnlyWithinOneStep(this.search);
       } else if (visibleNodes === 2) {
         this.showOnlyWithinTwoSteps(this.search);
+      } else if (visibleNodes === 3) {
+        this.showConnectedComponent(this.search);
       }
     },
   },
@@ -312,21 +331,23 @@ export default {
       this.height = bb.height;
     },
     showAllNodes() {
+      // show all nodes in the graph
       const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
       const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
       nodes.style('visibility', '');
       edges.style('visibility', '');
     },
-    showOnlyWithinOneStep(nodesConnectedTo) {
+    showOnlyWithinOneStep(startingNodes) {
+      // only show nodes that share an edge with each node in startingNodes
       const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
       const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
-      const visibleNodesSet = new Set(nodesConnectedTo);
+      const visibleNodesSet = new Set(startingNodes);
       const visibleEdgesSet = new Set();
       edges.each((d) => {
-        if (nodesConnectedTo.includes(d.source.id)) {
+        if (startingNodes.includes(d.source.id)) {
           visibleNodesSet.add(d.target.id);
           visibleEdgesSet.add(d.index);
-        } else if (nodesConnectedTo.includes(d.target.id)) {
+        } else if (startingNodes.includes(d.target.id)) {
           visibleNodesSet.add(d.source.id);
           visibleEdgesSet.add(d.index);
         }
@@ -334,17 +355,40 @@ export default {
       nodes.style('visibility', node => (visibleNodesSet.has(node.id) ? '' : 'hidden'));
       edges.style('visibility', edge => (visibleEdgesSet.has(edge.index) ? '' : 'hidden'));
     },
-    showOnlyWithinTwoSteps(nodesConnectedTo) {
+    showOnlyWithinTwoSteps(startingNodes) {
+      // only show nodes reachable by traversing 2 edges starting at each node in startingNodes
       const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
-      const additional = [];
+      const additional = []; // nodes that are strictly 2 edges away from a startingNode
       edges.each((edge) => {
-        if (nodesConnectedTo.includes(edge.source.id)) {
+        if (startingNodes.includes(edge.source.id)) {
           additional.push(edge.target.id);
-        } else if (nodesConnectedTo.includes(edge.target.id)) {
+        } else if (startingNodes.includes(edge.target.id)) {
           additional.push(edge.source.id);
         }
       });
-      this.showOnlyWithinOneStep([...nodesConnectedTo, ...additional]);
+      this.showOnlyWithinOneStep([...startingNodes, ...additional]);
+    },
+    showConnectedComponent(startingNodes) {
+      // only show nodes in the same connected component(s) as the nodes in startingNodes
+      const bfsQueue = [...startingNodes]; // avoid modifying starting nodes directly
+      const connectedComponent = new Set(startingNodes);
+      const processedNodes = new Set(); // nodes that have already been traversed
+
+      // perform breadth-first search to identify connected components
+      for (let currentNode = bfsQueue.shift(); currentNode; currentNode = bfsQueue.shift()) {
+        this.graphAdjacencyList[currentNode].forEach((node) => {
+          if (!processedNodes.has(node)) {
+            bfsQueue.push(node);
+            processedNodes.add(node);
+          }
+        });
+        connectedComponent.add(currentNode);
+      }
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+      nodes.style('visibility', node => (connectedComponent.has(node.id) ? '' : 'hidden'));
+      edges.style('visibility', edge => ((connectedComponent.has(edge.source.id)
+          || connectedComponent.has(edge.target.id)) ? '' : 'hidden'));
     },
   },
 };

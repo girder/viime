@@ -169,7 +169,8 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
       span.searchBarContainers
         v-icon(@click='(e) => clearSearch(e)', v-text="'mdi-delete'")
 
-      v-radio-group(v-model='searchNodeVisibility')
+      v-radio-group(v-model='searchNodeVisibility',
+          :disabled="search.length === 0")
             v-radio(:label="'Show all'",
                 :value="0")
             v-radio(:label="'Show within 1 step'",
