@@ -178,7 +178,7 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
             v-radio(:label="'Show within 2 steps'",
                 :value="2")
             v-radio(:label="'Show all reachable'",
-                :value="3")
+                :value="Infinity")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Advanced Options
