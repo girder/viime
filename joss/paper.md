@@ -346,4 +346,10 @@ Range Scaling, Vast Scaling, Level Scaling). All preprocessing functions were
 programmed in R. After preprocessing, the dataset is ready for input into the
 analysis methods.
 
+# Acknowledgments
+
+This project has been funded in whole or in part with Federal funds from the
+National Cancer Institute, National Institutes of Health, Department of Health
+and Human Services, under Contract No. HHSN261201800044C (UPIID 75N91018C00044).
+
 # References
