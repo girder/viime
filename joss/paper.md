@@ -36,7 +36,7 @@ affiliations:
     index: 4
   - name: Department of BioHealth Informatics, Indiana University School of Informatics and Computing
     index: 5
-  - name: Department of Anesthesiology and Pain Medicine, University of Washington School of Medicine
+  - name: Department of Anesthesiology and Pain Medicine, University of Washington
     index: 6
   - name: Department of Otolaryngology--Head and Neck Surgery, Indiana University School of Medicine
     index: 7
@@ -49,12 +49,12 @@ bibliography: paper.bib
 
 Metabolomics involves the comprehensive measurement of metabolites from a
 biological system. The resulting metabolite profiles are influenced by genetics,
-lifestyle, diet and environment and therefore provides a more holistic
+lifestyle, biological stresses, disease, diet and the environment and therefore provides a more holistic
 biological readout of the pathological condition of the organism [@beger:2016;
 @wishart:2016]. The challenge for metabolomics is that no single analytical
 platform can provide a truly comprehensive coverage of the metabolome. The most
 commonly used platforms are based on mass-spectrometry (MS) and nuclear magnetic
-resonance (NMR) methods. Investigators are increasingly using both methods to
+resonance (NMR). Investigators are increasingly using both methods to
 increase the metabolite coverage. The challenge for this type of multi-platform
 approach is that the data structure may be very different in these two
 platforms. For example, NMR data may be reported as a list of spectral features
@@ -64,10 +64,13 @@ millimolar. Some MS approaches can also provide data in the form of identified
 metabolite concentrations, but given the superior sensitivity of MS, the
 concentrations can be several orders of magnitude lower than for NMR. Other MS
 approaches yield data in the form of arbitrary response units where the dynamic
-range can be more than 6 orders of magnitude. Given the diversity of data
+range can be more than 6 orders of magnitude.
+Importantly, the variability and reproducibility of the data may differ across platforms.
+Given the diversity of data
 structures (i.e. magnitude and dynamic range) integrating the data from multiple
 platforms can be challenging.  This often leads investigators to analyze the
 datasets separately which prevents the observation of potentially interesting
+relationships and
 correlations between metabolites detected on different platforms.  Viime
 (VIsualization and Integration of Metabolomics Experiments)
 is an
@@ -80,29 +83,30 @@ and visualization is shown in Figure 1.
 ## Data Upload
 
 Data upload can be a cumbersome step in many data analysis packages.  Often the
-data must be in a specified format in order to be properly read and the details
+data must be provided in a specified format in order to be properly read and the details
 of the requisite format are not always clear.  To facilitate the easy import of
 data, we have designed an interactive drag and drop data upload interface which
 currently accepts .xlsx and .csv files.
 
-The UI begins with presenting the
-user with an upload screen, which shows whether any errors were encountered in
+The UI begins by presenting the
+user with an upload screen, which reports whether any errors were encountered in
 the file.
-The user then is able to correct any errors, designate any column as the primary
+The user then is able to correct any errors, designating any column as the primary
 ID, masked/hidden, a factor, the group, or a metabolite concentration column
-(see Figure 1). The table view underwent significant refactoring of the client
-and server to support tables that scale to hundreds of rows and thousands of
-columns.
+(see Figure 1). The table view and its associated server support
+have been designed
+to support tables that scale to hundreds of rows and thousands of
+columns, enabling support for a wide range of experimental data sizes.
  
 ![The data ingestion view.](figures/figure1.png)
 
 Any errors encountered during parsing are prompted for correction. Errors that
 are detected include levels of missing data that exceed a default threshold
 within a group or across all samples, non-numeric data in concentration data,
-the lack of a primary ID, non-uniqueness of the primary ID. The UI guides the
-user through each error and warning until the data is ready for analysis. In
-this case, a low-variance metabolite is being flagged for possible omission from
-analysis (see Figure 2).
+the lack of a primary ID, and non-uniqueness of the primary ID. The UI guides the
+user through each error and warning until the data is ready for analysis. As
+seen in Figure 2, a low-variance metabolite is being flagged for possible omission from
+analysis.
 
 ![The ingestion error and warning panel.](figures/figure2.png)
 
@@ -159,7 +163,9 @@ use of principal component analysis (PCA) to examine the similarity and
 dissimilarity of individual groups in the dataset for different data treatment
 options. Viime provides an interactive PCA score plot, showing how the
 selection of each treatment option affects the separation of the individual
-groups in the data.  A loadings plot shows how each treatment option affects
+groups in the data.
+In this way, a user can quickly examine a number of different treatments to better understand their data.
+A loadings plot shows how each treatment option affects
 the contributions of the metabolites to the separations.  Often data with no
 transformation or scaling may be dominated by only a few of the very high
 concentration metabolites.  In those cases, some separation of the groups may be
@@ -186,25 +192,25 @@ altered metabolites.
 
 To simultaneously visualize the magnitude of the change in a metabolite along
 with the statistical significance of that change, Viime offers an interactive volcano
-plot option.  As shown in Figure 8, the horizontal axis is the Log2 Fold change
-while the vertical axis is the -log10 of the p-value.  This type of plot is useful
-when making two-group comparisons and the specific pairs can be selected from
+plot option.  As shown in Figure 8, the horizontal axis displays the Log2 Fold change
+while the vertical axis displays the -log10 of the p-value.  This type of plot is useful
+when making two-group comparisons; the specific group pairs can be selected from
 the Group Combination menu.  The minimum fold change and p-values can be
-interactively adjusted to highlight more or less metabolite changes.    
+interactively adjusted to highlight larger or smaller metabolite changes.    
 
 ### Heatmaps
 
 Heatmaps of the data can be generated to help visualize metabolites changes
 (Figure 6).  The metabolite filter option on the Heatmaps page allows the option
 to include all metabolites in the heatmap versus only the significant
-metabolites.  When the dataset is the integration of multiple datasets, the
+metabolites.  When the dataset is comprised of data from multiple platforms, the
 metabolite filter option also enables the selection of data from any of the
-separate input datasets.   The Sample Filter option allows only specific groups
+separate platforms.   The Sample Filter option allows only specific groups
 of samples to be included in the heatmap.  The metabolite color option changes
-the color along with vertical axis related to the metabolites.  The options
+the color along with the vertical axis related to the metabolites.  The options
 include coloring based on significance or based on data source.  Hierarchical
 clustering analysis is carried out on both the samples and metabolites to help
-cluster the most similar sample and metabolite patterns.  Both of these can be
+cluster the most similar sample and metabolite patterns.  Both of these options can be
 toggled on or off if it would be beneficial to maintain the order of the samples
 and/or metabolites in the heatmap. 
 
@@ -228,7 +234,7 @@ significance.  The advanced options enable all metabolite nodes or edges to be
 labeled.  The minimum correlation used for visualization can be interactively
 adjusted.  Using the left mouse button the map can be moved and using the wheel,
 the map can be expanded.  To help clean up and interrogate the data, individual
-metabolites can be selected, moved and pinned in the map.  This enables the
+metabolites can be selected, moved and pinned in the map.  This enables a
 cleaner visualization of selected metabolite groups.  Hovering over nodes or
 edges brings up the metabolite identification information and the strength of
 the correlations respectively.
@@ -248,7 +254,7 @@ the link encodes the strength of the correlation.
 
 Volcano plots (see Figure 8) were added to the software to highlight the
 metabolites that meet a specified threshold for fold change and significance
-(p-value). For datasets with only two groups the data from the Wilcoxon analysis
+(p-value). For datasets with only two groups, the data from the Wilcoxon analysis
 is plotted. Interactive threshold adjustments for both fold change and p-value
 enable a simplified view. For datasets with more than two groups, the data from
 an ANOVA analysis is used and has options to plot data from selected groups.
