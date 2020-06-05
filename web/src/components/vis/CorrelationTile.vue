@@ -39,6 +39,7 @@ export default {
       currentUserInput: '', // the text currently typed in search box
       searchBarResults: new Set(), // current results from autocomplete search box
       excludedSearchBarResults: new Set(),
+      searchNodeVisibility: 0,
     };
   },
 
@@ -87,6 +88,12 @@ export default {
     nodeCount() {
       return this.nodes.length;
     },
+    visibleNodes() {
+      if (this.search === []) {
+        return 0;
+      }
+      return this.searchNodeVisibility;
+    },
   },
   methods: {
     searchFilter(item, queryText, itemText) {
@@ -100,16 +107,16 @@ export default {
       return match;
     },
     clearSearch(event) {
-      event.stopPropagation();
+      event.preventDefault();
       this.search = [];
       this.currentUserInput = ''; // clear search box
       this.searchBarResults = new Set(); // unhighlight search result nodes
     },
     removeNodeFromSearchResults(event, data) {
-      event.stopPropagation();
+      event.preventDefault();
       this.excludedSearchBarResults.add(data.item);
       // add and remove empty string to trigger
-      // refresh of search results
+      // refresh of search results. TODO: find better way to do this
       if (this.currentUserInput) {
         this.currentUserInput = this.currentUserInput.concat(' ');
       }
@@ -162,6 +169,15 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
       span.searchBarContainers
         v-icon(@click='(e) => clearSearch(e)', v-text="'mdi-delete'")
 
+      v-radio-group(v-model='searchNodeVisibility')
+            v-radio(:label="'Show all'",
+                :value="0")
+            v-radio(:label="'Show within 1 step'",
+                :value="1")
+            v-radio(:label="'Show within 2 steps'",
+                :value="2")
+            v-radio(:label="'Show all reachable'",
+                :value="3")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Advanced Options
@@ -181,7 +197,8 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
         :show-edge-labels="showEdgeLabels",
         :min-stroke-value="min_correlation",
         :search="search",
-        :filtered-items="searchResults")
+        :filtered-items="searchResults",
+        :visibleNodes="visibleNodes")
 </template>
 
 <style scoped>

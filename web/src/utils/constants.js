@@ -242,4 +242,6 @@ export {
 
   measurementColumnName,
   measurementValueName,
+
+  search_visibility_options,
 };

@@ -54,6 +54,10 @@ export default {
       type: Array,
       required: true,
     },
+    visibleNodes: {
+      type: Number,
+      default: 0,
+    },
   },
   data() {
     return {
@@ -88,6 +92,15 @@ export default {
       const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g');
       nodes.select('circle').style('stroke', d => (filteredItems.includes(d.id) ? 'red' : d.color));
       nodes.select('circle').style('stroke-width', d => (filteredItems.includes(d.id) ? '2' : '1'));
+    },
+    visibleNodes(visibleNodes) {
+      if (visibleNodes === 0) {
+        this.showAllNodes();
+      } else if (visibleNodes === 1) {
+        this.showOnlyWithinOneStep(this.search);
+      } else if (visibleNodes === 2) {
+        this.showOnlyWithinTwoSteps(this.search);
+      }
     },
   },
   mounted() {
@@ -297,6 +310,41 @@ export default {
       const bb = this.$el.getBoundingClientRect();
       this.width = bb.width;
       this.height = bb.height;
+    },
+    showAllNodes() {
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+      nodes.style('visibility', '');
+      edges.style('visibility', '');
+    },
+    showOnlyWithinOneStep(nodesConnectedTo) {
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+      const visibleNodesSet = new Set(nodesConnectedTo);
+      const visibleEdgesSet = new Set();
+      edges.each((d) => {
+        if (nodesConnectedTo.includes(d.source.id)) {
+          visibleNodesSet.add(d.target.id);
+          visibleEdgesSet.add(d.index);
+        } else if (nodesConnectedTo.includes(d.target.id)) {
+          visibleNodesSet.add(d.source.id);
+          visibleEdgesSet.add(d.index);
+        }
+      });
+      nodes.style('visibility', node => (visibleNodesSet.has(node.id) ? '' : 'hidden'));
+      edges.style('visibility', edge => (visibleEdgesSet.has(edge.index) ? '' : 'hidden'));
+    },
+    showOnlyWithinTwoSteps(nodesConnectedTo) {
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+      const additional = [];
+      edges.each((edge) => {
+        if (nodesConnectedTo.includes(edge.source.id)) {
+          additional.push(edge.target.id);
+        } else if (nodesConnectedTo.includes(edge.target.id)) {
+          additional.push(edge.source.id);
+        }
+      });
+      this.showOnlyWithinOneStep([...nodesConnectedTo, ...additional]);
     },
   },
 };
