@@ -172,7 +172,7 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
                   @click="(e) => removeNodeFromSearchResults(e, data)")
               span(v-text="data.item")
       span.searchBarContainers
-        v-icon(@click="(e) => clearSearch(e)", v-text="'mdi-delete'")
+        v-icon(@click="clearSearch", v-text="'mdi-delete'")
       v-btn.searchBarContainers(v-text="'Unhide Nodes'",
       @click="clearExcludedNodes",
       :disabled="excludedSearchBarResults.length === 0")
