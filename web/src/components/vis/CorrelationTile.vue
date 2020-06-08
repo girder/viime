@@ -154,31 +154,32 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
         v-autocomplete.searchBar(v-model="search",
             :search-input.sync="currentUserInput",
             :items="nodes.map(node => node.id)",
-            v-slot:item='data',
+            v-slot:item="data",
             chips,
             multiple,
+            deletable-chips,
             auto-select-first,
-            :filter="searchFilter"
+            :filter="searchFilter",
             @change="clearSearch")
-          template
+          template(:disabled="true")
             v-icon.closePillButton(v-text="'mdi-alpha-x-circle'",
                 style="padding-right: 12px;",
                 @click="(e) => removeNodeFromSearchResults(e, data)")
             span(v-text="data.item")
 
       span.searchBarContainers
-        v-icon(@click='(e) => clearSearch(e)', v-text="'mdi-delete'")
+        v-icon(@click="(e) => clearSearch(e)", v-text="'mdi-delete'")
 
-      v-radio-group(v-model='searchNodeVisibility',
+      v-radio-group(v-model="searchNodeVisibility",
           :disabled="search.length === 0")
-            v-radio(:label="'Show all'",
-                :value="0")
-            v-radio(:label="'Show within 1 step'",
-                :value="1")
-            v-radio(:label="'Show within 2 steps'",
-                :value="2")
-            v-radio(:label="'Show all reachable'",
-                :value="Infinity")
+        v-radio(:label="'Show all'",
+            :value="0")
+        v-radio(:label="'Show within 1 step'",
+            :value="1")
+        v-radio(:label="'Show within 2 steps'",
+            :value="2")
+        v-radio(:label="'Show all reachable'",
+            :value="Infinity")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Advanced Options
@@ -199,7 +200,8 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
         :min-stroke-value="min_correlation",
         :search="search",
         :filtered-items="searchResults",
-        :visibleNodes="visibleNodes")
+        :visible-nodes="visibleNodes")
+
 </template>
 
 <style scoped>
