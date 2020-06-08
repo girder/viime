@@ -84,7 +84,7 @@ export default [
     icon: vuetify.icons.metaboliteTable,
   },
   {
-    path: 'wilcoxon_volacno',
+    path: 'wilcoxon_volcano',
     name: 'Wilcoxon test (Volcano Plot)',
     shortName: 'Wilcoxon Volcano Plot',
     description() {

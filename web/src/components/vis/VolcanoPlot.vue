@@ -66,9 +66,11 @@ export default {
       this.update();
     },
   },
+  mounted() {
+    this.update();
+  },
   methods: {
     update() {
-      //
       // Compute the total variance in all the PCs.
       const svg = select(this.$refs.svg);
       this.axisPlot(svg);
