@@ -50,8 +50,7 @@ export default {
     pcXval: {
       handler(val) {
         const pcX = Number.parseInt(val, 10);
-        // eslint-disable-next-line no-restricted-globals
-        if (!isNaN(pcX)) {
+        if (!Number.isNaN(pcX)) {
           this.pcX = pcX;
         }
       },
@@ -60,8 +59,7 @@ export default {
     pcYval: {
       handler(val) {
         const pcY = Number.parseInt(val, 10);
-        // eslint-disable-next-line no-restricted-globals
-        if (!isNaN(pcY)) {
+        if (!Number.isNaN(pcY)) {
           this.pcY = pcY;
         }
       },
