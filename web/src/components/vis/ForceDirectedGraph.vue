@@ -111,11 +111,7 @@ export default {
       nodes.select('circle').style('stroke-width', d => (filteredItems.includes(d.id) ? '2' : '1'));
     },
     visibleNodes(visibleNodes) {
-      if (visibleNodes === 0) {
-        this.showNodesWithinPathLength(this.nodes.map(node => node.id), Infinity);
-      } else {
-        this.showNodesWithinPathLength(this.search, visibleNodes);
-      }
+      this.showNodesWithinPathLength(this.search, visibleNodes);
     },
   },
   mounted() {
@@ -328,9 +324,15 @@ export default {
     },
     showNodesWithinPathLength(startingNodes, maxDistance) {
       // Restricts visible nodes to those within a certain path length of each
-      // node in startingNodes.
+      // node in startingNodes. Shows all nodes and edges if maxDistance = 0.
       const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
       const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+
+      if (maxDistance === 0) {
+        nodes.style('visibility', 'visible');
+        edges.style('visibility', 'visible');
+        return;
+      }
 
       const bfsQueue = [...startingNodes]; // avoid modifying starting nodes directly
       const discoveredNodes = new Set(); // nodes that have already been traversed
@@ -357,10 +359,11 @@ export default {
               bfsQueue.push(node);
               discoveredNodes.add(node);
 
-              // only add edge as visible if it's not the last iteration 
+              // only add edge as visible if it's not the last iteration
               // (to prevent edges with only one node)
               if (i !== maxDistance) {
                 visibleEdges[currentNode].add(node);
+                visibleEdges[node].add(currentNode);
               }
             }
           });
