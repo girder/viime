@@ -112,6 +112,9 @@ export default {
       this.currentUserInput = ''; // clear search box
       this.searchBarResults = new Set(); // unhighlight search result nodes
     },
+    clearExcludedNodes() {
+      this.excludedSearchBarResults = [];
+    },
     removeNodeFromSearchResults(event, data) {
       event.stopPropagation();
       this.excludedSearchBarResults.push(data.item);
@@ -165,11 +168,14 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
           template(v-slot:item="data")
             v-chip
               v-icon.closePillButton(v-text="'mdi-alpha-x-circle'",
-                  style="margin-right: 12px;",
+                  style="margin-right: 12px; float: right;",
                   @click="(e) => removeNodeFromSearchResults(e, data)")
               span(v-text="data.item")
       span.searchBarContainers
         v-icon(@click="(e) => clearSearch(e)", v-text="'mdi-delete'")
+      v-btn.searchBarContainers(v-text="'Unhide Nodes'",
+      @click="clearExcludedNodes",
+      :disabled="excludedSearchBarResults.length === 0")
 
       v-radio-group(v-model="searchNodeVisibility",
           :disabled="search.length === 0")
