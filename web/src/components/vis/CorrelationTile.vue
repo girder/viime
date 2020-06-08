@@ -38,7 +38,7 @@ export default {
       search: [], // nodes being searched for
       currentUserInput: '', // the text currently typed in search box
       searchBarResults: new Set(), // current results from autocomplete search box
-      excludedSearchBarResults: new Set(),
+      excludedSearchBarResults: [],
       searchNodeVisibility: 0,
     };
   },
@@ -80,7 +80,7 @@ export default {
     },
     searchResults() {
       // if input is empty, don't highlight any nodes
-      if (this.currentUserInput === '') {
+      if (!this.currentUserInput || this.currentUserInput.trim() === '') {
         return [];
       }
       return Array.from(this.searchBarResults);
@@ -97,8 +97,8 @@ export default {
   },
   methods: {
     searchFilter(item, queryText, itemText) {
-      const match = itemText.toLocaleLowerCase().indexOf(queryText.toLocaleLowerCase()) > -1
-                    && !this.excludedSearchBarResults.has(itemText);
+      const match = itemText.toLocaleLowerCase().indexOf(queryText.trim().toLocaleLowerCase()) > -1
+                    && !this.excludedSearchBarResults.includes(itemText);
       if (match) {
         this.searchBarResults.add(itemText);
       } else {
@@ -113,15 +113,15 @@ export default {
       this.searchBarResults = new Set(); // unhighlight search result nodes
     },
     removeNodeFromSearchResults(event, data) {
-      event.preventDefault();
-      this.excludedSearchBarResults.add(data.item);
-      // add and remove empty string to trigger
-      // refresh of search results. TODO: find better way to do this
-      if (this.currentUserInput) {
-        this.currentUserInput = this.currentUserInput.concat(' ');
+      event.stopPropagation();
+      this.excludedSearchBarResults.push(data.item);
+      // add char to search box to trigger rerender
+      // of search results.
+      // TODO: find better way to do this
+      if (!this.currentUserInput) {
+        this.currentUserInput = '';
       }
-      this.currentUserInput = this.currentUserInput
-        .substring(0, this.currentUserInput.length - 1);
+      this.currentUserInput = this.currentUserInput.concat('\n');
     },
   },
 };
@@ -153,20 +153,21 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
       span.searchBarContainers
         v-autocomplete.searchBar(v-model="search",
             :search-input.sync="currentUserInput",
-            :items="nodes.map(node => node.id)",
-            v-slot:item="data",
+            :items="nodes.map(node => node.id)\
+                    .filter(node => !excludedSearchBarResults.includes(node))",
             chips,
             multiple,
             deletable-chips,
             auto-select-first,
+            hide-selected,
             :filter="searchFilter",
             @change="clearSearch")
-          template(:disabled="true")
-            v-icon.closePillButton(v-text="'mdi-alpha-x-circle'",
-                style="padding-right: 12px;",
-                @click="(e) => removeNodeFromSearchResults(e, data)")
-            span(v-text="data.item")
-
+          template(v-slot:item="data")
+            v-chip
+              v-icon.closePillButton(v-text="'mdi-alpha-x-circle'",
+                  style="margin-right: 12px;",
+                  @click="(e) => removeNodeFromSearchResults(e, data)")
+              span(v-text="data.item")
       span.searchBarContainers
         v-icon(@click="(e) => clearSearch(e)", v-text="'mdi-delete'")
 
@@ -199,9 +200,9 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
         :show-edge-labels="showEdgeLabels",
         :min-stroke-value="min_correlation",
         :search="search",
-        :filtered-items="searchResults",
+        :filtered-items="searchResults.filter(node => !excludedSearchBarResults.has(node))",
+        :excluded-search-results="excludedSearchBarResults",
         :visible-nodes="visibleNodes")
-
 </template>
 
 <style scoped>
@@ -217,7 +218,7 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
 
 .searchBar {
   max-width: 100px;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .minCorrelation {

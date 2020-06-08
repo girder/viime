@@ -54,6 +54,10 @@ export default {
       type: Array,
       required: true,
     },
+    excludedSearchResults: {
+      type: Array, // must be Array since Vue doesn't watch for changes to Set objects
+      required: true,
+    },
     visibleNodes: {
       type: Number,
       default: 0,
@@ -112,6 +116,13 @@ export default {
     },
     visibleNodes(visibleNodes) {
       this.showNodesWithinPathLength(this.search, visibleNodes);
+    },
+    excludedSearchResults(excluded) {
+      // hide nodes that have been deleted from search results
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+      nodes.style('visibility', node => (excluded.includes(node.id) ? 'hidden' : ''));
+      edges.style('visibility', edge => (excluded.includes(edge.source.id) || excluded.includes(edge.target.id) ? 'hidden' : 'visible'));
     },
   },
   mounted() {
@@ -288,7 +299,7 @@ export default {
 
       nodes.select('circle')
         .attr('r', this.radius)
-        .style('fill', d => (this.search && this.search.includes(d.id) ? 'red' : d.color))
+        .style('fill', d => (this.search.includes(d.id) ? 'red' : d.color))
         .on('click', resetPinned)
         .call(drag()
           .container(function container() {
@@ -370,8 +381,11 @@ export default {
           visibleNodes.add(currentNode);
         }
       }
-      nodes.style('visibility', node => (visibleNodes.has(node.id) ? '' : 'hidden'));
-      edges.style('visibility', edge => (visibleEdges[edge.source.id].has(edge.target.id) || visibleEdges[edge.target.id].has(edge.source.id) ? '' : 'hidden'));
+      nodes.style('visibility', node => (visibleNodes.has(node.id) && !this.excludedSearchResults.includes(node.id) ? '' : 'hidden'));
+      edges.style('visibility', edge => ((visibleEdges[edge.source.id]
+        .has(edge.target.id) || visibleEdges[edge.target.id].has(edge.source.id))
+        && !this.excludedSearchResults.includes(edge.source.id)
+        && !this.excludedSearchResults.includes(edge.target.id) ? '' : 'hidden'));
     },
   },
 };
