@@ -69,7 +69,7 @@ export default {
       handler(val) {
         const numComponents = Number.parseInt(val, 10);
         // eslint-disable-next-line no-restricted-globals
-        if (!isNaN(numComponents)) {
+        if (!Number.isNaN(numComponents)) {
           this.numComponents = numComponents;
         }
       },
