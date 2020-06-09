@@ -116,7 +116,7 @@ export default {
       this.excludedSearchBarResults = [];
     },
     removeNodeFromSearchResults(event, data) {
-      event.stopPropagation();
+      // event.stopPropagation();
       this.excludedSearchBarResults.push(data.item);
       // add char to search box to trigger rerender
       // of search results.
@@ -147,43 +147,50 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
               @change="changePlotArgs({min_correlation: $event})")
     metabolite-filter(title="Node Filter", :dataset="dataset", v-model="metaboliteFilter",
         :not-selected-color="colors.correlationNode", selection-last)
-    metabolite-colorer(title="Node Color", :dataset="dataset", v-model="metaboliteColor",
-        :not-selected-color="colors.correlationNode", selection-last)
+    //- metabolite-colorer(title="Node Color", :dataset="dataset", v-model="metaboliteColor",
+    //-     :not-selected-color="colors.correlationNode", selection-last)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Search
-    v-card.mx-3(flat)
-      span.searchBarContainers
-        v-autocomplete.searchBar(v-model="search",
+    v-card.mx-3.px-2(flat)
+      div
+        v-autocomplete(
+            v-model="search",
             :search-input.sync="currentUserInput",
             :items="nodes.map(node => node.id)\
                     .filter(node => !excludedSearchBarResults.includes(node))",
             chips,
             multiple,
+            dense,
             deletable-chips,
             auto-select-first,
             hide-selected,
+            hide-details,
             :filter="searchFilter",
             @change="clearSearch")
           template(v-slot:item="data")
-            v-chip
-              v-icon.closePillButton(v-text="'mdi-alpha-x-circle'",
-                  style="margin-right: 12px; float: right;",
-                  @click="(e) => removeNodeFromSearchResults(e, data)")
+            v-chip(
+                close,
+                small,
+                @input="removeNodeFromSearchResults($event, data)")
               span(v-text="data.item")
-      span.searchBarContainers
-        v-icon(@click="clearSearch", v-text="'mdi-delete'")
-      v-btn.searchBarContainers(v-text="'Unhide Nodes'",
+      v-btn.my-0.mx-0.mt-2(small, flat, @click="clearSearch")
+        v-icon.pr-2 mdi-close
+        | Clear Selections
+      v-btn.my-0.mx-0(small, flat,
           @click="clearExcludedNodes",
           :disabled="excludedSearchBarResults.length === 0")
-
-      v-radio-group(v-model="searchNodeVisibility",
+        v-icon.pr-2 mdi-eye
+        | Unhide Nodes
+      v-radio-group.pb-3(
+          hide-details
+          v-model="searchNodeVisibility",
           :disabled="search.length === 0")
         v-radio(:label="'Show all'",
             :value="0")
-        v-radio(:label="'Show within 1 step'",
+        v-radio(:label="'Show depth 1'",
             :value="1")
-        v-radio(:label="'Show within 2 steps'",
+        v-radio(:label="'Show depth 2'",
             :value="2")
         v-radio(:label="'Show all reachable'",
             :value="Infinity")
@@ -212,21 +219,6 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
 </template>
 
 <style scoped>
-
-.closePillButton:hover {
-  color: red;
-}
-
-.searchBarContainers {
-  display: inline-block;
-  margin-left: 1em;
-}
-
-.searchBar {
-  max-width: 100px;
-  overflow: auto;
-}
-
 .minCorrelation {
   padding-top: 16px;
 }
