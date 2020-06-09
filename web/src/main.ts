@@ -18,9 +18,19 @@ import { SessionStore } from './utils';
 Vue.use(Vuetify, vuetifyConfig);
 Vue.config.productionTip = false;
 
-const serverURL = (new URL('/api/v1', process.env.VUE_APP_SERVER_ADDRESS)).href;
+let serverUrl;
 
-ApiService.init(serverURL);
+try {
+  serverUrl = (new URL('/api/v1', process.env.VUE_APP_SERVER_ADDRESS)).href;
+} catch {
+  if (process.env.NODE_ENV !== 'production') {
+    serverUrl = '/api/v1';
+  } else {
+    throw new Error('Must set VUE_APP_SERVER_ADDRESS in production');
+  }
+}
+
+ApiService.init(serverUrl);
 store.dispatch(LOAD_SESSION, new SessionStore(window));
 
 if (process.env.CONTEXT === 'production') {

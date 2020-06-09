@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e903293ee003e5346835e63803c8de87e7fb6538bced10ca93d263123157f3d0"
+            "sha256": "701eca715a8ed756d4ba4c863e64c4d5b18f739d34ea8fcf68e08beff08f44c6"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -25,10 +25,10 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:1d987a998c75633c40847cc966fcf5904906c920a7f17ef374f5aa4282abd304",
-                "sha256:51fcb31174be6e6664c5f69e3e1691a2d72a1a12e90f872cbdb1567eb47b6519"
+                "sha256:5ad7e9a056d25ffa5082862e36f119f7f7cec6457fa07ee2f8c339814b80c9b1",
+                "sha256:9cd41137dc19af6a5e03b630eefe7d1f458d964d406342dd3edf625839b944cc"
             ],
-            "version": "==2020.4.5.1"
+            "version": "==2020.4.5.2"
         },
         "chardet": {
             "hashes": [
@@ -76,7 +76,6 @@
                 "sha256:72170423eb4612f0847318afff8c247b38bd516b7737adfc10d1c2cdbb382d16",
                 "sha256:f4d97201660e6bbcff2d89d082b5b6d31abee04b1b3003ee073a6fd25ad1d69a"
             ],
-            "index": "pypi",
             "version": "==3.0.8"
         },
         "flask-migrate": {
