@@ -16,8 +16,8 @@ from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from viime.models import AXIS_NAME_TYPES, clean, CSVFile, CSVFileSchema, db, \
     GroupLevelSchema, ModifyLabelListSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
-    TableColumn, TableColumnSchema, TableRow, \
-    TableRowSchema, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
+    TableColumnSchema, TableRowSchema, \
+    ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
 from viime.normalization import validate_normalization_method
 from viime.plot import pca
 from viime.scaling import SCALING_METHODS
@@ -27,8 +27,8 @@ from viime.transformation import TRANSFORMATION_METHODS
 
 csv_file_schema = CSVFileSchema()
 modify_label_list_schema = ModifyLabelListSchema()
-table_column_schema = TableColumnSchema(exclude=['csv_file'])
-table_row_schema = TableRowSchema(exclude=['csv_file'])
+table_column_schema = TableColumnSchema()
+table_row_schema = TableRowSchema()
 validation_schema = ValidationSchema()
 validated_metabolite_table_schema = ValidatedMetaboliteTableSchema()
 
@@ -163,21 +163,19 @@ def merge_csv_files(name: str, description: str, method: str, datasets: List[str
         if row_types:
             # update the row types
             for row, row_type in zip(csv_file.rows, row_types):
-                row.row_type = row_type['type']
-                row.subtype = row_type.get('subtype')
-                row.meta = row_type.get('meta')
-                db.session.add(row)
+                row['row_type'] = row_type['type']
+                row['subtype'] = row_type.get('subtype')
+                row['meta'] = row_type.get('meta')
 
         if column_types:
             # update the row types
             for column, column_type in zip(csv_file.columns, column_types):
-                column.column_type = column_type['type']
-                column.subtype = column_type.get('subtype')
-                column.meta = column_type.get('meta')
-                db.session.add(column)
+                column['column_type'] = column_type['type']
+                column['subtype'] = column_type.get('subtype')
+                column['meta'] = column_type.get('meta')
 
         # need to call it manually since we might have changed the column types
-        csv_file.derive_group_levels(clear_caches=True)
+        csv_file.derive_group_levels()
 
         db.session.add(csv_file)
         db.session.flush()
@@ -326,8 +324,6 @@ def delete_csv_file(csv_id: str):
     csv_file = CSVFile.query.get_or_404(csv_id)
 
     try:
-        TableRow.query.filter_by(csv_file_id=csv_id).delete()
-        TableColumn.query.filter_by(csv_file_id=csv_id).delete()
         db.session.delete(csv_file)
         db.session.commit()
     except Exception:
@@ -379,18 +375,15 @@ def set_imputation_options(csv_id: str, **kwargs):
 # Row/Column API
 @csv_bp.route('/csv/<uuid:csv_id>/column', methods=['GET'])
 def list_columns(csv_id: str):
-    CSVFile.query.get_or_404(csv_id)  # ensure the file exists
-    return jsonify(table_column_schema.dump(
-        TableColumn.query.filter_by(csv_file_id=csv_id),
-        many=True
-    ))
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    return jsonify(csv_file.columns)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/column/<int:column_index>', methods=['GET'])
 def get_column(csv_id: str, column_index: int):
-    return jsonify(table_column_schema.dump(
-        TableColumn.query.get_or_404((csv_id, column_index))
-    ))
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    column = csv_file.columns[column_index]
+    return jsonify(column)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/batch/label', methods=['PUT'])
@@ -403,22 +396,18 @@ def batch_modify_label(csv_id: str):
         index = change['index']
         label = change['label']
         context = change['context']
-
         if context == AXIS_NAME_TYPES.ROW:
-            row = TableRow.query.get_or_404((csv_id, index))
+            row = csv_file.rows[index]
             if label == TABLE_ROW_TYPES.INDEX:
                 csv_file.header_row_index = index
-            setattr(row, 'row_type', label)
-            db.session.add(row)
-
+            row['row_type'] = label
         elif context == AXIS_NAME_TYPES.COLUMN:
-            column = TableColumn.query.get_or_404((csv_id, index))
+            column = csv_file.columns[index]
             if label == TABLE_COLUMN_TYPES.INDEX:
                 csv_file.key_column_index = index
             elif label == TABLE_COLUMN_TYPES.GROUP:
                 csv_file.group_column_index = index
-            setattr(column, 'column_type', label)
-            db.session.add(column)
+            column['column_type'] = label
 
     db.session.add(csv_file)
 
@@ -432,18 +421,15 @@ def batch_modify_label(csv_id: str):
 
 @csv_bp.route('/csv/<uuid:csv_id>/row', methods=['GET'])
 def list_rows(csv_id: str):
-    CSVFile.query.get_or_404(csv_id)  # ensure the file exists
-    return jsonify(table_row_schema.dump(
-        TableRow.query.filter_by(csv_file_id=csv_id),
-        many=True
-    ))
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    return jsonify(csv_file.rows)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/row/<int:row_index>', methods=['GET'])
 def get_row(csv_id: str, row_index: int):
-    return jsonify(table_row_schema.dump(
-        TableRow.query.get_or_404((csv_id, row_index))
-    ))
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    row = csv_file.rows[row_index]
+    return jsonify(row)
 
 
 def _update_row_types(csv_file: CSVFile, row_types: Optional[List[Dict[str, Any]]]):
@@ -454,10 +440,9 @@ def _update_row_types(csv_file: CSVFile, row_types: Optional[List[Dict[str, Any]
     count_current = len(csv_file.rows)
     # update the row types
     for row, row_type in zip(csv_file.rows, row_types):
-        row.row_type = row_type['type']
-        row.subtype = row_type.get('subtype')
-        row.meta = row_type.get('meta')
-        db.session.add(row)
+        row['row_type'] = row_type['type']
+        row['subtype'] = row_type.get('subtype')
+        row['meta'] = row_type.get('meta')
 
     if count_target > count_current:
         # create missing
@@ -467,7 +452,7 @@ def _update_row_types(csv_file: CSVFile, row_types: Optional[List[Dict[str, Any]
                 'row_type': row_type
             })
             csv_file.rows.append(row)
-            db.session.add(row)
+
     elif count_target < count_current:
         # delete extra
         for row in csv_file.rows[count_target:]:
@@ -484,10 +469,9 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[List[Dict[str
     # update the column types
 
     for column, column_type in zip(csv_file.columns, column_types):
-        column.column_type = column_type['type']
-        column.subtype = column_type.get('subtype')
-        column.meta = column_type.get('meta')
-        db.session.add(column)
+        column['column_type'] = column_type['type']
+        column['subtype'] = column_type.get('subtype')
+        column['meta'] = column_type.get('meta')
 
     if count_target > count_current:
         # create missing
@@ -497,7 +481,6 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[List[Dict[str
                 'column_type': column_type
             })
             csv_file.columns.append(column)
-            db.session.add(column)
 
     elif count_target < count_current:
         # delete extra
@@ -530,7 +513,7 @@ def remerge_csv_file(csv_id: str, method: Optional[str]):
         _update_row_types(csv_file, row_types)
 
         # need to call it manually since we might have changed the column types
-        csv_file.derive_group_levels(clear_caches=True)
+        csv_file.derive_group_levels()
 
         meta = csv_file.meta.copy()
         meta.update({
