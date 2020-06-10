@@ -100,14 +100,17 @@ export default {
       return this.eigenvalues || [];
     },
 
+    numComponentsInternal() {
+      return Math.min(this.numComponents, this.eigenvaluesInternal.length);
+    },
+
     scaleX() {
       const {
-        numComponents,
+        numComponentsInternal,
         dwidth,
       } = this;
 
-      const labels = [...Array(numComponents).keys()].map(d => d + 1);
-
+      const labels = [...Array(numComponentsInternal).keys()].map(d => d + 1);
       return scalePoint()
         .domain(labels)
         .range([0, dwidth]);
@@ -177,7 +180,7 @@ export default {
         cumulativePercents,
         fadeInDuration,
         duration,
-        numComponents,
+        numComponentsInternal,
         showCutoffs,
         cutoffs,
       } = this;
@@ -199,7 +202,7 @@ export default {
         eigenvalue: d,
         percent: percents[i],
         cumPercent: cumulativePercents[i],
-      })).slice(0, numComponents);
+      })).slice(0, numComponentsInternal);
 
       const pctFormat = format('.2%');
       const floatFormat = format('.2f');
@@ -254,7 +257,7 @@ export default {
         .attr('cy', d => this.scaleY(d.eigenvalue));
 
       // Plot the line.
-      const pathData = [...Array(numComponents).keys()].map(i => [
+      const pathData = [...Array(numComponentsInternal).keys()].map(i => [
         this.scaleX(i + 1),
         this.scaleY(eigenvaluesInternal[i]),
       ]);
@@ -266,9 +269,8 @@ export default {
 
       const lineFunc = line();
       const curPath = svg.select('path.line').attr('d');
-      const startPath = curPath ? `${curPath}L${curPath.split('L').slice(-1)[0]}` : lineFunc(pathDataNull);
+      const startPath = curPath || lineFunc(pathDataNull);
       const endPath = lineFunc(pathData);
-
       svg.select('path.line')
         .attr('d', startPath)
         .transition()
@@ -279,7 +281,7 @@ export default {
       const drawCutoff = (which, where) => {
         const cutoff = svg.select(`line.cutoff${which}`);
 
-        if (where === null || where >= numComponents) {
+        if (where === null || where === 0 || where >= numComponentsInternal) {
           cutoff.style('opacity', 0.0);
           return;
         }
