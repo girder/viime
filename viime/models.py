@@ -1,4 +1,5 @@
 from collections import namedtuple
+from dataclasses import dataclass
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -117,6 +118,22 @@ class CSVFile(BaseModel):
                                                 'remote(SampleGroup.name)',
                                     order_by='CSVFile.name')
 
+    column_json = db.Column(JSONType, nullable=False, default=list)
+    row_json = db.Column(JSONType, nullable=False, default=list)
+
+    @property
+    def columns(self) -> List['TableColumn']:
+        # TODO: serialization will involve needlessly converting to the dataclass representing and
+        #       back, we can optimize this later.
+        return [TableColumn(**c) for c in self.column_json]
+
+    @columns.setter
+    def columns(self, columns: List['TableColumn']):
+        # TODO: this will be very inefficient for setting properties on single columns, but
+        #       we can optimize later.
+        table_column_schema = TableColumnSchema()
+        self.column_json = table_column_schema.dump(columns, many=True)
+
     @property
     def table_validation(self):
         """Return a list of issues with the table or None if everything is okay."""
@@ -177,6 +194,7 @@ class CSVFile(BaseModel):
     def size(self) -> int:
         return Path(self.uri).stat().st_size
 
+    # update this property like key_column_index
     @hybrid_property
     def header_row_index(self):
         return _header_row_index(self)
@@ -204,35 +222,38 @@ class CSVFile(BaseModel):
 
     @property
     def headers(self):
-        return _headers(self)
+        return [c.column_header for c in self.columns]
 
-    @hybrid_property
+    @property
     def key_column_index(self):
         column = self.find_first_entity(
             lambda c: c.column_type == TABLE_COLUMN_TYPES.INDEX, self.columns)
         return column and column.column_index
 
-    @key_column_index.expression  # type: ignore
-    def key_column_index(self):  # noqa: N805
-        return TableColumn.query\
-            .filter_by(csv_file_id=self.id, column_type=TABLE_COLUMN_TYPES.INDEX)\
-            .with_entities(TableColumn.column_index)\
-            .scalar()
-
     @key_column_index.setter  # type: ignore
     def key_column_index(self, value: Optional[int]):
+        columns = self.columns
         if self.key_column_index is not None:
-            old_column = self.columns[self.key_column_index]
+            old_column = columns[self.key_column_index]
             old_column.column_type = TABLE_COLUMN_TYPES.METADATA
-            db.session.add(old_column)
+
+            self.columns = columns  # update the json representation
+            db.session.add(self)
+
+            # this will likely not be needed as most of the request local
+            # caching will be unnecessary
             clear_cache()
 
         if value is not None:
-            new_column = self.columns[value]
+            new_column = columns[value]
             new_column.column_type = TABLE_COLUMN_TYPES.INDEX
-            db.session.add(new_column)
+
+            self.columns = columns  # update the json representation
+            db.session.add(self)
+
             clear_cache()
 
+    # update group_column_index like above
     @hybrid_property
     def group_column_index(self):
         return _group_column_index(self)
@@ -306,6 +327,26 @@ class CSVFile(BaseModel):
         cls._save_csv_file_data(csv_file.uri, table)
         row_types, column_types = _guess_table_structure(csv_file.table)
 
+        # TODO: get from row_types list
+        header_row_index = 0
+        headers = _headers(csv_file, header_row_index)
+        columns: List[TableColumn] = []
+        last_data_column_index = 0
+        for index, column_type in enumerate(column_types):
+            data_column_index = None
+            if column_type == TABLE_COLUMN_TYPES.DATA:
+                last_data_column_index += 1
+                data_column_index = last_data_column_index
+
+            columns.append(TableColumn(
+                csv_file=csv_file,
+                column_index=index,
+                column_type=column_type,
+                data_column_index=data_column_index,
+                column_header=headers[index],
+            ))
+
+        # do something similar for the rows
         rows: List[TableRow] = []
         table_row_schema = TableRowSchema()
         for index, row_type in enumerate(row_types):
@@ -314,14 +355,6 @@ class CSVFile(BaseModel):
             }))
 
         csv_file.rows = rows
-
-        columns: List[TableColumn] = []
-        table_column_schema = TableColumnSchema()
-        for index, column_type in enumerate(column_types):
-            columns.append(table_column_schema.load({
-                'csv_file_id': id, 'column_index': index, 'column_type': column_type
-            }))
-
         csv_file.columns = columns
         csv_file.derive_group_levels()
 
@@ -421,37 +454,20 @@ class SampleGroupSchema(BaseSchema):
     files = fields.List(fields.Nested(CSVFileSchema, only=['id', 'name', 'description']))
 
 
-class TableColumn(BaseModel):
-    csv_file_id = db.Column(UUIDType(binary=False), db.ForeignKey('csv_file.id'), primary_key=True)
-    column_index = db.Column(db.Integer, primary_key=True)
-    column_type = db.Column(db.String, nullable=False)
-    subtype = db.Column(db.String, nullable=True)
-    meta = db.Column(JSONType, nullable=True)
+# replace TableColumn model with something like this (similar for TableRow)
+@dataclass
+class TableColumn:
+    csv_file: CSVFile
 
-    csv_file = db.relationship(
-        CSVFile, backref=db.backref('columns', lazy=True, order_by='TableColumn.column_index'))
+    # index into the raw csv file
+    column_index: int
+    column_type: str
+    subtype: Optional[str]
+    meta: Dict[str, Any]
 
-    @property
-    def data_column_index(self):
-        return _data_column_index(self)
-
-    @property
-    def column_header(self):
-        return self.csv_file.headers[self.column_index]
-
-    @property
-    def missing_percent(self) -> Optional[float]:
-        if self.column_type == TABLE_COLUMN_TYPES.DATA:
-            return self.csv_file._stats and \
-                self.csv_file._stats['columns']['missing'][self.data_column_index]
-        return None
-
-    @property
-    def data_variance(self) -> Optional[float]:
-        if self.column_type == TABLE_COLUMN_TYPES.DATA:
-            return self.csv_file._stats and \
-                self.csv_file._stats['columns']['variance'][self.data_column_index]
-        return None
+    # index into the sample table
+    data_column_index: Optional[int]
+    column_header: str
 
 
 class TableColumnSchema(BaseSchema):
@@ -559,8 +575,8 @@ def _header_row_index(csv_file: CSVFile) -> Optional[int]:
 
 
 @region.cache_on_arguments()
-def _headers(csv_file: CSVFile) -> List[str]:
-    idx = csv_file.header_row_index
+def _headers(csv_file: CSVFile, header_row_index=None) -> List[str]:
+    idx = header_row_index or csv_file.header_row_index
     if idx is None:
         return [
             f'col{i + 1}' for i in range(csv_file.table.shape[1])
