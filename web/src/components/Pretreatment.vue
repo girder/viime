@@ -79,52 +79,63 @@ v-layout.pretreatment-component(row, fill-height)
             :class="{ active: problemData.type === problem && dataset.id === id}",
             :inactive="!problemData.clickable",
             :key="problemData.title")
-          v-list-tile-title
+          v-list-tile-action
             v-icon.pr-1(
                 :color="problemData.severity") {{ $vuetify.icons[problemData.severity] }}
-            | {{ problemData.title }}
-            span(v-if="problemData.data") ({{ problemData.data.length }})
-            v-tooltip(v-else, top)
-              template(#activator="{ on }")
-                v-icon.pr-1(small, v-on="on") {{ $vuetify.icons.info }}
-              span {{ problemData.description }}
+          v-list-tile-content
+            v-list-tile-title
+              | {{ problemData.title }}
+              span(v-if="problemData.data") ({{ problemData.data.length }})
+              v-tooltip(v-else, top)
+                template(#activator="{ on }")
+                  v-icon.pr-1(small, v-on="on") {{ $vuetify.icons.info }}
+                span {{ problemData.description }}
 
         v-list-tile(:to="{ name: 'Impute Table', params: { id: dataset.id } }",
             v-show="!isMerged(dataset)")
-          v-list-tile-title
+          v-list-tile-action
             v-icon.pr-1 {{ $vuetify.icons.tableEdit }}
-            | Impute Table
+          v-list-tile-content
+            v-list-tile-title
+              | Impute Table
 
         v-list-tile(:to="{ name: 'Transform Table', params: { id: dataset.id } }",
             :disabled="!valid(dataset)", v-show="!isMerged(dataset)")
-          v-list-tile-title
+          v-list-tile-action
             v-icon.pr-1 {{ $vuetify.icons.bubbles }}
-            | Transform Table
-
-        v-list-group(
-            no-action,
-            sub-group,
-            :class="{ active: $route.name === 'Analyze Data' && dataset.id === id}")
-          template(#activator)
-            v-list-tile(
-                :to="{ name: 'Analyze Data', params: { id: dataset.id } }",
-                exact,
-                :disabled="!valid(dataset)")
-              v-list-tile-title
-                v-icon.pr-1 {{ $vuetify.icons.cogs }}
-                | Analyze Table
-          v-list-tile(v-for="a in analyses", :key="a.path",
-              :to="{ name: a.shortName, params: { id: dataset.id } }",
-              :disabled="!valid(dataset)")
+          v-list-tile-content
             v-list-tile-title
-              v-icon.pr-1(:style="a.iconStyle") {{ a.icon || $vuetify.icons.compare }}
-              | {{a.shortName}}
+              | Transform Table
+
+        v-list
+          v-list-group(
+              :class="{ active: $route.name === 'Analyze Data' && dataset.id === id}")
+            template(#activator)
+              v-list-tile(
+                  :to="{ name: 'Analyze Data', params: { id: dataset.id } }",
+                  exact,
+                  :disabled="!valid(dataset)")
+                v-list-tile-action
+                  v-icon.pr-1 {{ $vuetify.icons.cogs }}
+                v-list-tile-content
+                  v-list-tile-title
+                    | Analyze Table
+            v-list-tile(v-for="a in analyses", :key="a.path",
+                :to="{ name: a.shortName, params: { id: dataset.id } }",
+                :disabled="!valid(dataset)")
+              v-list-tile-action
+                v-icon.pr-1(:style="a.iconStyle") {{ a.icon || $vuetify.icons.compare }}
+              v-list-tile-content
+                v-list-tile-title
+                  | {{a.shortName}}
 
         v-list-tile(:to="{ name: 'Download Data', params: { id: dataset.id } }",
             :disabled="!valid(dataset)")
-          v-list-tile-title
+          v-list-tile-action
             v-icon.pr-1 {{ $vuetify.icons.fileDownload }}
-            | Download Data
+          v-list-tile-content
+            v-list-tile-title
+              | Download Data
 
   router-view
 </template>
