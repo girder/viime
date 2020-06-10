@@ -489,7 +489,7 @@ const actions = {
           commit(SET_LOADING, false);
           commit(SET_PLOT, { dataset_id, name, obj: { loading: false, data: d, valid: true } });
         } catch (err) {
-          commit(SET_PLOT, { dataset_id, name, obj: { loading: false, valid: false } });
+          commit(SET_PLOT, { dataset_id, name, obj: { loading: false, valid: true } });
           commit(SET_LOADING, err);
           throw err;
         }

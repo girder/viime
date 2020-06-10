@@ -281,8 +281,8 @@ export default {
       return this.rowConfig.dendrogram ? this.width * DENDROGRAM_RATIO : 0;
     },
     matrixDimensions() {
-      let width = this.width - this.rowDendrogramWidth - LABEL_WIDTH;
-      let height = this.height - this.columnDendrogramHeight - LABEL_WIDTH;
+      let width = Math.max(this.width - this.rowDendrogramWidth - LABEL_WIDTH, 0);
+      let height = Math.max(this.height - this.columnDendrogramHeight - LABEL_WIDTH, 0);
       if (this.layout === 'squareCells') {
         const wx = width / this.columnLeaves.length;
         const hy = height / this.rowLeaves.length;
