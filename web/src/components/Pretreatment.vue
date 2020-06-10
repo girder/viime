@@ -70,9 +70,11 @@ v-layout.pretreatment-component(row, fill-height)
                 | {{ $vuetify.icons.check }}
 
         v-list-tile(:to="{ name: 'Clean Up Table', params: { id: dataset.id } }", exact)
-          v-list-tile-title
+          v-list-tile-action
             v-icon {{ $vuetify.icons.tableEdit }}
-            | Clean Up Table
+          v-list-tile-content
+            v-list-tile-title
+              | Clean Up Table
 
         v-list-tile(v-for="problemData in dataset.validation",
             @click="problemNav(problemData)",
