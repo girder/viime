@@ -110,7 +110,9 @@ export default {
             file.status = 'done';
           } catch (err) {
             file.status = 'error';
-            file.meta = err.response.data;
+            if (err.response) {
+              file.meta = err.response.data;
+            }
             throw err;
           }
         });
