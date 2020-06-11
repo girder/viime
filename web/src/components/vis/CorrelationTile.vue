@@ -189,10 +189,10 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
         v-icon.pr-2 mdi-eye
         | Unhide Nodes
       v-select.py-2(
-        hide-details
-        v-model="searchNodeVisibility",
-        :disabled="search.length === 0"
-        :items="depthOptions")
+          hide-details,
+          v-model="searchNodeVisibility",
+          :disabled="search.length === 0",
+          :items="depthOptions")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Advanced Options
