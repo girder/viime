@@ -62,6 +62,10 @@ function covar(xs, ys) {
 // Port of Python function from:
 //      https://matplotlib.org/gallery/statistics/confidence_ellipse.html
 function confidenceEllipse(x, y, std, xScale, yScale) {
+  if (x.length < 2 || y.length < 2) {
+    // cannot generate an ellipse for less than two data points
+    return { rx: 0, ry: 0, transform: '' };
+  }
   // cov = np.cov(x, y)
   const xdev = deviation(x);
   const ydev = deviation(y);
@@ -410,6 +414,7 @@ export default {
 
     toggleEllipse(which) {
       this.ellipseVisible[which] = !this.ellipseVisible[which];
+      this.update();
       return this.ellipseVisible[which];
     },
 
@@ -438,6 +443,13 @@ export default {
         return;
       }
 
+      const [xData, yData] = pcPoints;
+      if (xData.includes(undefined) || yData.includes(undefined)) {
+        // undefined data indicates an out of bounds pcX or pcY
+        // no point in trying to render invalid data
+        return;
+      }
+
       const fmt = format('.2%');
       const x = `PC${pcX} (${fmt(pcVariances[0])})`;
       const y = `PC${pcY} (${fmt(pcVariances[1])})`;
@@ -452,7 +464,6 @@ export default {
         height,
       });
 
-      const [xData, yData] = pcPoints;
       const grouped = this.grouped(xData, yData);
 
       const groups = Object.keys(grouped);
@@ -477,7 +488,7 @@ export default {
       const newCols = columns.map(d => d[0])
         .filter(d => !d.endsWith('_x'));
 
-      // Draw the C3 chart, unloding the existing data first if the column names
+      // Draw the C3 chart, unloading the existing data first if the column names
       // have changed.
       await c3LoadWait(this.chart, {
         columns,
