@@ -98,13 +98,13 @@ export default {
 
   watch: {
     async currentUserInput(newval) {
-      if (newval === '') {
-        this.highlightedItems = new Set();
-      } else {
+      if (newval) {
         await this.$nextTick(); // wait for the filter function to populate the result set
         const highlighted = new Set(this.searchBarResults);
         this.excludedSearchBarResults.forEach(item => highlighted.delete(item));
         this.highlightedItems = highlighted;
+      } else {
+        this.highlightedItems = new Set();
       }
     },
   },
