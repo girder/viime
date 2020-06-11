@@ -146,7 +146,9 @@ export default {
         showCrosshairs,
       } = this;
 
-      if (pointsInternal.length === 0) {
+      if (pointsInternal.length === 0
+        || pointsInternal[0].loadings.length < pcX
+        || pointsInternal[0].loadings.length < pcY) {
         return;
       }
 
