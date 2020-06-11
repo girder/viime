@@ -127,6 +127,9 @@ export default {
       this.currentUserInput = ''; // clear search box
       this.searchBarResults = new Set(); // unhighlight search result nodes
     },
+    unselect(val) {
+      this.search.splice(this.search.indexOf(val), 1);
+    },
     clearExcludedNodes() {
       this.excludedSearchBarResults = new Set();
     },
@@ -175,9 +178,16 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
             hide-details,
             :filter="searchFilter")
           template(v-slot:item="data")
-            v-chip(smal)
-              v-icon.closePillButton.pr-2(@click.stop="removeNodeFromSearchResults($event, data)")
+            v-chip(small)
+              v-icon.closePillButton.pr-1(small,
+                  @click.stop="removeNodeFromSearchResults($event, data)")
                 | mdi-eye-off
+              span {{ data.item }}
+          template(v-slot:selection="data")
+            v-chip(small)
+              v-icon.closePillButton.pr-1(small,
+                  @click.stop="unselect(data.item)")
+                | mdi-close
               span {{ data.item }}
       v-btn.my-0.mx-0.mt-2(small, flat, @click="clearSearch")
         v-icon.pr-2 mdi-close
