@@ -46,6 +46,22 @@ export default {
       default: 0,
       required: false,
     },
+    search: {
+      type: Array,
+      required: true,
+    },
+    highlightedItems: {
+      type: Set,
+      required: true,
+    },
+    excludedItems: {
+      type: Set,
+      required: true,
+    },
+    visibleNodes: {
+      type: Number,
+      default: 0,
+    },
   },
   data() {
     return {
@@ -57,13 +73,6 @@ export default {
     };
   },
   computed: {
-    reactivePlotUpdate() {
-      if (!this.refsMounted) {
-        return '';
-      }
-      this.update();
-      return '';
-    },
     reactivePlotBoundsUpdate() {
       if (!this.refsMounted) {
         return '';
@@ -75,10 +84,54 @@ export default {
       return scalePow().exponent(2).domain([this.minStrokeValue, 1]).range([1, 8])
         .clamp(true);
     },
+    graphAdjacencyList() {
+      // return an adjacency list representation of the correlation network graph
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+      const adjList = [];
+
+      // Initialize empty adjacency list for each node
+      nodes.each((node) => {
+        adjList[node.id] = [];
+      });
+
+      edges.each((edge) => {
+        adjList[edge.source.id].push(edge.target.id);
+        adjList[edge.target.id].push(edge.source.id);
+      });
+      return adjList;
+    },
+  },
+  watch: {
+    search(searchedNodes) {
+      // highlights nodes being searched for
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g');
+      nodes.select('circle').style('fill', d => (searchedNodes.includes(d.id) ? 'red' : d.color));
+      this.showNodesWithinPathLength(this.search, this.visibleNodes);
+    },
+    highlightedItems(highlightedItems) {
+      // circles nodes in search results
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
+      nodes.style('stroke', d => (highlightedItems.has(d.id) ? 'red' : d.color));
+      nodes.style('stroke-width', d => (highlightedItems.has(d.id) ? '2' : '1'));
+    },
+    excludedItems(excluded) {
+      // circles nodes in search results
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+      // hide nodes that have been deleted from search results
+      nodes.style('visibility', node => (excluded.has(node.id) ? 'hidden' : ''));
+      edges.style('visibility', edge => (excluded.has(edge.source.id) || excluded.has(edge.target.id) ? 'hidden' : 'visible'));
+      this.showNodesWithinPathLength(this.search, this.visibleNodes);
+    },
+    visibleNodes(visibleNodes) {
+      this.showNodesWithinPathLength(this.search, visibleNodes);
+    },
   },
   mounted() {
     this.onResize();
     this.refsMounted = true;
+    this.update();
   },
   beforeDestroy() {
     this.simulation.stop();
@@ -249,7 +302,7 @@ export default {
 
       nodes.select('circle')
         .attr('r', this.radius)
-        .style('fill', d => d.color)
+        .style('fill', d => (this.search.includes(d.id) ? 'red' : d.color))
         .on('click', resetPinned)
         .call(drag()
           .container(function container() {
@@ -277,11 +330,74 @@ export default {
       simulation.force('link').links(localEdges);
 
       this.tick250();
+
+      this.showNodesWithinPathLength(this.search, this.visibleNodes);
     },
     onResize() {
       const bb = this.$el.getBoundingClientRect();
       this.width = bb.width;
       this.height = bb.height;
+    },
+    showNodesWithinPathLength(startingNodes, maxDistance) {
+      // Restricts visible nodes to those within a certain path length of each
+      // node in startingNodes. Shows all nodes and edges if maxDistance = 0.
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+
+      if (maxDistance === 0) {
+        nodes.style('visibility', node => (this.excludedItems.has(node.id) ? 'hidden' : 'visible'));
+        edges.style('visibility', edge => (this.excludedItems.has(edge.source.id) || this.excludedItems.has(edge.target.id) ? 'hidden' : 'visible'));
+        return;
+      }
+
+      const bfsQueue = [...startingNodes]; // avoid modifying starting nodes directly
+      const discoveredNodes = new Set(); // nodes that have already been traversed
+
+      const visibleNodes = new Set(); // nodes to make visible
+      const visibleEdges = []; // edges to make visible
+
+      // initialize visibleEdges
+      nodes.each((node) => {
+        visibleEdges[node.id] = new Set();
+      });
+
+      // perform breadth-first search, stopping at the maxDistance
+      // or when every possible node has been traversed.
+      for (let i = 0; i < maxDistance + 1; i += 1) {
+        const currentLevelLength = bfsQueue.length; // # of nodes in current level of BFS tree
+        if (currentLevelLength === 0) {
+          break; // stop if there are no more nodes
+        }
+        for (let j = 0; j < currentLevelLength; j += 1) {
+          const currentNode = bfsQueue.shift();
+          this.graphAdjacencyList[currentNode].forEach((node) => {
+            if (!discoveredNodes.has(node)) {
+              bfsQueue.push(node);
+              discoveredNodes.add(node);
+
+              // only add edge as visible if it's not the last iteration
+              // (to prevent edges with only one node)
+              if (i !== maxDistance) {
+                visibleEdges[currentNode].add(node);
+                visibleEdges[node].add(currentNode);
+              }
+            }
+          });
+          visibleNodes.add(currentNode);
+        }
+      }
+      nodes.style('visibility', node => (
+        (
+          visibleNodes.has(node.id) && !this.excludedItems.has(node.id)
+        ) ? '' : 'hidden'));
+      edges.style('visibility', edge => ((
+        (
+          visibleEdges[edge.source.id].has(edge.target.id)
+          || visibleEdges[edge.target.id].has(edge.source.id)
+        )
+        && !this.excludedItems.has(edge.source.id)
+        && !this.excludedItems.has(edge.target.id)
+      ) ? '' : 'hidden'));
     },
   },
 };
@@ -290,7 +406,7 @@ export default {
 <template lang="pug">
 .main(v-resize:throttle="onResize")
   svg.svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg",
-      :data-update="reactivePlotUpdate", :data-update-bounds="reactivePlotBoundsUpdate")
+      :data-update-bounds="reactivePlotBoundsUpdate")
     g.zoom
       g.edges(:class="{ hideLabels: !this.showEdgeLabels }")
       g.nodes(:class="{ hideLabels: !this.showNodeLabels }")
@@ -320,6 +436,11 @@ export default {
 .nodes >>> circle.pinned {
   stroke-width: 2;
   stroke: black;
+}
+
+.nodes >>> circle.searched {
+  stroke-width: 2;
+  stroke: red;
 }
 
 .nodes >>> text {
