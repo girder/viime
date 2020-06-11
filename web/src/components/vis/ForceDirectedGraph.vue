@@ -50,12 +50,12 @@ export default {
       type: Array,
       required: true,
     },
-    filteredItems: {
-      type: Array,
+    highlightedItems: {
+      type: Set,
       required: true,
     },
-    excludedSearchResults: {
-      type: Array, // must be Array since Vue doesn't watch for changes to Set objects
+    excludedItems: {
+      type: Set,
       required: true,
     },
     visibleNodes: {
@@ -108,21 +108,22 @@ export default {
       const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g');
       nodes.select('circle').style('fill', d => (searchedNodes.includes(d.id) ? 'red' : d.color));
     },
-    filteredItems(filteredItems) {
+    highlightedItems(highlightedItems) {
       // circles nodes in search results
-      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g');
-      nodes.select('circle').style('stroke', d => (filteredItems.includes(d.id) ? 'red' : d.color));
-      nodes.select('circle').style('stroke-width', d => (filteredItems.includes(d.id) ? '2' : '1'));
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
+      nodes.style('stroke', d => (highlightedItems.has(d.id) ? 'red' : d.color));
+      nodes.style('stroke-width', d => (highlightedItems.has(d.id) ? '2' : '1'));
+    },
+    excludedItems(excluded) {
+      // circles nodes in search results
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+      // hide nodes that have been deleted from search results
+      nodes.style('visibility', node => (excluded.has(node.id) ? 'hidden' : ''));
+      edges.style('visibility', edge => (excluded.has(edge.source.id) || excluded.has(edge.target.id) ? 'hidden' : 'visible'));
     },
     visibleNodes(visibleNodes) {
       this.showNodesWithinPathLength(this.search, visibleNodes);
-    },
-    excludedSearchResults(excluded) {
-      // hide nodes that have been deleted from search results
-      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
-      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
-      nodes.style('visibility', node => (excluded.includes(node.id) ? 'hidden' : ''));
-      edges.style('visibility', edge => (excluded.includes(edge.source.id) || excluded.includes(edge.target.id) ? 'hidden' : 'visible'));
     },
   },
   mounted() {
@@ -381,11 +382,18 @@ export default {
           visibleNodes.add(currentNode);
         }
       }
-      nodes.style('visibility', node => (visibleNodes.has(node.id) && !this.excludedSearchResults.includes(node.id) ? '' : 'hidden'));
-      edges.style('visibility', edge => ((visibleEdges[edge.source.id]
-        .has(edge.target.id) || visibleEdges[edge.target.id].has(edge.source.id))
-        && !this.excludedSearchResults.includes(edge.source.id)
-        && !this.excludedSearchResults.includes(edge.target.id) ? '' : 'hidden'));
+      nodes.style('visibility', node => (
+        (
+          visibleNodes.has(node.id) && !this.excludedItems.has(node.id)
+        ) ? '' : 'hidden'));
+      edges.style('visibility', edge => ((
+        (
+          visibleEdges[edge.source.id].has(edge.target.id)
+          || visibleEdges[edge.target.id].has(edge.source.id)
+        )
+        && !this.excludedItems.has(edge.source.id)
+        && !this.excludedItems.has(edge.target.id)
+      ) ? '' : 'hidden'));
     },
   },
 };

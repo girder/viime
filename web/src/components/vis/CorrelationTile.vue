@@ -38,7 +38,14 @@ export default {
       search: [], // nodes being searched for
       currentUserInput: '', // the text currently typed in search box
       searchBarResults: new Set(), // current results from autocomplete search box
-      excludedSearchBarResults: [],
+      excludedSearchBarResults: new Set(),
+      highlightedItems: new Set(),
+      depthOptions: [
+        { value: 0, text: 'Show all' },
+        { value: 1, text: 'Show 1' },
+        { value: 2, text: 'Show 2' },
+        { value: Infinity, text: 'Show reachable' },
+      ],
       searchNodeVisibility: 0,
     };
   },
@@ -78,13 +85,6 @@ export default {
             value: Math.abs(d.value),
           }));
     },
-    searchResults() {
-      // if input is empty, don't highlight any nodes
-      if (!this.currentUserInput || this.currentUserInput.trim() === '') {
-        return [];
-      }
-      return Array.from(this.searchBarResults);
-    },
     nodeCount() {
       return this.nodes.length;
     },
@@ -95,10 +95,26 @@ export default {
       return this.searchNodeVisibility;
     },
   },
+
+  watch: {
+    async currentUserInput(newval) {
+      if (newval) {
+        await this.$nextTick(); // wait for the filter function to populate the result set
+        const highlighted = new Set(this.searchBarResults);
+        this.excludedSearchBarResults.forEach(item => highlighted.delete(item));
+        this.highlightedItems = highlighted;
+      } else {
+        this.highlightedItems = new Set();
+      }
+    },
+  },
+
   methods: {
     searchFilter(item, queryText, itemText) {
-      const match = itemText.toLocaleLowerCase().indexOf(queryText.trim().toLocaleLowerCase()) > -1
-                    && !this.excludedSearchBarResults.includes(itemText);
+      const match = (itemText
+        .toLocaleLowerCase()
+        .indexOf(queryText.trim().toLocaleLowerCase()) > -1
+      ) && !this.excludedSearchBarResults.has(itemText);
       if (match) {
         this.searchBarResults.add(itemText);
       } else {
@@ -106,25 +122,19 @@ export default {
       }
       return match;
     },
-    clearSearch(event) {
-      event.preventDefault();
+    clearSearch() {
       this.search = [];
       this.currentUserInput = ''; // clear search box
       this.searchBarResults = new Set(); // unhighlight search result nodes
     },
+    unselect(val) {
+      this.search.splice(this.search.indexOf(val), 1);
+    },
     clearExcludedNodes() {
-      this.excludedSearchBarResults = [];
+      this.excludedSearchBarResults = new Set();
     },
     removeNodeFromSearchResults(event, data) {
-      event.stopPropagation();
-      this.excludedSearchBarResults.push(data.item);
-      // add char to search box to trigger rerender
-      // of search results.
-      // TODO: find better way to do this
-      if (!this.currentUserInput) {
-        this.currentUserInput = '';
-      }
-      this.currentUserInput = this.currentUserInput.concat('\n');
+      this.excludedSearchBarResults = new Set([...this.excludedSearchBarResults, data.item]);
     },
   },
 };
@@ -147,46 +157,49 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
               @change="changePlotArgs({min_correlation: $event})")
     metabolite-filter(title="Node Filter", :dataset="dataset", v-model="metaboliteFilter",
         :not-selected-color="colors.correlationNode", selection-last)
-    metabolite-colorer(title="Node Color", :dataset="dataset", v-model="metaboliteColor",
-        :not-selected-color="colors.correlationNode", selection-last)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Search
-    v-card.mx-3(flat)
-      span.searchBarContainers
-        v-autocomplete.searchBar(v-model="search",
+    v-card.mx-3.px-2(flat)
+      div
+        v-autocomplete(
+            v-model="search",
             :search-input.sync="currentUserInput",
             :items="nodes.map(node => node.id)\
-                    .filter(node => !excludedSearchBarResults.includes(node))",
+                    .filter(node => !excludedSearchBarResults.has(node))",
             chips,
             multiple,
+            dense,
             deletable-chips,
             auto-select-first,
             hide-selected,
-            :filter="searchFilter",
-            @change="clearSearch")
+            hide-details,
+            :filter="searchFilter")
           template(v-slot:item="data")
-            v-chip
-              v-icon.closePillButton(v-text="'mdi-alpha-x-circle'",
-                  style="margin-right: 12px; float: right;",
-                  @click="(e) => removeNodeFromSearchResults(e, data)")
-              span(v-text="data.item")
-      span.searchBarContainers
-        v-icon(@click="clearSearch", v-text="'mdi-delete'")
-      v-btn.searchBarContainers(v-text="'Unhide Nodes'",
+            v-chip(small)
+              v-icon.closePillButton.pr-1(small,
+                  @click.stop="removeNodeFromSearchResults($event, data)")
+                | mdi-eye-off
+              span {{ data.item }}
+          template(v-slot:selection="data")
+            v-chip(small)
+              v-icon.closePillButton.pr-1(small,
+                  @click.stop="unselect(data.item)")
+                | mdi-close
+              span {{ data.item }}
+      v-btn.my-0.mx-0.mt-2(small, flat, @click="clearSearch")
+        v-icon.pr-2 mdi-close
+        | Clear Selections
+      v-btn.my-0.mx-0(small, flat,
           @click="clearExcludedNodes",
-          :disabled="excludedSearchBarResults.length === 0")
-
-      v-radio-group(v-model="searchNodeVisibility",
-          :disabled="search.length === 0")
-        v-radio(:label="'Show all'",
-            :value="0")
-        v-radio(:label="'Show within 1 step'",
-            :value="1")
-        v-radio(:label="'Show within 2 steps'",
-            :value="2")
-        v-radio(:label="'Show all reachable'",
-            :value="Infinity")
+          :disabled="excludedSearchBarResults.size === 0")
+        v-icon.pr-2 mdi-eye
+        | Unhide Nodes
+      v-select.py-2(
+          hide-details,
+          v-model="searchNodeVisibility",
+          :disabled="search.length === 0",
+          :items="depthOptions")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Advanced Options
@@ -206,25 +219,14 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
         :show-edge-labels="showEdgeLabels",
         :min-stroke-value="min_correlation",
         :search="search",
-        :filtered-items="searchResults.filter(node => !excludedSearchBarResults.has(node))",
-        :excluded-search-results="excludedSearchBarResults",
+        :highlighted-items="highlightedItems",
+        :excluded-items="excludedSearchBarResults",
         :visible-nodes="visibleNodes")
 </template>
 
 <style scoped>
-
 .closePillButton:hover {
   color: red;
-}
-
-.searchBarContainers {
-  display: inline-block;
-  margin-left: 1em;
-}
-
-.searchBar {
-  max-width: 100px;
-  overflow: auto;
 }
 
 .minCorrelation {
