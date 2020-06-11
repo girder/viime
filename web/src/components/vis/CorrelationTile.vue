@@ -175,11 +175,10 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
             hide-details,
             :filter="searchFilter")
           template(v-slot:item="data")
-            v-chip(
-                close,
-                small,
-                @input="removeNodeFromSearchResults($event, data)")
-              span(v-text="data.item")
+            v-chip(smal)
+              v-icon.closePillButton.pr-2(@click.stop="removeNodeFromSearchResults($event, data)")
+                | mdi-eye-off
+              span {{ data.item }}
       v-btn.my-0.mx-0.mt-2(small, flat, @click="clearSearch")
         v-icon.pr-2 mdi-close
         | Clear Selections
@@ -218,6 +217,10 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
 </template>
 
 <style scoped>
+.closePillButton:hover {
+  color: red;
+}
+
 .minCorrelation {
   padding-top: 16px;
 }
