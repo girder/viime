@@ -107,6 +107,7 @@ export default {
       // highlights nodes being searched for
       const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g');
       nodes.select('circle').style('fill', d => (searchedNodes.includes(d.id) ? 'red' : d.color));
+      this.showNodesWithinPathLength(this.search, this.visibleNodes);
     },
     highlightedItems(highlightedItems) {
       // circles nodes in search results
@@ -121,6 +122,7 @@ export default {
       // hide nodes that have been deleted from search results
       nodes.style('visibility', node => (excluded.has(node.id) ? 'hidden' : ''));
       edges.style('visibility', edge => (excluded.has(edge.source.id) || excluded.has(edge.target.id) ? 'hidden' : 'visible'));
+      this.showNodesWithinPathLength(this.search, this.visibleNodes);
     },
     visibleNodes(visibleNodes) {
       this.showNodesWithinPathLength(this.search, visibleNodes);
@@ -328,6 +330,8 @@ export default {
       simulation.force('link').links(localEdges);
 
       this.tick250();
+
+      this.showNodesWithinPathLength(this.search, this.visibleNodes);
     },
     onResize() {
       const bb = this.$el.getBoundingClientRect();
@@ -341,8 +345,8 @@ export default {
       const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
 
       if (maxDistance === 0) {
-        nodes.style('visibility', 'visible');
-        edges.style('visibility', 'visible');
+        nodes.style('visibility', node => (this.excludedItems.has(node.id) ? 'hidden' : 'visible'));
+        edges.style('visibility', edge => (this.excludedItems.has(edge.source.id) || this.excludedItems.has(edge.target.id) ? 'hidden' : 'visible'));
         return;
       }
 

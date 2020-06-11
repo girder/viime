@@ -198,7 +198,6 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
       v-select.py-2(
           hide-details,
           v-model="searchNodeVisibility",
-          :disabled="search.length === 0",
           :items="depthOptions")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
