@@ -157,8 +157,6 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
               @change="changePlotArgs({min_correlation: $event})")
     metabolite-filter(title="Node Filter", :dataset="dataset", v-model="metaboliteFilter",
         :not-selected-color="colors.correlationNode", selection-last)
-    //- metabolite-colorer(title="Node Color", :dataset="dataset", v-model="metaboliteColor",
-    //-     :not-selected-color="colors.correlationNode", selection-last)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Search
