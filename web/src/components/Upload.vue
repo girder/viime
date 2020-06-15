@@ -3,9 +3,9 @@ import { mapState } from 'vuex';
 import { sizeFormatter } from '@girder/components/src/utils/mixins';
 import Dropzone from '@girder/components/src/components/Presentation/Dropzone.vue';
 import FileList from '@girder/components/src/components/Presentation/FileUploadList.vue';
-import SampleBrowser from './SampleBrowser.vue';
 import { UPLOAD_CSV, UPLOAD_EXCEL } from '@/store/actions.type';
 import { REMOVE_DATASET } from '@/store/mutations.type';
+import SampleBrowser from './SampleBrowser.vue';
 
 function isExcelFile(file) {
   return file.name.match(/\.xlsx$/i);
@@ -80,18 +80,18 @@ export default {
       }
       // filter to valid types only
       const filteredFiles = targetFiles.filter(
-        f => isExcelFile(f) || isCSVFile(f) || isTextFile(f),
+        (f) => isExcelFile(f) || isCSVFile(f) || isTextFile(f),
       );
       const invalidFiles = targetFiles.filter(
-        f => !(isExcelFile(f) || isCSVFile(f) || isTextFile(f)),
+        (f) => !(isExcelFile(f) || isCSVFile(f) || isTextFile(f)),
       );
 
       if (invalidFiles.length > 0) {
-        this.snackbarContent = `invalid file extension for: ${invalidFiles.map(d => d.name).join(', ')}`;
+        this.snackbarContent = `invalid file extension for: ${invalidFiles.map((d) => d.name).join(', ')}`;
         this.snackbar = true;
       }
 
-      this.pendingFiles = this.pendingFiles.concat([...filteredFiles].map(file => ({
+      this.pendingFiles = this.pendingFiles.concat([...filteredFiles].map((file) => ({
         file,
         id: `${file.name}-pending`,
         status: 'pending',
@@ -99,9 +99,8 @@ export default {
         meta: {},
       })));
 
-
       const promises = this.pendingFiles
-        .filter(f => f.status === 'pending')
+        .filter((f) => f.status === 'pending')
         .map(async (file) => {
           file.status = 'uploading';
           try {
@@ -118,18 +117,18 @@ export default {
         });
       await Promise.all(promises);
       // filter out done ones
-      this.pendingFiles = this.pendingFiles.filter(f => f.status !== 'done');
+      this.pendingFiles = this.pendingFiles.filter((f) => f.status !== 'done');
     },
     async remove(file) {
       if (file.status === 'done' && file.meta.id) {
         this.$store.commit(REMOVE_DATASET, { dataset_id: file.meta.id });
       } else {
-        const i = this.pendingFiles.findIndex(f => f.name === file.name && f.size === file.size);
+        const i = this.pendingFiles.findIndex((f) => f.name === file.name && f.size === file.size);
         this.pendingFiles.splice(i, 1);
       }
     },
     removeAll() {
-      this.readyFiles.concat(this.pendingFiles).forEach(f => this.remove(f));
+      this.readyFiles.concat(this.pendingFiles).forEach((f) => this.remove(f));
     },
   },
 };

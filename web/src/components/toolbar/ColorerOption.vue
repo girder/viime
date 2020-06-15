@@ -25,7 +25,7 @@ export default {
       return !this.value || this.options.length > 1;
     },
     filterOptions() {
-      const selected = this.options.find(d => d.value === this.value);
+      const selected = this.options.find((d) => d.value === this.value);
       return selected ? selected.options : [];
     },
     hasOptions() {

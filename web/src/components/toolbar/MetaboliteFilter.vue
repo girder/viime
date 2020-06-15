@@ -47,7 +47,7 @@ export default {
       const firstOption = this.options[0];
       const v = {
         option: firstOption.value,
-        filter: firstOption.options.map(d => d.value),
+        filter: firstOption.options.map((d) => d.value),
       };
       this.changeValue(v);
       return v;
@@ -70,16 +70,16 @@ export default {
         const isSelected = this.selectionLookup;
         const showSelected = value.filter.includes('selected');
         const showNotSelected = value.filter.includes('not-selected');
-        return column => (isSelected(column) ? showSelected : showNotSelected);
+        return (column) => (isSelected(column) ? showSelected : showNotSelected);
       }
-      const meta = this.categoricalMetaData.find(d => d.value === value.option);
+      const meta = this.categoricalMetaData.find((d) => d.value === value.option);
       const lookup = new Set(value.filter);
       const toIndex = this.columnToIndex;
-      return column => lookup.has(meta.data[toIndex(column)]);
+      return (column) => lookup.has(meta.data[toIndex(column)]);
     },
     generateGroupBy(value) {
       if (!value.option) {
-        return rows => [{
+        return (rows) => [{
           name: 'default',
           color: '#ffffff',
           rows,
@@ -96,36 +96,36 @@ export default {
         return (columns) => {
           const groups = [];
           if (showSelected) {
-            const subset = columns.filter(column => isSelected(column));
+            const subset = columns.filter((column) => isSelected(column));
             groups.push({
               name: selected.name,
               color: selected.color,
               columns: subset,
-              indices: subset.map(r => toIndex(r)),
+              indices: subset.map((r) => toIndex(r)),
             });
           }
           if (showNotSelected) {
-            const subset = columns.filter(column => !isSelected(column));
+            const subset = columns.filter((column) => !isSelected(column));
             groups.push({
               name: notSelected.name,
               color: notSelected.color,
               columns: subset,
-              indices: subset.map(r => toIndex(r)),
+              indices: subset.map((r) => toIndex(r)),
             });
           }
           return groups;
         };
       }
-      const meta = this.categoricalMetaData.find(d => d.value === value.option);
+      const meta = this.categoricalMetaData.find((d) => d.value === value.option);
       const lookup = new Set(value.filter);
-      const options = meta.levels.filter(o => lookup.has(o.name));
-      return columns => options.map((v) => {
-        const subset = columns.filter(column => meta.data[toIndex(column)] === v.name);
+      const options = meta.levels.filter((o) => lookup.has(o.name));
+      return (columns) => options.map((v) => {
+        const subset = columns.filter((column) => meta.data[toIndex(column)] === v.name);
         return {
           name: v.label,
           color: v.color,
           columns: subset,
-          indices: subset.map(r => toIndex(r)),
+          indices: subset.map((r) => toIndex(r)),
         };
       });
     },

@@ -15,7 +15,7 @@ export default {
     return {
       valid: false,
       requiredRules: [
-        v => !!v.trim() || 'Name is required',
+        (v) => !!v.trim() || 'Name is required',
       ],
       groupLevelHeaders: [
         {
@@ -70,7 +70,7 @@ export default {
         };
       });
     },
-    allDatasetsValid() { return this.isMerged && this.mergedDatasets.every(d => d.valid); },
+    allDatasetsValid() { return this.isMerged && this.mergedDatasets.every((d) => d.valid); },
   },
   watch: {
     dataset(newValue) {

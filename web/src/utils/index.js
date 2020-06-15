@@ -103,7 +103,7 @@ function mapValidationErrors(errors, columns) {
     };
     if (errorMeta.multi === true) {
       error.description = errorMeta.description;
-      error.data = errorsOfType.map(e => ({
+      error.data = errorsOfType.map((e) => ({
         index: e.column_index,
         info: e.data,
         name: columns[e.column_index].column_header,
@@ -126,7 +126,7 @@ function textColor(backgroundColor) {
 }
 
 function formatter(v) {
-  const nf = n => (n.toPrecision(6).length <= 10 ? n.toPrecision(6) : n.toExponential(4));
+  const nf = (n) => (n.toPrecision(6).length <= 10 ? n.toPrecision(6) : n.toExponential(4));
   return typeof v === 'number' || (v && !Number.isNaN(+v)) ? nf(parseFloat(v)) : v;
 }
 

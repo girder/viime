@@ -38,16 +38,16 @@ export default {
       if (!value) {
         return () => null;
       }
-      const meta = this.categoricalMetaData.find(d => d.value === value);
+      const meta = this.categoricalMetaData.find((d) => d.value === value);
       const lookup = new Map(meta.levels.map(({ name, color }) => [name, color]));
       const toIndex = this.rowToIndex;
-      return column => lookup.get(meta.data[toIndex(column)]);
+      return (column) => lookup.get(meta.data[toIndex(column)]);
     },
     generateLevels(value) {
       if (!value || value === this.emptyOption) {
         return [];
       }
-      return this.options.find(d => d.value === value).options;
+      return this.options.find((d) => d.value === value).options;
     },
     changeValue(value) {
       const wrapper = {

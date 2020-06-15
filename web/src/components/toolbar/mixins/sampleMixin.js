@@ -1,4 +1,3 @@
-
 export default {
   props: {
     dataset: {
@@ -22,7 +21,7 @@ export default {
         return () => -1;
       }
       const m = new Map(this.dataset.validatedMeasurements.rowNames.map((name, i) => [name, i]));
-      return row => (m.has(row) ? m.get(row) : -1);
+      return (row) => (m.has(row) ? m.get(row) : -1);
     },
     categoricalMetaData() {
       const metaData = this.dataset.validatedSampleMetaData;
@@ -31,18 +30,18 @@ export default {
       const metaDataM = metaData ? metaData.columnNames.map((name, i) => ({
         name,
         value: name,
-        data: metaData.data.map(row => row[i]),
+        data: metaData.data.map((row) => row[i]),
         i,
         ...metaData.columnMetaData[i],
-      })).filter(d => d.subtype === 'categorical') : [];
+      })).filter((d) => d.subtype === 'categorical') : [];
 
       const metaGroupsM = groups ? groups.columnNames.map((name, i) => ({
         name,
         value: name,
-        data: groups.data.map(row => row[i]),
+        data: groups.data.map((row) => row[i]),
         i,
         ...groups.columnMetaData[i],
-      })).filter(d => d.levels) : [];
+      })).filter((d) => d.levels) : [];
 
       return [...metaGroupsM, ...metaDataM];
     },
@@ -58,7 +57,7 @@ export default {
         ...this.categoricalMetaData.map(({ name, value, levels }) => ({
           name,
           value,
-          options: levels.map(d => ({ name: d.label, value: d.name, color: d.color })),
+          options: levels.map((d) => ({ name: d.label, value: d.name, color: d.color })),
         })),
       ];
     },

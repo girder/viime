@@ -126,7 +126,6 @@ export const CSVService = {
   },
 };
 
-
 export const ExcelService = {
   upload(file) {
     const formData = new FormData();
@@ -134,7 +133,6 @@ export const ExcelService = {
     return ApiService.upload('excel', formData);
   },
 };
-
 
 export const SampleService = {
 

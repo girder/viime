@@ -8,7 +8,6 @@ import {
 import { base26Converter, textColor, formatter } from '../utils';
 import DataTable from './DataTable.vue';
 
-
 export default {
   components: {
     DataTable,
@@ -58,7 +57,7 @@ export default {
     groupToColor() {
       const levels = this.dataset.groupLevels;
       const lookup = new Map(levels.map(({ name, color }) => [name, color]));
-      return group => lookup.get(group) || null;
+      return (group) => lookup.get(group) || null;
     },
   },
   methods: {

@@ -6,12 +6,12 @@ import Vue from 'vue';
 export default class RangeList {
   constructor(initial = []) {
     this.members_ = {};
-    initial.forEach(i => this.add(i));
+    initial.forEach((i) => this.add(i));
   }
 
   get members() {
     return Object.keys(this.members_)
-      .map(m => parseInt(m, 10))
+      .map((m) => parseInt(m, 10))
       .sort((a, b) => a - b);
   }
 

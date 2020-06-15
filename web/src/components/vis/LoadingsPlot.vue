@@ -55,9 +55,9 @@ export default {
   props: {
     points: {
       required: true,
-      validator: prop => !prop
+      validator: (prop) => !prop
           || (typeof prop === 'object'
-          && prop.every(val => ['col', 'loadings'].every(key => key in val))),
+          && prop.every((val) => ['col', 'loadings'].every((key) => key in val))),
     },
     pcX: {
       default: 1,
@@ -93,7 +93,7 @@ export default {
         pointsInternal,
         pcX,
       } = this;
-      const arr = pointsInternal.map(d => d.loadings[pcX - 1]);
+      const arr = pointsInternal.map((d) => d.loadings[pcX - 1]);
       if (arr.length === 0) {
         return [-1, 1];
       }
@@ -104,7 +104,7 @@ export default {
         pointsInternal,
         pcY,
       } = this;
-      const arr = pointsInternal.map(d => d.loadings[pcY - 1]);
+      const arr = pointsInternal.map((d) => d.loadings[pcY - 1]);
       if (arr.length === 0) {
         return [-1, 1];
       }
@@ -170,19 +170,19 @@ export default {
         .select('g.crosshairs')
         .selectAll('line')
         .data([{ x: 10, y: 0 }, { x: 0, y: 10 }])
-        .join(enter => enter.append('line')
+        .join((enter) => enter.append('line')
           .attr('stroke', crosshair.color)
           .attr('stroke-width', crosshair.width))
         .style('display', showCrosshairs ? null : 'none')
-        .attr('x1', d => this.scaleX(0) - d.x)
-        .attr('x2', d => this.scaleX(0) + d.x)
-        .attr('y1', d => this.scaleY(0) - d.y)
-        .attr('y2', d => this.scaleY(0) + d.y);
+        .attr('x1', (d) => this.scaleX(0) - d.x)
+        .attr('x2', (d) => this.scaleX(0) + d.x)
+        .attr('y1', (d) => this.scaleY(0) - d.y)
+        .attr('y2', (d) => this.scaleY(0) + d.y);
 
       svg.select('g.plot')
         .selectAll('circle')
         .data(pointsInternal)
-        .join(enter => enter.append('circle')
+        .join((enter) => enter.append('circle')
           .attr('cx', this.scaleX(0))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
@@ -214,8 +214,8 @@ export default {
         .transition()
         .duration(this.fadeInDuration)
         .attr('r', radius)
-        .attr('cx', d => this.scaleX(d.loadings[pcX - 1]))
-        .attr('cy', d => this.scaleY(d.loadings[pcY - 1]));
+        .attr('cx', (d) => this.scaleX(d.loadings[pcX - 1]))
+        .attr('cy', (d) => this.scaleY(d.loadings[pcY - 1]));
     },
   },
 };

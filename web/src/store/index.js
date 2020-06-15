@@ -124,18 +124,17 @@ const appstate = {
 };
 
 const getters = {
-  dataset: state => id => state.datasets[id],
-  ready: state => id => state.datasets[id] && state.datasets[id].ready,
+  dataset: (state) => (id) => state.datasets[id],
+  ready: (state) => (id) => state.datasets[id] && state.datasets[id].ready,
   // valid indicates fatal errors, and will be true even if there are warnings
-  valid: state => id => getters.ready(state)(id)
-    && state.datasets[id].validation.filter(v => v.severity === 'error').length === 0,
-  txType: state => (id, category) => getters.ready(state)(id)
+  valid: (state) => (id) => getters.ready(state)(id)
+    && state.datasets[id].validation.filter((v) => v.severity === 'error').length === 0,
+  txType: (state) => (id, category) => getters.ready(state)(id)
     && state.datasets[id][category],
-  plot: state => (id, name) => getters.ready(state)(id) && state.plots[id][name],
-  isMerged: state => id => getters.ready(id) && Array.isArray(state.datasets[id].meta.merged),
-  waiting: state => state.loading || state.saving,
+  plot: (state) => (id, name) => getters.ready(state)(id) && state.plots[id][name],
+  isMerged: (state) => (id) => getters.ready(id) && Array.isArray(state.datasets[id].meta.merged),
+  waiting: (state) => state.loading || state.saving,
 };
-
 
 const mutations = {
   /**
@@ -143,7 +142,7 @@ const mutations = {
    */
   [INVALIDATE_PLOTS](state, { dataset_id }) {
     const plots = Object.keys(plotDefaults);
-    plots.forEach(name => Vue.set(state.plots[dataset_id][name], 'valid', false));
+    plots.forEach((name) => Vue.set(state.plots[dataset_id][name], 'valid', false));
   },
 
   /**
@@ -219,8 +218,8 @@ const mutations = {
 
     const toMeta = ({ meta, subtype }) => ({ ...(meta || {}), subtype });
 
-    base.columnMetaData = ds.column.data.filter(d => d.column_type === 'measurement').map(toMeta);
-    base.rowMetaData = ds.row.data.filter(d => d.row_type === 'sample').map(toMeta);
+    base.columnMetaData = ds.column.data.filter((d) => d.column_type === 'measurement').map(toMeta);
+    base.rowMetaData = ds.row.data.filter((d) => d.row_type === 'sample').map(toMeta);
 
     const validatedMeasurements = parsePandasDataFrame(data.measurements, base);
     const validatedGroups = parsePandasDataFrame(data.groups, base);
@@ -229,14 +228,14 @@ const mutations = {
 
     // inject meta data
 
-    validatedGroups.columnMetaData = ds.column.data.filter(d => d.column_type === 'group').map(toMeta);
+    validatedGroups.columnMetaData = ds.column.data.filter((d) => d.column_type === 'group').map(toMeta);
 
     if (ds.groupLevels && validatedGroups.columnMetaData.length > 0) {
       validatedGroups.columnMetaData[0].levels = ds.groupLevels;
     }
 
-    validatedSampleMetaData.columnMetaData = ds.column.data.filter(d => d.column_type === 'metadata').map(toMeta);
-    validatedMeasurementsMetaData.rowMetaData = ds.row.data.filter(d => d.row_type === 'metadata').map(toMeta);
+    validatedSampleMetaData.columnMetaData = ds.column.data.filter((d) => d.column_type === 'metadata').map(toMeta);
+    validatedMeasurementsMetaData.rowMetaData = ds.row.data.filter((d) => d.row_type === 'metadata').map(toMeta);
 
     const delta = {
       imputationInfo: data.imputation_info || { mcar: [], mnar: [] },
@@ -273,11 +272,11 @@ const mutations = {
     const colsSorted = columns.sort((a, b) => a.column_index - b.column_index);
 
     Vue.set(ds, 'row', {
-      labels: rowsSorted.map(r => r.row_type),
+      labels: rowsSorted.map((r) => r.row_type),
       data: rowsSorted,
     });
     Vue.set(ds, 'column', {
-      labels: colsSorted.map(c => c.column_type),
+      labels: colsSorted.map((c) => c.column_type),
       data: colsSorted,
     });
     Vue.set(ds, 'groupLevels', group_levels);
@@ -383,7 +382,7 @@ const actions = {
     commit(SET_SAVING, true);
     try {
       const { data } = await ExcelService.upload(file);
-      const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
+      const promiseList = data.map((dataFile) => dispatch(ADD_DATASET, dataFile));
       await Promise.all(promiseList);
       state.store.save(state, state.session_id);
       commit(SET_SAVING, false);
@@ -398,7 +397,7 @@ const actions = {
     commit(SET_SAVING, true);
     try {
       const { data } = await SampleService.importSample(sampleId);
-      const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
+      const promiseList = data.map((dataFile) => dispatch(ADD_DATASET, dataFile));
       await Promise.all(promiseList);
       state.store.save(state, state.session_id);
       commit(SET_SAVING, false);
@@ -413,7 +412,7 @@ const actions = {
     commit(SET_SAVING, true);
     try {
       const { data } = await SampleService.importSampleGroup(group);
-      const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
+      const promiseList = data.map((dataFile) => dispatch(ADD_DATASET, dataFile));
       await Promise.all(promiseList);
       state.store.save(state, state.session_id);
       commit(SET_SAVING, false);

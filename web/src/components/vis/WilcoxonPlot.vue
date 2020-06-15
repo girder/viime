@@ -11,7 +11,7 @@ export default Vue.extend({
     data: {
       type: Object,
       required: true,
-      validator: prop => !prop || ('data' in prop && 'pairs' in prop),
+      validator: (prop) => !prop || ('data' in prop && 'pairs' in prop),
     },
     threshold: {
       type: Number,
@@ -39,7 +39,7 @@ export default Vue.extend({
           value: 'Metabolite',
           isLabel: true,
         },
-        ...this.pairs.map(text => ({ text, value: text })),
+        ...this.pairs.map((text) => ({ text, value: text })),
       ];
     },
   },

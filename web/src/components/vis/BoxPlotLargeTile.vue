@@ -36,11 +36,11 @@ export default {
       }
       let data = df.columnNames.map((name, i) => ({
         name,
-        values: df.data.map(row => row[i]),
+        values: df.data.map((row) => row[i]),
       }));
 
       if (this.metaboliteFilter && this.metaboliteFilter.option) {
-        data = data.filter(d => this.metaboliteFilter.apply(d.name));
+        data = data.filter((d) => this.metaboliteFilter.apply(d.name));
       }
 
       if (this.sampleFilter && this.sampleFilter.option) {
@@ -49,10 +49,10 @@ export default {
         data.forEach((row) => {
           const vs = row.values;
           delete row.values;
-          row.groups = groups.map(group => ({
+          row.groups = groups.map((group) => ({
             name: group.name,
             color: group.color,
-            values: group.indices.map(i => vs[i]),
+            values: group.indices.map((i) => vs[i]),
           }));
         });
       }

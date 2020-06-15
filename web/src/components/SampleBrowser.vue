@@ -2,7 +2,6 @@
 import { IMPORT_SAMPLE, IMPORT_SAMPLE_GROUP } from '../store/actions.type';
 import { SampleService } from '../common/api.service';
 
-
 export default {
   data() {
     return {

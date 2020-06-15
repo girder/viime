@@ -10,7 +10,7 @@ export default {
     return {
       valid: false,
       requiredRules: [
-        v => !!v.trim() || 'Name is required',
+        (v) => !!v.trim() || 'Name is required',
       ],
       selectedRules: [
         () => this.selected.length >= 2 || 'At least two data sources are required',
@@ -24,7 +24,7 @@ export default {
   },
   computed: {
     datasets() {
-      return Object.values(this.$store.state.datasets).map(d => ({
+      return Object.values(this.$store.state.datasets).map((d) => ({
         id: d.id,
         name: d.name,
         dataset: d,
@@ -33,11 +33,11 @@ export default {
       }));
     },
     selectedDatasets() {
-      const lookup = new Map(this.datasets.map(ds => [ds.id, ds]));
-      return this.selected.map(id => lookup.get(id));
+      const lookup = new Map(this.datasets.map((ds) => [ds.id, ds]));
+      return this.selected.map((id) => lookup.get(id));
     },
     mergeInfo() {
-      const selected = this.datasets.filter(d => this.selected.includes(d.id)
+      const selected = this.datasets.filter((d) => this.selected.includes(d.id)
                                                  && d.dataset.validatedMeasurements);
       if (selected.length < 2) {
         return {
@@ -48,14 +48,14 @@ export default {
       }
       // check overlap of their row identifiers
 
-      const rowNames = selected.map(d => new Set(d.dataset.validatedMeasurements.rowNames));
+      const rowNames = selected.map((d) => new Set(d.dataset.validatedMeasurements.rowNames));
 
       const union = rowNames.reduce((acc, n) => {
-        n.forEach(v => acc.add(v));
+        n.forEach((v) => acc.add(v));
         return acc;
       }, new Set());
 
-      const intersection = Array.from(rowNames[0]).filter(v => rowNames.every(r => r.has(v)));
+      const intersection = Array.from(rowNames[0]).filter((v) => rowNames.every((r) => r.has(v)));
 
       return {
         intersection: intersection.length,
@@ -66,11 +66,11 @@ export default {
   },
   watch: {
     selectedDatasets(newValue, oldValue) {
-      const oldName = oldValue.map(d => d.name).join(' + ');
+      const oldName = oldValue.map((d) => d.name).join(' + ');
       if (this.name !== oldName) {
         return;
       }
-      this.name = newValue.map(d => d.name).join(' + ');
+      this.name = newValue.map((d) => d.name).join(' + ');
     },
   },
   methods: {

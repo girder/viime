@@ -5,9 +5,9 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
+    "test:unit": "jest --clearCache && vue-cli-service test:unit",
     "lint": "vue-cli-service lint",
-    "lint:pug": "pug-lint-vue src",
-    "test:unit": "jest --clearCache && vue-cli-service test:unit"
+    "lint:pug": "pug-lint-vue src"
   },
   "dependencies": {
     "@girder/components": "v3.0.0-alpha.3",
@@ -17,6 +17,7 @@
     "@sentry/integrations": "^5.0.7",
     "axios": "^0.18.0",
     "c3": "^0.7.8",
+    "core-js": "^3.6.5",
     "d3-array": "^2.3.1",
     "d3-axis": "^1.0.12",
     "d3-boxplot": "^0.7.5",
@@ -47,17 +48,18 @@
     "vuex": "^3.1.0"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^3.0.4",
-    "@vue/cli-plugin-eslint": "^3.0.4",
-    "@vue/cli-plugin-unit-jest": "^3.5.3",
-    "@vue/cli-service": "^3.0.4",
-    "@vue/eslint-config-airbnb": "^4.0.0",
+    "@vue/cli-plugin-babel": "~4.4.4",
+    "@vue/cli-plugin-eslint": "~4.4.4",
+    "@vue/cli-plugin-unit-jest": "~4.4.4",
+    "@vue/cli-service": "~4.4.4",
+    "@vue/eslint-config-airbnb": "^5.0.2",
     "@vue/test-utils": "^1.0.0-beta.29",
     "babel-core": "~7.0.0-bridge.0",
-    "babel-eslint": "^10.0.1",
+    "babel-eslint": "^10.1.0",
     "babel-jest": "^24.7.0",
-    "eslint": "^5.8.0",
-    "eslint-plugin-vue": "^5.0.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-vue": "^6.2.2",
     "git-revision-webpack-plugin": "^3.0.3",
     "node-sass": "^4.13.0",
     "pug": "^2.0.3",
@@ -96,6 +98,16 @@
       "COMMITHASH": true
     }
   },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ],
   "jest": {
     "cache": false,
     "moduleFileExtensions": [
@@ -150,15 +162,5 @@
     "validateLineBreaks": "LF",
     "validateSelfClosingTags": true,
     "validateTemplateString": true
-  },
-  "postcss": {
-    "plugins": {
-      "autoprefixer": {}
-    }
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not ie <= 8"
-  ]
+  }
 }

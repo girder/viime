@@ -57,7 +57,7 @@ import 'd3-transition';
 
 import { axisPlot } from './mixins/axisPlot';
 
-const sum = arr => arr.reduce((acc, x) => acc + x, 0);
+const sum = (arr) => arr.reduce((acc, x) => acc + x, 0);
 
 export default {
   mixins: [
@@ -67,7 +67,7 @@ export default {
   props: {
     eigenvalues: {
       required: true,
-      validator: prop => !prop || prop.every(v => Number.isFinite(v) && v > 0.0),
+      validator: (prop) => !prop || prop.every((v) => Number.isFinite(v) && v > 0.0),
     },
     numComponents: {
       default: 10,
@@ -110,7 +110,7 @@ export default {
         dwidth,
       } = this;
 
-      const labels = [...Array(numComponentsInternal).keys()].map(d => d + 1);
+      const labels = [...Array(numComponentsInternal).keys()].map((d) => d + 1);
       return scalePoint()
         .domain(labels)
         .range([0, dwidth]);
@@ -126,7 +126,7 @@ export default {
 
     percents() {
       const total = sum(this.eigenvaluesInternal);
-      return this.eigenvaluesInternal.map(d => d / total);
+      return this.eigenvaluesInternal.map((d) => d / total);
     },
 
     cumulativePercents() {
@@ -215,7 +215,7 @@ export default {
       svg.select('g.points')
         .selectAll('circle')
         .data(data)
-        .join(enter => enter.append('circle')
+        .join((enter) => enter.append('circle')
           .attr('cx', (d, i) => this.scaleX(i + 1))
           .attr('cy', this.scaleY(0))
           .attr('r', 0)
@@ -254,10 +254,10 @@ export default {
         .duration(fadeInDuration)
         .attr('r', radius)
         .attr('cx', (d, i) => this.scaleX(i + 1))
-        .attr('cy', d => this.scaleY(d.eigenvalue));
+        .attr('cy', (d) => this.scaleY(d.eigenvalue));
 
       // Plot the line.
-      const pathData = [...Array(numComponentsInternal).keys()].map(i => [
+      const pathData = [...Array(numComponentsInternal).keys()].map((i) => [
         this.scaleX(i + 1),
         this.scaleY(eigenvaluesInternal[i]),
       ]);
