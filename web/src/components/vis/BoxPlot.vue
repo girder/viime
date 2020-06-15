@@ -7,7 +7,6 @@ import 'd3-transition';
 import { axisPlot } from './mixins/axisPlot';
 import { measurementColumnName, measurementValueName } from '../../utils/constants';
 
-
 export default {
   mixins: [
     axisPlot,
@@ -42,7 +41,7 @@ export default {
     scaleY() {
       const { rows, dheight } = this;
       return scaleBand()
-        .domain(rows.map(d => d.name))
+        .domain(rows.map((d) => d.name))
         .range([0, dheight], 0.1);
     },
     scaleGroup() {
@@ -67,7 +66,7 @@ export default {
           row.values.forEach(pushValue);
         }
         if (row.groups) {
-          row.groups.forEach(group => group.values.forEach(pushValue));
+          row.groups.forEach((group) => group.values.forEach(pushValue));
         }
       });
       return [min, max];
@@ -91,10 +90,10 @@ export default {
       this.axisPlot(svg);
 
       // compute stats
-      const stats = this.rows.map(d => ({
+      const stats = this.rows.map((d) => ({
         ...d,
         ...(d.values ? boxplotStats(d.values) : {}),
-        groups: d.groups ? d.groups.map(group => ({
+        groups: d.groups ? d.groups.map((group) => ({
           ...group,
           group: group.name,
           name: `${d.name} ${group.name}`,
@@ -114,18 +113,18 @@ export default {
 
       if (!this.groups) {
         base.selectAll('g.boxplots').remove();
-        boxplots = base.selectAll('g.boxplot').data(stats, d => d.name)
-          .join(enter => enter.append('g').classed('boxplot', true))
-          .attr('transform', d => `translate(0, ${this.scaleY(d.name)})`);
+        boxplots = base.selectAll('g.boxplot').data(stats, (d) => d.name)
+          .join((enter) => enter.append('g').classed('boxplot', true))
+          .attr('transform', (d) => `translate(0, ${this.scaleY(d.name)})`);
       } else {
         base.selectAll('g.boxplot').remove();
-        const boxplotGroups = base.selectAll('g.boxplots').data(stats, d => d.name)
-          .join(enter => enter.append('g').classed('boxplots', true))
-          .attr('transform', d => `translate(0, ${this.scaleY(d.name)})`);
+        const boxplotGroups = base.selectAll('g.boxplots').data(stats, (d) => d.name)
+          .join((enter) => enter.append('g').classed('boxplots', true))
+          .attr('transform', (d) => `translate(0, ${this.scaleY(d.name)})`);
 
-        boxplots = boxplotGroups.selectAll('g.group').data(d => d.groups, d => d.group)
-          .join(enter => enter.append('g').classed('group', true))
-          .attr('transform', d => `translate(0, ${this.scaleGroup(d.group)})`);
+        boxplots = boxplotGroups.selectAll('g.group').data((d) => d.groups, (d) => d.group)
+          .join((enter) => enter.append('g').classed('group', true))
+          .attr('transform', (d) => `translate(0, ${this.scaleGroup(d.group)})`);
       }
 
       boxplots
@@ -137,11 +136,11 @@ export default {
         .catch(() => {})
         .then(() => {
           // inject tooltips
-          const f = d => d.toFixed(3);
+          const f = (d) => d.toFixed(3);
 
           // outliers: show the value
           boxplots.select('g.point').selectAll('.outlier')
-            .html(d => `<title>${f(d.value)}</title>`);
+            .html((d) => `<title>${f(d.value)}</title>`);
 
           const count = (values, min, max) => values
             .reduce((acc, v) => acc + (v >= min && v < max ? 1 : 0), 0);
@@ -150,17 +149,17 @@ export default {
           const whiskers = boxplots.select('.whisker');
 
           boxplots.select('.whisker path')
-            .html(d => `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`);
+            .html((d) => `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`);
           boxplots.select('.box line')
-            .style('stroke', d => d.color)
-            .html(d => `<title>${d.name}: ${f(d.fiveNums[1])} (q1) - ${f(d.fiveNums[2])} (median) = ${count(d.values, d.fiveNums[1], d.fiveNums[2])} Items</title>`);
+            .style('stroke', (d) => d.color)
+            .html((d) => `<title>${d.name}: ${f(d.fiveNums[1])} (q1) - ${f(d.fiveNums[2])} (median) = ${count(d.values, d.fiveNums[1], d.fiveNums[2])} Items</title>`);
           boxplots.select('.box line:last-of-type')
-            .style('stroke', d => d.color)
-            .html(d => `<title>${d.name}: ${f(d.fiveNums[2])} (median) - ${f(d.fiveNums[3])} (q3) = ${count(d.values, d.fiveNums[2], d.fiveNums[3])} Items</title>`);
+            .style('stroke', (d) => d.color)
+            .html((d) => `<title>${d.name}: ${f(d.fiveNums[2])} (median) - ${f(d.fiveNums[3])} (q3) = ${count(d.values, d.fiveNums[2], d.fiveNums[3])} Items</title>`);
           boxplots.select('.whisker path:last-of-type')
-            .html(d => `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`);
+            .html((d) => `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`);
 
-          const bgs = whiskers.selectAll('rect').data(d => [d, d]).join('rect');
+          const bgs = whiskers.selectAll('rect').data((d) => [d, d]).join('rect');
           bgs
             .attr('x', (d, i) => this.scaleX(Math.min(d.whiskers[i].start, d.whiskers[i].end)))
             .attr('y', this.boxHeight * -0.5)

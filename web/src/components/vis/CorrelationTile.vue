@@ -62,7 +62,7 @@ export default {
         return [];
       }
 
-      const nodes = this.plot.data.columns.map(d => ({
+      const nodes = this.plot.data.columns.map((d) => ({
         id: d,
         color: this.metaboliteColor ? this.metaboliteColor.apply(d) : null,
       }));
@@ -70,14 +70,14 @@ export default {
       if (!this.metaboliteFilter) {
         return nodes;
       }
-      return nodes.filter(n => this.metaboliteFilter.apply(n.id));
+      return nodes.filter((n) => this.metaboliteFilter.apply(n.id));
     },
     edges() {
       const show = !this.metaboliteFilter ? (() => true) : this.metaboliteFilter.apply;
       return !this.plot.data ? []
         : this.plot.data.correlations
-          .filter(d => Math.abs(d.value) > this.min_correlation && show(d.x) && show(d.y))
-          .map(d => ({
+          .filter((d) => Math.abs(d.value) > this.min_correlation && show(d.x) && show(d.y))
+          .map((d) => ({
             source: d.x,
             target: d.y,
             color: d.value < 0 ? colors.negativeCorrelation : colors.positiveCorrelation,
@@ -101,7 +101,7 @@ export default {
       if (newval) {
         await this.$nextTick(); // wait for the filter function to populate the result set
         const highlighted = new Set(this.searchBarResults);
-        this.excludedSearchBarResults.forEach(item => highlighted.delete(item));
+        this.excludedSearchBarResults.forEach((item) => highlighted.delete(item));
         this.highlightedItems = highlighted;
       } else {
         this.highlightedItems = new Set();

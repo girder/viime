@@ -50,11 +50,11 @@ export default {
 
       if (this.metaboliteFilter) {
         const filter = this.metaboliteFilter.apply;
-        data = data.filter(row => filter(row.Metabolite));
+        data = data.filter((row) => filter(row.Metabolite));
       }
       if (this.metaboliteColor) {
         const colorer = this.metaboliteColor.apply;
-        data = data.map(row => ({ ...row, color: colorer(row.Metabolite) }));
+        data = data.map((row) => ({ ...row, color: colorer(row.Metabolite) }));
       }
 
       return {

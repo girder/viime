@@ -10,7 +10,7 @@ import { svg2url } from '../../utils/exporter';
 function domain(arr) {
   // let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
-  arr.forEach(row => row.forEach((v) => {
+  arr.forEach((row) => row.forEach((v) => {
     // if (v < min) {
     //   min = v;
     // }
@@ -81,7 +81,7 @@ function changeHovered(wrapper, arr) {
     wrapper.hovered = new Set(arr);
     return true;
   }
-  if (old.size === 0 || ((arr.length === 1 && old.has(arr[0])) || arr.every(d => old.has(d)))) {
+  if (old.size === 0 || ((arr.length === 1 && old.has(arr[0])) || arr.every((d) => old.has(d)))) {
     return false;
   }
 
@@ -120,7 +120,7 @@ export default {
     },
     layout: { // { dendrogram: boolean }
       type: String,
-      validate: v => heatmapLayouts.find(d => d.value === v),
+      validate: (v) => heatmapLayouts.find((d) => d.value === v),
       default: heatmapLayouts[0].value,
     },
     transposed: {
@@ -216,7 +216,7 @@ export default {
       return root;
     },
     valueScale() {
-      return scaleSequential(t => interpolateRdBu(1 - t)).domain(domain(this.values));
+      return scaleSequential((t) => interpolateRdBu(1 - t)).domain(domain(this.values));
     },
     legendDomain() {
       return this.valueScale.domain().map(this.format);
@@ -245,7 +245,7 @@ export default {
 
       // Reorder the leaves by the order given in the clustering prop.
       const source = transposed ? original.rows : original.columns;
-      return source.map(name => lookup.get(name));
+      return source.map((name) => lookup.get(name));
     },
 
     rowLeaves() {
@@ -271,7 +271,7 @@ export default {
 
       // Reorder the leaves by the order given in the clustering prop.
       const source = transposed ? original.columns : original.rows;
-      return source.map(name => lookup.get(name));
+      return source.map((name) => lookup.get(name));
     },
 
     columnDendrogramHeight() {
@@ -324,7 +324,7 @@ export default {
           s.names = [s.name];
         } else {
           s.indices = [].concat(...s.children.map(injectIndices));
-          s.names = [].concat(...s.children.map(c => c.names));
+          s.names = [].concat(...s.children.map((c) => c.names));
           s.name = s.names.join(', ');
         }
         return s.indices;
@@ -333,7 +333,7 @@ export default {
       injectIndices(node);
 
       let root = hierarchy(node,
-        d => (collapsed.has(d) ? [] : (d.children || [])))
+        (d) => (collapsed.has(d) ? [] : (d.children || [])))
         .count()
         .sort((a, b) => b.height - a.height || b.data.index - a.data.index);
 
@@ -373,14 +373,14 @@ export default {
       const { hovered, collapsed } = wrapper;
       const { padding } = this;
 
-      edges.classed('selected', d => d.target.data.indices.some(l => hovered.has(l)));
+      edges.classed('selected', (d) => d.target.data.indices.some((l) => hovered.has(l)));
 
-      const renderVerticalLinks = d => `
+      const renderVerticalLinks = (d) => `
         M${d.target.x},${d.target.y + (d.target.children ? 0 : padding)}
         L${d.target.x},${d.source.y}
         L${d.source.x},${d.source.y}
       `;
-      const renderHorizontalLinks = d => `
+      const renderHorizontalLinks = (d) => `
         M${d.target.x + (d.target.children ? 0 : padding)},${d.target.y}
         L${d.source.x},${d.target.y}
         L${d.source.x},${d.source.y}
@@ -388,11 +388,11 @@ export default {
 
       edges.attr('d', horizontalLayout ? renderVerticalLinks : renderHorizontalLinks);
 
-      const innerNodes = root.descendants().filter(d => d.data.indices.length > 1);
+      const innerNodes = root.descendants().filter((d) => d.data.indices.length > 1);
       const inner = svg.select('g.nodes').selectAll('g').data(innerNodes).join((enter) => {
         const r = enter.append('g')
           .html(`<circle r="${padding}"></circle><text><text><title></title>`)
-          .attr('transform', d => `translate(${d.x},${d.y})`);
+          .attr('transform', (d) => `translate(${d.x},${d.y})`);
         r.on('click', (d) => {
           if (wrapper.focus === d.data) {
             wrapper.focus = null;
@@ -419,11 +419,11 @@ export default {
         }
         return collapsed.has(d.data) ? MDI_PLUS_CIRCLE : MDI_MINUS_CIRCLE;
       });
-      inner.select('title').text(d => d.data.name);
-      inner.classed('collapsed', d => collapsed.has(d.data));
-      inner.classed('focused', d => wrapper.focus === d.data);
+      inner.select('title').text((d) => d.data.name);
+      inner.classed('collapsed', (d) => collapsed.has(d.data));
+      inner.classed('focused', (d) => wrapper.focus === d.data);
 
-      inner.attr('transform', d => `translate(${d.x},${d.y})`);
+      inner.attr('transform', (d) => `translate(${d.x},${d.y})`);
     },
     updateColumn() {
       if (this.columnDendrogramHeight === 0) {
@@ -464,12 +464,12 @@ export default {
       });
       const { hovered } = wrapper;
 
-      text.classed('selected', d => d.data.indices.some(l => hovered.has(l)));
+      text.classed('selected', (d) => d.data.indices.some((l) => hovered.has(l)));
 
-      text.select('.label').text(d => d.data.name);
+      text.select('.label').text((d) => d.data.name);
       text.select('.color')
         .classed('hidden', !colorer)
-        .style('background', colorer ? (d => this.combineColor(d.data.names, colorer)) : null);
+        .style('background', colorer ? ((d) => this.combineColor(d.data.names, colorer)) : null);
     },
     updateColumnLabel() {
       this.updateLabel(this.$refs.collabel, this.column, this.columnLeaves,
@@ -502,15 +502,14 @@ export default {
 
       ctx.strokeStyle = 'orange';
 
-
       // work on copy for speed
-      const data = values.map(r => r.slice());
+      const data = values.map((r) => r.slice());
 
-      const cnodeIndices = columns.map(n => n.data.indices);
+      const cnodeIndices = columns.map((n) => n.data.indices);
 
       rows.forEach((rnode, i) => {
         const rnodeIndices = rnode.data.indices;
-        const rowSelected = rnodeIndices.some(s => hoveredRow.has(s));
+        const rowSelected = rnodeIndices.some((s) => hoveredRow.has(s));
         cnodeIndices.forEach((indices, j) => {
           const v = aggregate(data, rnodeIndices, indices, transposed);
           ctx.fillStyle = valueScale(v);
@@ -528,7 +527,7 @@ export default {
       });
 
       cnodeIndices.forEach((indices, j) => {
-        const columnSelected = indices.some(s => hoveredColumn.has(s));
+        const columnSelected = indices.some((s) => hoveredColumn.has(s));
         if (columnSelected) {
           ctx.beginPath();
           ctx.moveTo(j * w, 0);
@@ -741,7 +740,6 @@ export default {
   right: 0;
 }
 
-
 .collabel {
   grid-area: clabel;
   display: flex;
@@ -773,7 +771,6 @@ export default {
   justify-content: center;
   line-height: normal;
 }
-
 
 .rowlabel >>> .color {
   align-self: stretch;
@@ -844,6 +841,5 @@ export default {
 .nodes >>> .focused {
   opacity: 1;
 }
-
 
 </style>

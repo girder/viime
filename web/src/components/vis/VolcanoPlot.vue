@@ -40,7 +40,7 @@ export default {
 
   computed: {
     transformedRows() {
-      return this.rows.map(row => ({
+      return this.rows.map((row) => ({
         ...row,
         x: row.log2FoldChange,
         y: -Math.log10(row.pValue),
@@ -82,22 +82,22 @@ export default {
           r.append('title');
           return r;
         })
-        .attr('r', d => (Math.abs(d.x) >= this.minFoldChange && d.y >= this.minLogP ? this.radius * 2 : this.radius))
-        .attr('opacity', d => (Math.abs(d.x) >= this.minFoldChange && d.y >= this.minLogP ? 1 : 0.5))
-        .attr('cx', d => this.scaleX(d.x))
-        .attr('cy', d => this.scaleY(d.y))
-        .style('fill', d => d.color)
+        .attr('r', (d) => (Math.abs(d.x) >= this.minFoldChange && d.y >= this.minLogP ? this.radius * 2 : this.radius))
+        .attr('opacity', (d) => (Math.abs(d.x) >= this.minFoldChange && d.y >= this.minLogP ? 1 : 0.5))
+        .attr('cx', (d) => this.scaleX(d.x))
+        .attr('cy', (d) => this.scaleY(d.y))
+        .style('fill', (d) => d.color)
         .select('title')
-        .text(d => `${d.name}: ${d.log2FoldChange} x ${d.pValue}`);
+        .text((d) => `${d.name}: ${d.log2FoldChange} x ${d.pValue}`);
       svg.select('.plot').selectAll('line.x-threshold')
         .data([-1, 1])
         .join('line')
         .attr('class', 'x-threshold')
         .style('stroke', 'black')
         .style('stroke-width', 0.5)
-        .attr('x1', d => this.scaleX(d * this.minFoldChange))
+        .attr('x1', (d) => this.scaleX(d * this.minFoldChange))
         .attr('y1', 0)
-        .attr('x2', d => this.scaleX(d * this.minFoldChange))
+        .attr('x2', (d) => this.scaleX(d * this.minFoldChange))
         .attr('y2', this.height - this.margin.top - this.margin.bottom);
       svg.select('.plot').selectAll('line.y-threshold')
         .data([1])

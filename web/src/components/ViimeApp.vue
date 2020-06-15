@@ -37,7 +37,7 @@ export default {
           text: 'Data',
           to: { name: 'Upload Data' },
         },
-        ...this.$route.matched.filter(route => !route.meta.hidden).map((route) => {
+        ...this.$route.matched.filter((route) => !route.meta.hidden).map((route) => {
           const b = route.meta.breadcrumb;
           return {
             text: route.name,

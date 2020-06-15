@@ -331,7 +331,6 @@ v-app.viime-landing
   }
 }
 
-
 .capabilities {
   background: #f5f5f5;
   .capability {
@@ -461,7 +460,6 @@ v-app.viime-landing
     transform: rotate(45deg) translate(30px, 30px);
   }
 }
-
 
 @media screen and (max-width: 960px) {
   .banner-area {

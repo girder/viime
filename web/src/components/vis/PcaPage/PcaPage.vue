@@ -1,9 +1,9 @@
 <script>
+import VisTileLarge from '@/components/vis/VisTileLarge.vue';
+import LayoutGrid from '@/components/LayoutGrid.vue';
 import ScorePlot from './ScorePlot.vue';
 import ScreePlot from './ScreePlot.vue';
 import LoadingsPlot from './LoadingsPlot.vue';
-import VisTileLarge from '@/components/vis/VisTileLarge.vue';
-import LayoutGrid from '@/components/LayoutGrid.vue';
 
 export default {
   components: {

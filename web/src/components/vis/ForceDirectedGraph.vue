@@ -8,7 +8,6 @@ import { scalePow } from 'd3-scale';
 import { zoom, zoomTransform } from 'd3-zoom';
 import { drag } from 'd3-drag';
 
-
 export default {
   directives: {
     resize,
@@ -106,22 +105,22 @@ export default {
     search(searchedNodes) {
       // highlights nodes being searched for
       const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g');
-      nodes.select('circle').style('fill', d => (searchedNodes.includes(d.id) ? 'red' : d.color));
+      nodes.select('circle').style('fill', (d) => (searchedNodes.includes(d.id) ? 'red' : d.color));
       this.showNodesWithinPathLength(this.search, this.visibleNodes);
     },
     highlightedItems(highlightedItems) {
       // circles nodes in search results
       const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
-      nodes.style('stroke', d => (highlightedItems.has(d.id) ? 'red' : d.color));
-      nodes.style('stroke-width', d => (highlightedItems.has(d.id) ? '2' : '1'));
+      nodes.style('stroke', (d) => (highlightedItems.has(d.id) ? 'red' : d.color));
+      nodes.style('stroke-width', (d) => (highlightedItems.has(d.id) ? '2' : '1'));
     },
     excludedItems(excluded) {
       // circles nodes in search results
       const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
       const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
       // hide nodes that have been deleted from search results
-      nodes.style('visibility', node => (excluded.has(node.id) ? 'hidden' : ''));
-      edges.style('visibility', edge => (excluded.has(edge.source.id) || excluded.has(edge.target.id) ? 'hidden' : 'visible'));
+      nodes.style('visibility', (node) => (excluded.has(node.id) ? 'hidden' : ''));
+      edges.style('visibility', (edge) => (excluded.has(edge.source.id) || excluded.has(edge.target.id) ? 'hidden' : 'visible'));
       this.showNodesWithinPathLength(this.search, this.visibleNodes);
     },
     visibleNodes(visibleNodes) {
@@ -144,7 +143,7 @@ export default {
       f.force('y', forceY().strength(0.01));
       f.force('center', forceCenter());
       f.force('collide', forceCollide());
-      f.force('link', forceLink().id(d => d.id).strength(d => d.value));
+      f.force('link', forceLink().id((d) => d.id).strength((d) => d.value));
       f.on('tick', () => this.tick());
       return f;
     },
@@ -179,17 +178,17 @@ export default {
       const t = zoomTransform(svg.node());
 
       nodes.select('circle')
-        .attr('transform', d => `translate(${t.applyX(d.x)},${t.applyY(d.y)})`);
+        .attr('transform', (d) => `translate(${t.applyX(d.x)},${t.applyY(d.y)})`);
       nodes.select('text')
-        .attr('transform', d => `translate(${t.applyX(d.x)},${t.applyY(d.y)})`);
+        .attr('transform', (d) => `translate(${t.applyX(d.x)},${t.applyY(d.y)})`);
 
       edges.select('line')
-        .attr('x1', d => t.applyX(d.source.x))
-        .attr('y1', d => t.applyY(d.source.y))
-        .attr('x2', d => t.applyX(d.target.x))
-        .attr('y2', d => t.applyY(d.target.y));
+        .attr('x1', (d) => t.applyX(d.source.x))
+        .attr('y1', (d) => t.applyY(d.source.y))
+        .attr('x2', (d) => t.applyX(d.target.x))
+        .attr('y2', (d) => t.applyY(d.target.y));
       edges.select('text')
-        .attr('transform', d => `translate(${t.applyX((d.source.x + d.target.x) / 2)},${t.applyY((d.source.y + d.target.y) / 2)})`);
+        .attr('transform', (d) => `translate(${t.applyX((d.source.x + d.target.x) / 2)},${t.applyY((d.source.y + d.target.y) / 2)})`);
     },
     tick250() {
       const sim = this.simulation.alpha(1).restart().stop();
@@ -264,10 +263,9 @@ export default {
       const svg = select(this.$refs.svg);
 
       // work on local copy since D3 manipulates the data structure
-      const localNodes = this.nodes.map(d => Object.assign({}, d));
+      const localNodes = this.nodes.map((d) => ({ ...d }));
       const nodes = svg.select('g.nodes').selectAll('g').data(localNodes)
-        .join(enter => enter.append('g').html('<title></title><circle></circle><text dx="12"></text>'));
-
+        .join((enter) => enter.append('g').html('<title></title><circle></circle><text dx="12"></text>'));
 
       function dragged() {
         const node = d3Event.subject.data;
@@ -302,27 +300,27 @@ export default {
 
       nodes.select('circle')
         .attr('r', this.radius)
-        .style('fill', d => (this.search.includes(d.id) ? 'red' : d.color))
+        .style('fill', (d) => (this.search.includes(d.id) ? 'red' : d.color))
         .on('click', resetPinned)
         .call(drag()
           .container(function container() {
             return this.parentNode.parentNode;
           })
-          .subject(data => ({ x: d3Event.x, y: d3Event.y, data }))
+          .subject((data) => ({ x: d3Event.x, y: d3Event.y, data }))
           .on('start', dragstarted)
           .on('drag', dragged)
           .on('end', dragended));
-      nodes.select('title').text(d => d.id);
-      nodes.select('text').text(d => d.id);
+      nodes.select('title').text((d) => d.id);
+      nodes.select('text').text((d) => d.id);
 
-      const localEdges = this.edges.map(d => Object.assign({}, d));
+      const localEdges = this.edges.map((d) => ({ ...d }));
       const edges = svg.select('g.edges').selectAll('g').data(localEdges)
-        .join(enter => enter.append('g').html('<title></title><line></line><text></text>'));
+        .join((enter) => enter.append('g').html('<title></title><line></line><text></text>'));
       edges.select('line')
-        .style('stroke-width', d => this.strokeScale(d.value))
-        .style('stroke', d => d.color);
-      edges.select('title').text(d => `${d.source} - ${d.target}: ${d.ori.toFixed(3)}`);
-      edges.select('text').text(d => d.ori.toFixed(3));
+        .style('stroke-width', (d) => this.strokeScale(d.value))
+        .style('stroke', (d) => d.color);
+      edges.select('title').text((d) => `${d.source} - ${d.target}: ${d.ori.toFixed(3)}`);
+      edges.select('text').text((d) => d.ori.toFixed(3));
 
       // towards center of screen
       simulation.nodes(localNodes);
@@ -345,8 +343,8 @@ export default {
       const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
 
       if (maxDistance === 0) {
-        nodes.style('visibility', node => (this.excludedItems.has(node.id) ? 'hidden' : 'visible'));
-        edges.style('visibility', edge => (this.excludedItems.has(edge.source.id) || this.excludedItems.has(edge.target.id) ? 'hidden' : 'visible'));
+        nodes.style('visibility', (node) => (this.excludedItems.has(node.id) ? 'hidden' : 'visible'));
+        edges.style('visibility', (edge) => (this.excludedItems.has(edge.source.id) || this.excludedItems.has(edge.target.id) ? 'hidden' : 'visible'));
         return;
       }
 
@@ -386,11 +384,11 @@ export default {
           visibleNodes.add(currentNode);
         }
       }
-      nodes.style('visibility', node => (
+      nodes.style('visibility', (node) => (
         (
           visibleNodes.has(node.id) && !this.excludedItems.has(node.id)
         ) ? '' : 'hidden'));
-      edges.style('visibility', edge => ((
+      edges.style('visibility', (edge) => ((
         (
           visibleEdges[edge.source.id].has(edge.target.id)
           || visibleEdges[edge.target.id].has(edge.source.id)

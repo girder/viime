@@ -38,11 +38,11 @@ export default {
         return () => -1;
       }
       const m = new Map(this.dataset.validatedMeasurements.columnNames.map((name, i) => [name, i]));
-      return column => (m.has(column) ? m.get(column) : -1);
+      return (column) => (m.has(column) ? m.get(column) : -1);
     },
     selectionLookup() {
       const selected = new Set((this.dataset && this.dataset.selectedColumns) || []);
-      return name => selected.has(name);
+      return (name) => selected.has(name);
     },
     countSelected() {
       return (this.dataset.selectedColumns || []).length;
@@ -62,7 +62,7 @@ export default {
         data: metaData.data[i],
         i,
         ...metaData.rowMetaData[i],
-      })).filter(d => d.subtype === 'categorical') : [];
+      })).filter((d) => d.subtype === 'categorical') : [];
     },
 
     selectedOption() {
@@ -88,7 +88,7 @@ export default {
       const metaOptions = this.categoricalMetaData.map(({ name, value, levels }) => ({
         name,
         value,
-        options: levels.map(d => ({ name: d.label, value: d.name, color: d.color })),
+        options: levels.map((d) => ({ name: d.label, value: d.name, color: d.color })),
       }));
 
       const empty = this.emptyOption ? [{

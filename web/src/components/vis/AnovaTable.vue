@@ -10,7 +10,7 @@ export default {
   props: {
     data: {
       type: Object,
-      validator: prop => !prop || ('data' in prop && 'pairs' in prop),
+      validator: (prop) => !prop || ('data' in prop && 'pairs' in prop),
       required: true,
     },
     threshold: {
@@ -44,7 +44,7 @@ export default {
           value: 'Group',
           isLabel: true,
         },
-        ...this.pairs.map(text => ({ text, value: text })),
+        ...this.pairs.map((text) => ({ text, value: text })),
       ];
     },
   },

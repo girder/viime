@@ -9,7 +9,6 @@ import {
 import { base26Converter } from '@/utils';
 import CleanupDataTable from '@/components/CleanupDataTable.vue';
 
-
 export default {
   components: {
     CleanupDataTable,
@@ -36,13 +35,13 @@ export default {
     radioValue() {
       const { type, ranges } = this.selected;
       const { members } = ranges;
-      const types = members.map(m => this.dataset[type].labels[m]);
+      const types = members.map((m) => this.dataset[type].labels[m]);
       const unique = [...new Set(types)];
       return unique.length === 1 ? unique[0] : null;
     },
     tagOptions() {
       return this.privateTagOptions[this.selected.type]
-        .filter(option => (this.selected.ranges.members.length > 1 ? !option.mutex : true));
+        .filter((option) => (this.selected.ranges.members.length > 1 ? !option.mutex : true));
     },
     selectedString() {
       const { members } = this.selected.ranges;
@@ -60,7 +59,7 @@ export default {
     base26Converter,
     async selectOption(label) {
       const { ranges, type: context } = this.selected;
-      const changes = ranges.members.map(index => ({ context, index, label }));
+      const changes = ranges.members.map((index) => ({ context, index, label }));
       await this.$store.dispatch(CHANGE_AXIS_LABEL, { dataset_id: this.id, changes });
     },
   },

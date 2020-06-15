@@ -49,18 +49,18 @@ export default {
       }
       if (value === 'selection') {
         const isSelected = this.selectionLookup;
-        return column => (isSelected(column) ? colors.selected : this.notSelectedColor);
+        return (column) => (isSelected(column) ? colors.selected : this.notSelectedColor);
       }
-      const meta = this.categoricalMetaData.find(d => d.name === value);
+      const meta = this.categoricalMetaData.find((d) => d.name === value);
       const lookup = new Map(meta.levels.map(({ name, color }) => [name, color]));
       const toIndex = this.columnToIndex;
-      return column => lookup.get(meta.data[toIndex(column)]);
+      return (column) => lookup.get(meta.data[toIndex(column)]);
     },
     generateLevels(value) {
       if (!value || value === this.emptyOption) {
         return [];
       }
-      return this.options.find(d => d.value === value).options;
+      return this.options.find((d) => d.value === value).options;
     },
     changeValue(value) {
       const wrapper = {

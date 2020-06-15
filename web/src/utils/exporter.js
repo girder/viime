@@ -1,9 +1,8 @@
+import { unparse } from 'papaparse';
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import font from '!url-loader?limit=undefined!@openfonts/barlow-condensed_all/files/barlow-condensed-all-400.woff2';
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import iconFont from '!url-loader?limit=undefined!@mdi/font/fonts/materialdesignicons-webfont.woff2';
-import { unparse } from 'papaparse';
-
 
 function isC3(node) {
   return node.querySelector('.c3-chart') != null;
@@ -38,9 +37,9 @@ function findScopedAttr(elem) {
     names = Array.from(elem.getAttributeNames());
   } else {
     // like edge
-    names = Array.from(elem.attributes).map(attr => attr.name);
+    names = Array.from(elem.attributes).map((attr) => attr.name);
   }
-  return names.find(d => d.startsWith('data-v-'));
+  return names.find((d) => d.startsWith('data-v-'));
 }
 
 export function svg2url(svgElement, options = {}) {

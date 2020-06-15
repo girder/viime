@@ -222,7 +222,6 @@ v-layout.pretreatment-component(row, fill-height)
     }
   }
 
-
   .sub-level {
     margin: 4px 0 4px 24px;
 

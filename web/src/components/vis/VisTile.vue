@@ -145,7 +145,6 @@ v-flex.white.rounded.main(shrink=1, :class="scaleClass")
   border-radius: 0 0 5px 5px;
 }
 
-
 .progress {
   position: absolute;
 }

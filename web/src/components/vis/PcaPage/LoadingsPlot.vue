@@ -21,13 +21,13 @@ export default {
 
     pcX: {
       type: Number,
-      validator: prop => Number.isInteger(prop),
+      validator: (prop) => Number.isInteger(prop),
       required: true,
     },
 
     pcY: {
       type: Number,
-      validator: prop => Number.isInteger(prop),
+      validator: (prop) => Number.isInteger(prop),
       required: true,
     },
 

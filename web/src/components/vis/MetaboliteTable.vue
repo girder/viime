@@ -42,10 +42,10 @@ export default {
     selectedItems: {
       get() {
         const s = new Set(this.value);
-        return this.items.filter(d => s.has(d.Metabolite));
+        return this.items.filter((d) => s.has(d.Metabolite));
       },
       set(newValue) {
-        const s = newValue.map(d => d.Metabolite);
+        const s = newValue.map((d) => d.Metabolite);
         this.$emit('input', s);
       },
     },
@@ -59,7 +59,7 @@ export default {
       evt.preventDefault();
       evt.stopPropagation();
 
-      const highlighted = this.items.filter(item => this.isInteresting(item[header.value]));
+      const highlighted = this.items.filter((item) => this.isInteresting(item[header.value]));
       const current = this.selectedItems.slice();
       const currentLookup = new Set(current);
       highlighted.forEach((item) => {

@@ -137,8 +137,8 @@ export const axisPlot = {
 
       labelAxis(svg.select('.label.x'),
         msg,
-        bbox => dwidth / 2 - bbox.width / 2,
-        bbox => dheight + margin.bottom / 2 + bbox.height / 2,
+        (bbox) => dwidth / 2 - bbox.width / 2,
+        (bbox) => dheight + margin.bottom / 2 + bbox.height / 2,
         0);
     },
 
@@ -155,8 +155,8 @@ export const axisPlot = {
 
       labelAxis(svg.select('.label.y'),
         msg,
-        bbox => -margin.left / 2 - bbox.height / 2,
-        bbox => dheight / 2 + bbox.width / 2,
+        (bbox) => -margin.left / 2 - bbox.height / 2,
+        (bbox) => dheight / 2 + bbox.width / 2,
         -90);
     },
     onResize() {

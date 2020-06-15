@@ -47,7 +47,7 @@ export default {
       const firstOption = this.options[0];
       const v = {
         option: firstOption.value,
-        filter: firstOption.options.map(d => d.value),
+        filter: firstOption.options.map((d) => d.value),
       };
       this.changeValue(v);
       return v;
@@ -58,31 +58,31 @@ export default {
       if (!value.option) {
         return () => true;
       }
-      const meta = this.categoricalMetaData.find(d => d.value === value.option);
+      const meta = this.categoricalMetaData.find((d) => d.value === value.option);
       const lookup = new Set(value.filter);
       const toIndex = this.rowToIndex;
-      return row => lookup.has(meta.data[toIndex(row)]);
+      return (row) => lookup.has(meta.data[toIndex(row)]);
     },
     generateGroupBy(value) {
       if (!value.option) {
-        return rows => [{
+        return (rows) => [{
           name: 'default',
           color: '#ffffff',
           rows,
           indices: rows.map((_, i) => i),
         }];
       }
-      const meta = this.categoricalMetaData.find(d => d.value === value.option);
+      const meta = this.categoricalMetaData.find((d) => d.value === value.option);
       const lookup = new Set(value.filter);
-      const options = meta.levels.filter(o => lookup.has(o.name));
+      const options = meta.levels.filter((o) => lookup.has(o.name));
       const toIndex = this.rowToIndex;
-      return rows => options.map((v) => {
-        const subset = rows.filter(row => meta.data[toIndex(row)] === v.name);
+      return (rows) => options.map((v) => {
+        const subset = rows.filter((row) => meta.data[toIndex(row)] === v.name);
         return {
           name: v.label,
           color: v.color,
           rows: subset,
-          indices: subset.map(r => toIndex(r)),
+          indices: subset.map((r) => toIndex(r)),
         };
       });
     },
