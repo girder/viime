@@ -105,7 +105,7 @@ export default {
     search(searchedNodes) {
       // highlights nodes being searched for
       const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g');
-      nodes.select('circle').style('fill', (d) => (searchedNodes.includes(d.id) ? 'red' : d.color));
+      nodes.select('circle').style('fill', (node, index) => (searchedNodes.includes(node.id) ? 'red' : this.nodes[index].color));
       this.showNodesWithinPathLength(this.search, this.visibleNodes);
     },
     highlightedItems(highlightedItems) {
@@ -119,12 +119,21 @@ export default {
       const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
       const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
       // hide nodes that have been deleted from search results
-      nodes.style('visibility', (node) => (excluded.has(node.id) ? 'hidden' : ''));
+      nodes.style('visibility', (node) => (excluded.has(node.id) ? 'hidden' : 'visible'));
       edges.style('visibility', (edge) => (excluded.has(edge.source.id) || excluded.has(edge.target.id) ? 'hidden' : 'visible'));
       this.showNodesWithinPathLength(this.search, this.visibleNodes);
     },
     visibleNodes(visibleNodes) {
       this.showNodesWithinPathLength(this.search, visibleNodes);
+    },
+    nodes(newNodes) {
+      // hide/unhide nodes based on node filter
+      const newNodeSet = new Set(newNodes.map((node) => node.id)); // convert to set for fast lookup
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+      nodes.style('visibility', (node) => (newNodeSet.has(node.id) ? 'visible' : 'hidden'))
+           .style('fill', (node, index) => (this.search.includes(node.id) ? 'red' : this.nodes[index].color));
+      edges.style('visibility', (edge) => (newNodeSet.has(edge.source.id) && newNodeSet.has(edge.target.id) ? 'visible' : 'hidden'));
     },
   },
   mounted() {
@@ -387,7 +396,7 @@ export default {
       nodes.style('visibility', (node) => (
         (
           visibleNodes.has(node.id) && !this.excludedItems.has(node.id)
-        ) ? '' : 'hidden'));
+        ) ? 'visible' : 'hidden'));
       edges.style('visibility', (edge) => ((
         (
           visibleEdges[edge.source.id].has(edge.target.id)
@@ -395,7 +404,7 @@ export default {
         )
         && !this.excludedItems.has(edge.source.id)
         && !this.excludedItems.has(edge.target.id)
-      ) ? '' : 'hidden'));
+      ) ? 'visible' : 'hidden'));
     },
   },
 };
