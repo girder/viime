@@ -548,8 +548,9 @@ export default {
       const w = canvas.width / this.columnLeaves.length;
       const h = canvas.height / this.rowLeaves.length;
 
-      const j = Math.floor(evt.offsetX / w);
-      const i = Math.floor(evt.offsetY / h);
+      const j = Math.floor(Math.max(evt.offsetX, 0) / w);
+      const i = Math.floor(Math.max(evt.offsetY, 0) / h);
+
       const rnode = this.rowLeaves[i].data;
       const cnode = this.columnLeaves[j].data;
       const rowChanged = changeHovered(this.row, rnode.indices);
