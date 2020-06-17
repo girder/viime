@@ -40,13 +40,14 @@ export default {
       searchBarResults: new Set(), // current results from autocomplete search box
       excludedSearchBarResults: new Set(),
       highlightedItems: new Set(),
+      depth: 0,
       depthOptions: [
-        { value: 0, text: 'Show all' },
-        { value: 1, text: 'Show 1' },
-        { value: 2, text: 'Show 2' },
-        { value: Infinity, text: 'Show reachable' },
+        { value: -1, text: 'All' },
+        { value: Infinity, text: 'Reachable' },
+        { value: 0, text: 'Within Depth' },
       ],
-      searchNodeVisibility: 0,
+      searchNodeVisibility: -1,
+      showSearchedNodes: true, // whether to show or hide searched nodes
     };
   },
 
@@ -91,6 +92,9 @@ export default {
     visibleNodes() {
       if (this.search === []) {
         return 0;
+      }
+      if (this.searchNodeVisibility === 0) {
+        return Number(this.depth);
       }
       return this.searchNodeVisibility;
     },
@@ -200,10 +204,18 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
           :disabled="excludedSearchBarResults.size === 0")
         v-icon.pr-2 mdi-eye
         | Unhide Nodes
+      v-switch(v-model="showSearchedNodes", label="Invert visibility")
       v-select.py-2(
           hide-details,
           v-model="searchNodeVisibility",
           :items="depthOptions")
+      v-text-field(type="number",
+          min="0",
+          v-if="searchNodeVisibility === 0",
+          v-model="depth",
+          style="width:2em;",
+          label="Depth",
+          placeholder="#")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Advanced Options
@@ -225,7 +237,8 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
         :search="search",
         :highlighted-items="highlightedItems",
         :excluded-items="excludedSearchBarResults",
-        :visible-nodes="visibleNodes")
+        :visible-nodes="visibleNodes",
+        :show-searched-nodes="showSearchedNodes")
 </template>
 
 <style scoped>
