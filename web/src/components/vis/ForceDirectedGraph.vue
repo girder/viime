@@ -103,16 +103,16 @@ export default {
   },
   watch: {
     search(searchedNodes) {
-      // highlights nodes being searched for
-      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g');
-      nodes.select('circle').style('fill', (node, index) => (searchedNodes.includes(node.id) ? 'red' : this.nodes[index].color));
+      // circles nodes being searched for
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
+      nodes.style('stroke', (node) => (searchedNodes.includes(node.id) ? 'red' : ''))
+        .style('stroke-width', (node) => (searchedNodes.includes(node.id) ? '2' : '1'));
       this.showNodesWithinPathLength(this.search, this.visibleNodes);
     },
     highlightedItems(highlightedItems) {
-      // circles nodes in search results
+      // highlights nodes in search results
       const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
-      nodes.style('stroke', (d) => (highlightedItems.has(d.id) ? 'red' : d.color));
-      nodes.style('stroke-width', (d) => (highlightedItems.has(d.id) ? '2' : '1'));
+      nodes.style('fill', (node, index) => (highlightedItems.has(node.id) ? 'red' : this.nodes[index].color));
     },
     excludedItems(excluded) {
       // circles nodes in search results
@@ -132,7 +132,7 @@ export default {
       const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
       const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
       nodes.style('visibility', (node) => (newNodeSet.has(node.id) ? 'visible' : 'hidden'))
-           .style('fill', (node, index) => (this.search.includes(node.id) ? 'red' : this.nodes[index].color));
+        .style('fill', (node, index) => (this.highlightedItems.has(node.id) ? 'red' : this.nodes[index].color));
       edges.style('visibility', (edge) => (newNodeSet.has(edge.source.id) && newNodeSet.has(edge.target.id) ? 'visible' : 'hidden'));
     },
   },
@@ -309,7 +309,9 @@ export default {
 
       nodes.select('circle')
         .attr('r', this.radius)
-        .style('fill', (d) => (this.search.includes(d.id) ? 'red' : d.color))
+        .style('fill', (d) => d.color)
+        .style('stroke', (d) => (this.search.includes(d.id) ? 'red' : ''))
+        .style('stroke-width', (d) => (this.search.includes(d.id) ? '2' : '1'))
         .on('click', resetPinned)
         .call(drag()
           .container(function container() {
