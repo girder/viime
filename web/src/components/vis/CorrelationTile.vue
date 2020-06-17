@@ -184,10 +184,13 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
                 | mdi-eye-off
               span {{ data.item }}
           template(v-slot:selection="data")
-            v-chip(small)
-              v-icon.closePillButton.pr-1(small,
-                  @click.stop="unselect(data.item)")
-                | mdi-close
+            v-tooltip(right)
+              template(v-slot:activator="{ on, attrs }")
+                v-chip(small, v-on="on")
+                  v-icon.closePillButton.pr-1(small,
+                      @click.stop="unselect(data.item)")
+                    | mdi-close
+                  span.searchResult {{ data.item }}
               span {{ data.item }}
       v-btn.my-0.mx-0.mt-2(small, flat, @click="clearSearch")
         v-icon.pr-2 mdi-close
@@ -226,6 +229,12 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
 </template>
 
 <style scoped>
+.searchResult {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  width: 100px;
+}
 .closePillButton:hover {
   color: red;
 }
