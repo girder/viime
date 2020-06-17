@@ -50,7 +50,7 @@ v-layout.pretreatment-component(row, fill-height)
 
   v-navigation-drawer.navigation(floating, permanent, style="min-width: 220px; width: 220px;",
       touchless, disable-resize-watcher, stateless)
-    v-list(dense)
+    v-list.py-0(dense)
       v-list-group(
           v-for="(dataset, index) in datasets",
           :key="dataset.id",
