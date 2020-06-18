@@ -46,7 +46,7 @@ export default {
 v-layout(v-else, row, fill-height)
   v-navigation-drawer.primary.darken-3.nav-drawer(
       v-if="hasControls", permanent,
-      style="width: 200px;min-width: 200px;",
+      style="width: 215px;min-width: 215px;",
       touchless, disable-resize-watcher, stateless)
     slot(name="controls")
 
