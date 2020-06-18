@@ -1,55 +1,77 @@
-<script>
+<script lang="ts">
+import {
+  PropType, defineComponent, computed, ref, watch, onMounted,
+} from '@vue/composition-api';
+import { axisTop, axisLeft, Axis } from 'd3-axis';
 import { select } from 'd3-selection';
-import { scaleBand } from 'd3-scale';
+import { scaleBand, scaleLinear } from 'd3-scale';
 import { boxplot, boxplotStats } from 'd3-boxplot';
 import 'd3-transition';
 
-import { axisPlot } from './mixins/axisPlot';
-import { measurementColumnName, measurementValueName } from '../../utils/constants';
+import { measurementColumnName, measurementValueName } from '@/utils/constants';
+import useAxisPlot from './use/useAxisPlot';
 
-export default {
-  mixins: [
-    axisPlot,
-  ],
+interface Row {
+  name: string;
+  values?: number[];
+  groups?: {
+    name: string;
+    color: string;
+    values: number[];
+  }[];
+}
+
+interface Group {
+  name: string;
+  values?: number[];
+}
+
+interface Stats {
+  name: string;
+  groups: Stats[];
+  group: string;
+  value: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+export default defineComponent({
   props: {
-    rows: { // {name: string, values?: number[],
-      //  groups?: {name: string, color: string, values: number[][]}
-      // }[]
-      type: Array,
+    rows: {
+      type: Array as PropType<Row[]>,
       default: () => [],
     },
     groups: {
-      type: Array,
+      type: Array as PropType<Group[]>,
       required: false,
       default: null,
     },
   },
-  data() {
-    return {
-      margin: {
-        top: 20,
-        right: 20,
-        bottom: 50,
-        left: 120,
-      },
-      duration: 200,
-      ylabel: measurementColumnName,
-      xlabel: measurementValueName,
+  setup(props) {
+    const svgRef = ref(document.createElement('svg'));
+    const margin = {
+      top: 20,
+      right: 20,
+      bottom: 50,
+      left: 120,
     };
-  },
-  computed: {
-    scaleY() {
-      const { rows, dheight } = this;
-      return scaleBand()
-        .domain(rows.map((d) => d.name))
-        .range([0, dheight], 0.1);
-    },
-    scaleGroup() {
-      return scaleBand()
-        .domain(this.groups || [])
-        .range([0, this.scaleY.bandwidth()], 0.1);
-    },
-    xrange() {
+    const duration = 200;
+    const xlabel = measurementColumnName;
+    const ylabel = measurementValueName;
+
+    const boxHeight = 25;
+    const width = ref(800);
+    const height = computed(() => props.rows.length * boxHeight);
+
+    const {
+      dwidth,
+      dheight,
+      axisPlot,
+      setXLabel,
+      setYLabel,
+    } = useAxisPlot<number>(margin, width, height);
+
+    const xrange = computed(() => {
       let min = Number.POSITIVE_INFINITY;
       let max = Number.NEGATIVE_INFINITY;
 
@@ -61,7 +83,7 @@ export default {
           max = v;
         }
       };
-      this.rows.forEach((row) => {
+      props.rows.forEach((row) => {
         if (row.values) {
           row.values.forEach(pushValue);
         }
@@ -70,27 +92,35 @@ export default {
         }
       });
       return [min, max];
-    },
-    boxHeight() {
-      return !this.groups ? this.scaleY.bandwidth() : this.scaleGroup.bandwidth();
-    },
-  },
-  watch: {
-    rows() {
-      this.update();
-    },
-  },
-  mounted() {
-    this.update();
-  },
-  methods: {
-    update() {
+    });
+    const yrange = [-1, 1];
+
+    const scaleX = computed(() => scaleLinear()
+      .domain(xrange.value)
+      .range([0, dwidth.value]));
+    const scaleY = computed(() => scaleBand()
+      .domain(props.rows.map((d) => d.name))
+      // @ts-ignore d3 typings are bad
+      .range([0, dheight.value], 0.1));
+    const scaleGroup = computed(() => scaleBand()
+      // @ts-ignore d3 typings are bad
+      .domain(props.groups || []));
+
+    const axisX = computed(() => axisTop(scaleX.value) as Axis<number>);
+    const axisY = computed(() => axisLeft(scaleY.value) as Axis<number>);
+
+    /**
+     * Update function called on mount and whenever
+     * props.rows changes
+     */
+    function update() {
       // Compute the total variance in all the PCs.
-      const svg = select(this.$refs.svg);
-      this.axisPlot(svg);
+      const svg = select<SVGElement, null>(svgRef.value);
+      axisPlot(svg, axisX.value, axisY.value);
 
       // compute stats
-      const stats = this.rows.map((d) => ({
+      // TODO: formalize shape of stats with interface
+      const stats: Stats[] = props.rows.map((d) => ({
         ...d,
         ...(d.values ? boxplotStats(d.values) : {}),
         groups: d.groups ? d.groups.map((group) => ({
@@ -102,89 +132,123 @@ export default {
       }));
 
       const layout = boxplot()
-        .scale(this.scaleX)
+        .scale(scaleX.value)
         .vertical(false)
         .showInnerDots(false)
-        .bandwidth(this.boxHeight)
-        .boxwidth(this.boxHeight * 0.8);
+        .bandwidth(boxHeight)
+        .boxwidth(boxHeight * 0.8);
 
-      const base = svg.select('.plot');
-      let boxplots;
+      const base = svg.select<SVGGElement>('.plot');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let boxplots: any;
 
-      if (!this.groups) {
+      if (!props.groups) {
         base.selectAll('g.boxplots').remove();
         boxplots = base.selectAll('g.boxplot').data(stats, (d) => d.name)
           .join((enter) => enter.append('g').classed('boxplot', true))
-          .attr('transform', (d) => `translate(0, ${this.scaleY(d.name)})`);
+          .attr('transform', (d) => `translate(0, ${scaleY.value(d.name)})`);
       } else {
         base.selectAll('g.boxplot').remove();
         const boxplotGroups = base.selectAll('g.boxplots').data(stats, (d) => d.name)
           .join((enter) => enter.append('g').classed('boxplots', true))
-          .attr('transform', (d) => `translate(0, ${this.scaleY(d.name)})`);
+          .attr('transform', (d) => `translate(0, ${scaleY.value(d.name)})`);
 
         boxplots = boxplotGroups.selectAll('g.group').data((d) => d.groups, (d) => d.group)
           .join((enter) => enter.append('g').classed('group', true))
-          .attr('transform', (d) => `translate(0, ${this.scaleGroup(d.group)})`);
+          .attr('transform', (d) => `translate(0, ${scaleGroup.value(d.group)})`);
       }
+
+      console.log(boxplot(boxplots[0]));
 
       boxplots
         .transition()
-        .duration(this.duration)
+        .duration(duration)
+        // @ts-ignore
         .call(layout)
         .end()
         // silently catch any transition interruptions from consecutive updates
         .catch(() => {})
         .then(() => {
           // inject tooltips
-          const f = (d) => d.toFixed(3);
+          const f = (d: number) => d.toFixed(3);
 
           // outliers: show the value
           boxplots.select('g.point').selectAll('.outlier')
-            .html((d) => `<title>${f(d.value)}</title>`);
+            .html((d: Stats) => `<title>${f(d.value)}</title>`);
 
-          const count = (values, min, max) => values
+          const count = (values: number[], min: number, max: number) => values
             .reduce((acc, v) => acc + (v >= min && v < max ? 1 : 0), 0);
 
           // inject rect backgrounds for whiskers
           const whiskers = boxplots.select('.whisker');
 
           boxplots.select('.whisker path')
-            .html((d) => `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`);
+            .html((d: Stats) => `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`);
           boxplots.select('.box line')
             .style('stroke', (d) => d.color)
-            .html((d) => `<title>${d.name}: ${f(d.fiveNums[1])} (q1) - ${f(d.fiveNums[2])} (median) = ${count(d.values, d.fiveNums[1], d.fiveNums[2])} Items</title>`);
+            .html((d: Stats) => `<title>${d.name}: ${f(d.fiveNums[1])} (q1) - ${f(d.fiveNums[2])} (median) = ${count(d.values, d.fiveNums[1], d.fiveNums[2])} Items</title>`);
           boxplots.select('.box line:last-of-type')
             .style('stroke', (d) => d.color)
-            .html((d) => `<title>${d.name}: ${f(d.fiveNums[2])} (median) - ${f(d.fiveNums[3])} (q3) = ${count(d.values, d.fiveNums[2], d.fiveNums[3])} Items</title>`);
+            .html((d: Stats) => `<title>${d.name}: ${f(d.fiveNums[2])} (median) - ${f(d.fiveNums[3])} (q3) = ${count(d.values, d.fiveNums[2], d.fiveNums[3])} Items</title>`);
           boxplots.select('.whisker path:last-of-type')
-            .html((d) => `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`);
+            .html((d: Stats) => `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`);
 
           const bgs = whiskers.selectAll('rect').data((d) => [d, d]).join('rect');
           bgs
-            .attr('x', (d, i) => this.scaleX(Math.min(d.whiskers[i].start, d.whiskers[i].end)))
-            .attr('y', this.boxHeight * -0.5)
-            .attr('width', (d, i) => this.scaleX(Math.abs(d.whiskers[i].start - d.whiskers[i].end)))
-            .attr('height', this.boxHeight)
+            .attr('x', (d: Stats, i: number) => scaleX.value(Math.min(d.whiskers[i].start, d.whiskers[i].end)))
+            .attr('y', boxHeight * -0.5)
+            .attr('width', (d: Stats, i: number) => scaleX.value(Math.abs(d.whiskers[i].start - d.whiskers[i].end)))
+            .attr('height', boxHeight)
             .style('fill', 'transparent')
-            .html((d, i) => (i === 0
+            .html((d: Stats, i: number) => (i === 0
               ? `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`
               : `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`));
         });
-    },
+    }
+
+    watch(props.rows, update);
+    onMounted(update);
+
+    return {
+      width,
+      height,
+      margin,
+      dwidth,
+      dheight,
+      xlabel,
+      ylabel,
+      svgRef,
+    };
   },
-};
+});
 </script>
 
-<template lang="pug">
-.main(v-resize:throttle="onResize")
-  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
-    g.master
-      g.axes
-      g.plot
-    text.x.label(:transform="`translate(${margin.left + dwidth / 2},${height - 10})`")
-      | {{xlabel}}
-    text.y.label(:transform="`translate(${10},${margin.top + dheight / 2})rotate(-90)`")
-      | {{ylabel}}
+<template>
+  <div class="main">
+    <svg
+      ref="svgRef"
+      :width="width"
+      :height="height"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g class="master">
+        <g class="axes" />
+        <g class="plot" />
+      </g>
+      <text
+        class="x label"
+        :transform="`translate(${margin.left + dwidth / 2},${height - 10})`"
+      >
+        {{ xlabel }}
+      </text>
+      <text
+        class="y label"
+        :transform="`translate(${10},${margin.top + dheight / 2})rotate(-90)`"
+      >
+        {{ ylabel }}
+      </text>
+    </svg>
+  </div>
 </template>
 
 <style scoped>
