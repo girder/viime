@@ -2,7 +2,6 @@ import {
   reactive, computed, toRefs, Ref,
 } from '@vue/composition-api';
 import { Selection } from 'd3-selection';
-import { Axis, AxisDomain } from 'd3-axis';
 
 interface PositionFunc {
   (bbox: DOMRect): number;
@@ -29,7 +28,7 @@ interface Margin {
   right: number;
 }
 
-export default function useAxisPlot<AxisDomain>(
+export default function useAxisPlot(
   margin: Margin, width: Ref<number>, height: Ref<number>, duration = 500,
 ) {
   const data = reactive({
@@ -40,18 +39,17 @@ export default function useAxisPlot<AxisDomain>(
   const dheight = computed(() => height.value - margin.top - margin.bottom);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function axisPlot(svg: any, axisX: Axis<AxisDomain>, axisY: Axis<AxisDomain>) {
+  function axisPlot(svg: any, axisX: any, axisY: any) {
     // Set a "master" SVG group.
     const master = svg.select('g.master').attr('transform', `translate(${margin.left},${margin.top})`);
     const axes = master.select('g.axes');
+
     if (axes.select('.x-axis').size() === 0) {
       axes.append('g')
         .classed('x-axis', true)
-        .attr('transform', `translate(0,${dheight})`)
         .call(axisX);
     } else {
       axes.select('.x-axis')
-        .attr('transform', `translate(0,${dheight})`)
         .transition()
         .duration(duration)
         .call(axisX);
@@ -60,7 +58,7 @@ export default function useAxisPlot<AxisDomain>(
     if (axes.select('.y-axis').size() === 0) {
       axes.append('g')
         .classed('y-axis', true)
-        .attr('transform', 'translate(0,0)')
+        .attr('transform', `translate(0,${margin.top})`)
         .call(axisY);
     } else {
       axes.select('.y-axis')

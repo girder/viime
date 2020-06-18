@@ -2,13 +2,14 @@
 import {
   PropType, defineComponent, computed, ref, watch, onMounted,
 } from '@vue/composition-api';
-import { axisTop, axisLeft, Axis } from 'd3-axis';
+import { axisTop, axisLeft } from 'd3-axis';
 import { select } from 'd3-selection';
 import { scaleBand, scaleLinear } from 'd3-scale';
-import { boxplot, boxplotStats } from 'd3-boxplot';
+import { boxplotStats } from 'd3-boxplot';
 import 'd3-transition';
 
 import { measurementColumnName, measurementValueName } from '@/utils/constants';
+import BoxplotBox from '@/components/vis/snippets/BoxplotBox.vue';
 import useAxisPlot from './use/useAxisPlot';
 
 interface Row {
@@ -23,16 +24,7 @@ interface Row {
 
 interface Group {
   name: string;
-  values?: number[];
-}
-
-interface Stats {
-  name: string;
-  groups: Stats[];
-  group: string;
-  value: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  values: number[];
 }
 
 export default defineComponent({
@@ -43,10 +35,12 @@ export default defineComponent({
     },
     groups: {
       type: Array as PropType<Group[]>,
-      required: false,
-      default: null,
+      default: () => [],
     },
   },
+
+  components: { BoxplotBox },
+
   setup(props) {
     const svgRef = ref(document.createElement('svg'));
     const margin = {
@@ -55,34 +49,31 @@ export default defineComponent({
       bottom: 50,
       left: 120,
     };
-    const duration = 200;
     const xlabel = measurementColumnName;
     const ylabel = measurementValueName;
 
     const boxHeight = 25;
     const width = ref(800);
-    const height = computed(() => props.rows.length * boxHeight);
+    const height = computed(() => (props.rows.length * boxHeight) + (margin.top + margin.bottom));
 
     const {
       dwidth,
       dheight,
       axisPlot,
-      setXLabel,
-      setYLabel,
-    } = useAxisPlot<number>(margin, width, height);
+    } = useAxisPlot(margin, width, height);
 
     const xrange = computed(() => {
       let min = Number.POSITIVE_INFINITY;
       let max = Number.NEGATIVE_INFINITY;
 
-      const pushValue = (v) => {
+      function pushValue(v: number) {
         if (v < min) {
           min = v;
         }
         if (v > max) {
           max = v;
         }
-      };
+      }
       props.rows.forEach((row) => {
         if (row.values) {
           row.values.forEach(pushValue);
@@ -93,7 +84,6 @@ export default defineComponent({
       });
       return [min, max];
     });
-    const yrange = [-1, 1];
 
     const scaleX = computed(() => scaleLinear()
       .domain(xrange.value)
@@ -102,112 +92,72 @@ export default defineComponent({
       .domain(props.rows.map((d) => d.name))
       // @ts-ignore d3 typings are bad
       .range([0, dheight.value], 0.1));
-    const scaleGroup = computed(() => scaleBand()
-      // @ts-ignore d3 typings are bad
-      .domain(props.groups || []));
+    // const scaleGroup = computed(() => scaleBand()
+    //   // @ts-ignore d3 typings are bad
+    //   .domain(props.groups || []));
 
-    const axisX = computed(() => axisTop(scaleX.value) as Axis<number>);
-    const axisY = computed(() => axisLeft(scaleY.value) as Axis<number>);
+    const axisX = computed(() => axisTop(scaleX.value));
+    const axisY = computed(() => axisLeft(scaleY.value));
 
-    /**
-     * Update function called on mount and whenever
-     * props.rows changes
-     */
-    function update() {
-      // Compute the total variance in all the PCs.
-      const svg = select<SVGElement, null>(svgRef.value);
-      axisPlot(svg, axisX.value, axisY.value);
+    const boxData = computed(() => {
+      const valueStats = props.rows.map((r) => {
+        if (r.values) {
+          return {
+            group: '',
+            boxes: [{
+              name: r.name,
+              stats: boxplotStats(r.values),
+            }],
+          };
+        }
+        if (r.groups) {
+          return {
+            group: r.name,
+            boxes: r.groups.map((g) => ({
+              name: `${r.name} ${g.name}`,
+              stats: boxplotStats(g.values),
+            })),
+          };
+        }
+        throw new Error('Row must contain 1 of values, groups');
+      });
 
-      // compute stats
-      // TODO: formalize shape of stats with interface
-      const stats: Stats[] = props.rows.map((d) => ({
-        ...d,
-        ...(d.values ? boxplotStats(d.values) : {}),
-        groups: d.groups ? d.groups.map((group) => ({
-          ...group,
-          group: group.name,
-          name: `${d.name} ${group.name}`,
-          ...boxplotStats(group.values),
-        })) : null,
+      const _scaleX = scaleX.value;
+      const _scaleY = scaleY.value;
+
+      return valueStats.map((data) => ({
+        group: data.group,
+        boxes: data.boxes.map((box) => ({
+          name: box.name,
+          transform: `translate(0, ${_scaleY(box.name) + (boxHeight / 2)})`,
+          lines: box.stats.boxes.map((b) => ({
+            x1: _scaleX(b.start),
+            x2: _scaleX(b.end),
+          })),
+          circles: box.stats.points
+            .filter((p) => p.outlier)
+            .map((p) => ({
+              cx: _scaleX(p.value),
+            })),
+          whiskers: box.stats.whiskers.map((p) => ({
+            d: `
+              M${[_scaleX(p.start), -0.4 * boxHeight]}
+              l${[0, boxHeight * 0.8]}
+              m${[0, -0.4 * boxHeight]}
+              L${[_scaleX(p.end), 0]}
+            `,
+          })),
+        })),
       }));
+    });
 
-      const layout = boxplot()
-        .scale(scaleX.value)
-        .vertical(false)
-        .showInnerDots(false)
-        .bandwidth(boxHeight)
-        .boxwidth(boxHeight * 0.8);
-
-      const base = svg.select<SVGGElement>('.plot');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let boxplots: any;
-
-      if (!props.groups) {
-        base.selectAll('g.boxplots').remove();
-        boxplots = base.selectAll('g.boxplot').data(stats, (d) => d.name)
-          .join((enter) => enter.append('g').classed('boxplot', true))
-          .attr('transform', (d) => `translate(0, ${scaleY.value(d.name)})`);
-      } else {
-        base.selectAll('g.boxplot').remove();
-        const boxplotGroups = base.selectAll('g.boxplots').data(stats, (d) => d.name)
-          .join((enter) => enter.append('g').classed('boxplots', true))
-          .attr('transform', (d) => `translate(0, ${scaleY.value(d.name)})`);
-
-        boxplots = boxplotGroups.selectAll('g.group').data((d) => d.groups, (d) => d.group)
-          .join((enter) => enter.append('g').classed('group', true))
-          .attr('transform', (d) => `translate(0, ${scaleGroup.value(d.group)})`);
-      }
-
-      console.log(boxplot(boxplots[0]));
-
-      boxplots
-        .transition()
-        .duration(duration)
-        // @ts-ignore
-        .call(layout)
-        .end()
-        // silently catch any transition interruptions from consecutive updates
-        .catch(() => {})
-        .then(() => {
-          // inject tooltips
-          const f = (d: number) => d.toFixed(3);
-
-          // outliers: show the value
-          boxplots.select('g.point').selectAll('.outlier')
-            .html((d: Stats) => `<title>${f(d.value)}</title>`);
-
-          const count = (values: number[], min: number, max: number) => values
-            .reduce((acc, v) => acc + (v >= min && v < max ? 1 : 0), 0);
-
-          // inject rect backgrounds for whiskers
-          const whiskers = boxplots.select('.whisker');
-
-          boxplots.select('.whisker path')
-            .html((d: Stats) => `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`);
-          boxplots.select('.box line')
-            .style('stroke', (d) => d.color)
-            .html((d: Stats) => `<title>${d.name}: ${f(d.fiveNums[1])} (q1) - ${f(d.fiveNums[2])} (median) = ${count(d.values, d.fiveNums[1], d.fiveNums[2])} Items</title>`);
-          boxplots.select('.box line:last-of-type')
-            .style('stroke', (d) => d.color)
-            .html((d: Stats) => `<title>${d.name}: ${f(d.fiveNums[2])} (median) - ${f(d.fiveNums[3])} (q3) = ${count(d.values, d.fiveNums[2], d.fiveNums[3])} Items</title>`);
-          boxplots.select('.whisker path:last-of-type')
-            .html((d: Stats) => `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`);
-
-          const bgs = whiskers.selectAll('rect').data((d) => [d, d]).join('rect');
-          bgs
-            .attr('x', (d: Stats, i: number) => scaleX.value(Math.min(d.whiskers[i].start, d.whiskers[i].end)))
-            .attr('y', boxHeight * -0.5)
-            .attr('width', (d: Stats, i: number) => scaleX.value(Math.abs(d.whiskers[i].start - d.whiskers[i].end)))
-            .attr('height', boxHeight)
-            .style('fill', 'transparent')
-            .html((d: Stats, i: number) => (i === 0
-              ? `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`
-              : `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`));
-        });
+    function update() {
+      const svg = select(svgRef.value);
+      axisPlot(svg, axisX.value, axisY.value);
     }
 
-    watch(props.rows, update);
-    onMounted(update);
+    watch(props, () => update());
+    onMounted(() => update());
 
     return {
       width,
@@ -218,6 +168,7 @@ export default defineComponent({
       xlabel,
       ylabel,
       svgRef,
+      boxData,
     };
   },
 });
@@ -233,7 +184,22 @@ export default defineComponent({
     >
       <g class="master">
         <g class="axes" />
-        <g class="plot" />
+        <g
+          class="plot"
+          :transform="`translate(0, ${margin.top})`"
+        >
+          <template
+            v-for="group in boxData"
+          >
+            <boxplot-box
+              v-for="box in group.boxes"
+              :key="group.group + box.name"
+              :transform="box.transform"
+              :data="box"
+              class="boxplot"
+            />
+          </template>
+        </g>
       </g>
       <text
         class="x label"
@@ -252,11 +218,7 @@ export default defineComponent({
 </template>
 
 <style scoped>
-.label.x {
-  text-anchor: middle;
-}
-
-.label.y {
-  dominant-baseline: central;
+.boxplot {
+  transition: .4s ease-in-out;
 }
 </style>
