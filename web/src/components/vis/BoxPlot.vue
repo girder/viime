@@ -41,8 +41,9 @@ export default defineComponent({
 
   components: { BoxplotBox },
 
-  setup(props) {
+  setup(props, ctx) {
     const svgRef = ref(document.createElement('svg'));
+    const mainRef = ref(document.createElement('div'));
     const margin = {
       top: 40,
       right: 20,
@@ -64,7 +65,6 @@ export default defineComponent({
     const {
       dwidth,
       dheight,
-
       axisPlot,
     } = useAxisPlot(margin, width, height);
 
@@ -95,12 +95,14 @@ export default defineComponent({
       .domain(xrange.value)
       .range([0, dwidth.value]));
     const scaleY = computed(() => scaleBand()
+      // @ts-ignore d3 typings are bad
       .domain(props.rows.map((d) => d.name))
       // @ts-ignore d3 typings are bad
       .range([0, dheight.value], 0.1));
     const scaleGroup = computed(() => scaleBand()
       // @ts-ignore d3 typings are bad
       .domain(props.groups || [])
+      // @ts-ignore d3 typings are bad
       .range([0, groupCount.value * boxHeight], 0.1));
 
     const axisX = computed(() => axisTop(scaleX.value));
@@ -139,7 +141,7 @@ export default defineComponent({
 
       return valueStats.map((data) => ({
         metabolite: data.metabolite,
-        transform: `translate(0, ${_scaleY(data.metabolite) + (boxHeight / 2)})`,
+        transform: `translate(0, ${(_scaleY(data.metabolite) || 0) + (boxHeight / 2)})`,
         boxes: data.boxes.map((box) => ({
           title: box.title,
           transform: `translate(0, ${_scaleGroup(box.group) || 0})`,
@@ -170,8 +172,16 @@ export default defineComponent({
       axisPlot(svg, axisX.value, axisY.value);
     }
 
+    function onResize() {
+      const bb = mainRef.value.getBoundingClientRect();
+      width.value = bb.width;
+    }
+
     watch(props, () => update());
-    onMounted(() => update());
+    onMounted(() => {
+      update();
+      onResize();
+    });
 
     return {
       width,
@@ -182,14 +192,20 @@ export default defineComponent({
       xlabel,
       ylabel,
       svgRef,
+      mainRef,
       boxData,
+      onResize,
     };
   },
 });
 </script>
 
 <template>
-  <div class="main">
+  <div
+    ref="mainRef"
+    v-resize:throttle="onResize"
+    class="main"
+  >
     <svg
       ref="svgRef"
       :width="width"
