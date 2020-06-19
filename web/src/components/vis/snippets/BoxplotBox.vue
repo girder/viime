@@ -2,9 +2,17 @@
 import Vue, { PropType } from 'vue';
 
 export interface BoxData {
-  whiskers: { d: string }[];
-  lines: { x1: number; x2: number }[];
-  circles: { cx: number }[];
+  whiskers: {
+    d: string;
+  }[];
+  lines: {
+    x1: number;
+    x2: number;
+    stroke: string;
+  }[];
+  circles: {
+    cx: number;
+  }[];
 }
 
 export default Vue.extend({
@@ -34,12 +42,10 @@ export default Vue.extend({
         v-for="(line, i) in data.lines"
         :key="i"
         v-bind="line"
-        stroke="black"
-        stroke-width="20"
+        stroke-width="16"
         opacity="0.7"
         y1="0"
         y2="0"
-        height="20"
       />
     </g>
     <g class="point">

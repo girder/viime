@@ -58,7 +58,6 @@ export default function useAxisPlot(
     if (axes.select('.y-axis').size() === 0) {
       axes.append('g')
         .classed('y-axis', true)
-        .attr('transform', `translate(0,${margin.top})`)
         .call(axisY);
     } else {
       axes.select('.y-axis')

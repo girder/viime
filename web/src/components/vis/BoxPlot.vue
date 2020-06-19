@@ -44,21 +44,27 @@ export default defineComponent({
   setup(props) {
     const svgRef = ref(document.createElement('svg'));
     const margin = {
-      top: 20,
+      top: 40,
       right: 20,
       bottom: 50,
-      left: 120,
+      left: 150,
     };
     const xlabel = measurementColumnName;
     const ylabel = measurementValueName;
 
-    const boxHeight = 25;
+    const boxHeight = 20;
+    // number of groups is len(groups) or 1
+    const groupCount = computed(() => (props.groups || []).length || 1);
     const width = ref(800);
-    const height = computed(() => (props.rows.length * boxHeight) + (margin.top + margin.bottom));
+    // height is rows * groups per row * height per box (plus margins)
+    const height = computed(() => (
+      (props.rows.length * boxHeight * groupCount.value)
+      + (margin.top + margin.bottom)));
 
     const {
       dwidth,
       dheight,
+
       axisPlot,
     } = useAxisPlot(margin, width, height);
 
@@ -92,9 +98,10 @@ export default defineComponent({
       .domain(props.rows.map((d) => d.name))
       // @ts-ignore d3 typings are bad
       .range([0, dheight.value], 0.1));
-    // const scaleGroup = computed(() => scaleBand()
-    //   // @ts-ignore d3 typings are bad
-    //   .domain(props.groups || []));
+    const scaleGroup = computed(() => scaleBand()
+      // @ts-ignore d3 typings are bad
+      .domain(props.groups || [])
+      .range([0, groupCount.value * boxHeight], 0.1));
 
     const axisX = computed(() => axisTop(scaleX.value));
     const axisY = computed(() => axisLeft(scaleY.value));
@@ -103,18 +110,22 @@ export default defineComponent({
       const valueStats = props.rows.map((r) => {
         if (r.values) {
           return {
-            group: '',
+            metabolite: r.name,
             boxes: [{
-              name: r.name,
+              title: r.name,
+              group: '',
+              color: 'black',
               stats: boxplotStats(r.values),
             }],
           };
         }
         if (r.groups) {
           return {
-            group: r.name,
+            metabolite: r.name,
             boxes: r.groups.map((g) => ({
-              name: `${r.name} ${g.name}`,
+              title: `${r.name} ${g.name}`,
+              group: g.name,
+              color: g.color,
               stats: boxplotStats(g.values),
             })),
           };
@@ -124,15 +135,18 @@ export default defineComponent({
 
       const _scaleX = scaleX.value;
       const _scaleY = scaleY.value;
+      const _scaleGroup = scaleGroup.value;
 
       return valueStats.map((data) => ({
-        group: data.group,
+        metabolite: data.metabolite,
+        transform: `translate(0, ${_scaleY(data.metabolite) + (boxHeight / 2)})`,
         boxes: data.boxes.map((box) => ({
-          name: box.name,
-          transform: `translate(0, ${_scaleY(box.name) + (boxHeight / 2)})`,
+          title: box.title,
+          transform: `translate(0, ${_scaleGroup(box.group) || 0})`,
           lines: box.stats.boxes.map((b) => ({
             x1: _scaleX(b.start),
             x2: _scaleX(b.end),
+            stroke: box.color,
           })),
           circles: box.stats.points
             .filter((p) => p.outlier)
@@ -184,21 +198,20 @@ export default defineComponent({
     >
       <g class="master">
         <g class="axes" />
-        <g
-          class="plot"
-          :transform="`translate(0, ${margin.top})`"
-        >
-          <template
+        <g class="plot">
+          <g
             v-for="group in boxData"
+            :key="group.metabolite"
+            :transform="group.transform"
+            class="boxplot"
           >
             <boxplot-box
               v-for="box in group.boxes"
-              :key="group.group + box.name"
+              :key="box.title"
               :transform="box.transform"
               :data="box"
-              class="boxplot"
             />
-          </template>
+          </g>
         </g>
       </g>
       <text
@@ -220,5 +233,8 @@ export default defineComponent({
 <style scoped>
 .boxplot {
   transition: .4s ease-in-out;
+}
+.axes >>> text {
+  font-size: 14px;
 }
 </style>
