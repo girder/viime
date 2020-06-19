@@ -41,13 +41,25 @@ div
         v-radio.wide.mr-0(v-for="m in options",
             :value="m.value", :key="m.value")
           template(#label)
-            span.grow {{ m.label }}
-            help-dialog(v-if="m.helpText", :title="`${m.label} ${title}`",
+            span.grow.groupCombinationContainer(v-bind:title="m.label")
+              | {{ m.label }}
+            help-dialog(
+                v-if="m.helpText",
+                :title="`${m.label} ${title}`",
                 :text="m.helpText", outline)
 </template>
 
 <style scoped>
+.groupCombinationContainer {
+  position: absolute;
+  width: 100px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .wide >>> .v-label {
   flex: 1 1 0;
 }
+
 </style>
