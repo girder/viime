@@ -27,6 +27,20 @@ interface Group {
   values: number[];
 }
 
+// hoisted constants
+const margin = {
+  top: 40,
+  right: 20,
+  bottom: 50,
+  left: 150,
+};
+const xlabel = measurementColumnName;
+const ylabel = measurementValueName;
+const boxHeight = 20;
+const toFixed3 = (d: number) => d.toFixed(3);
+const count = (values: number[], min: number, max: number) => (
+  values.reduce((acc, v) => acc + (v >= min && v < max ? 1 : 0), 0));
+
 export default defineComponent({
   props: {
     rows: {
@@ -44,20 +58,8 @@ export default defineComponent({
   setup(props) {
     const svgRef = ref(document.createElement('svg'));
     const mainRef = ref(document.createElement('div'));
-    const margin = {
-      top: 40,
-      right: 20,
-      bottom: 50,
-      left: 150,
-    };
-    const xlabel = measurementColumnName;
-    const ylabel = measurementValueName;
-
-    const boxHeight = 20;
-    // number of groups is len(groups) or 1
     const groupCount = computed(() => (props.groups || []).length || 1);
     const width = ref(800);
-    // height is rows * groups per row * height per box (plus margins)
     const height = computed(() => (
       (props.rows.length * boxHeight * groupCount.value)
       + (margin.top + margin.bottom)));
@@ -71,15 +73,14 @@ export default defineComponent({
     const xrange = computed(() => {
       let min = Number.POSITIVE_INFINITY;
       let max = Number.NEGATIVE_INFINITY;
-
-      function pushValue(v: number) {
+      const pushValue = (v: number) => {
         if (v < min) {
           min = v;
         }
         if (v > max) {
           max = v;
         }
-      }
+      };
       props.rows.forEach((row) => {
         if (row.values) {
           row.values.forEach(pushValue);
@@ -109,62 +110,75 @@ export default defineComponent({
     const axisY = computed(() => axisLeft(scaleY.value));
 
     const boxData = computed(() => {
-      const valueStats = props.rows.map((r) => {
-        if (r.values) {
-          return {
-            metabolite: r.name,
-            boxes: [{
-              title: r.name,
-              group: '',
-              color: 'black',
-              stats: boxplotStats(r.values),
-            }],
-          };
-        }
-        if (r.groups) {
-          return {
-            metabolite: r.name,
-            boxes: r.groups.map((g) => ({
-              title: `${r.name} ${g.name}`,
-              group: g.name,
-              color: g.color,
-              stats: boxplotStats(g.values),
-            })),
-          };
-        }
-        throw new Error('Row must contain 1 of values, groups');
-      });
-
       const _scaleX = scaleX.value;
       const _scaleY = scaleY.value;
       const _scaleGroup = scaleGroup.value;
 
-      return valueStats.map((data) => ({
-        metabolite: data.metabolite,
-        transform: `translate(0, ${(_scaleY(data.metabolite) || 0) + (boxHeight / 2)})`,
-        boxes: data.boxes.map((box) => ({
-          title: box.title,
-          transform: `translate(0, ${_scaleGroup(box.group) || 0})`,
-          lines: box.stats.boxes.map((b) => ({
-            x1: _scaleX(b.start),
-            x2: _scaleX(b.end),
-            stroke: box.color,
+      return props.rows.map((r) => {
+        let boxes;
+        if (r.values) {
+          boxes = [{
+            title: r.name,
+            group: '',
+            color: 'black',
+            stats: boxplotStats(r.values),
+            values: r.values,
+          }];
+        } else if (r.groups) {
+          boxes = r.groups.map((g) => ({
+            title: `${r.name} ${g.name}`,
+            group: g.name,
+            color: g.color,
+            stats: boxplotStats(g.values),
+            values: g.values,
+          }));
+        } else {
+          throw new Error('Row must contain 1 of values, groups');
+        }
+        return {
+          metabolite: r.name,
+          transform: `translate(0, ${(_scaleY(r.name) || 0) + (boxHeight / 2)})`,
+          boxes: boxes.map((box) => ({
+            title: box.title,
+            transform: `translate(0, ${_scaleGroup(box.group) || 0})`,
+            lines: [
+              {
+                x1: _scaleX(box.stats.boxes[0].start),
+                x2: _scaleX(box.stats.boxes[0].end) - 0.4,
+                stroke: box.color,
+                height: boxHeight,
+                text: `${r.name}: ${toFixed3(box.stats.fiveNums[1])} (q1) - ${toFixed3(box.stats.fiveNums[2])} (median) = ${count(box.values, box.stats.fiveNums[1], box.stats.fiveNums[2])} Items`,
+              }, {
+                x1: _scaleX(box.stats.boxes[1].start) + 0.4,
+                x2: _scaleX(box.stats.boxes[1].end),
+                stroke: box.color,
+                height: boxHeight,
+                text: `${r.name}: ${toFixed3(box.stats.fiveNums[2])} (median) - ${toFixed3(box.stats.fiveNums[3])} (q3) = ${count(box.values, box.stats.fiveNums[2], box.stats.fiveNums[3])} Items`,
+              },
+            ],
+            circles: box.stats.points
+              .filter((p) => p.outlier)
+              .map((p) => ({
+                cx: _scaleX(p.value),
+                value: p.value,
+              })),
+            whiskers: [
+              {
+                start: _scaleX(box.stats.whiskers[0].start) || 0,
+                end: _scaleX(box.stats.whiskers[0].end) || 0,
+                height: boxHeight,
+                text: `${r.name}: ${toFixed3(box.stats.whiskers[0].start)} (q1-iqr*1.5) - ${toFixed3(box.stats.fiveNums[1])} (q1) = ${count(box.values, box.stats.whiskers[0].start, box.stats.fiveNums[1])} Items`,
+              },
+              {
+                start: _scaleX(box.stats.whiskers[1].start) || 0,
+                end: _scaleX(box.stats.whiskers[1].end) || 0,
+                height: boxHeight,
+                text: `${r.name}: ${toFixed3(box.stats.fiveNums[3])} (q3) - ${toFixed3(box.stats.whiskers[1].start)} (q3+iqr*1.5) = ${count(box.values, box.stats.fiveNums[3], box.stats.whiskers[1].start)} Items`,
+              },
+            ],
           })),
-          circles: box.stats.points
-            .filter((p) => p.outlier)
-            .map((p) => ({
-              cx: _scaleX(p.value),
-            })),
-          whiskers: box.stats.whiskers.map((p) => ({
-            d: `
-              M${[_scaleX(p.start), -0.4 * boxHeight]}
-              l${[0, boxHeight * 0.8]}
-              m${[0, -0.4 * boxHeight]}
-              L${[_scaleX(p.end), 0]}
-            `,
-          })),
-        })),
-      }));
+        };
+      });
     });
 
     function update() {
@@ -179,8 +193,8 @@ export default defineComponent({
 
     watch(props, () => update());
     onMounted(() => {
-      update();
       onResize();
+      update();
     });
 
     return {
