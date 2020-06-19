@@ -41,7 +41,7 @@ export default defineComponent({
 
   components: { BoxplotBox },
 
-  setup(props, ctx) {
+  setup(props) {
     const svgRef = ref(document.createElement('svg'));
     const mainRef = ref(document.createElement('div'));
     const margin = {
