@@ -1,12 +1,14 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from compare_csv import CSV
 import dotenv
 import pytest
 
 from viime import models
 from viime.app import create_app
 from viime.models import CSVFileSchema, db
+
 
 csv_file_schema = CSVFileSchema()
 pathological_file_path = Path(__file__).parent / 'pathological.csv'
@@ -71,3 +73,8 @@ def pathological_table(client):
     db.session.add(csv_file)
     db.session.commit()
     yield csv_file
+
+
+def pytest_assertrepr_compare(op, left, right):
+    if op == '==' and isinstance(left, CSV) and isinstance(right, CSV):
+        return left.get_pytest_error(right)
