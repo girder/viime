@@ -16,12 +16,6 @@ This dataset should have no missing values, so no data interpolation is required
 2. Sample Normalization -> Normalization by sum
 3. Download `data_normalized.csv`
 
-## metaboanalyst_normalization_reference_sample_PIF_178.csv
-
-1. Skip Data Integrity check
-2. Sample Normalization -> Normalization by reference sample (PQN) -> `PIF-178`
-3. Download `data_normalized.csv`
-
 ## metaboanalyst_transformation_log.csv
 
 1. Skip Data Integrity check

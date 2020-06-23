@@ -2,9 +2,6 @@ import csv
 import math
 import typing
 
-# How close two floats have to be to be considered equal
-float_diff = 1e-10
-
 
 class CSV:
     """
@@ -13,7 +10,8 @@ class CSV:
     This class makes it easy to compare Metaboanalyst CSVs with VIIME CSVs.
     """
 
-    def __init__(self, csvfile: typing.Iterable[typing.Text]):
+    def __init__(self, csvfile: typing.Iterable[typing.Text], float_diff=1e-9):
+        self.float_diff = float_diff
         reader = csv.reader(csvfile, quoting=csv.QUOTE_ALL)
         self._table = [row for row in reader]
 
@@ -33,6 +31,7 @@ class CSV:
         return self._table[row_index][col_index]
 
     def __eq__(self, other):
+        float_diff = max(self.float_diff, other.float_diff)
         if self._col_map.keys() != other._col_map.keys():
             return False
         if self._row_map.keys() != other._row_map.keys():
@@ -51,6 +50,7 @@ class CSV:
         return True
 
     def get_pytest_error(self, other):
+        float_diff = max(self.float_diff, other.float_diff)
         if self._col_map.keys() != other._col_map.keys():
             return ['CSV headers match', f'{self._col_map.keys()} != {other._col_map.keys()}']
         if self._row_map.keys() != other._row_map.keys():
