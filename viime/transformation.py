@@ -24,11 +24,11 @@ def transform(method: Optional[str], table: pd.DataFrame) -> pd.DataFrame:
 
 
 def log10(table: pd.DataFrame, min=1e-8):
-    return np.log(table.clip(lower=min)) / np.log(10)
+    return np.log10(table.clip(lower=min))
 
 
 def log2(table: pd.DataFrame, min=1e-8):
-    return np.log(table.clip(lower=min)) / np.log(2)
+    return np.log2(table.clip(lower=min))
 
 
 def squareroot(table: pd.DataFrame):
