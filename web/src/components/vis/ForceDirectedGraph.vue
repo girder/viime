@@ -125,11 +125,18 @@ export default {
     },
     excludedItems(excluded) {
       // circles nodes in search results
-      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
-      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g');
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g');
+
       // hide nodes that have been deleted from search results
-      nodes.style('visibility', (node) => (excluded.has(node.id) ? this.nodeVisibilityStates.notSearchedNodeState : this.nodeVisibilityStates.searchedNodeState));
-      edges.style('visibility', (edge) => (excluded.has(edge.source.id) || excluded.has(edge.target.id) ? this.nodeVisibilityStates.notSearchedNodeState : this.nodeVisibilityStates.searchedNodeState));
+      nodes.select('circle').style('visibility', (node) => (excluded.has(node.id) ? this.nodeVisibilityStates.notSearchedNodeState : this.nodeVisibilityStates.searchedNodeState));
+      edges.select('line').style('visibility', (edge) => (excluded.has(edge.source.id) || excluded.has(edge.target.id) ? this.nodeVisibilityStates.notSearchedNodeState : this.nodeVisibilityStates.searchedNodeState));
+      if (this.showSearchedNodes) {
+        nodes.select('text').text((node) => (excluded.has(node.id) ? '' : node.id));
+      } else {
+        nodes.select('text').text((node) => (excluded.has(node.id) ? node.id : ''));
+      }
+
       this.showNodesWithinPathLength(this.search, this.visibleNodes);
     },
     visibleNodes(visibleNodes) {
@@ -138,10 +145,19 @@ export default {
     nodes(newNodes) {
       // hide/unhide nodes based on node filter
       const newNodeSet = new Set(newNodes.map((node) => node.id)); // convert to set for fast lookup
-      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
-      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
-      nodes.style('visibility', (node) => (newNodeSet.has(node.id) ? this.nodeVisibilityStates.searchedNodeState : this.nodeVisibilityStates.notSearchedNodeState));
-      edges.style('visibility', (edge) => (newNodeSet.has(edge.source.id) && newNodeSet.has(edge.target.id) ? this.nodeVisibilityStates.searchedNodeState : this.nodeVisibilityStates.notSearchedNodeState));
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g');
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g');
+
+      // set visibility of nodes and edges
+      nodes.select('circle').style('visibility', (node) => (newNodeSet.has(node.id) ? this.nodeVisibilityStates.searchedNodeState : this.nodeVisibilityStates.notSearchedNodeState));
+      edges.select('line').style('visibility', (edge) => (newNodeSet.has(edge.source.id) && newNodeSet.has(edge.target.id) ? this.nodeVisibilityStates.searchedNodeState : this.nodeVisibilityStates.notSearchedNodeState));
+
+      // set visibility of labels
+      if (this.showSearchedNodes) {
+        nodes.select('text').text((node) => (newNodeSet.has(node.id) ? node.id : ''));
+      } else {
+        nodes.select('text').text((node) => (newNodeSet.has(node.id) ? '' : node.id));
+      }
     },
     showSearchedNodes() {
       this.showNodesWithinPathLength(this.search, this.visibleNodes);
@@ -372,13 +388,23 @@ export default {
     showNodesWithinPathLength(startingNodes, maxDistance) {
       // Restricts visible nodes to those within a certain path length of each
       // node in startingNodes. Shows all nodes and edges if maxDistance < 0.
-      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g').select('circle');
-      const edges = select(this.$refs.svg).select('g.edges').selectAll('g').select('line');
+      const nodes = select(this.$refs.svg).select('g.nodes').selectAll('g');
+      const edges = select(this.$refs.svg).select('g.edges').selectAll('g');
 
       // show all nodes if maxDistance is negative
       if (maxDistance < 0) {
-        nodes.style('visibility', (node) => (this.excludedItems.has(node.id) ? this.nodeVisibilityStates.notSearchedNodeState : this.nodeVisibilityStates.searchedNodeState));
-        edges.style('visibility', (edge) => (this.excludedItems.has(edge.source.id) || this.excludedItems.has(edge.target.id) ? this.nodeVisibilityStates.notSearchedNodeState : this.nodeVisibilityStates.searchedNodeState));
+        // set visibility of nodes and edges
+        nodes.select('circle').style('visibility', (node) => (this.excludedItems.has(node.id) ? this.nodeVisibilityStates.notSearchedNodeState : this.nodeVisibilityStates.searchedNodeState));
+        edges.select('line').style('visibility', (edge) => (this.excludedItems.has(edge.source.id) || this.excludedItems.has(edge.target.id) ? this.nodeVisibilityStates.notSearchedNodeState : this.nodeVisibilityStates.searchedNodeState));
+
+        // set visibility of labels
+        if (this.showSearchedNodes) {
+          nodes.select('text').text((node) => (this.excludedItems.has(node.id) ? '' : node.id));
+          edges.select('text').text((edge) => (this.excludedItems.has(edge.source.id) || this.excludedItems.has(edge.target.id) ? '' : edge.ori.toFixed(3)));
+        } else {
+          nodes.select('text').text((node) => (this.excludedItems.has(node.id) ? node.id : ''));
+          edges.select('text').text((edge) => (this.excludedItems.has(edge.source.id) || this.excludedItems.has(edge.target.id) ? edge.ori.toFixed(3) : ''));
+        }
         return;
       }
 
@@ -405,16 +431,14 @@ export default {
           visibleNodes.add(currentNode);
         }
       }
-      nodes.style('visibility', (node) => (
+      nodes.select('circle').style('visibility', (node) => (
         (
           visibleNodes.has(node.id) && !this.excludedItems.has(node.id)
         ) ? this.nodeVisibilityStates.searchedNodeState
           : this.nodeVisibilityStates.notSearchedNodeState));
 
-      // edge visibility requires different logic depending on whether
-      // or not searched nodes are being shown or hidden.
       if (this.showSearchedNodes) {
-        edges.style('visibility', (edge) => ((
+        edges.select('line').style('visibility', (edge) => ((
           (
             visibleNodes.has(edge.target.id)
             && visibleNodes.has(edge.source.id)
@@ -423,8 +447,22 @@ export default {
           && !this.excludedItems.has(edge.target.id)
         ) ? this.nodeVisibilityStates.searchedNodeState
           : this.nodeVisibilityStates.notSearchedNodeState));
+
+        nodes.select('text').text((node) => (
+          (
+            visibleNodes.has(node.id) && !this.excludedItems.has(node.id)
+          ) ? node.id : ''));
+
+        edges.select('text').text((edge) => ((
+          (
+            visibleNodes.has(edge.target.id)
+            && visibleNodes.has(edge.source.id)
+          )
+          && !this.excludedItems.has(edge.source.id)
+          && !this.excludedItems.has(edge.target.id)
+        ) ? edge.ori.toFixed(3) : ''));
       } else {
-        edges.style('visibility', (edge) => ((
+        edges.select('line').style('visibility', (edge) => ((
           (
             visibleNodes.has(edge.target.id)
             || visibleNodes.has(edge.source.id)
@@ -433,6 +471,20 @@ export default {
           && !this.excludedItems.has(edge.target.id)
         ) ? this.nodeVisibilityStates.searchedNodeState
           : this.nodeVisibilityStates.notSearchedNodeState));
+
+        nodes.select('text').text((node) => (
+          (
+            visibleNodes.has(node.id) && !this.excludedItems.has(node.id)
+          ) ? '' : node.id));
+
+        edges.select('text').text((edge) => ((
+          (
+            visibleNodes.has(edge.target.id)
+            || visibleNodes.has(edge.source.id)
+          )
+          && !this.excludedItems.has(edge.source.id)
+          && !this.excludedItems.has(edge.target.id)
+        ) ? '' : edge.ori.toFixed(3)));
       }
     },
   },
