@@ -61,5 +61,13 @@ div
 .wide >>> .v-label {
   flex: 1 1 0;
 }
+</style>
 
+<style>
+/* This fixes a bug that was fixed in Vuetify 2.1 */
+/* See https://github.com/vuetifyjs/vuetify/issues/5416#issuecomment-567106519 */
+/* TODO Remove this once the version is bumped */
+.v-input--selection-controls .v-input__control {
+  width: 100% !important;
+}
 </style>
