@@ -1,8 +1,8 @@
 VIIME
 ========
 
-Getting started
----------------
+Getting started (Running natively)
+----------------------------------
 
 This project includes a `Pipfile` to help set up a virtual environment for
 VIIME. To set up the virtual environment
@@ -98,3 +98,19 @@ To migrate to the latest database schema, run:
 ```sh
 flask db upgrade
 ```
+
+Developing with `docker-compose`
+--------------------------------
+Install `ldc` from [here](https://github.com/Kitware/ldc) and start the project in Docker by running
+
+```sh
+cd devops
+ldc up
+```
+This starts the backend in `production` mode. To switch to `development`, do
+
+```sh
+ldc dev backend
+```
+
+Note, the web client will still need to be started using `yarn serve`. See the [ldc README](https://github.com/Kitware/ldc#usage) for more details.

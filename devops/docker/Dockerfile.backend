@@ -1,0 +1,23 @@
+FROM tiangolo/meinheld-gunicorn:python3.8
+
+WORKDIR /app
+
+# add these first to cache pip install
+ADD setup.py /app
+ADD .git /app/.git
+
+RUN pip install -e  /app
+
+# copy gunicorn prestart script to working dir
+ADD devops/docker/prestart.sh /app/prestart.sh
+RUN chmod +x /app/prestart.sh
+
+# copy flask start script to working dir
+ADD devops/docker/start_flask_dev.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+# copy db migrations
+ADD migrations /app/migrations
+
+# create directory for db
+RUN mkdir /app/viime_sqlite

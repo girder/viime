@@ -1,0 +1,14 @@
+.tox
+.circleci
+.coverage
+.cache
+.vscode
+env
+*.egg-info
+node_modules
+reference
+samples
+tests
+viime_sqlite
+web/node_modules
+web/dist
