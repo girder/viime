@@ -61,9 +61,9 @@ export default {
       type: Number,
       default: 0,
     },
-    showSearchedNodes: {
+    invertVisibility: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   data() {
@@ -105,8 +105,8 @@ export default {
       return adjList;
     },
     nodeVisibilityStates() {
-      const searchedNodeState = this.showSearchedNodes ? 'visible' : 'hidden';
-      const notSearchedNodeState = this.showSearchedNodes ? 'hidden' : 'visible';
+      const searchedNodeState = this.invertVisibility ? 'hidden' : 'visible';
+      const notSearchedNodeState = this.invertVisibility ? 'visible' : 'hidden';
       return { searchedNodeState, notSearchedNodeState };
     },
   },
@@ -131,10 +131,10 @@ export default {
       // hide nodes that have been deleted from search results
       nodes.select('circle').style('visibility', (node) => (excluded.has(node.id) ? this.nodeVisibilityStates.notSearchedNodeState : this.nodeVisibilityStates.searchedNodeState));
       edges.select('line').style('visibility', (edge) => (excluded.has(edge.source.id) || excluded.has(edge.target.id) ? this.nodeVisibilityStates.notSearchedNodeState : this.nodeVisibilityStates.searchedNodeState));
-      if (this.showSearchedNodes) {
-        nodes.select('text').text((node) => (excluded.has(node.id) ? '' : node.id));
-      } else {
+      if (this.invertVisibility) {
         nodes.select('text').text((node) => (excluded.has(node.id) ? node.id : ''));
+      } else {
+        nodes.select('text').text((node) => (excluded.has(node.id) ? '' : node.id));
       }
 
       this.showNodesWithinPathLength(this.search, this.visibleNodes);
@@ -153,13 +153,13 @@ export default {
       edges.select('line').style('visibility', (edge) => (newNodeSet.has(edge.source.id) && newNodeSet.has(edge.target.id) ? this.nodeVisibilityStates.searchedNodeState : this.nodeVisibilityStates.notSearchedNodeState));
 
       // set visibility of labels
-      if (this.showSearchedNodes) {
-        nodes.select('text').text((node) => (newNodeSet.has(node.id) ? node.id : ''));
-      } else {
+      if (this.invertVisibility) {
         nodes.select('text').text((node) => (newNodeSet.has(node.id) ? '' : node.id));
+      } else {
+        nodes.select('text').text((node) => (newNodeSet.has(node.id) ? node.id : ''));
       }
     },
-    showSearchedNodes() {
+    invertVisibility() {
       this.showNodesWithinPathLength(this.search, this.visibleNodes);
     },
   },
@@ -398,12 +398,12 @@ export default {
         edges.select('line').style('visibility', (edge) => (this.excludedItems.has(edge.source.id) || this.excludedItems.has(edge.target.id) ? this.nodeVisibilityStates.notSearchedNodeState : this.nodeVisibilityStates.searchedNodeState));
 
         // set visibility of labels
-        if (this.showSearchedNodes) {
-          nodes.select('text').text((node) => (this.excludedItems.has(node.id) ? '' : node.id));
-          edges.select('text').text((edge) => (this.excludedItems.has(edge.source.id) || this.excludedItems.has(edge.target.id) ? '' : edge.ori.toFixed(3)));
-        } else {
+        if (this.invertVisibility) {
           nodes.select('text').text((node) => (this.excludedItems.has(node.id) ? node.id : ''));
           edges.select('text').text((edge) => (this.excludedItems.has(edge.source.id) || this.excludedItems.has(edge.target.id) ? edge.ori.toFixed(3) : ''));
+        } else {
+          nodes.select('text').text((node) => (this.excludedItems.has(node.id) ? '' : node.id));
+          edges.select('text').text((edge) => (this.excludedItems.has(edge.source.id) || this.excludedItems.has(edge.target.id) ? '' : edge.ori.toFixed(3)));
         }
         return;
       }
@@ -437,31 +437,7 @@ export default {
         ) ? this.nodeVisibilityStates.searchedNodeState
           : this.nodeVisibilityStates.notSearchedNodeState));
 
-      if (this.showSearchedNodes) {
-        edges.select('line').style('visibility', (edge) => ((
-          (
-            visibleNodes.has(edge.target.id)
-            && visibleNodes.has(edge.source.id)
-          )
-          && !this.excludedItems.has(edge.source.id)
-          && !this.excludedItems.has(edge.target.id)
-        ) ? this.nodeVisibilityStates.searchedNodeState
-          : this.nodeVisibilityStates.notSearchedNodeState));
-
-        nodes.select('text').text((node) => (
-          (
-            visibleNodes.has(node.id) && !this.excludedItems.has(node.id)
-          ) ? node.id : ''));
-
-        edges.select('text').text((edge) => ((
-          (
-            visibleNodes.has(edge.target.id)
-            && visibleNodes.has(edge.source.id)
-          )
-          && !this.excludedItems.has(edge.source.id)
-          && !this.excludedItems.has(edge.target.id)
-        ) ? edge.ori.toFixed(3) : ''));
-      } else {
+      if (this.invertVisibility) {
         edges.select('line').style('visibility', (edge) => ((
           (
             visibleNodes.has(edge.target.id)
@@ -485,6 +461,30 @@ export default {
           && !this.excludedItems.has(edge.source.id)
           && !this.excludedItems.has(edge.target.id)
         ) ? '' : edge.ori.toFixed(3)));
+      } else {
+        edges.select('line').style('visibility', (edge) => ((
+          (
+            visibleNodes.has(edge.target.id)
+            && visibleNodes.has(edge.source.id)
+          )
+          && !this.excludedItems.has(edge.source.id)
+          && !this.excludedItems.has(edge.target.id)
+        ) ? this.nodeVisibilityStates.searchedNodeState
+          : this.nodeVisibilityStates.notSearchedNodeState));
+
+        nodes.select('text').text((node) => (
+          (
+            visibleNodes.has(node.id) && !this.excludedItems.has(node.id)
+          ) ? node.id : ''));
+
+        edges.select('text').text((edge) => ((
+          (
+            visibleNodes.has(edge.target.id)
+            && visibleNodes.has(edge.source.id)
+          )
+          && !this.excludedItems.has(edge.source.id)
+          && !this.excludedItems.has(edge.target.id)
+        ) ? edge.ori.toFixed(3) : ''));
       }
     },
   },

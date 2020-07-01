@@ -47,7 +47,7 @@ export default {
         { value: 0, text: 'Within Depth' },
       ],
       searchNodeVisibility: -1,
-      showSearchedNodes: true, // whether to show or hide searched nodes
+      invertVisibility: false, // whether to show or hide searched nodes
     };
   },
 
@@ -204,7 +204,7 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
           :disabled="excludedSearchBarResults.size === 0")
         v-icon.pr-2 mdi-eye
         | Unhide Nodes
-      v-switch(v-model="showSearchedNodes", label="Invert visibility")
+      v-switch(v-model="invertVisibility", label="Invert visibility")
       v-select.py-2(
           hide-details,
           v-model="searchNodeVisibility",
@@ -238,7 +238,7 @@ vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="p
         :highlighted-items="highlightedItems",
         :excluded-items="excludedSearchBarResults",
         :visible-nodes="visibleNodes",
-        :show-searched-nodes="showSearchedNodes")
+        :invert-visibility="invertVisibility")
 </template>
 
 <style scoped>
