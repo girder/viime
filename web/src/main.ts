@@ -2,6 +2,7 @@ import '@mdi/font/css/materialdesignicons.min.css';
 
 import Vue from 'vue';
 import Vuetify from 'vuetify';
+import CompositionApi from '@vue/composition-api';
 import './stylus/main.styl';
 import { init as SentryInit } from '@sentry/browser';
 import { Vue as SentryVue } from '@sentry/integrations';
@@ -16,6 +17,7 @@ import vuetifyConfig from './utils/vuetifyConfig';
 import { SessionStore } from './utils';
 
 Vue.use(Vuetify, vuetifyConfig);
+Vue.use(CompositionApi);
 Vue.config.productionTip = false;
 
 let serverUrl;

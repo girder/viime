@@ -1,7 +1,15 @@
 const measurementColumnName = 'Metabolite';
 const measurementValueName = 'Measurement';
 
-const rowMenuOptions = [
+interface MenuOption {
+  value: string;
+  icon: string | null;
+  title: string;
+  color: string | null;
+  mutex: boolean;
+}
+
+const rowMenuOptions: MenuOption[] = [
   {
     value: 'header',
     icon: 'key',
@@ -35,7 +43,7 @@ const defaultRowOption = 'sample';
 const rowFallbackType = 'metadata';
 const rowPrimaryKey = 'header';
 
-const colMenuOptions = [
+const colMenuOptions: MenuOption[] = [
   {
     value: 'key',
     icon: 'key',

@@ -61,7 +61,7 @@ export default {
     },
 
     groups() {
-      return this.sampleFilter && this.sampleFilter.option ? this.sampleFilter.filter : null;
+      return this.sampleFilter && this.sampleFilter.option ? this.sampleFilter.filter : [];
     },
   },
 };
@@ -78,7 +78,8 @@ vis-tile-large(v-if="dataset", title="Metabolite Box Plot", :loading="false",
 
   boxplot-plot.main(
       v-if="dataset.ready",
-      :rows="chartData", :groups="groups")
+      :rows="chartData",
+      :groups="groups")
 </template>
 
 <style scoped>

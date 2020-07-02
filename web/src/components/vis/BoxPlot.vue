@@ -1,198 +1,258 @@
-<script>
+<script lang="ts">
+import {
+  PropType, defineComponent, computed, ref, watch, onMounted, Ref,
+} from '@vue/composition-api';
+import { extent } from 'd3-array';
+import { axisTop, axisLeft } from 'd3-axis';
 import { select } from 'd3-selection';
-import { scaleBand } from 'd3-scale';
-import { boxplot, boxplotStats } from 'd3-boxplot';
+import { scaleBand, scaleLinear } from 'd3-scale';
+import { boxplotStats } from 'd3-boxplot';
 import 'd3-transition';
+import { flatMapDeep } from 'lodash';
 
-import { axisPlot } from './mixins/axisPlot';
-import { measurementColumnName, measurementValueName } from '../../utils/constants';
+import { measurementColumnName, measurementValueName } from '@/utils/constants';
+import BoxplotBox from '@/components/vis/snippets/BoxplotBox.vue';
+import useAxisPlot from './use/useAxisPlot';
 
-export default {
-  mixins: [
-    axisPlot,
-  ],
+interface Row {
+  name: string;
+  values?: number[];
+  groups?: {
+    name: string;
+    color: string;
+    values: number[];
+  }[];
+}
+
+interface Group {
+  name: string;
+  values: number[];
+}
+
+// hoisted constants
+const margin = {
+  top: 40,
+  right: 20,
+  bottom: 50,
+  left: 150,
+};
+const xlabel = measurementColumnName;
+const ylabel = measurementValueName;
+const boxHeight = 20;
+const toFixed3 = (d: number) => d.toFixed(3);
+const count = (values: number[], min: number, max: number) => (
+  values.reduce((acc, v) => acc + (v >= min && v < max ? 1 : 0), 0));
+
+export default defineComponent({
   props: {
-    rows: { // {name: string, values?: number[],
-      //  groups?: {name: string, color: string, values: number[][]}
-      // }[]
-      type: Array,
+    rows: {
+      type: Array as PropType<Row[]>,
       default: () => [],
     },
     groups: {
-      type: Array,
-      required: false,
-      default: null,
+      type: Array as PropType<Group[]>,
+      default: () => [],
     },
   },
-  data() {
+
+  components: { BoxplotBox },
+
+  setup(props) {
+    const svgRef = ref(document.createElement('svg'));
+    const mainRef = ref(document.createElement('div'));
+    const groupCount = computed(() => (props.groups || []).length || 1);
+    const width = ref(800);
+    const height = computed(() => (
+      (props.rows.length * boxHeight * groupCount.value)
+      + (margin.top + margin.bottom)));
+
+    const {
+      dwidth,
+      dheight,
+      axisPlot,
+    } = useAxisPlot(margin, width, height);
+
+    const xrange = computed(() => {
+      if (props.groups.length) {
+        return extent(flatMapDeep(props.rows, (r) => flatMapDeep(r.groups, (g) => g.values)));
+      }
+      return extent(flatMapDeep(props.rows, (r) => r.values || []));
+    }) as Ref<[number, number]>;
+
+    const scaleX = computed(() => scaleLinear()
+      .domain(xrange.value)
+      .range([0, dwidth.value]));
+    const scaleY = computed(() => scaleBand()
+      // @ts-ignore d3 typings are bad
+      .domain(props.rows.map((d) => d.name))
+      // @ts-ignore d3 typings are bad
+      .range([0, dheight.value], 0.1));
+    const scaleGroup = computed(() => scaleBand()
+      // @ts-ignore d3 typings are bad
+      .domain(props.groups || [])
+      // @ts-ignore d3 typings are bad
+      .range([0, groupCount.value * boxHeight], 0.1));
+
+    const axisX = computed(() => axisTop(scaleX.value));
+    const axisY = computed(() => axisLeft(scaleY.value));
+
+    const boxData = computed(() => {
+      const _scaleX = scaleX.value;
+      const _scaleY = scaleY.value;
+      const _scaleGroup = scaleGroup.value;
+
+      return props.rows.map((r) => {
+        let boxes;
+        if (r.values) {
+          boxes = [{
+            title: r.name,
+            group: '',
+            color: 'black',
+            stats: boxplotStats(r.values),
+            values: r.values,
+          }];
+        } else if (r.groups) {
+          boxes = r.groups.map((g) => ({
+            title: `${r.name} ${g.name}`,
+            group: g.name,
+            color: g.color,
+            stats: boxplotStats(g.values),
+            values: g.values,
+          }));
+        } else {
+          throw new Error('Row must contain 1 of values, groups');
+        }
+        return {
+          metabolite: r.name,
+          transform: `translate(0, ${(_scaleY(r.name) || 0) + (boxHeight / 2)})`,
+          boxes: boxes.map((box) => ({
+            title: box.title,
+            transform: `translate(0, ${_scaleGroup(box.group) || 0})`,
+            lines: [
+              {
+                x1: _scaleX(box.stats.boxes[0].start),
+                x2: _scaleX(box.stats.boxes[0].end) - 0.4,
+                stroke: box.color,
+                height: boxHeight,
+                text: `${r.name}: ${toFixed3(box.stats.fiveNums[1])} (q1) - ${toFixed3(box.stats.fiveNums[2])} (median) = ${count(box.values, box.stats.fiveNums[1], box.stats.fiveNums[2])} Items`,
+              }, {
+                x1: _scaleX(box.stats.boxes[1].start) + 0.4,
+                x2: _scaleX(box.stats.boxes[1].end),
+                stroke: box.color,
+                height: boxHeight,
+                text: `${r.name}: ${toFixed3(box.stats.fiveNums[2])} (median) - ${toFixed3(box.stats.fiveNums[3])} (q3) = ${count(box.values, box.stats.fiveNums[2], box.stats.fiveNums[3])} Items`,
+              },
+            ],
+            circles: box.stats.points
+              .filter((p) => p.outlier)
+              .map((p) => ({
+                cx: _scaleX(p.value),
+                value: p.value,
+              })),
+            whiskers: [
+              {
+                start: _scaleX(box.stats.whiskers[0].start) || 0,
+                end: _scaleX(box.stats.whiskers[0].end) || 0,
+                height: boxHeight,
+                text: `${r.name}: ${toFixed3(box.stats.whiskers[0].start)} (q1-iqr*1.5) - ${toFixed3(box.stats.fiveNums[1])} (q1) = ${count(box.values, box.stats.whiskers[0].start, box.stats.fiveNums[1])} Items`,
+              },
+              {
+                start: _scaleX(box.stats.whiskers[1].start) || 0,
+                end: _scaleX(box.stats.whiskers[1].end) || 0,
+                height: boxHeight,
+                text: `${r.name}: ${toFixed3(box.stats.fiveNums[3])} (q3) - ${toFixed3(box.stats.whiskers[1].start)} (q3+iqr*1.5) = ${count(box.values, box.stats.fiveNums[3], box.stats.whiskers[1].start)} Items`,
+              },
+            ],
+          })),
+        };
+      });
+    });
+
+    function update() {
+      const svg = select(svgRef.value);
+      axisPlot(svg, axisX.value, axisY.value);
+    }
+
+    function onResize() {
+      const bb = mainRef.value.getBoundingClientRect();
+      width.value = bb.width;
+      update();
+    }
+
+    watch(props, () => update());
+    onMounted(() => {
+      onResize();
+      update();
+    });
+
     return {
-      margin: {
-        top: 20,
-        right: 20,
-        bottom: 50,
-        left: 120,
-      },
-      duration: 200,
-      ylabel: measurementColumnName,
-      xlabel: measurementValueName,
+      width,
+      height,
+      margin,
+      dwidth,
+      dheight,
+      xlabel,
+      ylabel,
+      svgRef,
+      mainRef,
+      boxData,
+      onResize,
     };
   },
-  computed: {
-    scaleY() {
-      const { rows, dheight } = this;
-      return scaleBand()
-        .domain(rows.map((d) => d.name))
-        .range([0, dheight], 0.1);
-    },
-    scaleGroup() {
-      return scaleBand()
-        .domain(this.groups || [])
-        .range([0, this.scaleY.bandwidth()], 0.1);
-    },
-    xrange() {
-      let min = Number.POSITIVE_INFINITY;
-      let max = Number.NEGATIVE_INFINITY;
-
-      const pushValue = (v) => {
-        if (v < min) {
-          min = v;
-        }
-        if (v > max) {
-          max = v;
-        }
-      };
-      this.rows.forEach((row) => {
-        if (row.values) {
-          row.values.forEach(pushValue);
-        }
-        if (row.groups) {
-          row.groups.forEach((group) => group.values.forEach(pushValue));
-        }
-      });
-      return [min, max];
-    },
-    boxHeight() {
-      return !this.groups ? this.scaleY.bandwidth() : this.scaleGroup.bandwidth();
-    },
-  },
-  watch: {
-    rows() {
-      this.update();
-    },
-  },
-  mounted() {
-    this.update();
-  },
-  methods: {
-    update() {
-      // Compute the total variance in all the PCs.
-      const svg = select(this.$refs.svg);
-      this.axisPlot(svg);
-
-      // compute stats
-      const stats = this.rows.map((d) => ({
-        ...d,
-        ...(d.values ? boxplotStats(d.values) : {}),
-        groups: d.groups ? d.groups.map((group) => ({
-          ...group,
-          group: group.name,
-          name: `${d.name} ${group.name}`,
-          ...boxplotStats(group.values),
-        })) : null,
-      }));
-
-      const layout = boxplot()
-        .scale(this.scaleX)
-        .vertical(false)
-        .showInnerDots(false)
-        .bandwidth(this.boxHeight)
-        .boxwidth(this.boxHeight * 0.8);
-
-      const base = svg.select('.plot');
-      let boxplots;
-
-      if (!this.groups) {
-        base.selectAll('g.boxplots').remove();
-        boxplots = base.selectAll('g.boxplot').data(stats, (d) => d.name)
-          .join((enter) => enter.append('g').classed('boxplot', true))
-          .attr('transform', (d) => `translate(0, ${this.scaleY(d.name)})`);
-      } else {
-        base.selectAll('g.boxplot').remove();
-        const boxplotGroups = base.selectAll('g.boxplots').data(stats, (d) => d.name)
-          .join((enter) => enter.append('g').classed('boxplots', true))
-          .attr('transform', (d) => `translate(0, ${this.scaleY(d.name)})`);
-
-        boxplots = boxplotGroups.selectAll('g.group').data((d) => d.groups, (d) => d.group)
-          .join((enter) => enter.append('g').classed('group', true))
-          .attr('transform', (d) => `translate(0, ${this.scaleGroup(d.group)})`);
-      }
-
-      boxplots
-        .transition()
-        .duration(this.duration)
-        .call(layout)
-        .end()
-        // silently catch any transition interruptions from consecutive updates
-        .catch(() => {})
-        .then(() => {
-          // inject tooltips
-          const f = (d) => d.toFixed(3);
-
-          // outliers: show the value
-          boxplots.select('g.point').selectAll('.outlier')
-            .html((d) => `<title>${f(d.value)}</title>`);
-
-          const count = (values, min, max) => values
-            .reduce((acc, v) => acc + (v >= min && v < max ? 1 : 0), 0);
-
-          // inject rect backgrounds for whiskers
-          const whiskers = boxplots.select('.whisker');
-
-          boxplots.select('.whisker path')
-            .html((d) => `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`);
-          boxplots.select('.box line')
-            .style('stroke', (d) => d.color)
-            .html((d) => `<title>${d.name}: ${f(d.fiveNums[1])} (q1) - ${f(d.fiveNums[2])} (median) = ${count(d.values, d.fiveNums[1], d.fiveNums[2])} Items</title>`);
-          boxplots.select('.box line:last-of-type')
-            .style('stroke', (d) => d.color)
-            .html((d) => `<title>${d.name}: ${f(d.fiveNums[2])} (median) - ${f(d.fiveNums[3])} (q3) = ${count(d.values, d.fiveNums[2], d.fiveNums[3])} Items</title>`);
-          boxplots.select('.whisker path:last-of-type')
-            .html((d) => `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`);
-
-          const bgs = whiskers.selectAll('rect').data((d) => [d, d]).join('rect');
-          bgs
-            .attr('x', (d, i) => this.scaleX(Math.min(d.whiskers[i].start, d.whiskers[i].end)))
-            .attr('y', this.boxHeight * -0.5)
-            .attr('width', (d, i) => this.scaleX(Math.abs(d.whiskers[i].start - d.whiskers[i].end)))
-            .attr('height', this.boxHeight)
-            .style('fill', 'transparent')
-            .html((d, i) => (i === 0
-              ? `<title>${d.name}: ${f(d.whiskers[0].start)} (q1-iqr*1.5) - ${f(d.fiveNums[1])} (q1) = ${count(d.values, d.whiskers[0].start, d.fiveNums[1])} Items</title>`
-              : `<title>${d.name}: ${f(d.fiveNums[3])} (q3) - ${f(d.whiskers[1].start)} (q3+iqr*1.5) = ${count(d.values, d.fiveNums[3], d.whiskers[1].start)} Items</title>`));
-        });
-    },
-  },
-};
+});
 </script>
 
-<template lang="pug">
-.main(v-resize:throttle="onResize")
-  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
-    g.master
-      g.axes
-      g.plot
-    text.x.label(:transform="`translate(${margin.left + dwidth / 2},${height - 10})`")
-      | {{xlabel}}
-    text.y.label(:transform="`translate(${10},${margin.top + dheight / 2})rotate(-90)`")
-      | {{ylabel}}
+<template>
+  <div
+    ref="mainRef"
+    v-resize:throttle="onResize"
+    style="overflow-y: auto;"
+  >
+    <svg
+      ref="svgRef"
+      :width="width"
+      :height="height"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g class="master">
+        <g class="axes" />
+        <g class="plot">
+          <g
+            v-for="group in boxData"
+            :key="group.metabolite"
+            :transform="group.transform"
+            class="boxplot"
+          >
+            <boxplot-box
+              v-for="box in group.boxes"
+              :key="box.title"
+              :transform="box.transform"
+              :data="box"
+            />
+          </g>
+        </g>
+      </g>
+      <text
+        class="x label"
+        :transform="`translate(${margin.left + dwidth / 2},${height - 10})`"
+      >
+        {{ xlabel }}
+      </text>
+      <text
+        class="y label"
+        :transform="`translate(${10},${margin.top + dheight / 2})rotate(-90)`"
+      >
+        {{ ylabel }}
+      </text>
+    </svg>
+  </div>
 </template>
 
 <style scoped>
-.label.x {
-  text-anchor: middle;
+.boxplot {
+  transition: .4s ease-in-out;
 }
-
-.label.y {
-  dominant-baseline: central;
+.axes >>> text {
+  font-size: 14px;
 }
 </style>
