@@ -1,0 +1,3 @@
+[build.environment]
+  VUE_APP_GOOGLE_ANALYTICS_ID = "UA-6042509-40"
+  VUE_APP_SERVER_ADDRESS = "https://api.viime.org"
