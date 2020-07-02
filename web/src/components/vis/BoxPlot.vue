@@ -1,12 +1,14 @@
 <script lang="ts">
 import {
-  PropType, defineComponent, computed, ref, watch, onMounted,
+  PropType, defineComponent, computed, ref, watch, onMounted, Ref,
 } from '@vue/composition-api';
+import { extent } from 'd3-array';
 import { axisTop, axisLeft } from 'd3-axis';
 import { select } from 'd3-selection';
 import { scaleBand, scaleLinear } from 'd3-scale';
 import { boxplotStats } from 'd3-boxplot';
 import 'd3-transition';
+import { flatMapDeep } from 'lodash';
 
 import { measurementColumnName, measurementValueName } from '@/utils/constants';
 import BoxplotBox from '@/components/vis/snippets/BoxplotBox.vue';
@@ -71,26 +73,11 @@ export default defineComponent({
     } = useAxisPlot(margin, width, height);
 
     const xrange = computed(() => {
-      let min = Number.POSITIVE_INFINITY;
-      let max = Number.NEGATIVE_INFINITY;
-      const pushValue = (v: number) => {
-        if (v < min) {
-          min = v;
-        }
-        if (v > max) {
-          max = v;
-        }
-      };
-      props.rows.forEach((row) => {
-        if (row.values) {
-          row.values.forEach(pushValue);
-        }
-        if (row.groups) {
-          row.groups.forEach((group) => group.values.forEach(pushValue));
-        }
-      });
-      return [min, max];
-    });
+      if (props.groups.length) {
+        return extent(flatMapDeep(props.rows, (r) => flatMapDeep(r.groups, (g) => g.values)));
+      }
+      return extent(flatMapDeep(props.rows, (r) => r.values || []));
+    }) as Ref<[number, number]>;
 
     const scaleX = computed(() => scaleLinear()
       .domain(xrange.value)
@@ -189,6 +176,7 @@ export default defineComponent({
     function onResize() {
       const bb = mainRef.value.getBoundingClientRect();
       width.value = bb.width;
+      update();
     }
 
     watch(props, () => update());
@@ -218,7 +206,7 @@ export default defineComponent({
   <div
     ref="mainRef"
     v-resize:throttle="onResize"
-    class="main"
+    style="overflow-y: auto;"
   >
     <svg
       ref="svgRef"
