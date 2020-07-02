@@ -10,16 +10,12 @@ from pandas.util import hash_pandas_object
 
 
 def hash_argument(arg):
-    from viime.models import CSVFile, TableColumn, TableRow
+    from viime.models import CSVFile
     if isinstance(arg, PandasObject):
         r = hash_pandas_object(arg, index=True)
         return sha256(r.values.tostring()).hexdigest()
     elif isinstance(arg, CSVFile):
         return str(arg.id)
-    elif isinstance(arg, TableColumn):
-        return str(arg.csv_file_id) + str(arg.column_index)
-    elif isinstance(arg, TableRow):
-        return str(arg.csv_file_id) + str(arg.row_index)
 
     return str(arg)
 

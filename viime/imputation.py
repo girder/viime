@@ -2,14 +2,12 @@ from typing import Dict, List, Tuple
 
 import pandas as pd
 
-from viime.cache import region
 from viime.opencpu import opencpu_request
 
 IMPUTE_MNAR_METHODS = ['zero', 'half-minimum']
 IMPUTE_MCAR_METHODS = ['random-forest', 'knn', 'mean', 'median']
 
 
-@region.cache_on_arguments()
 def impute_missing(table: pd.DataFrame, groups: pd.DataFrame,
                    mnar='zero', mcar='random-forest', p_mnar=0.7,
                    p_mcar=0.4) -> Tuple[pd.DataFrame, Dict[str, List[str]]]:
