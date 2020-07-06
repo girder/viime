@@ -91,7 +91,7 @@ const plotDefaults = {
     type: plot_types.TRANSFORM,
   },
   loadings: {
-    data: null,
+    data: [],
     valid: false,
     loading: false,
     args: {},

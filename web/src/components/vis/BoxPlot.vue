@@ -70,7 +70,7 @@ export default defineComponent({
       dwidth,
       dheight,
       axisPlot,
-    } = useAxisPlot(margin, width, height);
+    } = useAxisPlot({ margin, width, height, topAxis: true });
 
     const xrange = computed(() => {
       if (props.groups.length) {
@@ -250,7 +250,7 @@ export default defineComponent({
 
 <style scoped>
 .boxplot {
-  transition: .4s ease-in-out;
+  transition: 0.4s ease-in-out;
 }
 .axes >>> text {
   font-size: 14px;

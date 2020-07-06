@@ -29,7 +29,7 @@ interface Margin {
 }
 
 export default function useAxisPlot(
-  margin: Margin, width: Ref<number>, height: Ref<number>, duration = 500,
+  { margin, width, height, duration = 500, topAxis = false }: { margin: Margin, width: Ref<number>, height: Ref<number>, duration?: number, topAxis?: Boolean }
 ) {
   const data = reactive({
     axisPlotInitialized: false,
@@ -44,13 +44,17 @@ export default function useAxisPlot(
     const master = svg.select('g.master').attr('transform', `translate(${margin.left},${margin.top})`);
     const axes = master.select('g.axes');
 
+    const xAxisOffset = (topAxis) ? 0 : dheight.value;
+
     if (axes.select('.x-axis').size() === 0) {
       axes.append('g')
         .classed('x-axis', true)
+        .attr('transform', `translate(0,${xAxisOffset})`)
         .call(axisX);
     } else {
       axes.select('.x-axis')
         .transition()
+        .attr('transform', `translate(0,${xAxisOffset})`)
         .duration(duration)
         .call(axisX);
     }
@@ -79,7 +83,6 @@ export default function useAxisPlot(
     if (!svg.node()) {
       return;
     }
-
     labelAxis(svg.select('.label.x'),
       msg,
       (bbox: DOMRect) => dwidth.value / 2 - bbox.width / 2,
