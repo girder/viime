@@ -70,7 +70,12 @@ export default defineComponent({
       dwidth,
       dheight,
       axisPlot,
-    } = useAxisPlot({ margin, width, height, topAxis: true });
+    } = useAxisPlot({
+      margin,
+      width,
+      height,
+      topAxis: true,
+    });
 
     const xrange = computed(() => {
       if (props.groups.length) {

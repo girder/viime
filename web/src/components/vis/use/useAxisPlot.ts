@@ -29,7 +29,19 @@ interface Margin {
 }
 
 export default function useAxisPlot(
-  { margin, width, height, duration = 500, topAxis = false }: { margin: Margin, width: Ref<number>, height: Ref<number>, duration?: number, topAxis?: Boolean }
+  {
+    margin,
+    width,
+    height,
+    duration = 500,
+    topAxis = false,
+  }: {
+    margin: Margin;
+    width: Ref<number>;
+    height: Ref<number>;
+    duration?: number;
+    topAxis?: boolean;
+  },
 ) {
   const data = reactive({
     axisPlotInitialized: false,
