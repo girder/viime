@@ -1,7 +1,7 @@
 // This filename is not magic; it is referenced by Jest's setupFilesAfterEnv
 
 import { setDefaultOptions } from 'expect-puppeteer';
-// import { CLIENT_URL } from './src/util.js';
+import { CLIENT_URL } from './src/util';
 
 // Set the default action timeout to something greater than 500ms
 setDefaultOptions({ timeout: 10000 });
@@ -13,8 +13,7 @@ setDefaultOptions({ timeout: 10000 });
 // eslint-disable-next-line jest/require-top-level-describe
 beforeAll(async () => {
   await Promise.all([
-    page.goto('http://localhost:8080'),
-    // page.goto(CLIENT_URL),
+    page.goto(CLIENT_URL),
     page.waitForNavigation({ waitUntil: 'networkidle0' }),
   ]);
 });
@@ -23,8 +22,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await jestPuppeteer.resetBrowser();
   await Promise.all([
-    // page.goto(CLIENT_URL),
-    page.goto('http://localhost:8080'),
+    page.goto(CLIENT_URL),
     page.waitForNavigation({ waitUntil: 'networkidle0' }),
   ]);
 });
