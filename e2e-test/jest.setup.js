@@ -1,7 +1,7 @@
 // This filename is not magic; it is referenced by Jest's setupFilesAfterEnv
 
 import { setDefaultOptions } from 'expect-puppeteer';
-import { CLIENT_URL } from './src/util.js';
+import { CLIENT_URL } from './src/util';
 
 // Set the default action timeout to something greater than 500ms
 setDefaultOptions({ timeout: 10000 });
