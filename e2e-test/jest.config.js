@@ -5,7 +5,7 @@ module.exports = {
   setupFilesAfterEnv: [
     // Normally, expect-puppeteer is specified by the jest-puppeteer preset
     'expect-puppeteer',
-    './jest-puppeteer-vuetify',
+    'jest-puppeteer-vuetify',
     './jest.setup.js',
   ],
 
