@@ -1,18 +1,42 @@
-<template lang="pug">
-.main(v-resize:throttle="onResize")
-  svg(ref="svg", :width="width", :height="height", xmlns="http://www.w3.org/2000/svg")
-    g.master
-      g.axes
-      g.label.x(style="opacity: 0")
-        text x
-      g.label.y(style="opacity: 0")
-        text y
-      g.crosshairs
-      g.plot
-  .tooltip(ref="tooltip")
+<template>
+  <div
+    ref="mainRef"
+    class="main"
+  >
+    <!-- v-resize:throttle="onResize" -->
+    <svg
+      ref="svgRef"
+      :width="width"
+      :height="height"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g class="master">
+        <g class="axes" />
+        <g class="label x">
+          <text>x</text>
+        </g>
+        <g class="label y">
+          <text>y</text>
+        </g>
+        <g class="crosshairs" />
+        <g class="plot" />
+      </g>
+    </svg>
+    <div
+      ref="tooltipRef"
+      class="tooltip"
+    />
+  </div>
 </template>
 
 <style scoped lang="scss">
+g.label {
+  opacity: 0;
+}
+circle {
+  fill-opacity: 0.001;
+  stroke: black;
+}
 div.tooltip {
   position: fixed;
   text-align: center;
@@ -22,18 +46,40 @@ div.tooltip {
   border-radius: 3px;
   pointer-events: none;
   z-index: 20;
-  opacity: 0;
+  opacity: 1; // 0
 }
 </style>
 
-<script>
+<script lang="ts">
+import {
+  PropType, defineComponent, computed, ref, watch, onMounted,
+} from '@vue/composition-api';
+import { axisBottom, axisLeft } from 'd3-axis';
 import { select, event } from 'd3-selection';
 import { format } from 'd3-format';
+import { scaleLinear } from 'd3-scale';
 import 'd3-transition';
 
-import { axisPlot } from './mixins/axisPlot';
+import useAxisPlot from './use/useAxisPlot';
 
-function domain(arr) {
+interface Point {
+  col: string;
+  loadings: number[];
+}
+
+// hoisted constants
+const margin = {
+  top: 20,
+  right: 20,
+  bottom: 50,
+  left: 60,
+};
+const radius = 4;
+
+const duration = 200;
+const fadeInDuration = 500;
+
+function domain(arr: number[]): number[] {
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
   arr.forEach((v) => {
@@ -48,120 +94,86 @@ function domain(arr) {
   return [-amax, amax];
 }
 
-export default {
-  mixins: [
-    axisPlot,
-  ],
+export default defineComponent({
   props: {
     points: {
       required: true,
-      validator: (prop) => !prop
-          || (typeof prop === 'object'
-          && prop.every((val) => ['col', 'loadings'].every((key) => key in val))),
+      type: Array as PropType<Point[]>,
     },
     pcX: {
+      type: Number,
       default: 1,
-      validator: Number.isInteger,
     },
     pcY: {
+      type: Number,
       default: 2,
-      validator: Number.isInteger,
     },
     showCrosshairs: {
       type: Boolean,
       default: true,
     },
   },
-  data() {
-    return {
-      margin: {
-        top: 20,
-        right: 20,
-        bottom: 50,
-        left: 50,
-      },
-      fadeInDuration: 500,
-      duration: 200,
-    };
-  },
-  computed: {
-    pointsInternal() {
-      return this.points || [];
-    },
-    pcXRange() {
-      const {
-        pointsInternal,
-        pcX,
-      } = this;
-      const arr = pointsInternal.map((d) => d.loadings[pcX - 1]);
+
+  setup(props) {
+    const svgRef = ref(document.createElement('svg'));
+    const mainRef = ref(document.createElement('div'));
+    const tooltipRef = ref(document.createElement('div'));
+    const width = ref(400);
+    const height = ref(400);
+
+    const {
+      dwidth,
+      dheight,
+      setXLabel,
+      setYLabel,
+      axisPlot,
+    } = useAxisPlot({ margin, width, height });
+
+    const pcXRange = computed(() => {
+      const arr = props.points.map((d) => d.loadings[props.pcX - 1]);
       if (arr.length === 0) {
         return [-1, 1];
       }
       return domain(arr);
-    },
-    pcYRange() {
-      const {
-        pointsInternal,
-        pcY,
-      } = this;
-      const arr = pointsInternal.map((d) => d.loadings[pcY - 1]);
+    });
+
+    const pcYRange = computed(() => {
+      const arr = props.points.map((d) => d.loadings[props.pcY - 1]);
       if (arr.length === 0) {
         return [-1, 1];
       }
       return domain(arr);
-    },
-    pcRange() {
-      const x = this.pcXRange;
-      const y = this.pcYRange;
+    });
+
+    const pcRange = computed(() => {
+      const x = pcXRange.value;
+      const y = pcYRange.value;
       return [Math.min(x[0], y[0]), Math.max(x[1], y[1])];
-    },
-    xrange() {
-      return this.pcRange;
-    },
-    yrange() {
-      return this.pcRange;
-    },
-  },
-  watch: {
-    points() {
-      this.update();
-    },
-    pcX() {
-      this.update();
-    },
-    pcY() {
-      this.update();
-    },
-    showCrosshairs() {
-      this.update();
-    },
-  },
-  methods: {
-    update() {
-      // Grab the input props.
-      const {
-        pointsInternal,
-        pcX,
-        pcY,
-        showCrosshairs,
-      } = this;
+    });
 
-      if (pointsInternal.length === 0
-        || pointsInternal[0].loadings.length < pcX
-        || pointsInternal[0].loadings.length < pcY) {
-        return;
-      }
+    const scaleX = computed(() => scaleLinear()
+      .domain(pcRange.value)
+      .range([0, dwidth.value]));
+    const scaleY = computed(() => scaleLinear()
+      .domain(pcRange.value)
+      .range([dheight.value, 0]));
 
-      // Plot the vectors as a scatter plot.
-      const svg = select(this.$refs.svg);
-      this.axisPlot(svg);
-      this.setXLabel(`PC${pcX} correlation`);
-      this.setYLabel(`PC${pcY} correlation`);
-      const tooltip = select(this.$refs.tooltip);
-      const coordFormat = format('.2f');
-      const radius = 4;
-      const { duration } = this;
+    const axisX = computed(() => axisBottom(scaleX.value));
+    const axisY = computed(() => axisLeft(scaleY.value));
 
+    function update() {
+      // Recalculate width/height
+      const bb = mainRef.value.getBoundingClientRect();
+      height.value = bb.height;
+      width.value = bb.width;
+
+      // Set up plot
+      const svg = select(svgRef.value);
+      axisPlot(svg, axisX.value, axisY.value);
+      setXLabel(svg, `PC${props.pcX} correlation`);
+      setYLabel(svg, `PC${props.pcY} correlation`);
+
+      // Draw the crosshair
       const crosshair = {
         color: 'gray',
         width: '2px',
@@ -173,18 +185,22 @@ export default {
         .join((enter) => enter.append('line')
           .attr('stroke', crosshair.color)
           .attr('stroke-width', crosshair.width))
-        .style('display', showCrosshairs ? null : 'none')
-        .attr('x1', (d) => this.scaleX(0) - d.x)
-        .attr('x2', (d) => this.scaleX(0) + d.x)
-        .attr('y1', (d) => this.scaleY(0) - d.y)
-        .attr('y2', (d) => this.scaleY(0) + d.y);
+        // @ts-ignore d3 typings are bad
+        .style('display', props.showCrosshairs ? null : 'none')
+        .attr('x1', (d) => scaleX.value(0) - d.x)
+        .attr('x2', (d) => scaleX.value(0) + d.x)
+        .attr('y1', (d) => scaleY.value(0) - d.y)
+        .attr('y2', (d) => scaleY.value(0) + d.y);
 
+      // Draw the scatter plot
+      const coordFormat = format('.2f');
+      const tooltip = select(tooltipRef.value);
       svg.select('g.plot')
         .selectAll('circle')
-        .data(pointsInternal)
+        .data(props.points)
         .join((enter) => enter.append('circle')
-          .attr('cx', this.scaleX(0))
-          .attr('cy', this.scaleY(0))
+          .attr('cx', scaleX.value(0))
+          .attr('cy', scaleY.value(0))
           .attr('r', 0)
           .style('fill-opacity', 0.001)
           .style('stroke', 'black')
@@ -197,7 +213,7 @@ export default {
             tooltip.transition()
               .duration(duration)
               .style('opacity', 0.9);
-            tooltip.html(`<b>${d.col}</b><br>(${coordFormat(d.loadings[pcX - 1])}, ${coordFormat(d.loadings[pcY - 1])})`)
+            tooltip.html(`<b>${d.col}</b><br>(${coordFormat(d.loadings[props.pcX - 1])}, ${coordFormat(d.loadings[props.pcY - 1])})`)
               .style('left', `${event.clientX + 15}px`)
               .style('top', `${event.pageY - 30}px`);
           })
@@ -212,11 +228,24 @@ export default {
               .style('opacity', 0.0);
           }))
         .transition()
-        .duration(this.fadeInDuration)
+        .duration(fadeInDuration)
         .attr('r', radius)
-        .attr('cx', (d) => this.scaleX(d.loadings[pcX - 1]))
-        .attr('cy', (d) => this.scaleY(d.loadings[pcY - 1]));
-    },
+        .attr('cx', (d) => scaleX.value(d.loadings[props.pcX - 1]))
+        .attr('cy', (d) => scaleY.value(d.loadings[props.pcY - 1]));
+    }
+
+    watch(props, () => update());
+    onMounted(() => {
+      update();
+    });
+
+    return {
+      width,
+      height,
+      mainRef,
+      svgRef,
+      tooltipRef,
+    };
   },
-};
+});
 </script>
