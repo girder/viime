@@ -152,3 +152,46 @@ clustered_heatmap <- function(measurements) {
 
   list(data=OUT_CSV, row=unclass(ddr), col=unclass(ddc))
 }
+
+#' roc_analysis
+#'
+#' @export
+roc_analysis <- function(measurements, groups, group_name, column_name, method) {
+  library(pROC)
+  library(randomForest)
+
+  df = read.csv(measurements, row.names=1, check.names=FALSE)
+  groups = read.csv(groups, row.names=1, check.names=FALSE)
+  groups = as.factor(groups[, 1])
+  group_mask = ifelse(groups == group_name, 1, 0)
+
+  #############
+  #Get predicted values
+
+  column = df[[ column_name ]];
+
+  if (method == "logistic_regression") {
+    #-# Logistic Regression
+    glm.fit = glm(group_mask ~ column, family=binomial)
+
+    # Save predicted values from logistic regression
+    pred <- glm.fit$fitted.values
+  } else if (method == "random_forest") {
+    #-# Random forest
+    rf.model <- randomForest::randomForest(factor(group_mask)~column)
+
+    # Save predicted values from random forest
+    pred <- rf.model$votes[,1]
+  } else {
+    stop("Invalid method")
+  }
+
+  #############
+  #ROC analysis
+  roc.a <- pROC::roc(group_mask, pred, plot=FALSE)
+  data.frame(
+    sensitivities=roc.a$sensitivities,
+    specificities=roc.a$specificities,
+    thresholds=roc.a$thresholds
+  )
+}

@@ -11,7 +11,8 @@ from webargs.flaskparser import use_kwargs
 from werkzeug.datastructures import FileStorage
 
 from viime import opencpu, samples
-from viime.analyses import anova_test, hierarchical_clustering, pairwise_correlation, wilcoxon_test
+from viime.analyses import anova_test, hierarchical_clustering, pairwise_correlation, \
+    roc_analysis, wilcoxon_test
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from viime.models import AXIS_NAME_TYPES, clean, CSVFile, CSVFileSchema, db, \
     GroupLevelSchema, ModifyLabelListSchema, \
@@ -811,6 +812,29 @@ def get_correlation(validated_table: ValidatedMetaboliteTable,
     data = pairwise_correlation(table, min_correlation, method)
 
     return jsonify(data), 200
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/roc', methods=['GET'])
+@use_kwargs({
+    'group': fields.Str(required=True),
+    'column': fields.Str(required=True),
+    'method': fields.Str(required=True, validate=validate.OneOf([
+        'logistic_regression', 'random_forest'
+    ]))
+})
+@load_validated_csv_file
+def get_roc(validated_table: ValidatedMetaboliteTable,
+            group: str, column: str, method: str):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+    errors = {}
+    if not (groups == group).sum().sum():
+        errors['group'] = ['Invalid group name']
+    if column not in measurements.keys():
+        errors['column'] = ['Invalid column name']
+    if errors:
+        return jsonify(errors), 400
+    return jsonify(roc_analysis(measurements, groups, group, column, method))
 
 
 #
