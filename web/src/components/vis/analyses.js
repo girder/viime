@@ -6,6 +6,7 @@ import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
 import PcaPage from './PcaPage/PcaPage.vue';
 import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
+import RocCurveTile from './RocCurveTile.vue';
 import { plot_types } from '../../utils/constants';
 import { correlation_methods } from './constants';
 import vuetify from '../../utils/vuetifyConfig';
@@ -146,5 +147,15 @@ export default [
     },
     type: plot_types.ANALYSIS,
     icon: vuetify.icons.graph,
+  },
+  {
+    path: 'roc',
+    name: 'ROC Curve',
+    shortName: 'ROC Curve',
+    description: 'wip',
+    component: RocCurveTile,
+    args: {},
+    type: plot_types.ANALYSIS,
+    icon: vuetify.icons.pca,
   },
 ];
