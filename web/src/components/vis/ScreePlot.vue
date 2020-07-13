@@ -1,8 +1,7 @@
-
 <template>
   <div
-    class="main"
     ref="mainRef"
+    class="main"
   >
     <!-- v-resize:throttle="onResize"-->
     <svg
@@ -32,8 +31,8 @@
       </g>
     </svg>
     <div
-      class="tooltip"
       ref="tooltipRef"
+      class="tooltip"
     />
   </div>
 </template>
@@ -84,9 +83,10 @@ import useAxisPlot from './use/useAxisPlot';
 
 const sum = (arr: number[]) => arr.reduce((acc, x) => acc + x, 0);
 
-
 const radius = 4;
-const margin = { top: 20, right: 20, bottom: 50, left: 50 };
+const margin = {
+  top: 20, right: 20, bottom: 50, left: 50,
+};
 const fadeInDuration = 500;
 const duration = 200;
 
@@ -95,7 +95,7 @@ export default defineComponent({
     eigenvalues: {
       required: true,
       type: Array as PropType<number[]>,
-      validator: (prop: number[]) => prop.every((v) => Number.isFinite(v) && v > 0.0)
+      validator: (prop: number[]) => prop.every((v) => Number.isFinite(v) && v > 0.0),
     },
     numComponents: {
       type: Number,
@@ -114,7 +114,7 @@ export default defineComponent({
     const width = ref(400);
     const height = ref(400);
 
-    const numComponentsInternal = computed(() => Math.min(props.numComponents, props.eigenvalues.length));
+    const numRendered = computed(() => Math.min(props.numComponents, props.eigenvalues.length));
 
     const {
       dwidth,
@@ -125,7 +125,7 @@ export default defineComponent({
     } = useAxisPlot({ margin, width, height });
 
     const scaleX = computed(() => {
-      const labels = [...Array(numComponentsInternal.value).keys()].map((d) => d + 1);
+      const labels = [...Array(numRendered.value).keys()].map((d) => d + 1);
       return scalePoint<number>()
         .domain(labels)
         .range([0, dwidth.value]);
@@ -188,7 +188,7 @@ export default defineComponent({
         eigenvalue: d,
         percent: percents.value[i],
         cumPercent: cumulativePercents.value[i],
-      })).slice(0, numComponentsInternal.value);
+      })).slice(0, numRendered.value);
 
       const pctFormat = format('.2%');
       const floatFormat = format('.2f');
@@ -197,7 +197,7 @@ export default defineComponent({
         .selectAll('circle')
         .data(data)
         .join((enter) => enter.append('circle')
-          .attr('cx', (d, i) => <number>scaleX.value(i + 1))
+          .attr('cx', (d, i) => scaleX.value(i + 1) as number)
           .attr('cy', scaleY.value(0))
           .attr('r', 0)
           .style('stroke', 'black')
@@ -208,7 +208,6 @@ export default defineComponent({
               .transition()
               .duration(duration)
               .attr('r', 2 * radius);
-
             tooltip.transition()
               .duration(duration)
               .style('opacity', 0.9);
@@ -234,14 +233,15 @@ export default defineComponent({
         .transition()
         .duration(fadeInDuration)
         .attr('r', radius)
-        .attr('cx', (d, i) => <number>scaleX.value(i + 1))
+        .attr('cx', (d, i) => scaleX.value(i + 1) as number)
         .attr('cy', (d) => scaleY.value(d.eigenvalue));
 
       // Plot the line.
-      const pathData: [number, number][] = [...Array(numComponentsInternal.value).keys()].map((i) => [
-        <number>scaleX.value(i + 1),
-        scaleY.value(props.eigenvalues[i]),
-      ]);
+      const pathData: [number, number][] = [...Array(numRendered.value).keys()]
+        .map((i) => [
+          scaleX.value(i + 1) as number,
+          scaleY.value(props.eigenvalues[i]),
+        ]);
 
       const pathDataNull: [number, number][] = pathData.map(([x]) => [
         x,
@@ -264,13 +264,13 @@ export default defineComponent({
       const drawCutoff = (which: string, where: number | null) => {
         const cutoff = svg.select(`line.cutoff${which}`);
 
-        if (where === null || where === 0 || where >= numComponentsInternal.value) {
+        if (where === null || where === 0 || where >= numRendered.value) {
           cutoff.style('opacity', 0.0);
           return;
         }
 
         const step = scaleX.value.step();
-        const x = <number>scaleX.value(where) + step / 2;
+        const x = scaleX.value(where) as number + step / 2;
 
         cutoff.attr('y1', scaleY.value(yRange.value[0]))
           .attr('y2', scaleY.value(yRange.value[1]))
@@ -301,8 +301,7 @@ export default defineComponent({
       drawCutoff('50', cutoffs.value[0]);
       drawCutoff('80', cutoffs.value[1]);
       drawCutoff('90', cutoffs.value[2]);
-    };
-
+    }
 
     watch(props, () => update());
     onMounted(() => {
@@ -315,7 +314,7 @@ export default defineComponent({
       tooltipRef,
       width,
       height,
-      numComponentsInternal,
+      numRendered,
       scaleX,
       yRange,
       scaleY,
@@ -326,6 +325,6 @@ export default defineComponent({
       cutoffs,
       update,
     };
-  }
+  },
 });
 </script>
