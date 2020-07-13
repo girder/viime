@@ -77,7 +77,7 @@ export default {
     // quick and dirty way to grab file id
     const id = this.location.split('/')[this.location.split('/').length - 3];
     const apiUrl = new URL('api/v1', process.env.VUE_APP_SERVER_ADDRESS).href;
-    this.columns = (await axios.get(`${apiUrl}/csv/${id}/column`)).data;
+    this.columns = (await axios.get(`${apiUrl}/csv/${id}/analyses/correlation`)).data.columns;
     const groups = (await axios.get(`${apiUrl}/csv/${id}`)).data.group_levels.map((level) => level.name);
     groups.forEach((group) => this.groups.push(group));
     this.group = groups[0];
@@ -93,7 +93,7 @@ vis-tile-large(title="ROC Curve", expanded)
     v-card.mx-3.px-2(flat)
       v-autocomplete(
           v-model="search",
-          :items="columns.filter(column => column.column_type === 'measurement').map(column => column.column_header)",
+          :items="columns",
           chips,
           dense,
           deletable-chips,

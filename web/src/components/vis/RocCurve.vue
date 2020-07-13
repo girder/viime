@@ -79,34 +79,30 @@ export default {
         .attr('transform', 'rotate(-90)')
         .text('Sensitivities');
 
-      draw(svg, 200, 0.2);
+      svg.selectAll('path.line').remove();
+      svg.append('path')
+        .attr('class', 'line')
+        .attr('d', line(data));
+      const cells = svg.append('g').attr('class', 'vors').selectAll('g');
 
-      function draw(svg) {
-        svg.selectAll('path.line').remove();
-        svg.append('path')
-          .attr('class', 'line')
-          .attr('d', line(data));
-        const cells = svg.append('g').attr('class', 'vors').selectAll('g');
+      const cell = cells.data(data);
+      cell.exit().remove();
 
-        const cell = cells.data(data);
-        cell.exit().remove();
+      const cellEnter = cell.enter().append('g');
 
-        const cellEnter = cell.enter().append('g');
+      cellEnter.append('circle')
+        .attr('class', 'dot')
+        .attr('r', 3.5)
+        .attr('cx', (d) => x(d.specificity))
+        .attr('cy', (d) => y(d.sensitivity));
 
-        cellEnter.append('circle')
-          .attr('class', 'dot')
-          .attr('r', 3.5)
-          .attr('cx', (d) => x(d.specificity))
-          .attr('cy', (d) => y(d.sensitivity));
+      cell.select('path').attr('d', (d) => `M${d.vtess.join('L')}Z`);
 
-        cell.select('path').attr('d', (d) => `M${d.vtess.join('L')}Z`);
-
-        cellEnter.append('text').attr('class', 'hidetext')
-          .attr('x', (d) => x(d.specificity))
-          .attr('y', (d) => y(d.sensitivity))
-          .style('cursor', 'none')
-          .text((d) => `threshold: ${d.threshold}`);
-      }
+      cellEnter.append('text').attr('class', 'hidetext')
+        .attr('x', (d) => x(d.specificity))
+        .attr('y', (d) => y(d.sensitivity))
+        .style('cursor', 'none')
+        .text((d) => `threshold: ${d.threshold}`);
     },
   },
 };
