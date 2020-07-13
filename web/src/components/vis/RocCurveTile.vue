@@ -29,6 +29,7 @@ export default {
       currentUserInput: '',
       columns: [],
       location: location.href,
+      group: '',
       groups: [],
       rocData: {},
       method: 'random_forest',
@@ -49,6 +50,9 @@ export default {
     },
     method() {
       this.updateRoc();
+    },
+    group() {
+      this.updateRoc();
     }
   },
   methods: {
@@ -61,7 +65,7 @@ export default {
         url: `${apiUrl}/csv/${id}/analyses/roc`,
         params: {
           column: this.search,
-          group: this.groups[0],
+          group: this.group,
           method: this.method,
         },
       };
@@ -76,6 +80,7 @@ export default {
     this.columns = (await axios.get(`${apiUrl}/csv/${id}/column`)).data;
     const groups = (await axios.get(`${apiUrl}/csv/${id}`)).data.group_levels.map((level) => level.name);
     groups.forEach((group) => this.groups.push(group));
+    this.group = groups[0];
   },
 };
 </script>
@@ -95,6 +100,13 @@ vis-tile-large(title="ROC Curve", expanded)
           auto-select-first,
           hide-selected,
           hide-details,)
+    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
+      v-toolbar-title Group
+    v-card.mx-3.px-2(flat)
+      v-select.py-2(
+        hide-details,
+        v-model="group",
+        :items="groups")
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Method
     v-card.mx-3.px-2(flat)
