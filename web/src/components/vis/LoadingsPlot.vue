@@ -52,7 +52,7 @@ div.tooltip {
 
 <script lang="ts">
 import {
-  PropType, defineComponent, computed, ref, watch, onMounted,
+  PropType, defineComponent, computed, ref, watchEffect, onMounted,
 } from '@vue/composition-api';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { select, event } from 'd3-selection';
@@ -161,7 +161,7 @@ export default defineComponent({
     const axisX = computed(() => axisBottom(scaleX.value));
     const axisY = computed(() => axisLeft(scaleY.value));
 
-    function update() {
+    onMounted(() => watchEffect(() => {
       // Recalculate width/height
       const bb = mainRef.value.getBoundingClientRect();
       height.value = bb.height;
@@ -232,12 +232,7 @@ export default defineComponent({
         .attr('r', radius)
         .attr('cx', (d) => scaleX.value(d.loadings[props.pcX - 1]))
         .attr('cy', (d) => scaleY.value(d.loadings[props.pcY - 1]));
-    }
-
-    watch(props, () => update());
-    onMounted(() => {
-      update();
-    });
+    }));
 
     return {
       width,
