@@ -16,7 +16,7 @@ export default {
     };
   },
   watch: {
-    async rocData(newRocdata) {
+    rocData(newRocdata) {
       d3.select('svg').remove();
       const unformattedData = newRocdata;
       const { sensitivities } = unformattedData;
@@ -101,7 +101,6 @@ export default {
       cellEnter.append('text').attr('class', 'hidetext')
         .attr('x', (d) => x(d.specificity))
         .attr('y', (d) => y(d.sensitivity))
-        .style('cursor', 'none')
         .text((d) => `threshold: ${d.threshold}`);
     },
   },

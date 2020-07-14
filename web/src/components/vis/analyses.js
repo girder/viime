@@ -150,8 +150,8 @@ export default [
   },
   {
     path: 'roc',
-    name: 'ROC Curve',
-    shortName: 'ROC Curve',
+    name: 'Group Prediction',
+    shortName: 'Group Prediction',
     description: 'wip',
     component: RocCurveTile,
     args: {},

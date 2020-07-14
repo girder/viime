@@ -86,7 +86,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(title="ROC Curve", expanded)
+vis-tile-large(title="Group Prediction", expanded)
   template(#controls)
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Metabolite
