@@ -26,7 +26,7 @@ export default {
       const data = [];
 
       thresholds.forEach((threshold, i) => {
-        data.push({ sensitivity: sensitivities[i], specificity: specificities[i], threshold });
+        data.push({ sensitivity: sensitivities[i], specificity: 1 - specificities[i], threshold });
       });
 
       const margin = {
@@ -37,7 +37,7 @@ export default {
 
       const x = d3.scaleLinear()
         .domain([0, 1])
-        .range([width, 0]);
+        .range([0, width]);
 
       const y = d3.scaleLinear()
         .domain([0, 1])
@@ -70,14 +70,14 @@ export default {
         .attr('text-anchor', 'end')
         .attr('x', width)
         .attr('y', height - 6)
-        .text('Specificities');
+        .text('1 - Specificity');
       svg.append('text')
         .attr('class', 'y label')
         .attr('text-anchor', 'end')
         .attr('y', 6)
         .attr('dy', '.75em')
         .attr('transform', 'rotate(-90)')
-        .text('Sensitivities');
+        .text('Sensitivity');
 
       svg.selectAll('path.line').remove();
       svg.append('path')

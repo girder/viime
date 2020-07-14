@@ -25,8 +25,7 @@ export default {
 
   data() {
     return {
-      search: [],
-      currentUserInput: '',
+      column: [],
       columns: [],
       location: location.href,
       group: '',
@@ -41,8 +40,8 @@ export default {
   },
 
   watch: {
-    search(newSearch) {
-      if (!newSearch || newSearch.length === 0) {
+    column(newColumn) {
+      if (!newColumn || newColumn.length === 0) {
         this.rocData = null;
         return;
       }
@@ -64,7 +63,7 @@ export default {
         method: 'get',
         url: `${apiUrl}/csv/${id}/analyses/roc`,
         params: {
-          column: this.search,
+          column: this.column,
           group: this.group,
           method: this.method,
         },
@@ -80,7 +79,8 @@ export default {
     this.columns = (await axios.get(`${apiUrl}/csv/${id}/analyses/correlation`)).data.columns;
     const groups = (await axios.get(`${apiUrl}/csv/${id}`)).data.group_levels.map((level) => level.name);
     groups.forEach((group) => this.groups.push(group));
-    this.group = groups[0];
+    [this.group] = groups;
+    [this.column] = this.columns;
   },
 };
 </script>
@@ -92,7 +92,7 @@ vis-tile-large(title="ROC Curve", expanded)
       v-toolbar-title Metabolite
     v-card.mx-3.px-2(flat)
       v-autocomplete(
-          v-model="search",
+          v-model="column",
           :items="columns",
           chips,
           dense,
