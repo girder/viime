@@ -189,9 +189,10 @@ roc_analysis <- function(measurements, groups, group_name, column_name, method) 
   #############
   #ROC analysis
   roc.a <- pROC::roc(group_mask, pred, plot=FALSE)
-  data.frame(
-    sensitivities=roc.a$sensitivities,
-    specificities=roc.a$specificities,
-    thresholds=roc.a$thresholds
+  out = data.frame(
+      sensitivities=roc.a$sensitivities,
+      specificities=roc.a$specificities,
+      thresholds=roc.a$thresholds,
+      auc=rep(roc.a$auc, length(roc.a$thresholds))
   )
 }

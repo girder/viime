@@ -30,7 +30,7 @@ def test_roc(client):
     }
     resp = client.get(url_for('csv.get_roc', csv_id=str(csv_id)), json=data)
     assert resp.status_code == 200
-    keys = {'sensitivities', 'thresholds', 'specificities'}
+    keys = {'sensitivities', 'thresholds', 'specificities', 'auc'}
     assert keys == set(resp.json.keys())
     for key in keys:
         for value in resp.json[key]:
