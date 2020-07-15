@@ -1,5 +1,8 @@
 <script>
-import * as d3 from 'd3';
+import { scaleLinear } from 'd3-scale';
+import { axisBottom, axisLeft } from 'd3-axis';
+import { line } from 'd3-shape';
+import { select } from 'd3-selection';
 
 export default {
   props: {
@@ -9,46 +12,44 @@ export default {
     },
   },
   mounted() {
-    d3.select('svg').remove();
+    select('svg').remove();
     const { sensitivities } = this.rocData;
     const { specificities } = this.rocData;
 
     const data = [];
 
     sensitivities.forEach((sensitivity, i) => {
-      data.push({ sensitivity: sensitivity, specificity: 1 - specificities[i] });
+      data.push({ sensitivity, specificity: 1 - specificities[i] });
     });
 
     const margin = {
-      top: 20, right: 65, bottom: 20, left: 80,
+      top: 40,
+      right: 20,
+      bottom: 50,
+      left: 150,
     };
     const width = 1000 - margin.left - margin.right;
     const height = 800 - margin.top - margin.bottom;
 
-    const x = d3.scaleLinear()
+    const x = scaleLinear()
       .domain([0, 1])
       .range([0, width]);
 
-    const y = d3.scaleLinear()
+    const y = scaleLinear()
       .domain([0, 1])
       .range([height, 0]);
 
-    const xAxis = d3.axisBottom(x)
+    const xAxis = axisBottom(x)
       .scale(x);
 
-    const yAxis = d3.axisLeft(x)
+    const yAxis = axisLeft(x)
       .scale(y);
 
-    const line = d3.line()
+    const graphLine = line()
       .x((d) => x(d.specificity))
       .y((d) => y(d.sensitivity));
 
-    // const area = d3.area()
-    //   .x((d) => x(d.specificity))
-    //   .y0(height)
-    //   .y1((d) => y(d.sensitivity));
-
-    const svg = d3.select('div#roc').append('svg')
+    const svg = select('div#roc').append('svg')
       .attr('width', width + margin.left + margin.right)
       .attr('height', height + margin.top + margin.bottom)
       .append('g')
@@ -61,13 +62,11 @@ export default {
       .attr('class', 'axis')
       .call(yAxis);
     svg.append('text')
-      .attr('class', 'x label')
-      // .attr('text-anchor', 'end')
+      .attr('text-anchor', 'end')
       .attr('x', width)
       .attr('y', height - 6)
       .text('1 - Specificity');
     svg.append('text')
-      .attr('class', 'y label')
       .attr('text-anchor', 'end')
       .attr('y', 6)
       .attr('dy', '.75em')
@@ -75,24 +74,17 @@ export default {
       .text('Sensitivity');
 
     svg.selectAll('path.line').remove();
-    // svg.selectAll('path.area').remove();
 
     svg.append('path')
       .attr('class', 'line')
-      .attr('d', line(data));
-
-    // svg.append("path")
-    //   .datum(data)
-    //   .attr('class', 'area')
-    //   .attr("d", area)
-
+      .attr('d', graphLine(data));
   },
 };
 </script>
 
 <template>
   <div>
-    <span v-text="`AUC = ${this.rocData.auc}`" />
+    <span v-text="`AUC = ${rocData.auc}`" />
     <div id="roc" />
   </div>
 </template>

@@ -47,14 +47,14 @@ export default {
     },
     rocData() {
       if (!this.plot.data) {
-        return { sensitivities: [], specificities: [], auc: 0, }
+        return { sensitivities: [], specificities: [], auc: 0 };
       }
       return {
         sensitivities: this.plot.data.sensitivities,
         specificities: this.plot.data.specificities,
         auc: this.plot.data.auc[0],
       };
-    }
+    },
   },
 };
 </script>
@@ -79,18 +79,18 @@ vis-tile-large(v-if="plot", title="Group Prediction", :loading="plot.loading", e
       v-toolbar-title Group
     v-card.mx-3.px-2(flat)
       v-select.py-2(
-        hide-details,
-        v-model="group",
-        :items="groups",
-        @change="changePlotArgs({group: $event})")
+          hide-details,
+          v-model="group",
+          :items="groups",
+          @change="changePlotArgs({group: $event})")
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Method
     v-card.mx-3.px-2(flat)
       v-select.py-2(
-        hide-details,
-        v-model="method",
-        :items="methodOptions",
-        @change="changePlotArgs({method: $event})")
+          hide-details,
+          v-model="method",
+          :items="methodOptions",
+          @change="changePlotArgs({method: $event})")
   roc-curve(:roc-data="rocData")
 </template>
 
