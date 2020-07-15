@@ -154,7 +154,11 @@ export default [
     shortName: 'Group Prediction',
     description: 'wip',
     component: RocCurveTile,
-    args: {},
+    args: {
+      column: null,
+      group: null,
+      method: 'random_forest',
+    },
     type: plot_types.ANALYSIS,
     icon: vuetify.icons.pca,
   },

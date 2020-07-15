@@ -1,14 +1,10 @@
 <script>
-import { csvFormat } from 'd3-dsv';
-import axios from 'axios';
 import RocCurve from './RocCurve.vue';
 import VisTileLarge from './VisTileLarge.vue';
 import ToolbarOption from '../toolbar/ToolbarOption.vue';
 import MetaboliteFilter from '../toolbar/MetaboliteFilter.vue';
 import MetaboliteColorer from '../toolbar/MetaboliteColorer.vue';
 import plotData from './mixins/plotData';
-import { SET_DATASET_SELECTED_COLUMNS } from '../../store/actions.type';
-import { downloadCSV } from '../../utils/exporter';
 
 export default {
   components: {
@@ -19,18 +15,18 @@ export default {
     RocCurve,
   },
 
+  mixins: [plotData('roc')],
+
   props: {
-
+    id: {
+      type: String,
+      required: true,
+    },
   },
-
   data() {
     return {
       column: [],
-      columns: [],
-      location: location.href,
       group: '',
-      groups: [],
-      rocData: {},
       method: 'random_forest',
       methodOptions: [
         { value: 'random_forest', text: 'Random Forest' },
@@ -38,55 +34,32 @@ export default {
       ],
     };
   },
-
-  watch: {
-    column(newColumn) {
-      if (!newColumn || newColumn.length === 0) {
-        this.rocData = null;
-        return;
+  computed: {
+    columns() {
+      if (this.dataset?.column?.data) {
+        return this.dataset.column.data.filter((column) => column.column_type === 'measurement')
+          .map((column) => column.column_header);
       }
-      this.updateRoc();
+      return [];
     },
-    method() {
-      this.updateRoc();
+    groups() {
+      return this.dataset.groupLevels.map((level) => level.name);
     },
-    group() {
-      this.updateRoc();
-    }
-  },
-  methods: {
-    async updateRoc() {
-      const id = this.location.split('/')[this.location.split('/').length - 3];
-      const apiUrl = new URL('api/v1', process.env.VUE_APP_SERVER_ADDRESS).href;
-
-      const config = {
-        method: 'get',
-        url: `${apiUrl}/csv/${id}/analyses/roc`,
-        params: {
-          column: this.column,
-          group: this.group,
-          method: this.method,
-        },
+    rocData() {
+      if (!this.plot.data) {
+        return { sensitivities: [], specificities: [] }
+      }
+      return {
+        sensitivities: this.plot.data.sensitivities,
+        specificities: this.plot.data.specificities,
       };
-      const unformattedData = (await axios(config)).data;
-      this.rocData = unformattedData;
     }
-  },
-  async mounted() {
-    // quick and dirty way to grab file id
-    const id = this.location.split('/')[this.location.split('/').length - 3];
-    const apiUrl = new URL('api/v1', process.env.VUE_APP_SERVER_ADDRESS).href;
-    this.columns = (await axios.get(`${apiUrl}/csv/${id}/analyses/correlation`)).data.columns;
-    const groups = (await axios.get(`${apiUrl}/csv/${id}`)).data.group_levels.map((level) => level.name);
-    groups.forEach((group) => this.groups.push(group));
-    [this.group] = groups;
-    [this.column] = this.columns;
   },
 };
 </script>
 
 <template lang="pug">
-vis-tile-large(title="Group Prediction", expanded)
+vis-tile-large(v-if="plot", title="Group Prediction", :loading="plot.loading", expanded)
   template(#controls)
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Metabolite
@@ -99,21 +72,24 @@ vis-tile-large(title="Group Prediction", expanded)
           deletable-chips,
           auto-select-first,
           hide-selected,
-          hide-details,)
+          hide-details,
+          @change="changePlotArgs({column: $event})")
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Group
     v-card.mx-3.px-2(flat)
       v-select.py-2(
         hide-details,
         v-model="group",
-        :items="groups")
+        :items="groups",
+        @change="changePlotArgs({group: $event})")
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Method
     v-card.mx-3.px-2(flat)
       v-select.py-2(
         hide-details,
         v-model="method",
-        :items="methodOptions")
+        :items="methodOptions",
+        @change="changePlotArgs({method: $event})")
   roc-curve(:roc-data="rocData")
 </template>
 
