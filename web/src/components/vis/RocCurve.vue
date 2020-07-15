@@ -8,16 +8,10 @@ export default {
       required: true,
     },
   },
-  data() {
-    return {
-      data: [],
-    };
-  },
   mounted() {
     d3.select('svg').remove();
-    const unformattedData = this.rocData;
-    const { sensitivities } = unformattedData;
-    const { specificities } = unformattedData;
+    const { sensitivities } = this.rocData;
+    const { specificities } = this.rocData;
 
     const data = [];
 
@@ -93,37 +87,12 @@ export default {
     //   .attr("d", area)
 
   },
-  computed: {
-    // extremely inaccurate numerical AUC
-    // auc() {
-    //   if (!this.rocData.specificities) {
-    //     return 0;
-    //   }
-    //   const n = this.rocData.specificities.length;
-    //   const deltaX = 1 / n;
-    //   let sum = 0;
-    //   // let x;
-    //   let y;
-    //   for (let i = 0; i < n; i += 1) {
-    //     // x = this.rocData.specificities[i] * deltaX;
-    //     y = this.rocData.sensitivities[i];
-    //     if (i === 0) {
-    //       sum += y;
-    //     } else if (i % 2 === 1) {
-    //       sum += (4 * y);
-    //     } else {
-    //       sum += (2 * y);
-    //     }
-    //   }
-    //   return (deltaX / 3) * sum;
-    // },
-  },
 };
 </script>
 
 <template>
   <div>
-    <!-- <span v-text="`AUC = ${auc}`" /> -->
+    <span v-text="`AUC = ${this.rocData.auc}`" />
     <div id="roc" />
   </div>
 </template>

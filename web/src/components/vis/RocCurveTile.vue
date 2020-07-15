@@ -47,11 +47,12 @@ export default {
     },
     rocData() {
       if (!this.plot.data) {
-        return { sensitivities: [], specificities: [] }
+        return { sensitivities: [], specificities: [], auc: 0, }
       }
       return {
         sensitivities: this.plot.data.sensitivities,
         specificities: this.plot.data.specificities,
+        auc: this.plot.data.auc[0],
       };
     }
   },
