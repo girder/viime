@@ -2,16 +2,12 @@
 import RocCurve from './RocCurve.vue';
 import VisTileLarge from './VisTileLarge.vue';
 import ToolbarOption from '../toolbar/ToolbarOption.vue';
-import MetaboliteFilter from '../toolbar/MetaboliteFilter.vue';
-import MetaboliteColorer from '../toolbar/MetaboliteColorer.vue';
 import plotData from './mixins/plotData';
 
 export default {
   components: {
     ToolbarOption,
     VisTileLarge,
-    MetaboliteFilter,
-    MetaboliteColorer,
     RocCurve,
   },
 
@@ -27,6 +23,13 @@ export default {
     return {
       column: [],
       group: '',
+      metaboliteSource: 'all',
+      metaboliteSourceOptions: [
+        { value: 'all', text: 'All metabolites' },
+        { value: 'selected', text: 'Selected Metabolites' },
+        { value: 'pc1', text: 'PC1' }, // TODO: PLACEHOLDER UNTIL PC VALUES CAN BE
+        { value: 'pc2', text: 'PC2' }, // RETRIEVED FROM BACKEND
+      ],
       method: 'random_forest',
       methodOptions: [
         { value: 'random_forest', text: 'Random Forest' },
@@ -37,8 +40,9 @@ export default {
   computed: {
     columns() {
       if (this.dataset?.column?.data) {
-        return this.dataset.column.data.filter((column) => column.column_type === 'measurement')
+        const columns = this.dataset.column.data.filter((column) => column.column_type === 'measurement')
           .map((column) => column.column_header);
+        return this.metaboliteSource === 'selected' ? this.dataset.selectedColumns : columns;
       }
       return [];
     },
