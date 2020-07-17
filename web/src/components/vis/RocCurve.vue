@@ -37,10 +37,6 @@ export default {
     const yAxis = axisLeft(x)
       .scale(y);
 
-    const graphLine = line()
-      .x((d) => x(d.specificity))
-      .y((d) => y(d.sensitivity));
-
     const svg = select('div#roc').append('svg')
       .attr('width', width + margin.left + margin.right)
       .attr('height', height + margin.top + margin.bottom)
@@ -65,7 +61,6 @@ export default {
       .attr('transform', 'rotate(-90)')
       .text('Sensitivity');
 
-    //
     const { sensitivities } = this.rocData;
     const { specificities } = this.rocData;
 
@@ -76,11 +71,23 @@ export default {
       data.push({ sensitivity, specificity: 1 - specificities[i] });
     });
 
+    const drawLine = line()
+      .x((d) => x(d.specificity))
+      .y((d) => y(d.sensitivity));
+
     // Draw the ROC curve using the data
     svg.selectAll('path.line').remove();
     svg.append('path')
-      .attr('class', 'line')
-      .attr('d', graphLine(data));
+      .attr('class', 'rocCurve')
+      .attr('d', drawLine(data));
+
+    // Draw the diagonal line
+    svg.append('path')
+      .attr('class', 'diagonal')
+      .attr('d', drawLine([
+        { sensitivity: 0, specificity: 0 },
+        { sensitivity: 1, specificity: 1 },
+      ]));
   },
 };
 </script>
@@ -94,10 +101,17 @@ export default {
 
 <style>
 
-.line {
+.rocCurve {
   fill: none;
   stroke: steelblue;
   stroke-width: 1.5px;
+}
+
+.diagonal {
+  fill: none;
+  stroke: black;
+  stroke-width: 1.5px;
+  stroke-dasharray: 5,5;
 }
 
 </style>
