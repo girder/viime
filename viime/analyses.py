@@ -84,14 +84,24 @@ def pairwise_correlation(measurements: pd.DataFrame, min_correlation: float = 0,
 
 
 def roc_analysis(measurements: pd.DataFrame, groups: pd.DataFrame,
-                 group: str, column: str, method: str) -> Dict[str, List[float]]:
+                 group1: str, group2: str, columns: list, method: str) -> Dict[str, List[float]]:
     files = {
         'measurements': measurements.to_csv().encode(),
-        'groups': groups.to_csv(header=True).encode()
+        'groups': groups.to_csv(header=True).encode(),
+        'column_names': pd.DataFrame(columns).to_csv().encode()
     }
     data = opencpu_request('roc_analysis', files, {
-        'group': group,
-        'column': column,
+        'group1_name': group1,
+        'group2_name': group2,
         'method': method
+    })
+    return clean(data).to_dict(orient='list')
+
+def factor_analysis(measurements: pd.DataFrame, threshold = 0.4) -> Dict[str, List[float]]:
+    files = {
+        'measurements': measurements.to_csv().encode()
+    }
+    data = opencpu_request('factor_analysis', files, {
+        'threshold': threshold
     })
     return clean(data).to_dict(orient='list')

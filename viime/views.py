@@ -11,7 +11,7 @@ from webargs.flaskparser import use_kwargs
 from werkzeug.datastructures import FileStorage
 
 from viime import opencpu, samples
-from viime.analyses import anova_test, hierarchical_clustering, pairwise_correlation, \
+from viime.analyses import anova_test, factor_analysis, hierarchical_clustering, pairwise_correlation, \
     roc_analysis, wilcoxon_test
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from viime.models import AXIS_NAME_TYPES, clean, CSVFile, CSVFileSchema, db, \
@@ -816,26 +816,44 @@ def get_correlation(validated_table: ValidatedMetaboliteTable,
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/roc', methods=['GET'])
 @use_kwargs({
-    'group': fields.Str(required=True),
-    'column': fields.Str(required=True),
+    'group1': fields.Str(required=True),
+    'group2': fields.Str(required=True),
+    'columns': fields.Str(required=True),
     'method': fields.Str(required=True, validate=validate.OneOf([
         'logistic_regression', 'random_forest'
     ]))
 })
 @load_validated_csv_file
 def get_roc(validated_table: ValidatedMetaboliteTable,
-            group: str, column: str, method: str):
+            group1: str, group2: str, columns: str, method: str):
     measurements = validated_table.measurements
     groups = validated_table.groups
     errors = {}
-    if not (groups == group).sum().sum():
-        errors['group'] = ['Invalid group name']
-    if column not in measurements.keys():
-        errors['column'] = ['Invalid column name']
+    try:
+        columns = json.loads(columns)
+    except ValueError:
+        errors['columns'] = ['Invalid columns, must be a list']
+    if not (groups == group1).sum().sum():
+        errors['group1'] = ['Invalid group name']
+    if not (groups == group2).sum().sum():
+        errors['group2'] = ['Invalid group name']
+    for i, column in enumerate(columns):
+        if column not in measurements.keys():
+            errors[f'columns[{i}]'] = [f'Invalid column name "{column}"']
     if errors:
         return jsonify(errors), 400
-    return jsonify(roc_analysis(measurements, groups, group, column, method))
+    return jsonify(roc_analysis(measurements, groups, group1, group2, columns, method))
 
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/factors', methods=['GET'])
+@use_kwargs({
+    'threshold': fields.Float(missing=0.4)
+})
+@load_validated_csv_file
+def get_factors(validated_table: ValidatedMetaboliteTable,
+                    threshold: Optional[float]):
+    
+    measurements = validated_table.measurements
+    return jsonify(factor_analysis(measurements, threshold))
 
 #
 # sample related

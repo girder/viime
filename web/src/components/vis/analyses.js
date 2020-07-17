@@ -155,8 +155,9 @@ export default [
     description: 'wip',
     component: RocCurveTile,
     args: {
-      column: null,
-      group: null,
+      columns: null,
+      group1: null,
+      group2: null,
       method: 'random_forest',
     },
     type: plot_types.ANALYSIS,
