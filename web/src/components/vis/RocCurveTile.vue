@@ -34,6 +34,7 @@ export default {
         { value: 'logistic_regression', text: 'Logistic Regression' },
       ],
       pcaData: null,
+      threshold: 0.4, // threshold for factor analysis
     };
   },
   computed: {
@@ -62,15 +63,19 @@ export default {
       };
     },
   },
-  async mounted() {
-    const pcaDataResponse = await CSVService.getAnalysis(this.dataset.id, 'factors', {});
-    this.pcaData = pcaDataResponse.data;
-    this.pcaData.factor.forEach((factor) => {
-      this.metaboliteSourceOptions.push({
-        value: factor,
-        text: `PC${factor}`,
-      });
-    });
+  watch: {
+    // get new factor analysis when threshold changes
+    threshold() {
+      this.getFactors();
+    },
+
+    // Clear metabolites when metabolite source is changed
+    metaboliteSource() {
+      this.metabolites = [];
+    }
+  },
+  mounted() {
+    this.getFactors();
   },
   methods: {
     // Called when a metabolite is removed from the ROC analysis
@@ -79,6 +84,23 @@ export default {
     removeMetabolite(metabolite) {
       this.metabolites.splice(this.metabolites.indexOf(metabolite), 1);
       this.changePlotArgs({ columns: JSON.stringify(this.metabolites) });
+    },
+    async getFactors() {
+      if (this.metaboliteSourceOptions.length > 2) {
+        this.metaboliteSourceOptions.splice(2, this.metaboliteSourceOptions.length - 2);
+      }
+      try {
+        const pcaDataResponse = await CSVService.getAnalysis(this.dataset.id, 'factors', { threshold: this.threshold });
+        this.pcaData = pcaDataResponse.data;
+        this.pcaData.factor.forEach((factor) => {
+          this.metaboliteSourceOptions.push({
+            value: factor,
+            text: `PC${factor}`,
+          });
+        });
+      } catch (err) { // if factor analysis fails b/c of threshold
+        return;
+      }
     },
   },
 };
@@ -112,6 +134,37 @@ export default {
           hide-details="hide-details"
           :items="metaboliteSourceOptions"
         />
+      </v-card>
+      <v-toolbar
+        class="darken-3"
+        color="primary"
+        dark="dark"
+        flat="flat"
+        dense="dense"
+        :card="false"
+      >
+        <v-toolbar-title>Loading Threshold</v-toolbar-title>
+      </v-toolbar>
+      <v-card
+        class="mx-3"
+        flat="flat"
+      >
+        <v-card-actions>
+          <v-layout column="column">
+            <v-slider
+              class="my-1 minCorrelation"
+              :value="threshold"
+              label="0"
+              thumb-label="always"
+              hide-details="hide-details"
+              min="0"
+              max="1"
+              step="0.1"
+              style="padding-top: 16px;"
+              @change="threshold = $event"
+            />
+          </v-layout>
+        </v-card-actions>
       </v-card>
       <v-toolbar
         class="darken-3"

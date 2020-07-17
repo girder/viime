@@ -1,3 +1,4 @@
+import json
 from io import BytesIO
 from pathlib import Path
 
@@ -24,8 +25,9 @@ def test_roc(client):
     assert resp.status_code == 201
 
     data = {
-        'group': 'C',
-        'column': '5-oxoproline (Pyroglutamic acid)',
+        'group1': 'C',
+        'group2': 'H',
+        'columns': json.dumps(['5-oxoproline (Pyroglutamic acid)']),
         'method': 'random_forest'
     }
     resp = client.get(url_for('csv.get_roc', csv_id=str(csv_id)), json=data)

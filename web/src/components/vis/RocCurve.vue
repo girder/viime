@@ -12,15 +12,7 @@ export default {
     },
   },
   mounted() {
-    select('svg').remove();
-    const { sensitivities } = this.rocData;
-    const { specificities } = this.rocData;
-
-    const data = [];
-
-    sensitivities.forEach((sensitivity, i) => {
-      data.push({ sensitivity, specificity: 1 - specificities[i] });
-    });
+    select('svg').remove(); // remove any existing graph
 
     const margin = {
       top: 40,
@@ -72,9 +64,20 @@ export default {
       .attr('dy', '.75em')
       .attr('transform', 'rotate(-90)')
       .text('Sensitivity');
+    
+    // 
+    const { sensitivities } = this.rocData;
+    const { specificities } = this.rocData;
 
+    const data = [];
+
+    // Get the data to be plotted
+    sensitivities.forEach((sensitivity, i) => {
+      data.push({ sensitivity, specificity: 1 - specificities[i] });
+    });
+
+    // Draw the ROC curve using the data
     svg.selectAll('path.line').remove();
-
     svg.append('path')
       .attr('class', 'line')
       .attr('d', graphLine(data));
@@ -97,22 +100,4 @@ export default {
   stroke-width: 1.5px;
 }
 
-.dot {
-    fill: none;
-}
-.vors :hover circle {
-  fill: red;
-}
-
-.vors :hover text {
-  opacity: 1;
-}
-
-.hidetext {
-  opacity: 0;
-}
-
-.area {
-  fill: lightblue;
-}
 </style>
