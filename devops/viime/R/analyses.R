@@ -3,8 +3,8 @@
 #'
 #' @export
 wilcoxon_test_z_scores <- function(measurements, groups, log_transformed=FALSE) {
-  Metab = read.csv(measurements, row.names=1)
-  groups = read.csv(groups, row.names=1)
+  Metab = read.csv(measurements, row.names=1, check.names=FALSE)
+  groups = read.csv(groups, row.names=1, check.names=FALSE)
 
   # take the first column
   Group = as.factor(groups[, 1])
@@ -64,8 +64,8 @@ wilcoxon_test_z_scores <- function(measurements, groups, log_transformed=FALSE) 
 #'
 #' @export
 anova_tukey_adjustment <- function(measurements, groups, log_transformed=FALSE) {
-  Metab = read.csv(measurements, row.names=1)
-  groups = read.csv(groups, row.names=1)
+  Metab = read.csv(measurements, row.names=1, check.names=FALSE)
+  groups = read.csv(groups, row.names=1, check.names=FALSE)
 
   # take the first column
   Group = as.factor(groups[, 1])
