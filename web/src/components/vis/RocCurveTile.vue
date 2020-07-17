@@ -41,11 +41,12 @@ export default {
       if (this.metaboliteSource === 'all') {
         return this.dataset.column.data.filter((column) => column.column_type === 'measurement')
           .map((column) => column.column_header);
-      } 
+      }
       if (this.metaboliteSource === 'selected') {
         return this.dataset.selectedColumns;
       }
-      return this.pcaData.metabolites.filter((metabolite, index) => this.pcaData.factor[index] === this.metaboliteSource);
+      const { metabolites } = this.pcaData;
+      return metabolites.filter((m, i) => (this.pcaData.factor[i] === this.metaboliteSource));
     },
     groups() {
       return this.dataset.groupLevels.map((level) => level.name);
@@ -70,6 +71,15 @@ export default {
         text: `PC${factor}`,
       });
     });
+  },
+  methods: {
+    // Called when a metabolite is removed from the ROC analysis
+    // as a result of the user clicking the red 'X' next to its
+    // name in the 'Metabolites' autoselect
+    removeMetabolite(metabolite) {
+      this.metabolites.splice(this.metabolites.indexOf(metabolite), 1);
+      this.changePlotArgs({ columns: JSON.stringify(this.metabolites) });
+    },
   },
 };
 </script>
@@ -128,7 +138,26 @@ export default {
           hide-selected="hide-selected"
           hide-details="hide-details"
           @change="changePlotArgs({columns: JSON.stringify(metabolites)})"
-        />
+        >
+          <template v-slot:selection="data">
+            <v-tooltip right="right">
+              <template v-slot:activator="{ on }">
+                <v-chip
+                  small="small"
+                  v-on="on"
+                >
+                  <v-icon
+                    class="closePillButton pr-1"
+                    small="small"
+                    @click.stop="removeMetabolite(data.item)"
+                  >
+                    mdi-close
+                  </v-icon><span class="searchResult">{{ data.item }}</span>
+                </v-chip>
+              </template><span>{{ data.item }}</span>
+            </v-tooltip>
+          </template>
+        </v-autocomplete>
       </v-card>
       <v-toolbar
         class="darken-3"
@@ -202,17 +231,14 @@ export default {
 </template>
 
 <style>
-.horizontalScrollable {
-  position: absolute;
+.closePillButton:hover {
+  color: red;
 }
 
-.minCorrelation {
-  padding-top: 16px;
-}
-
-.minCorrelation >>> .v-input__slot::after {
-  content: "0.1";
-  color: rgba(0,0,0,0.54);
-  margin-left: 16px;
+.searchResult {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  width: 100px;
 }
 </style>
