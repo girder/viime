@@ -97,7 +97,8 @@ def roc_analysis(measurements: pd.DataFrame, groups: pd.DataFrame,
     })
     return clean(data).to_dict(orient='list')
 
-def factor_analysis(measurements: pd.DataFrame, threshold = 0.4) -> Dict[str, List[float]]:
+
+def factor_analysis(measurements: pd.DataFrame, threshold=0.4) -> Dict[str, List[float]]:
     files = {
         'measurements': measurements.to_csv().encode()
     }

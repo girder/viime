@@ -11,8 +11,8 @@ from webargs.flaskparser import use_kwargs
 from werkzeug.datastructures import FileStorage
 
 from viime import opencpu, samples
-from viime.analyses import anova_test, factor_analysis, hierarchical_clustering, pairwise_correlation, \
-    roc_analysis, wilcoxon_test
+from viime.analyses import anova_test, factor_analysis, hierarchical_clustering,\
+    pairwise_correlation, roc_analysis, wilcoxon_test
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from viime.models import AXIS_NAME_TYPES, clean, CSVFile, CSVFileSchema, db, \
     GroupLevelSchema, ModifyLabelListSchema, \
@@ -844,16 +844,17 @@ def get_roc(validated_table: ValidatedMetaboliteTable,
         return jsonify(errors), 400
     return jsonify(roc_analysis(measurements, groups, group1, group2, columns, method))
 
+
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/factors', methods=['GET'])
 @use_kwargs({
     'threshold': fields.Float(missing=0.4)
 })
 @load_validated_csv_file
 def get_factors(validated_table: ValidatedMetaboliteTable,
-                    threshold: Optional[float]):
-    
+                threshold: Optional[float]):
     measurements = validated_table.measurements
     return jsonify(factor_analysis(measurements, threshold))
+
 
 #
 # sample related

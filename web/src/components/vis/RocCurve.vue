@@ -64,8 +64,8 @@ export default {
       .attr('dy', '.75em')
       .attr('transform', 'rotate(-90)')
       .text('Sensitivity');
-    
-    // 
+
+    //
     const { sensitivities } = this.rocData;
     const { specificities } = this.rocData;
 

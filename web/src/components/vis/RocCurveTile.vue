@@ -72,7 +72,7 @@ export default {
     // Clear metabolites when metabolite source is changed
     metaboliteSource() {
       this.metabolites = [];
-    }
+    },
   },
   mounted() {
     this.getFactors();
@@ -99,7 +99,7 @@ export default {
           });
         });
       } catch (err) { // if factor analysis fails b/c of threshold
-        return;
+
       }
     },
   },

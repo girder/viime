@@ -1,5 +1,5 @@
-import json
 from io import BytesIO
+import json
 from pathlib import Path
 
 from flask import url_for
