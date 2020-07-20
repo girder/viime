@@ -12,7 +12,7 @@ export default {
     },
   },
   mounted() {
-    select('svg').remove(); // remove any existing graph
+    // select('svg').remove(); // remove any existing graph
 
     const margin = {
       top: 40,
@@ -36,18 +36,15 @@ export default {
 
     const yAxis = axisLeft(x)
       .scale(y);
-
-    const svg = select('div#roc').append('svg')
+    const svg = select('svg')
       .attr('width', width + margin.left + margin.right)
       .attr('height', height + margin.top + margin.bottom)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
     svg.append('g')
-      .attr('class', 'axis')
       .attr('transform', `translate(0,${height})`)
       .call(xAxis);
     svg.append('g')
-      .attr('class', 'axis')
       .call(yAxis);
     svg.append('text')
       .attr('text-anchor', 'end')
@@ -93,13 +90,24 @@ export default {
 </script>
 
 <template>
-  <div>
-    <span v-text="`AUC = ${rocData.auc}`" />
-    <div id="roc" />
+  <div class="main">
+    <span
+      style="margin: 10px; font-weight: bold"
+      v-text="`AUC = ${rocData.auc}`"
+    />
+    <svg id="svg" />
   </div>
 </template>
 
 <style>
+.main {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+}
 
 .rocCurve {
   fill: none;
