@@ -3,7 +3,6 @@
     ref="mainRef"
     class="main"
   >
-    <!-- v-resize:throttle="onResize"-->
     <svg
       ref="svgRef"
       :width="width"
@@ -70,7 +69,7 @@ line.cutoff90 {
 
 <script lang="ts">
 import {
-  PropType, defineComponent, computed, ref, watch, onMounted,
+  PropType, defineComponent, computed, ref, watch, onMounted, Ref,
 } from '@vue/composition-api';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { scalePoint, scaleLinear } from 'd3-scale';
@@ -108,9 +107,9 @@ export default defineComponent({
   },
 
   setup(props) {
-    const svgRef = ref(document.createElement('svg'));
-    const mainRef = ref(document.createElement('div'));
-    const tooltipRef = ref(document.createElement('div'));
+    const svgRef = ref() as Ref<HTMLElement>;
+    const mainRef = ref() as Ref<HTMLElement>;
+    const tooltipRef = ref() as Ref<HTMLElement>;
     const width = ref(400);
     const height = ref(400);
 
