@@ -53,7 +53,7 @@ export default {
       return this.dataset.groupLevels.map((level) => level.name);
     },
     rocData() {
-      if (!this.plot.data) {
+      if (!this.plot.data || !this.group1 || !this.group2 || this.metabolites.length === 0) {
         return { sensitivities: [], specificities: [], auc: 0 };
       }
       return {
