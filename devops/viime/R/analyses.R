@@ -171,6 +171,15 @@ roc_analysis <- function(measurements, groups, group1_name, group2_name, column_
         group_mask <- c(group_mask, 1)
     }
   }
+  
+  # make sure row order is preserved
+  if (group_mask[1] == 0) {
+    # remove all rows not in group1 or group2
+    df <- rbind(df[groups == group1_name,], df[groups == group2_name,])
+  } else {
+    df <- rbind(df[groups == group2_name,], df[groups == group1_name,])
+  }
+
 
   column_names <- read.csv(column_names, row.names=1, check.names=TRUE)
   c <- unlist(column_names) # convert dataframe to a vector
