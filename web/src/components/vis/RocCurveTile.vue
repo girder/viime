@@ -78,6 +78,18 @@ export default {
       this.metabolites = newSource === 'all' ? [] : this.columns;
       this.changePlotArgs({ columns: JSON.stringify(this.metabolites) });
     },
+
+    // These two watchers prevent the same group from being selected twice.
+    group1(newGroup) {
+      if (this.group2 === newGroup) {
+        this.group2 = '';
+      }
+    },
+    group2(newGroup) {
+      if (this.group1 === newGroup) {
+        this.group1 = '';
+      }
+    },
   },
   mounted() {
     this.getFactors();
