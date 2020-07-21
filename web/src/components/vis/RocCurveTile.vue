@@ -184,7 +184,7 @@ export default {
         <v-toolbar-title>Metabolites</v-toolbar-title>
       </v-toolbar>
       <v-card
-        class="mx-3 px-2"
+        class="mx-3 px-1"
         flat="flat"
       >
         <v-autocomplete
@@ -193,6 +193,7 @@ export default {
           chips="chips"
           dense="dense"
           multiple
+          clearable
           deletable-chips="deletable-chips"
           auto-select-first="auto-select-first"
           hide-selected="hide-selected"
