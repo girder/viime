@@ -35,6 +35,7 @@ export default {
       ],
       pcaData: null,
       threshold: 0.4, // threshold for factor analysis
+      factorAnalysisFailed: false, // true if the factor analysis request fails
     };
   },
   computed: {
@@ -102,8 +103,9 @@ export default {
             text: `PC${factor}`,
           });
         });
+        this.factorAnalysisFailed = false;
       } catch (err) { // if factor analysis fails b/c of threshold
-
+        this.factorAnalysisFailed = true;
       }
     },
   },
@@ -147,7 +149,25 @@ export default {
         dense="dense"
         :card="false"
       >
-        <v-toolbar-title>Loading Threshold</v-toolbar-title>
+        <v-toolbar-title>
+          Loading Threshold
+          <v-tooltip
+            v-if="factorAnalysisFailed"
+            slot="append"
+            right
+          >
+            <v-icon
+              slot="activator"
+              color="error"
+            >
+              {{ $vuetify.icons.warningCircle }}
+            </v-icon>
+            <span>
+              Factor analysis with loading threshold of <br>
+              {{ threshold }} returned 0 metabolites.
+            </span>
+          </v-tooltip>
+        </v-toolbar-title>
       </v-toolbar>
       <v-card
         class="mx-3"
