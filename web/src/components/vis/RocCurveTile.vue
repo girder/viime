@@ -67,18 +67,15 @@ export default {
     // get new factor analysis when threshold changes
     threshold() {
       this.getFactors();
+      this.metaboliteSource = 'all';
     },
 
     // Clear metabolites when metabolite source is changed to 'All'
     // If the source is changed to 'Selected' or one of the PC factors,
     // populate the list with the filtered metabolite and graph them.
     metaboliteSource(newSource) {
-      if (newSource === 'all') {
-        this.metabolites = [];
-      } else {
-        this.metabolites = this.columns;
-        this.changePlotArgs({ columns: JSON.stringify(this.metabolites) });
-      }
+      this.metabolites = newSource === 'all' ? [] : this.columns;
+      this.changePlotArgs({ columns: JSON.stringify(this.metabolites) });
     },
   },
   mounted() {
