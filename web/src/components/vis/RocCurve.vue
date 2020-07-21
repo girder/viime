@@ -90,17 +90,17 @@ export default {
 </script>
 
 <template>
-  <div class="main">
+  <div class="rocContainer">
     <span
       style="margin: 10px; font-weight: bold"
-      v-text="`AUC = ${rocData.auc}`"
+      v-text="`AUC = ${rocData.auc.toPrecision(3)}`"
     />
     <svg id="svg" />
   </div>
 </template>
 
 <style>
-.main {
+.rocContainer {
   position: absolute;
   top: 0;
   left: 0;
