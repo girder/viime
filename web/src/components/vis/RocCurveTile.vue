@@ -69,9 +69,16 @@ export default {
       this.getFactors();
     },
 
-    // Clear metabolites when metabolite source is changed
-    metaboliteSource() {
-      this.metabolites = [];
+    // Clear metabolites when metabolite source is changed to 'All'
+    // If the source is changed to 'Selected' or one of the PC factors,
+    // populate the list with the filtered metabolite and graph them.
+    metaboliteSource(newSource) {
+      if (newSource === 'all') {
+        this.metabolites = [];
+      } else {
+        this.metabolites = this.columns;
+        this.changePlotArgs({ columns: JSON.stringify(this.metabolites) });
+      }
     },
   },
   mounted() {
