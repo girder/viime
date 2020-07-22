@@ -20,7 +20,7 @@ export default {
   },
   data() {
     return {
-      metabolites: [],
+      metabolites: [], // currently selected metabolites
       group1: '',
       group2: '',
       metaboliteSource: 'all',
@@ -33,12 +33,14 @@ export default {
         { value: 'random_forest', text: 'Random Forest' },
         { value: 'logistic_regression', text: 'Logistic Regression' },
       ],
-      pcaData: null,
+      pcaData: null, // data from factor analysis endpoint
       threshold: 0.4, // threshold for factor analysis
       factorAnalysisFailed: false, // true if the factor analysis request fails
     };
   },
   computed: {
+    // Column names (i.e. metabolites) available for selection,
+    // filtered based on current metabolite source
     columns() {
       if (this.metaboliteSource === 'all') {
         return this.dataset.column.data.filter((column) => column.column_type === 'measurement')
@@ -48,6 +50,9 @@ export default {
         return this.dataset.selectedColumns;
       }
       const { metabolites } = this.pcaData;
+      if (!metabolites) {
+        return [];
+      }
       return metabolites.filter((m, i) => (this.pcaData.factor[i] === this.metaboliteSource));
     },
     groups() {
@@ -55,6 +60,7 @@ export default {
     },
     rocData() {
       if (!this.plot.data || !this.group1 || !this.group2 || this.metabolites.length === 0) {
+        // if any data is missing, don't draw the ROC curve
         return { sensitivities: [], specificities: [], auc: 0 };
       }
       return {
@@ -80,18 +86,19 @@ export default {
     },
 
     // These two watchers prevent the same group from being selected twice.
-    group1(newGroup) {
+    group1(newGroup, oldGroup) {
       if (this.group2 === newGroup) {
-        this.group2 = '';
+        this.group2 = oldGroup;
       }
     },
-    group2(newGroup) {
+    group2(newGroup, oldGroup) {
       if (this.group1 === newGroup) {
-        this.group1 = '';
+        this.group1 = oldGroup;
       }
     },
   },
   mounted() {
+    // Perform an initial factor analysis when component is mounted
     this.getFactors();
   },
   methods: {
@@ -107,15 +114,22 @@ export default {
         this.metaboliteSourceOptions.splice(2, this.metaboliteSourceOptions.length - 2);
       }
       try {
+        // perform factor analysis
         const pcaDataResponse = await CSVService.getAnalysis(this.dataset.id, 'factors', { threshold: this.threshold });
         this.pcaData = pcaDataResponse.data;
+
+        // populate 'Metabolite Source' dropdown with factor analysis results
         this.pcaData.factor.forEach((factor) => {
           this.metaboliteSourceOptions.push({
             value: factor,
             text: `PC${factor}`,
           });
         });
-        this.factorAnalysisFailed = false;
+
+        // it's possible for the factor analysis to succeed but
+        // return zero metabolites, if that happens still mark
+        // it as failed
+        this.factorAnalysisFailed = !this.pcaData.metabolites;
       } catch (err) { // if factor analysis fails b/c of threshold
         this.factorAnalysisFailed = true;
       }

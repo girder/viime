@@ -6,7 +6,7 @@ import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
 import PcaPage from './PcaPage/PcaPage.vue';
 import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
-import RocCurveTile from './RocCurveTile.vue';
+import GroupPredictionTile from './GroupPredictionTile.vue';
 import { plot_types } from '../../utils/constants';
 import { correlation_methods } from './constants';
 import vuetify from '../../utils/vuetifyConfig';
@@ -153,7 +153,7 @@ export default [
     name: 'Group Prediction',
     shortName: 'Group Prediction',
     description: 'wip',
-    component: RocCurveTile,
+    component: GroupPredictionTile,
     args: {
       columns: null,
       group1: null,
