@@ -6,8 +6,16 @@ import { select } from 'd3-selection';
 
 export default {
   props: {
-    rocData: {
-      type: Object,
+    sensitivities: {
+      type: Array,
+      required: true,
+    },
+    specificities: {
+      type: Array,
+      required: true,
+    },
+    auc: {
+      type: Number,
       required: true,
     },
   },
@@ -58,10 +66,9 @@ export default {
       .attr('transform', 'rotate(-90)')
       .text('Sensitivity');
 
-    const { sensitivities } = this.rocData;
-    const { specificities } = this.rocData;
-
-    const data = sensitivities.map((sensitivity, i) => { sensitivity, specificity: 1 - specificities[i] });
+    const data = this.sensitivities.map((sensitivity, i) => (
+      { sensitivity, specificity: 1 - this.specificities[i] }
+    ));
 
     const drawLine = line()
       .x((d) => x(d.specificity))
@@ -88,7 +95,7 @@ export default {
   <div class="rocContainer">
     <span
       style="margin: 10px; font-weight: bold"
-      v-text="`AUC = ${rocData.auc.toPrecision(3)}`"
+      v-text="`AUC = ${auc.toPrecision(3)}`"
     />
     <svg id="svg" />
   </div>

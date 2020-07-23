@@ -58,16 +58,23 @@ export default {
     groups() {
       return this.dataset.groupLevels.map((level) => level.name);
     },
-    rocData() {
+    sensitivities() {
       if (!this.plot.data || !this.group1 || !this.group2 || this.metabolites.length === 0) {
-        // if any data is missing, don't draw the ROC curve
-        return { sensitivities: [], specificities: [], auc: 0 };
+        return [];
       }
-      return {
-        sensitivities: this.plot.data.sensitivities,
-        specificities: this.plot.data.specificities,
-        auc: this.plot.data.auc[0],
-      };
+      return this.plot.data.sensitivities;
+    },
+    specificities() {
+      if (!this.plot.data || !this.group1 || !this.group2 || this.metabolites.length === 0) {
+        return [];
+      }
+      return this.plot.data.specificities;
+    },
+    auc() {
+      if (!this.plot.data || !this.group1 || !this.group2 || this.metabolites.length === 0) {
+        return 0;
+      }
+      return this.plot.data.auc[0];
     },
   },
   watch: {
@@ -338,7 +345,11 @@ export default {
         />
       </v-card>
     </template>
-    <roc-curve :roc-data="rocData" />
+    <roc-curve
+      :specificities="specificities"
+      :sensitivities="sensitivities"
+      :auc="auc"
+    />
   </vis-tile-large>
 </template>
 
