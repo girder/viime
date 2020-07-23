@@ -61,12 +61,7 @@ export default {
     const { sensitivities } = this.rocData;
     const { specificities } = this.rocData;
 
-    const data = [];
-
-    // Get the data to be plotted
-    sensitivities.forEach((sensitivity, i) => {
-      data.push({ sensitivity, specificity: 1 - specificities[i] });
-    });
+    const data = sensitivities.map((sensitivity, i) => { sensitivity, specificity: 1 - specificities[i] });
 
     const drawLine = line()
       .x((d) => x(d.specificity))
