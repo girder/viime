@@ -130,7 +130,7 @@ export default {
         // return zero metabolites, if that happens still mark
         // it as failed
         this.factorAnalysisFailed = !this.pcaData.metabolites;
-      } catch (err) { 
+      } catch (err) {
         // if factor analysis fails b/c of threshold,
         // don't report error in viime UI
         if (err.response.status === 400) {
@@ -138,7 +138,6 @@ export default {
         } else {
           throw err;
         }
-        
       }
     },
   },
