@@ -135,14 +135,6 @@ export default {
         const pcaDataResponse = await CSVService.getAnalysis(this.dataset.id, 'factors', { threshold: this.threshold });
         this.pcaData = pcaDataResponse.data;
 
-        // populate 'Metabolite Source' dropdown with factor analysis results
-        this.pcaData.factor.forEach((factor) => {
-          this.metaboliteSourceOptions.push({
-            value: factor,
-            text: `PC${factor}`,
-          });
-        });
-
         // it's possible for the factor analysis to succeed but
         // return zero metabolites, if that happens still mark
         // it as failed
