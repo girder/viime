@@ -87,13 +87,17 @@ export default {
 
     // These two watchers prevent the same group from being selected twice.
     group1(newGroup, oldGroup) {
+      this.changePlotArgs({ group1: newGroup });
       if (this.group2 === newGroup) {
         this.group2 = oldGroup;
+        this.changePlotArgs({ group2: oldGroup });
       }
     },
     group2(newGroup, oldGroup) {
+      this.changePlotArgs({ group2: newGroup });
       if (this.group1 === newGroup) {
         this.group1 = oldGroup;
+        this.changePlotArgs({ group1: oldGroup });
       }
     },
   },
@@ -288,7 +292,6 @@ export default {
           class="py-2"
           hide-details="hide-details"
           :items="groups"
-          @change="changePlotArgs({group1: $event})"
         />
       </v-card>
       <v-toolbar
@@ -310,7 +313,6 @@ export default {
           class="py-2"
           hide-details="hide-details"
           :items="groups"
-          @change="changePlotArgs({group2: $event})"
         />
       </v-card>
       <v-toolbar
