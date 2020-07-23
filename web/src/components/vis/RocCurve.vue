@@ -20,8 +20,6 @@ export default {
     },
   },
   mounted() {
-    // select('svg').remove(); // remove any existing graph
-
     const margin = {
       top: 40,
       right: 20,

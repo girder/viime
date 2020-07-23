@@ -24,10 +24,6 @@ export default {
       group1: '',
       group2: '',
       metaboliteSource: 'all',
-      metaboliteSourceOptions: [
-        { value: 'all', text: 'All metabolites' },
-        { value: 'selected', text: 'Selected Metabolites' },
-      ],
       method: 'random_forest',
       methodOptions: [
         { value: 'random_forest', text: 'Random Forest' },
@@ -57,6 +53,16 @@ export default {
     },
     groups() {
       return this.dataset.groupLevels.map((level) => level.name);
+    },
+    metaboliteSourceOptions() {
+      const options = [
+        { value: 'all', text: 'All metabolites' },
+        { value: 'selected', text: 'Selected Metabolites' },
+      ];
+      if (this?.pcaData?.factors) {
+        options.concat(this.pcaData.factor.map((factor) => ({ value: factor, text: `PC${factor}` })));
+      }
+      return options;
     },
     sensitivities() {
       if (!this.plot.data || !this.group1 || !this.group2 || this.metabolites.length === 0) {
