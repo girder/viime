@@ -19,72 +19,54 @@ export default {
       required: true,
     },
   },
-  mounted() {
-    const margin = {
-      top: 40,
-      right: 20,
-      bottom: 50,
-      left: 150,
+  data() {
+    return {
+      margin: {
+        top: 40,
+        right: 20,
+        bottom: 50,
+        left: 150,
+      },
     };
-    const width = 1000 - margin.left - margin.right;
-    const height = 800 - margin.top - margin.bottom;
-
-    const x = scaleLinear()
-      .domain([0, 1])
-      .range([0, width]);
-
-    const y = scaleLinear()
-      .domain([0, 1])
-      .range([height, 0]);
-
-    const xAxis = axisBottom(x)
-      .scale(x);
-
-    const yAxis = axisLeft(x)
-      .scale(y);
-    const svg = select('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
-    svg.append('g')
-      .attr('transform', `translate(0,${height})`)
+  },
+  computed: {
+    width() {
+      return 1000 - this.margin.left - this.margin.right;
+    },
+    height() {
+      return 800 - this.margin.top - this.margin.bottom;
+    },
+    xScale() {
+      return scaleLinear()
+        .domain([0, 1])
+        .range([0, this.width]);
+    },
+    yScale() {
+      return scaleLinear()
+        .domain([0, 1])
+        .range([this.height, 0]);
+    },
+    drawLine() {
+      return line()
+        .x((d) => this.xScale(d.specificity))
+        .y((d) => this.yScale(d.sensitivity));
+    },
+    curvePlotData() {
+      return this.sensitivities.map((sensitivity, i) => (
+        { sensitivity, specificity: 1 - this.specificities[i] }
+      ));
+    },
+  },
+  mounted() {
+    // draw plot axes
+    const xAxis = axisBottom(this.xScale)
+      .scale(this.xScale);
+    const yAxis = axisLeft(this.xScale)
+      .scale(this.yScale);
+    select('g#xAxis')
       .call(xAxis);
-    svg.append('g')
+    select('g#yAxis')
       .call(yAxis);
-    svg.append('text')
-      .attr('text-anchor', 'end')
-      .attr('x', width)
-      .attr('y', height - 6)
-      .text('1 - Specificity');
-    svg.append('text')
-      .attr('text-anchor', 'end')
-      .attr('y', 6)
-      .attr('dy', '.75em')
-      .attr('transform', 'rotate(-90)')
-      .text('Sensitivity');
-
-    const data = this.sensitivities.map((sensitivity, i) => (
-      { sensitivity, specificity: 1 - this.specificities[i] }
-    ));
-
-    const drawLine = line()
-      .x((d) => x(d.specificity))
-      .y((d) => y(d.sensitivity));
-
-    // Draw the ROC curve using the data
-    svg.selectAll('path.line').remove();
-    svg.append('path')
-      .attr('class', 'rocCurve')
-      .attr('d', drawLine(data));
-
-    // Draw the diagonal line
-    svg.append('path')
-      .attr('class', 'diagonal')
-      .attr('d', drawLine([
-        { sensitivity: 0, specificity: 0 },
-        { sensitivity: 1, specificity: 1 },
-      ]));
   },
 };
 </script>
@@ -92,10 +74,45 @@ export default {
 <template>
   <div class="rocContainer">
     <span
-      style="margin: 10px; font-weight: bold"
+      style="margin: 10px; font-weight: bold;"
       v-text="`AUC = ${auc.toPrecision(3)}`"
     />
-    <svg id="svg" />
+    <svg
+      :width="width + margin.left + margin.right"
+      :height="height + margin.top + margin.bottom"
+    >
+      <g :transform="`translate(${margin.left},${margin.top})`">
+        <g
+          id="xAxis"
+          :transform="`translate(0,${height})`"
+        />
+        <g id="yAxis" />
+        <g>
+          <path
+            class="rocCurve"
+            :d="drawLine(curvePlotData)"
+          />
+          <path
+            class="diagonal"
+            :d="drawLine([
+              { sensitivity: 0, specificity: 0 },
+              { sensitivity: 1, specificity: 1 },
+            ])"
+          />
+        </g>
+        <text
+          text-anchor="end"
+          :y="height - 6"
+          :x="width"
+        >1 - Specificity</text>
+        <text
+          text-anchor="end"
+          y="6"
+          dy=".75em"
+          transform="rotate(-90)"
+        >Sensitivity</text>
+      </g>
+    </svg>
   </div>
 </template>
 
@@ -108,7 +125,6 @@ export default {
   bottom: 0;
   display: flex;
 }
-
 .rocCurve {
   fill: none;
   stroke: steelblue;
