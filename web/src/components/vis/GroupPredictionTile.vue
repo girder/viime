@@ -55,12 +55,12 @@ export default {
       return this.dataset.groupLevels.map((level) => level.name);
     },
     metaboliteSourceOptions() {
-      const options = [
+      let options = [
         { value: 'all', text: 'All metabolites' },
         { value: 'selected', text: 'Selected Metabolites' },
       ];
-      if (this?.pcaData?.factors) {
-        options.concat(this.pcaData.factor.map((factor) => ({ value: factor, text: `PC${factor}` })));
+      if (this?.pcaData?.factor) {
+        options = options.concat(this.pcaData.factor.map((factor) => ({ value: factor, text: `PC${factor}` })));
       }
       return options;
     },
@@ -140,6 +140,7 @@ export default {
         // it as failed
         this.factorAnalysisFailed = !this.pcaData.metabolites;
       } catch (err) {
+        this.pcaData = null;
         // if factor analysis fails b/c of threshold,
         // don't report error in viime UI
         if (err.response.status === 400) {
