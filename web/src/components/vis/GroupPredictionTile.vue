@@ -31,7 +31,6 @@ export default {
       ],
       pcaData: null, // data from factor analysis endpoint
       threshold: 0.4, // threshold for factor analysis
-      factorAnalysisFailed: false, // true if the factor analysis request fails
     };
   },
   computed: {
@@ -133,21 +132,9 @@ export default {
       try {
         // perform factor analysis
         const pcaDataResponse = await CSVService.getAnalysis(this.dataset.id, 'factors', { threshold: this.threshold });
-        this.pcaData = pcaDataResponse.data;
-
-        // it's possible for the factor analysis to succeed but
-        // return zero metabolites, if that happens still mark
-        // it as failed
-        this.factorAnalysisFailed = !this.pcaData.metabolites;
+        this.pcaData = pcaDataResponse?.data?.metabolites ? pcaDataResponse.data : null;
       } catch (err) {
         this.pcaData = null;
-        // if factor analysis fails b/c of threshold,
-        // don't report error in viime UI
-        if (err.response.status === 400) {
-          this.factorAnalysisFailed = true;
-        } else {
-          throw err;
-        }
       }
     },
   },
@@ -194,7 +181,7 @@ export default {
         <v-toolbar-title>
           Loading Threshold
           <v-tooltip
-            v-if="factorAnalysisFailed"
+            v-if="!pcaData"
             slot="append"
             right
           >
