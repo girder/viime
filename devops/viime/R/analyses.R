@@ -171,7 +171,7 @@ roc_analysis <- function(measurements, groups, group1_name, group2_name, column_
         group_mask <- c(group_mask, 1)
     }
   }
-  
+
   # make sure row order is preserved
   if (group_mask[1] == 0) {
     # remove all rows not in group1 or group2
@@ -249,13 +249,17 @@ factor_analysis <- function(measurements, threshold) {
   #################################
   #-#-#-# Table with Factors #-#-#-#
 
-  # #Loading threshold
-  # lt <- 0.4
-
   #Create table of factors and what is metabolites are in each factor
   OUT=NULL
   for (i in 1:ncomp){
-    a <- which(abs(loadings[,i]) >= threshold) #This is the line that chooses the metabolites with loading higher than 0.4
+    a <- which(abs(loadings[,i]) >= threshold) #This is the line that chooses the metabolites with loading higher than lt
+    if (length(a) == 0) { # if factor analysis returns zero metabolites, return empty dataframe
+      OUT <- data.frame(metabolites <- character(),
+                        eigenvalues <- numeric(),
+                        variances <- numeric(),
+                        factor <- numeric())
+      return(OUT)
+    }
     metabolites <- names(a)
     eigenvalues <- eigen.values[i]
     variances <- Prop.var[i]
