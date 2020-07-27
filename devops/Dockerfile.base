@@ -1,4 +1,4 @@
-FROM opencpu/rstudio
+FROM opencpu/rstudio:2.1.7
 
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
@@ -13,25 +13,28 @@ RUN dpkg -r --force-all libglib2.0-0 && \
 
 RUN apt-get install libcairo2-dev libxt-dev -y
 
-RUN R -e 'install.packages("XML");' && \
-    R -e 'install.packages("plotly");' && \
-    R -e 'install.packages("BiocManager");' && \
-    R -e 'BiocManager::install("genefilter", version = "3.9")' && \
-    R -e 'BiocManager::install("GlobalAncova", version = "3.9")' && \
-    R -e 'BiocManager::install("impute", version = "3.9")' && \
-    R -e 'BiocManager::install("KEGGgraph", version = "3.9")' && \
-    R -e 'BiocManager::install("limma", version = "3.9")' && \
-    R -e 'BiocManager::install("pcaMethods", version = "3.9")' && \
-    R -e 'BiocManager::install("preprocessCore", version = "3.9")' && \
-    R -e 'BiocManager::install("Rgraphviz", version = "3.9")' && \
-    R -e 'BiocManager::install("siggenes", version = "3.9")' && \
-    R -e 'BiocManager::install("SSPA", version = "3.9")' && \
-    R -e 'BiocManager::install("sva", version = "3.9")'
+RUN R -e 'install.packages("XML");'
+RUN R -e 'install.packages("plotly");'
+RUN R -e 'install.packages("BiocManager"); BiocManager::install(version = "3.9", ask = FALSE)'
+RUN R -e 'BiocManager::install("genefilter", version = "3.9")'
+RUN R -e 'BiocManager::install("GlobalAncova", version = "3.9")'
+RUN R -e 'BiocManager::install("impute", version = "3.9")'
+RUN R -e 'BiocManager::install("KEGGgraph", version = "3.9")'
+RUN R -e 'BiocManager::install("limma", version = "3.9")'
+RUN R -e 'BiocManager::install("pcaMethods", version = "3.9")'
+RUN R -e 'BiocManager::install("preprocessCore", version = "3.9")'
+RUN R -e 'BiocManager::install("Rgraphviz", version = "3.9")'
+RUN R -e 'BiocManager::install("siggenes", version = "3.9")'
+RUN R -e 'BiocManager::install("SSPA", version = "3.9")'
+RUN R -e 'BiocManager::install("sva", version = "3.9")'
 
-RUN R -e 'install.packages("devtools"); library(devtools)'
-RUN R -e 'library(devtools); devtools::install_github("klutometis/roxygen")'
+RUN R -e 'install.packages("devtools");'
+RUN R -e 'install.packages("roxygen2")'
 RUN R -e 'BiocManager::install("impute", version = "3.9")'
 RUN R -e 'install.packages("missForest")'
-
+RUN R -e 'install.packages("https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-6.tar.gz", repos=NULL, type="source")'
+RUN R -e 'require(devtools); install_version("mnormt", version = "1.5-6")'
+RUN R -e 'install.packages("psych")'
+RUN R -e 'install.packages("pROC")'
 ADD viime /viime
 RUN R -e 'setwd("/viime"); devtools::update_packages(devtools::dev_package_deps()$package, dependencies=NA, upgrade="never");' && rm -fr /viime

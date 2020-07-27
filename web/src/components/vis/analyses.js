@@ -6,6 +6,7 @@ import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
 import PcaPage from './PcaPage/PcaPage.vue';
 import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
+import GroupPredictionTile from './GroupPredictionTile.vue';
 import { plot_types } from '../../utils/constants';
 import { correlation_methods } from './constants';
 import vuetify from '../../utils/vuetifyConfig';
@@ -146,5 +147,20 @@ export default [
     },
     type: plot_types.ANALYSIS,
     icon: vuetify.icons.graph,
+  },
+  {
+    path: 'roc',
+    name: 'Group Prediction',
+    shortName: 'Group Prediction',
+    description: 'wip',
+    component: GroupPredictionTile,
+    args: {
+      columns: null,
+      group1: null,
+      group2: null,
+      method: 'random_forest',
+    },
+    type: plot_types.ANALYSIS,
+    icon: vuetify.icons.pca,
   },
 ];
