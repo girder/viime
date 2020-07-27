@@ -161,6 +161,7 @@ export default defineComponent({
     const axisX = computed(() => axisBottom(scaleX.value));
     const axisY = computed(() => axisLeft(scaleY.value));
 
+    // call the D3 render function after all refs are mounted
     onMounted(() => watchEffect(() => {
       // Recalculate width/height
       const bb = mainRef.value.getBoundingClientRect();
