@@ -831,6 +831,8 @@ def get_roc(validated_table: ValidatedMetaboliteTable,
     errors = {}
     try:
         columns = json.loads(columns)
+        if len(columns) == 0:
+            errors['columns'] = ['Invalid columns, must be non-empty']
     except ValueError:
         errors['columns'] = ['Invalid columns, must be a list']
     if not (groups == group1).sum().sum():

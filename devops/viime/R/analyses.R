@@ -171,7 +171,7 @@ roc_analysis <- function(measurements, groups, group1_name, group2_name, column_
         group_mask <- c(group_mask, 1)
     }
   }
-  
+
   # make sure row order is preserved
   if (group_mask[1] == 0) {
     # remove all rows not in group1 or group2
