@@ -19,7 +19,7 @@
 imputation <- function(table, groups,
                        mnar="zero", mcar="random-forest",
                        p_mnar=0.70, p_mcar=0.40, add_info=FALSE) {
-  table <- read.csv(table, row.names = 1)
+  table <- read.csv(table, row.names = 1, check.names=FALSE)
 
   if (sum(colSums(is.na(table))) == 0) {
     if (add_info) {
@@ -29,7 +29,7 @@ imputation <- function(table, groups,
     return(table)
   }
 
-  groups <- read.csv(groups, row.names = 1)
+  groups <- read.csv(groups, row.names = 1, check.names=FALSE)
 
   #-#-#-#-# Function for missing percentage #-#-#-#-#
 

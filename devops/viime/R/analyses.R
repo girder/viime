@@ -3,8 +3,8 @@
 #'
 #' @export
 wilcoxon_test_z_scores <- function(measurements, groups, log_transformed=FALSE) {
-  Metab = read.csv(measurements, row.names=1)
-  groups = read.csv(groups, row.names=1)
+  Metab = read.csv(measurements, row.names=1, check.names=FALSE)
+  groups = read.csv(groups, row.names=1, check.names=FALSE)
 
   # take the first column
   Group = as.factor(groups[, 1])
@@ -64,8 +64,8 @@ wilcoxon_test_z_scores <- function(measurements, groups, log_transformed=FALSE) 
 #'
 #' @export
 anova_tukey_adjustment <- function(measurements, groups, log_transformed=FALSE) {
-  Metab = read.csv(measurements, row.names=1)
-  groups = read.csv(groups, row.names=1)
+  Metab = read.csv(measurements, row.names=1, check.names=FALSE)
+  groups = read.csv(groups, row.names=1, check.names=FALSE)
 
   # take the first column
   Group = as.factor(groups[, 1])
@@ -151,4 +151,120 @@ clustered_heatmap <- function(measurements) {
   close(f)
 
   list(data=OUT_CSV, row=unclass(ddr), col=unclass(ddc))
+}
+
+#' roc_analysis
+#'
+#' @export
+roc_analysis <- function(measurements, groups, group1_name, group2_name, column_names, method) {
+  library(pROC)
+  library(randomForest)
+  df <- read.csv(measurements, row.names=1, check.names=TRUE)
+  groups <- read.csv(groups, row.names=1, check.names=TRUE)
+  groups <- as.factor(groups[, 1])
+
+  group_mask <- numeric() # intialize empty numeric vector
+  for (i in groups) {
+    if (i == group1_name) {
+        group_mask <- c(group_mask, 0)
+    } else if (i == group2_name) {
+        group_mask <- c(group_mask, 1)
+    }
+  }
+
+  # make sure row order is preserved
+  if (group_mask[1] == 0) {
+    # remove all rows not in group1 or group2
+    df <- rbind(df[groups == group1_name,], df[groups == group2_name,])
+  } else {
+    df <- rbind(df[groups == group2_name,], df[groups == group1_name,])
+  }
+
+
+  column_names <- read.csv(column_names, row.names=1, check.names=TRUE)
+  c <- unlist(column_names) # convert dataframe to a vector
+  c <- make.names(c) # convert column names to valid R names
+  columns <- df[c] # only select the columns/metabolites we want
+  new <- cbind(group_mask, columns)
+
+  if (method == "logistic_regression") {
+    #-# Logistic Regression
+    glm.fit <- glm(group_mask ~ . , family=binomial, data=new)
+    pred <- glm.fit$fitted.values
+  } else if (method == "random_forest") {
+    #-# Random forest
+    rf.model <- randomForest::randomForest(factor(group_mask)~ ., data=new)
+    pred <- rf.model$votes[,1]
+  } else {
+    stop("Invalid method")
+  }
+
+  #############
+  #ROC analysis
+  roc.a <- pROC::roc(group_mask, pred, plot=FALSE)
+  out = data.frame(
+      sensitivities=roc.a$sensitivities,
+      specificities=roc.a$specificities,
+      thresholds=roc.a$thresholds,
+      auc=rep(roc.a$auc, length(roc.a$thresholds))
+  )
+}
+
+#' factor_analysis
+#'
+#' @export
+factor_analysis <- function(measurements, threshold) {
+  library(psych) 
+
+  m.df <- read.csv(measurements, row.names=1, check.names=FALSE)
+
+  ##########################################
+  # Code for factor analysis
+
+
+  #-#-#- Defining number of factors we need -#-#-#
+  #- (Eigenvalues higher than 1) -#
+
+  # Principal Component Analysis to get eigenvalues
+  pca_a <- prcomp(m.df, center=T, scale=T)
+
+  #getting the eigenvalues
+  MS.eig <- (pca_a$sdev)^2 
+
+  #Eigenvalues higher than 1 to see how many factors we need
+  ncomp <- sum(MS.eig >= 1)
+
+  ##############################
+  #-#-#- Factor Analysis -#-#-#
+
+  # Factor analysis
+  #Using ncomp, number of components with eigenvalue higher than 1
+  fitpsy <- psych::fa(m.df, nfactors=ncomp, rotate="varimax") 
+
+  #Save some results from factor analysis
+  eigen.values <- fitpsy$e.values #eigenvalues
+  loadings <- fitpsy$Structure[,1:ncomp] #Loadings
+  Prop.var <- fitpsy$Vaccounted[2,] # Proportion of variance
+
+  #################################
+  #-#-#-# Table with Factors #-#-#-#
+
+  #Create table of factors and what is metabolites are in each factor
+  OUT=NULL
+  for (i in 1:ncomp){
+    a <- which(abs(loadings[,i]) >= threshold) #This is the line that chooses the metabolites with loading higher than lt
+    if (length(a) == 0) { # if factor analysis returns zero metabolites, return empty dataframe
+      OUT <- data.frame(metabolites <- character(),
+                        eigenvalues <- numeric(),
+                        variances <- numeric(),
+                        factor <- numeric())
+      return(OUT)
+    }
+    metabolites <- names(a)
+    eigenvalues <- eigen.values[i]
+    variances <- Prop.var[i]
+    b <- cbind(factor=i, metabolites, eigenvalues, variances)
+    OUT <- rbind(OUT,b)
+  }
+  out <- OUT
 }

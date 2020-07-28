@@ -1,11 +1,13 @@
 import { vBtn } from 'jest-puppeteer-vuetify';
 import { CLIENT_URL } from '../util';
 
+
 describe('home page', () => {
+  // eslint-disable-next-line jest/expect-expect
   it('load home page', async () => {
     await Promise.all([
-      expect(page).goto(CLIENT_URL),
-      expect(page).waitForNavigation({ waitUntil: 'networkidle0' }),
+      page.goto(CLIENT_URL),
+      page.waitForNavigation({ waitUntil: 'networkidle0' }),
     ]);
   });
 

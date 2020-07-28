@@ -7,7 +7,7 @@ import pytest
 
 from viime import models
 from viime.app import create_app
-from viime.models import CSVFileSchema, db
+from viime.models import CSVFileSchema, db, ValidatedMetaboliteTable
 
 
 csv_file_schema = CSVFileSchema()
@@ -59,6 +59,13 @@ def csv_file(client):
         'name': 'test_csv_file.csv'
     })
     db.session.add(csv_file)
+    db.session.commit()
+    yield csv_file
+
+
+@pytest.fixture
+def validated_csv_file(client, csv_file):
+    db.session.add(ValidatedMetaboliteTable.create_from_csv_file(csv_file))
     db.session.commit()
     yield csv_file
 

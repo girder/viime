@@ -1,6 +1,6 @@
 from io import StringIO
 from itertools import combinations
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
@@ -81,3 +81,28 @@ def pairwise_correlation(measurements: pd.DataFrame, min_correlation: float = 0,
             r.append(dict(x=columns[i], y=columns[j], value=value))
 
     return dict(columns=columns, correlations=r)
+
+
+def roc_analysis(measurements: pd.DataFrame, groups: pd.DataFrame,
+                 group1: str, group2: str, columns: list, method: str) -> Dict[str, List[float]]:
+    files = {
+        'measurements': measurements.to_csv().encode(),
+        'groups': groups.to_csv(header=True).encode(),
+        'column_names': pd.DataFrame(columns).to_csv().encode()
+    }
+    data = opencpu_request('roc_analysis', files, {
+        'group1_name': group1,
+        'group2_name': group2,
+        'method': method
+    })
+    return clean(data).to_dict(orient='list')
+
+
+def factor_analysis(measurements: pd.DataFrame, threshold=0.4) -> Dict[str, List[float]]:
+    files = {
+        'measurements': measurements.to_csv().encode()
+    }
+    data = opencpu_request('factor_analysis', files, {
+        'threshold': threshold
+    })
+    return clean(data).to_dict(orient='list')
