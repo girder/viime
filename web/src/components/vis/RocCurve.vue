@@ -116,7 +116,7 @@ export default {
   </div>
 </template>
 
-<style>
+<style scoped>
 .rocContainer {
   position: absolute;
   top: 0;
