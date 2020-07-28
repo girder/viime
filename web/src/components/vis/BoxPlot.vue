@@ -1,6 +1,6 @@
 <script lang="ts">
 import {
-  PropType, defineComponent, computed, ref, watch, onMounted, Ref,
+  PropType, defineComponent, computed, ref, watchEffect, onMounted, Ref,
 } from '@vue/composition-api';
 import { extent } from 'd3-array';
 import { axisTop, axisLeft } from 'd3-axis';
@@ -173,21 +173,14 @@ export default defineComponent({
       });
     });
 
-    function update() {
-      const svg = select(svgRef.value);
-      axisPlot(svg, axisX.value, axisY.value);
-    }
-
     function onResize() {
       const bb = mainRef.value.getBoundingClientRect();
       width.value = bb.width;
-      update();
     }
-
-    watch(props, () => update());
-    onMounted(() => {
-      onResize();
-      update();
+    onMounted(() => onResize());
+    watchEffect(() => {
+      const svg = select(svgRef.value);
+      axisPlot(svg, axisX.value, axisY.value);
     });
 
     return {

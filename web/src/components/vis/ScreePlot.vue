@@ -69,7 +69,7 @@ line.cutoff90 {
 
 <script lang="ts">
 import {
-  PropType, defineComponent, computed, ref, watch, onMounted, Ref,
+  PropType, defineComponent, computed, ref, watchEffect, onMounted, Ref,
 } from '@vue/composition-api';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { scalePoint, scaleLinear } from 'd3-scale';
@@ -166,145 +166,142 @@ export default defineComponent({
       return result;
     });
 
-    function update() {
-      // Recalculate width/height
-      const bb = mainRef.value.getBoundingClientRect();
-      height.value = bb.height;
-      width.value = bb.width;
+    onMounted(() => {
+      watchEffect(() => {
+        // Recalculate width/height
+        const bb = mainRef.value.getBoundingClientRect();
+        height.value = bb.height;
+        width.value = bb.width;
 
-      // Set up plot
-      const svg = select(svgRef.value);
-      const tooltip = select(tooltipRef.value);
-      axisPlot(svg, axisX.value, axisY.value);
-      setXLabel(svg, 'Principal Component');
-      setYLabel(svg, 'Eigenvalue');
+        // Set up plot
+        const svg = select(svgRef.value);
+        const tooltip = select(tooltipRef.value);
+        axisPlot(svg, axisX.value, axisY.value);
+        setXLabel(svg, 'Principal Component');
+        setYLabel(svg, 'Eigenvalue');
 
-      if (props.eigenvalues.length === 0) {
-        return;
-      }
-
-      const data = props.eigenvalues.map((d, i) => ({
-        eigenvalue: d,
-        percent: percents.value[i],
-        cumPercent: cumulativePercents.value[i],
-      })).slice(0, numRendered.value);
-
-      const pctFormat = format('.2%');
-      const floatFormat = format('.2f');
-
-      svg.select('g.points')
-        .selectAll('circle')
-        .data(data)
-        .join((enter) => enter.append('circle')
-          .attr('cx', (d, i) => scaleX.value(i + 1) as number)
-          .attr('cy', scaleY.value(0))
-          .attr('r', 0)
-          .style('stroke', 'black')
-          .style('fill', 'white')
-          .style('fill-opacity', 1.0)
-          .on('mouseover', function mouseover(d, i) {
-            select(this)
-              .transition()
-              .duration(duration)
-              .attr('r', 2 * radius);
-            tooltip.transition()
-              .duration(duration)
-              .style('opacity', 0.9);
-
-            const eig = floatFormat(d.eigenvalue);
-            const pct = pctFormat(d.percent);
-            const cpct = pctFormat(d.cumPercent);
-
-            tooltip.html(`<b>Principal Component ${i + 1}</b><br>${eig}<br>${pct} total variance<br>(${cpct} cumulative)`)
-              .style('left', `${event.clientX + 15}px`)
-              .style('top', `${event.clientY - 30}px`);
-          })
-          .on('mouseout', function mouseout() {
-            select(this)
-              .transition()
-              .duration(duration)
-              .attr('r', radius);
-
-            tooltip.transition()
-              .duration(duration)
-              .style('opacity', 0.0);
-          }))
-        .transition()
-        .duration(fadeInDuration)
-        .attr('r', radius)
-        .attr('cx', (d, i) => scaleX.value(i + 1) as number)
-        .attr('cy', (d) => scaleY.value(d.eigenvalue));
-
-      // Plot the line.
-      const pathData: [number, number][] = [...Array(numRendered.value).keys()]
-        .map((i) => [
-          scaleX.value(i + 1) as number,
-          scaleY.value(props.eigenvalues[i]),
-        ]);
-
-      const pathDataNull: [number, number][] = pathData.map(([x]) => [
-        x,
-        scaleY.value(0.0),
-      ]);
-
-      const lineFunc = line();
-      const curPath = svg.select('path.line').attr('d');
-      const startPath = curPath || lineFunc(pathDataNull);
-      const endPath = lineFunc(pathData);
-      svg.select('path.line')
-        // @ts-ignore d3 typings are bad
-        .attr('d', startPath)
-        .transition()
-        .duration(fadeInDuration)
-        // @ts-ignore d3 typings are bad
-        .attr('d', endPath);
-
-      // Plot the diagnostic cutoff lines.
-      const drawCutoff = (which: string, where: number | null) => {
-        const cutoff = svg.select(`line.cutoff${which}`);
-
-        if (where === null || where === 0 || where >= numRendered.value) {
-          cutoff.style('opacity', 0.0);
+        if (props.eigenvalues.length === 0) {
           return;
         }
 
-        const step = scaleX.value.step();
-        const x = scaleX.value(where) as number + step / 2;
+        const data = props.eigenvalues.map((d, i) => ({
+          eigenvalue: d,
+          percent: percents.value[i],
+          cumPercent: cumulativePercents.value[i],
+        })).slice(0, numRendered.value);
 
-        cutoff.attr('y1', scaleY.value(yRange.value[0]))
-          .attr('y2', scaleY.value(yRange.value[1]))
-          .attr('stroke-dasharray', '10 5 5 5')
-          .style('opacity', 1)
-          // @ts-ignore d3 typings are bad
-          .style('display', props.showCutoffs ? null : 'none')
-          .on('mouseover', () => {
-            tooltip.style('left', `${event.clientX + 15}px`)
-              .style('top', `${event.clientY - 30}px`)
-              .transition()
-              .duration(duration)
-              .style('opacity', 0.9);
+        const pctFormat = format('.2%');
+        const floatFormat = format('.2f');
 
-            tooltip.html(`The PCs to the left account for ${which}% of the variance`);
-          })
-          .on('mouseout', () => {
-            tooltip.transition()
-              .duration(duration)
-              .style('opacity', 0.0);
-          })
+        svg.select('g.points')
+          .selectAll('circle')
+          .data(data)
+          .join((enter) => enter.append('circle')
+            .attr('cx', (d, i) => scaleX.value(i + 1) as number)
+            .attr('cy', scaleY.value(0))
+            .attr('r', 0)
+            .style('stroke', 'black')
+            .style('fill', 'white')
+            .style('fill-opacity', 1.0)
+            .on('mouseover', function mouseover(d, i) {
+              select(this)
+                .transition()
+                .duration(duration)
+                .attr('r', 2 * radius);
+              tooltip.transition()
+                .duration(duration)
+                .style('opacity', 0.9);
+
+              const eig = floatFormat(d.eigenvalue);
+              const pct = pctFormat(d.percent);
+              const cpct = pctFormat(d.cumPercent);
+
+              tooltip.html(`<b>Principal Component ${i + 1}</b><br>${eig}<br>${pct} total variance<br>(${cpct} cumulative)`)
+                .style('left', `${event.clientX + 15}px`)
+                .style('top', `${event.clientY - 30}px`);
+            })
+            .on('mouseout', function mouseout() {
+              select(this)
+                .transition()
+                .duration(duration)
+                .attr('r', radius);
+
+              tooltip.transition()
+                .duration(duration)
+                .style('opacity', 0.0);
+            }))
           .transition()
           .duration(fadeInDuration)
-          .attr('x1', x)
-          .attr('x2', x);
-      };
+          .attr('r', radius)
+          .attr('cx', (d, i) => scaleX.value(i + 1) as number)
+          .attr('cy', (d) => scaleY.value(d.eigenvalue));
 
-      drawCutoff('50', cutoffs.value[0]);
-      drawCutoff('80', cutoffs.value[1]);
-      drawCutoff('90', cutoffs.value[2]);
-    }
+        // Plot the line.
+        const pathData: [number, number][] = [...Array(numRendered.value).keys()]
+          .map((i) => [
+            scaleX.value(i + 1) as number,
+            scaleY.value(props.eigenvalues[i]),
+          ]);
 
-    watch(props, () => update());
-    onMounted(() => {
-      update();
+        const pathDataNull: [number, number][] = pathData.map(([x]) => [
+          x,
+          scaleY.value(0.0),
+        ]);
+
+        const lineFunc = line();
+        const curPath = svg.select('path.line').attr('d');
+        const startPath = curPath || lineFunc(pathDataNull);
+        const endPath = lineFunc(pathData);
+        svg.select('path.line')
+          // @ts-ignore d3 typings are bad
+          .attr('d', startPath)
+          .transition()
+          .duration(fadeInDuration)
+          // @ts-ignore d3 typings are bad
+          .attr('d', endPath);
+
+        // Plot the diagnostic cutoff lines.
+        const drawCutoff = (which: string, where: number | null) => {
+          const cutoff = svg.select(`line.cutoff${which}`);
+
+          if (where === null || where === 0 || where >= numRendered.value) {
+            cutoff.style('opacity', 0.0);
+            return;
+          }
+
+          const step = scaleX.value.step();
+          const x = scaleX.value(where) as number + step / 2;
+
+          cutoff.attr('y1', scaleY.value(yRange.value[0]))
+            .attr('y2', scaleY.value(yRange.value[1]))
+            .attr('stroke-dasharray', '10 5 5 5')
+            .style('opacity', 1)
+            // @ts-ignore d3 typings are bad
+            .style('display', props.showCutoffs ? null : 'none')
+            .on('mouseover', () => {
+              tooltip.style('left', `${event.clientX + 15}px`)
+                .style('top', `${event.clientY - 30}px`)
+                .transition()
+                .duration(duration)
+                .style('opacity', 0.9);
+
+              tooltip.html(`The PCs to the left account for ${which}% of the variance`);
+            })
+            .on('mouseout', () => {
+              tooltip.transition()
+                .duration(duration)
+                .style('opacity', 0.0);
+            })
+            .transition()
+            .duration(fadeInDuration)
+            .attr('x1', x)
+            .attr('x2', x);
+        };
+
+        drawCutoff('50', cutoffs.value[0]);
+        drawCutoff('80', cutoffs.value[1]);
+        drawCutoff('90', cutoffs.value[2]);
+      });
     });
 
     return {
@@ -322,7 +319,6 @@ export default defineComponent({
       percents,
       cumulativePercents,
       cutoffs,
-      update,
     };
   },
 });
