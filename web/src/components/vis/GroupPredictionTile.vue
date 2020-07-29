@@ -147,6 +147,7 @@ export default {
     title="Group Prediction"
     :loading="plot.loading"
     expanded="expanded"
+    download
   >
     <template #controls>
       <v-toolbar
