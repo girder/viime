@@ -1,46 +1,58 @@
-<script>
+<script lang="ts">
+import { defineComponent, computed, ref } from '@vue/composition-api';
 import ScreePlot from '@/components/vis/ScreePlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
-import plotData from './mixins/plotData';
+import usePlotData from './use/usePlotData';
 
-export default {
-  components: {
-    ScreePlot,
-    VisTile,
-  },
-
-  mixins: [plotData('pca')],
-
+export default defineComponent({
   props: {
     id: {
-      required: true,
       type: String,
+      required: true,
     },
   },
 
-  data() {
+  components: { ScreePlot, VisTile },
+
+  setup(props) {
+    const id = computed(() => props.id);
+    const showCutoffs = ref(true);
+    const numComponentsText = ref('10');
+    const numComponents = computed(() => Number.parseInt(numComponentsText.value, 10));
+
+    const { plot } = usePlotData(id, 'pca');
+
     return {
-      numComponentsText: '10',
-      showCutoffs: true,
+      numComponentsText,
+      numComponents,
+      showCutoffs,
+      plot,
     };
   },
-
-  computed: {
-    numComponents() {
-      return Number.parseInt(this.numComponentsText, 10);
-    },
-  },
-};
+});
 </script>
 
 <template lang="pug">
-vis-tile(v-if="plot", title="PCA Scree Plot", :loading="plot.loading", svg-download)
+vis-tile(
+  v-if="plot",
+  title="PCA Scree Plot",
+  :loading="plot.loading",
+  svg-download
+)
   scree-plot(
-      :eigenvalues="getPlotDataProperty('sdev')",
-      :num-components="numComponents",
-      :show-cutoffs="showCutoffs")
+    v-if="plot.data",
+    :eigenvalues="plot.data.sdev",
+    :num-components="numComponents",
+    :show-cutoffs="showCutoffs"
+  )
   template(v-slot:controls)
-    v-menu(bottom, offset-y, left, :min-width="150", :close-on-content-click="false")
+    v-menu(
+      bottom,
+      offset-y,
+      left,
+      :min-width="150",
+      :close-on-content-click="false"
+    )
       template(v-slot:activator="{ on }")
         v-btn(v-on="on", icon)
           v-icon.mdi.mdi-dots-vertical
@@ -48,13 +60,18 @@ vis-tile(v-if="plot", title="PCA Scree Plot", :loading="plot.loading", svg-downl
       v-card.pa-1(flat)
         v-layout.px-2(column)
           v-text-field.py-2(
-              hide-details,
-              type="number",
-              label="Principal Components",
-              min="1",
-              outline,
-              v-model="numComponentsText")
-          v-switch.py-2(v-model="showCutoffs", label="Diagnostic cutoffs", hide-details)
+            hide-details,
+            type="number",
+            label="Principal Components",
+            min="1",
+            outline,
+            v-model="numComponentsText"
+          )
+          v-switch.py-2(
+            v-model="showCutoffs",
+            label="Diagnostic cutoffs",
+            hide-details
+          )
   template(v-slot:help)
     include help/ScreePlotHelp.pug
 </template>
