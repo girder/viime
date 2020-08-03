@@ -62,6 +62,12 @@ export default {
         data,
       };
     },
+    anovaError() {
+      if (this?.plot?.data?.error) {
+        return this.plot.data.error;
+      }
+      return '';
+    },
   },
 
   methods: {
@@ -93,6 +99,7 @@ vis-tile-large(v-if="plot", title="Anova Table", :loading="plot.loading", expand
       v-if="plot.data",
       :data="tableData",
       :threshold="threshold",
+      :error-msg="anovaError",
       v-model="selected")
 </template>
 

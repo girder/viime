@@ -23,6 +23,11 @@ export default {
       required: false,
       default: 0.05,
     },
+    noDataAvailableMsg: { // allows displaying a custom message when table has no data.
+      type: String,
+      required: false,
+      default: 'No data available',
+    },
   },
 
   data() {
@@ -107,6 +112,8 @@ v-data-table.elevation-1.main(:headers="headers", :items="items", disable-initia
     td.cell.text-xs-right(v-for="c in headers.slice(1)",
         :class="isInteresting(props.item[c.value]) ? 'highlight' : ''")
       | {{ format(props.item[c.value]) }}
+  template(slot="no-data")
+    v-text {{ noDataAvailableMsg }}
 </template>
 
 <style scoped>
