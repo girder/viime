@@ -34,7 +34,7 @@ export default defineComponent({
   props: {
     rows: {
       type: Array as PropType<Row[]>,
-      default: () => [],
+      required: true,
     },
     minFoldChange: {
       type: Number,
@@ -47,7 +47,8 @@ export default defineComponent({
   },
 
   setup(props) {
-    const mainRef = ref(document.createElement('div'));
+    const svgRef = ref() as Ref<HTMLElement>;
+    const mainRef = ref() as Ref<HTMLElement>;
 
     const width = ref(800);
     const height = computed(() => (
@@ -88,74 +89,61 @@ export default defineComponent({
       .range([0, dwidth.value]));
 
     const scaleY = computed(() => scaleLinear()
-      // @ts-ignore d3 typings are bad
       .domain(yrange.value)
-      // @ts-ignore d3 typings are bad
       .range([dheight.value, 0]));
 
     const axisX = computed(() => axisBottom(scaleX.value));
     const axisY = computed(() => axisLeft(scaleY.value));
 
-    function onResize() {
-      const bb = mainRef.value.getBoundingClientRect();
-      width.value = bb.width;
-    }
-    onMounted(() => onResize());
-    watchEffect(() => {
-      const svg = select('svg');
-      axisPlot(svg, axisX.value, axisY.value);
+    onMounted(() => {
+      watchEffect(() => {
+        // Recalculate width/height
+        const bb = mainRef.value.getBoundingClientRect();
+        width.value = bb.width;
 
-      const _scaleX = scaleX.value;
-      const _scaleY = scaleY.value;
+        const svg = select(svgRef.value);
+        axisPlot(svg, axisX.value, axisY.value);
 
-      // @ts-ignore
-      svg.select('.plot').selectAll('circle')
-        .data(transformedRows.value)
-        .join((enter) => {
-          const r = enter.append('circle');
-          r.append('title');
-          return r;
-        })
-        // @ts-ignore
-        .attr('r', (d) => (Math.abs(d.x) >= props.minFoldChange && d.y >= props.minLogP ? radius * 2 : radius))
-        // @ts-ignore
-        .attr('opacity', (d) => (Math.abs(d.x) >= props.minFoldChange && d.y >= props.minLogP ? 1 : 0.5))
-        // @ts-ignore
-        .attr('cx', (d) => _scaleX(d.x))
-        // @ts-ignore
-        .attr('cy', (d) => _scaleY(d.y))
-        // @ts-ignore
-        .style('fill', (d) => d.color)
-        .select('title')
-        // @ts-ignore
-        .text((d) => `${d.name}: ${d.log2FoldChange} x ${d.pValue}`);
-      svg.select('.plot').selectAll('line.x-threshold')
-        .data([-1, 1])
-        .join('line')
-        .attr('class', 'x-threshold')
-        .style('stroke', 'black')
-        .style('stroke-width', 0.5)
-        // @ts-ignore
-        .attr('x1', (d) => _scaleX(d * props.minFoldChange))
-        .attr('y1', 0)
-        // @ts-ignore
-        .attr('x2', (d) => _scaleX(d * props.minFoldChange))
-        // @ts-ignore
-        .attr('y2', height.value - margin.top - margin.bottom);
+        const _scaleX = scaleX.value;
+        const _scaleY = scaleY.value;
 
-      svg.select('.plot').selectAll('line.y-threshold')
-        .data([1])
-        .join('line')
-        .attr('class', 'y-threshold')
-        .style('stroke', 'black')
-        .style('stroke-width', 0.5)
-        .attr('x1', 0)
         // @ts-ignore
-        .attr('y1', () => _scaleY(props.minLogP))
-        // @ts-ignore
-        .attr('x2', width.value - margin.left - margin.right)
-        // @ts-ignore
-        .attr('y2', () => _scaleY(props.minLogP));
+        svg.select('.plot').selectAll('circle')
+          .data<TransformedRow>(transformedRows.value)
+          .join((enter) => {
+            const r = enter.append('circle');
+            r.append('title');
+            return r;
+          })
+          .attr('r', (d) => (Math.abs(d.x) >= props.minFoldChange && d.y >= props.minLogP ? radius * 2 : radius))
+          .attr('opacity', (d) => (Math.abs(d.x) >= props.minFoldChange && d.y >= props.minLogP ? 1 : 0.5))
+          .attr('cx', (d) => _scaleX(d.x))
+          .attr('cy', (d) => _scaleY(d.y))
+          .style('fill', (d) => d.color)
+          .select('title')
+          .text((d) => `${d.name}: ${d.log2FoldChange} x ${d.pValue}`);
+        svg.select('.plot').selectAll('line.x-threshold')
+          .data([-1, 1])
+          .join('line')
+          .attr('class', 'x-threshold')
+          .style('stroke', 'black')
+          .style('stroke-width', 0.5)
+          .attr('x1', (d) => _scaleX(d * props.minFoldChange))
+          .attr('y1', 0)
+          .attr('x2', (d) => _scaleX(d * props.minFoldChange))
+          .attr('y2', height.value - margin.top - margin.bottom);
+
+        svg.select('.plot').selectAll('line.y-threshold')
+          .data([1])
+          .join('line')
+          .attr('class', 'y-threshold')
+          .style('stroke', 'black')
+          .style('stroke-width', 0.5)
+          .attr('x1', 0)
+          .attr('y1', () => _scaleY(props.minLogP))
+          .attr('x2', width.value - margin.left - margin.right)
+          .attr('y2', () => _scaleY(props.minLogP));
+      });
     });
 
     return {
@@ -166,8 +154,8 @@ export default defineComponent({
       dheight,
       xlabel,
       ylabel,
+      svgRef,
       mainRef,
-      onResize,
     };
   },
 });
@@ -175,13 +163,11 @@ export default defineComponent({
 </script>
 <template>
   <div
-    id="mainRef"
     ref="mainRef"
-    v-resize:throttle="onResize"
     class="main"
   >
     <svg
-      ref="svg"
+      ref="svgRef"
       :width="width"
       :height="height"
       xmlns="http://www.w3.org/2000/svg"
