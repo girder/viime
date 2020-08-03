@@ -42,7 +42,7 @@ def anova_test(measurements: pd.DataFrame, groups: pd.Series,
     formatted_data = clean(data).to_dict(orient='records')
 
     if formatted_data[0].get('error') is not None:
-        return { 'error': formatted_data[0].get('error') }
+        return {'error': formatted_data[0].get('error')}
 
     return {
         'groups': list(set(groups)),
