@@ -104,10 +104,7 @@ export default defineComponent({
         const svg = select(svgRef.value);
         axisPlot(svg, axisX.value, axisY.value);
 
-        const _scaleX = scaleX.value;
-        const _scaleY = scaleY.value;
-
-        // @ts-ignore
+        // @ts-ignore d3 types cause issues
         svg.select('.plot').selectAll('circle')
           .data<TransformedRow>(transformedRows.value)
           .join((enter) => {
@@ -117,8 +114,8 @@ export default defineComponent({
           })
           .attr('r', (d) => (Math.abs(d.x) >= props.minFoldChange && d.y >= props.minLogP ? radius * 2 : radius))
           .attr('opacity', (d) => (Math.abs(d.x) >= props.minFoldChange && d.y >= props.minLogP ? 1 : 0.5))
-          .attr('cx', (d) => _scaleX(d.x))
-          .attr('cy', (d) => _scaleY(d.y))
+          .attr('cx', (d) => scaleX.value(d.x))
+          .attr('cy', (d) => scaleY.value(d.y))
           .style('fill', (d) => d.color)
           .select('title')
           .text((d) => `${d.name}: ${d.log2FoldChange} x ${d.pValue}`);
@@ -128,9 +125,9 @@ export default defineComponent({
           .attr('class', 'x-threshold')
           .style('stroke', 'black')
           .style('stroke-width', 0.5)
-          .attr('x1', (d) => _scaleX(d * props.minFoldChange))
+          .attr('x1', (d) => scaleX.value(d * props.minFoldChange))
           .attr('y1', 0)
-          .attr('x2', (d) => _scaleX(d * props.minFoldChange))
+          .attr('x2', (d) => scaleX.value(d * props.minFoldChange))
           .attr('y2', height.value - margin.top - margin.bottom);
 
         svg.select('.plot').selectAll('line.y-threshold')
@@ -140,9 +137,9 @@ export default defineComponent({
           .style('stroke', 'black')
           .style('stroke-width', 0.5)
           .attr('x1', 0)
-          .attr('y1', () => _scaleY(props.minLogP))
+          .attr('y1', scaleY.value(props.minLogP))
           .attr('x2', width.value - margin.left - margin.right)
-          .attr('y2', () => _scaleY(props.minLogP));
+          .attr('y2', scaleY.value(props.minLogP));
       });
     });
 
