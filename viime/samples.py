@@ -32,7 +32,11 @@ def import_files(files: List[CSVFile]):
             sub['csv_file_id'] = str(new_id)
 
         for sub in csv.group_levels:
+            db.session.expunge(sub)
+            make_transient(sub)
+            sub.id = uuid4()
             sub.csv_file_id = str(new_id)
+            db.session.add(sub)
 
         db.session.expunge(csv)
         make_transient(csv)
