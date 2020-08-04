@@ -3,20 +3,14 @@ import {
   vListTile,
   vIcon,
 } from 'jest-puppeteer-vuetify';
-import { CLIENT_URL } from '../util';
+import { uploadDataset } from '../util';
 
 
 describe('relabel dataset', () => {
-  it('make dataset ready for analysis with 2 clicks', async () => {
-    await Promise.all([
-      page.goto(CLIENT_URL),
-      page.waitForNavigation({ waitUntil: 'networkidle0' }),
-    ]);
+  it('mark as group', async () => {
     await expect(page).toClickXPath(vBtn('Your Datasets'));
 
-    const fileInputElementHandle = await page.waitForXPath("//input[@type='file']");
-    await fileInputElementHandle.uploadFile('../e2e-test/data/cleanUpTest.csv');
-    await page.waitForXPath(vListTile({ title: 'cleanUpTest.csv ', content: 'Dataset processed with 1 validation failures' }));
+    await uploadDataset('cleanUpTest');
 
     await expect(page).toClickXPath(vListTile({ title: 'cleanUpTest.csv ', content: 'Dataset processed with 1 validation failures' }) + vBtn('View Data'));
 
@@ -27,27 +21,21 @@ describe('relabel dataset', () => {
     await expect(page).toClickXPath("//div[@class='column-header-cell type-measurement'][contains(text(), 'C')]");
     await expect(page).toClickXPath("//input[@value='group']");
 
-    //  verify the dataset is ready to process but needs to be more explict
+    //  verify the dataset is ready to process
     await page.waitForXPath(vListTile({ title: 'cleanUpTest.csv' }) + vIcon({ cssClass: 'mdi mdi-check theme--light success--text' }));
   });
 
   it('mask all and unmask', async () => {
-    await Promise.all([
-      page.goto(CLIENT_URL),
-      page.waitForNavigation({ waitUntil: 'networkidle0' }),
-    ]);
     await expect(page).toClickXPath(vBtn('Your Datasets'));
 
-    const fileInputElementHandle = await page.waitForXPath("//input[@type='file']");
-    await fileInputElementHandle.uploadFile('../e2e-test/data/cleanUpTest1.csv');
-    await page.waitForXPath(vListTile({ title: 'cleanUpTest1.csv ', content: 'Dataset processed with 1 validation failures' }));
+    await uploadDataset('cleanUpTest1');
 
     await expect(page).toClickXPath(vListTile({ title: 'cleanUpTest1.csv ', content: 'Dataset processed with 1 validation failures' }) + vBtn('View Data'));
 
     //  verify the dataset is failing
     await page.waitForXPath(vListTile({ title: 'cleanUpTest1.csv' }) + vIcon({ cssClass: 'mdi mdi-alert theme--light warning--text' }));
 
-    // verify the dataset gets an error
+    // click the error message to get fix recommendations
     await expect(page).toClickXPath(vListTile({ title: 'Non-numeric column' }));
 
     // click 'mask all' to fix it
@@ -66,16 +54,10 @@ describe('relabel dataset', () => {
     await page.waitForXPath(vListTile({ title: 'cleanUpTest1.csv' }) + vIcon({ cssClass: 'mdi mdi-check theme--light success--text' }));
   });
 
-  it('fix selecting wrong data type for file name', async () => {
-    await Promise.all([
-      page.goto(CLIENT_URL),
-      page.waitForNavigation({ waitUntil: 'networkidle0' }),
-    ]);
+  it('mark as metabolite + metadata', async () => {
     await expect(page).toClickXPath(vBtn('Your Datasets'));
 
-    const fileInputElementHandle = await page.waitForXPath("//input[@type='file']");
-    await fileInputElementHandle.uploadFile('../e2e-test/data/cleanUpTest2.csv');
-    await page.waitForXPath(vListTile({ title: 'cleanUpTest2.csv ', content: 'Dataset processed with 1 validation failures' }));
+    await uploadDataset('cleanUpTest2');
 
     await expect(page).toClickXPath(vListTile({ title: 'cleanUpTest2.csv ', content: 'Dataset processed with 1 validation failures' }) + vBtn('View Data'));
 

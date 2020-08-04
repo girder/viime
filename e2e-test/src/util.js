@@ -11,3 +11,12 @@ export async function deleteAllDatasets() {
     await expect(page).toClickXPath(vBtn('Delete'));
   }
 }
+
+export async function uploadDataset(datasetName) {
+  const fileInputElementHandle = await page.waitForXPath("//input[@type='file']");
+  const fileName = datasetName.concat('.csv');
+  const datasetPath = '../e2e-test/data/';
+  const filePath = datasetPath.concat(fileName);
+  await fileInputElementHandle.uploadFile(filePath);
+  await page.waitForXPath(vListTile({ title: fileName }));
+}
