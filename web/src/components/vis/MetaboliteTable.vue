@@ -113,7 +113,7 @@ v-data-table.elevation-1.main(:headers="headers", :items="items", disable-initia
         :class="isInteresting(props.item[c.value]) ? 'highlight' : ''")
       | {{ format(props.item[c.value]) }}
   template(slot="no-data")
-    v-text {{ noDataAvailableMsg }}
+    | {{ noDataAvailableMsg }}
 </template>
 
 <style scoped>
