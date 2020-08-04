@@ -5,7 +5,7 @@ import store from '../../../store';
 import { LOAD_PLOT } from '../../../store/actions.type';
 import { SET_PLOT } from '../../../store/mutations.type';
 
-export default function useDataPlot(id: Ref<string>, plotName: string) {
+export default function usePlotData(id: Ref<string>, plotName: string) {
   const active = ref(true);
   const dataset = computed(() => store.getters.dataset(id.value));
   const plot = computed(() => store.getters.plot(id.value, plotName));
@@ -22,11 +22,12 @@ export default function useDataPlot(id: Ref<string>, plotName: string) {
   onActivated(() => { active.value = true; });
   onDeactivated(() => { active.value = false; });
   watchEffect(() => {
-    // TODO I think this is cleaner, but I'm not sure if will register properly.
-    // It needs to watch for changes to plot, active, and id
-    if (!plot.value.valid && !plot.value.loading && active.value) {
+    const plotValue = plot.value;
+    const activeValue = active.value;
+    const idValue = id.value;
+    if (!plotValue.valid && !plotValue.loading && activeValue) {
       store.dispatch(LOAD_PLOT, {
-        dataset_id: id.value,
+        dataset_id: idValue,
         name: plotName,
       });
     }

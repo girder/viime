@@ -15,6 +15,7 @@ export default defineComponent({
   components: { ScreePlot, VisTile },
 
   setup(props) {
+    // TODO this won't be necessary in Vue 3
     const id = computed(() => props.id);
     const showCutoffs = ref(true);
     const numComponentsText = ref('10');
