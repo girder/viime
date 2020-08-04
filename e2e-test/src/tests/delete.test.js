@@ -5,23 +5,16 @@ import {
   vListTile,
   vList,
 } from 'jest-puppeteer-vuetify';
-import { CLIENT_URL, deleteAllDatasets } from '../util';
+import { deleteAllDatasets, uploadDataset } from '../util';
 
 
 describe('delete dataset', () => {
   it('delete one dataset', async () => {
-    await Promise.all([
-      page.goto(CLIENT_URL),
-      page.waitForNavigation({ waitUntil: 'networkidle0' }),
-    ]);
     await expect(page).toClickXPath(vBtn('Your Datasets'));
 
     await deleteAllDatasets();
 
-    // todo: make a function for upload file(s)
-    const fileInputElementHandle = await page.waitForXPath("//input[@type='file']");
-    await fileInputElementHandle.uploadFile('../e2e-test/data/deleteTest.csv');
-    await page.waitForXPath(vListTile({ title: 'deleteTest.csv ' }));
+    await uploadDataset('deleteTest');
     await page.waitForXPath(vListTile({ title: 'deleteTest.csv ', content: 'Dataset ready for analysis' }));
 
     // wait for data set to be uploaded and then delete
@@ -36,27 +29,17 @@ describe('delete dataset', () => {
   });
 
   it('clear all', async () => {
-    await Promise.all([
-      page.goto(CLIENT_URL),
-      page.waitForNavigation({ waitUntil: 'networkidle0' }),
-    ]);
     await expect(page).toClickXPath(vBtn('Your Datasets'));
 
     await deleteAllDatasets();
 
-    const fileInputElementHandle = await page.waitForXPath("//input[@type='file']");
-
-    // todo: make a function for upload file(s)
-    await fileInputElementHandle.uploadFile('../e2e-test/data/deleteTest1.csv');
-    await page.waitForXPath(vListTile({ title: 'deleteTest1.csv ' }));
+    await uploadDataset('deleteTest1');
     await page.waitForXPath(vListTile({ title: 'deleteTest1.csv ', content: 'Dataset ready for analysis' }));
 
-    await fileInputElementHandle.uploadFile('../e2e-test/data/deleteTest2.csv');
-    await page.waitForXPath(vListTile({ title: 'deleteTest2.csv ' }));
+    await uploadDataset('deleteTest2');
     await page.waitForXPath(vListTile({ title: 'deleteTest2.csv ', content: 'Dataset processed with 1 validation failures' }));
 
-    await fileInputElementHandle.uploadFile('../e2e-test/data/deleteTest3.csv');
-    await page.waitForXPath(vListTile({ title: 'deleteTest3.csv ' }));
+    await uploadDataset('deleteTest3');
     await page.waitForXPath(vListTile({ title: 'deleteTest3.csv ', content: 'Dataset processed with 1 validation failures' }));
 
     // wait for data sets to be all uploaded before deletion

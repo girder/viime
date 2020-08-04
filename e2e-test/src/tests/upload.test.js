@@ -1,13 +1,8 @@
 import { vBtn, vListTile } from 'jest-puppeteer-vuetify';
-import { CLIENT_URL } from '../util';
 
 
 describe('upload dataset', () => {
   it('upload one dataset', async () => {
-    await Promise.all([
-      page.goto(CLIENT_URL),
-      page.waitForNavigation({ waitUntil: 'networkidle0' }),
-    ]);
     await expect(page).toClickXPath(vBtn('Your Datasets'));
 
     const fileInputElementHandle = await page.waitForXPath("//input[@type='file']");
@@ -16,10 +11,6 @@ describe('upload dataset', () => {
     await page.waitForXPath(vListTile({ title: 'uploadTest.csv ', content: 'Dataset processed with 1 validation failures' }));
   });
   it('upload 3 dataset', async () => {
-    await Promise.all([
-      page.goto(CLIENT_URL),
-      page.waitForNavigation({ waitUntil: 'networkidle0' }),
-    ]);
     await expect(page).toClickXPath(vBtn('Your Datasets'));
 
     const fileInputElementHandle = await page.waitForXPath("//input[@type='file']");
