@@ -1,42 +1,43 @@
-<script>
+<script lang="ts">
+import { defineComponent, computed, ref } from '@vue/composition-api';
 import ScreePlot from '@/components/vis/ScreePlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
-import plotData from './mixins/plotData';
+import usePlotData from './use/usePlotData';
 
-export default {
-  components: {
-    ScreePlot,
-    VisTile,
-  },
-
-  mixins: [plotData('pca')],
-
+export default defineComponent({
   props: {
     id: {
-      required: true,
       type: String,
+      required: true,
     },
   },
 
-  data() {
+  components: { ScreePlot, VisTile },
+
+  setup(props) {
+    // TODO this won't be necessary in Vue 3
+    const id = computed(() => props.id);
+    const showCutoffs = ref(true);
+    const numComponentsText = ref('10');
+    const numComponents = computed(() => Number.parseInt(numComponentsText.value, 10));
+
+    const { plot } = usePlotData(id, 'pca');
+
     return {
-      numComponentsText: '10',
-      showCutoffs: true,
+      numComponentsText,
+      numComponents,
+      showCutoffs,
+      plot,
     };
   },
-
-  computed: {
-    numComponents() {
-      return Number.parseInt(this.numComponentsText, 10);
-    },
-  },
-};
+});
 </script>
 
 <template lang="pug">
 vis-tile(v-if="plot", title="PCA Scree Plot", :loading="plot.loading", svg-download)
   scree-plot(
-      :eigenvalues="getPlotDataProperty('sdev')",
+      v-if="plot.data",
+      :eigenvalues="plot.data.sdev",
       :num-components="numComponents",
       :show-cutoffs="showCutoffs")
   template(v-slot:controls)
