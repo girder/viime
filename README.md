@@ -99,8 +99,8 @@ To migrate to the latest database schema, run:
 flask db upgrade
 ```
 
-Developing with `docker-compose`
---------------------------------
+Getting started (`docker-compose`)
+----------------------------------
 Install `ldc` from [here](https://github.com/Kitware/ldc) and start the project in Docker by running
 
 ```sh
