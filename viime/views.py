@@ -12,7 +12,7 @@ from werkzeug.datastructures import FileStorage
 
 from viime import opencpu, samples
 from viime.analyses import anova_test, factor_analysis, hierarchical_clustering,\
-    pairwise_correlation, roc_analysis, wilcoxon_test
+    pairwise_correlation, plsda, roc_analysis, wilcoxon_test
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from viime.models import AXIS_NAME_TYPES, clean, CSVFile, CSVFileSchema, db, \
     GroupLevelSchema, ModifyLabelListSchema, \
@@ -856,6 +856,21 @@ def get_factors(validated_table: ValidatedMetaboliteTable,
                 threshold: Optional[float]):
     measurements = validated_table.measurements
     return jsonify(factor_analysis(measurements, threshold))
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/plsda', methods=['GET'])
+@use_kwargs({
+    'num_of_components': fields.Integer(missing=5)
+})
+@load_validated_csv_file
+def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int]):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+    errors = {}
+    # TODO: validate groups
+    if errors:
+        return jsonify(errors), 400
+    return jsonify(plsda(measurements, groups, num_of_components))
 
 
 #

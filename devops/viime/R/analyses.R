@@ -240,7 +240,7 @@ roc_analysis <- function(measurements, groups, group1_name, group2_name, column_
 #'
 #' @export
 factor_analysis <- function(measurements, threshold) {
-  library(psych) 
+  library(psych)
 
   m.df <- read.csv(measurements, row.names=1, check.names=FALSE)
 
@@ -255,7 +255,7 @@ factor_analysis <- function(measurements, threshold) {
   pca_a <- prcomp(m.df, center=T, scale=T)
 
   #getting the eigenvalues
-  MS.eig <- (pca_a$sdev)^2 
+  MS.eig <- (pca_a$sdev)^2
 
   #Eigenvalues higher than 1 to see how many factors we need
   ncomp <- sum(MS.eig >= 1)
@@ -265,7 +265,7 @@ factor_analysis <- function(measurements, threshold) {
 
   # Factor analysis
   #Using ncomp, number of components with eigenvalue higher than 1
-  fitpsy <- psych::fa(m.df, nfactors=ncomp, rotate="varimax") 
+  fitpsy <- psych::fa(m.df, nfactors=ncomp, rotate="varimax")
 
   #Save some results from factor analysis
   eigen.values <- fitpsy$e.values #eigenvalues
@@ -293,4 +293,26 @@ factor_analysis <- function(measurements, threshold) {
     OUT <- rbind(OUT,b)
   }
   out <- OUT
+}
+
+#' plsda
+#'
+#' @export
+plsda <- function(measurements, groups, num_of_components) {
+  library(mixOmics)
+  df <- read.csv(measurements, row.names=1, check.names=FALSE)
+  groups <- read.csv(groups, row.names=1, check.names=TRUE)
+  groups <- as.factor(groups)
+
+  # PLS-DA (Set to scale=TRUE just for trial, for VIIME it should be FALSE since data has already been pretreated)
+  mod_plsda <- mixOmics::plsda(df, groups, scale=FALSE, ncomp = num_of_components)
+
+  # Save Scores
+  scores_plsda <- as.data.frame(mod_plsda$variates[1])
+
+  # Save loadings
+  load_plsda <- as.data.frame(mod_plsda$loadings$X)
+
+  OUT <- data.frame(scores=scores_plsda,
+                    loadings=load_plsda)
 }
