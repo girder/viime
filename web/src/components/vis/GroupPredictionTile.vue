@@ -228,7 +228,7 @@ export default {
         dense="dense"
         :card="false"
       >
-        <v-toolbar-title>Metabolites</v-toolbar-title>
+        <v-toolbar-title v-text="`Metabolites (${metabolites.length})`" />
       </v-toolbar>
       <v-card
         class="mx-3 px-1"
