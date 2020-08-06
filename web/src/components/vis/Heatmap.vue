@@ -51,8 +51,14 @@ const MDI_PLUS_CIRCLE = '\uF417;';
 const MDI_MINUS_CIRCLE = '\uF376;';
 const MDI_STAR_CIRCLE = '\uF4CF;';
 
+// max font size in px for metabolite names.
+// Anything larger will cause metabolite
+// names to be misaligned
+const MAX_FONT_SIZE = 12;
+
 export const heatmapLayouts = [
   { label: 'Auto', value: 'auto' },
+  { label: 'Full', value: 'full' },
   { label: 'Square Cells', value: 'squareCells' },
   { label: 'Square Matrix', value: 'squareMatrix' },
 ];
@@ -289,6 +295,9 @@ export default {
         const ci = Math.min(wx, hy);
         width = ci * this.columnLeaves.length;
         height = ci * this.rowLeaves.length;
+      } else if (this.layout === 'full') {
+        width = this.columnLeaves.length * (MAX_FONT_SIZE + 2);
+        height = this.rowLeaves.length * (MAX_FONT_SIZE + 2);
       } else if (this.layout === 'squareMatrix') {
         width = Math.min(width, height);
         height = width;
@@ -305,7 +314,7 @@ export default {
       const wx = this.matrixWidth / this.columnLeaves.length - 2;
       const hy = this.matrixHeight / this.rowLeaves.length - 2;
 
-      return Math.min(wx, hy, 12);
+      return Math.min(wx, hy, MAX_FONT_SIZE);
     },
   },
   mounted() {
@@ -664,34 +673,85 @@ export default {
 };
 </script>
 
-<template lang="pug">
-.grid(v-resize:throttle="onResize")
-  svg.column(ref="column", v-show="columnConfig.dendrogram",
-      :width="matrixWidth",
-      :height="height * DENDROGRAM_RATIO", xmlns="http://www.w3.org/2000/svg",
-      :data-update="reactiveColumnUpdate")
-    g.edges(:transform="`translate(0,${padding})`")
-    g.nodes(:transform="`translate(0,${padding})`")
-  svg.row(ref="row", v-show="rowConfig.dendrogram",
-      :width="width * DENDROGRAM_RATIO",
-      :height="matrixHeight", xmlns="http://www.w3.org/2000/svg",
-      :data-update="reactiveRowUpdate")
-    g.edges(:transform="`translate(${padding},0)`")
-    g.nodes(:transform="`translate(${padding},0)`")
-  canvas.matrix(ref="matrix", :data-update="reactiveMatrixUpdate",
-      @mousemove="canvasMouseMove($event)", @mouseleave="canvasMouseLeave()")
-  .collabel(ref="collabel",
-      :style="{fontSize: fontSize+'px', width: this.matrixWidth+'px', height: LABEL_WIDTH+'px'}",
-      :data-update="reactiveColumnLabelUpdate")
-  .rowlabel(ref="rowlabel",
-      :style="{fontSize: fontSize+'px', width: LABEL_WIDTH+'px', height: this.matrixHeight+'px'}",
-      :data-update="reactiveRowLabelUpdate")
-  .legend-wrapper(v-show="columnConfig.dendrogram && rowConfig.dendrogram")
-    .legend(:data-from="legendDomain[0]", :data-to="legendDomain[1]",
-        :style="{background: legendGradient}")
+<template>
+  <div
+    v-resize:throttle="onResize"
+    :class="{
+      'grid': true,
+      'grid--large': layout === 'full',
+    }"
+  >
+    <svg
+      v-show="columnConfig.dendrogram"
+      ref="column"
+      class="column"
+      :width="matrixWidth"
+      :height="height * DENDROGRAM_RATIO"
+      xmlns="http://www.w3.org/2000/svg"
+      :data-update="reactiveColumnUpdate"
+    >
+      <g
+        class="edges"
+        :transform="`translate(0,${padding})`"
+      />
+      <g
+        class="nodes"
+        :transform="`translate(0,${padding})`"
+      />
+    </svg>
+    <svg
+      v-show="rowConfig.dendrogram"
+      ref="row"
+      class="row"
+      :width="width * DENDROGRAM_RATIO"
+      :height="matrixHeight"
+      xmlns="http://www.w3.org/2000/svg"
+      :data-update="reactiveRowUpdate"
+    >
+      <g
+        class="edges"
+        :transform="`translate(${padding},0)`"
+      />
+      <g
+        class="nodes"
+        :transform="`translate(${padding},0)`"
+      />
+    </svg>
+    <canvas
+      ref="matrix"
+      class="matrix"
+      :data-update="reactiveMatrixUpdate"
+      @mousemove="canvasMouseMove($event)"
+      @mouseleave="canvasMouseLeave()"
+    />
+    <div
+      ref="collabel"
+      class="collabel"
+      :style="{fontSize: fontSize+'px', width: matrixWidth+'px', height: LABEL_WIDTH+'px'}"
+      :data-update="reactiveColumnLabelUpdate"
+    />
+    <div
+      ref="rowlabel"
+      class="rowlabel"
+      :style="{fontSize: fontSize+'px', width: LABEL_WIDTH+'px', height: matrixHeight+'px'}"
+      :data-update="reactiveRowLabelUpdate"
+    />
+    <div
+      v-show="columnConfig.dendrogram &amp;&amp; rowConfig.dendrogram"
+      class="legend-wrapper"
+    >
+      <div
+        class="legend"
+        :data-from="legendDomain[0]"
+        :data-to="legendDomain[1]"
+        :style="{background: legendGradient}"
+      />
+    </div>
+  </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+
 .grid {
   position: absolute;
   top: 4px;
@@ -699,19 +759,24 @@ export default {
   right: 8px;
   bottom: 8px;
   display: grid;
-  grid-template-areas: "legend column dl"
-    "row matrix rlabel"
-    "rc clabel ll";
+  grid-template-areas: "legend column dl" "row matrix rlabel" "rc clabel ll";
   justify-content: center;
   align-content: center;
+
+  &--large {
+    position: relative;
+    justify-content: left;
+  }
 }
 
 .column {
   grid-area: column;
 }
+
 .row {
   grid-area: row;
 }
+
 .matrix {
   grid-area: matrix;
 }
@@ -726,19 +791,17 @@ export default {
   height: 1.5em;
   margin: 2em;
   position: relative;
-}
-
-.legend::before {
-  content: attr(data-from);
-  position: absolute;
-  top: 100%;
-}
-
-.legend::after {
-  content: attr(data-to);
-  position: absolute;
-  top: 100%;
-  right: 0;
+  &::before {
+    content: attr(data-from);
+    position: absolute;
+    top: 100%;
+  }
+  &::after {
+    content: attr(data-to);
+    position: absolute;
+    top: 100%;
+    right: 0;
+  }
 }
 
 .collabel {
@@ -747,22 +810,29 @@ export default {
   justify-content: center;
   overflow: hidden;
   line-height: normal;
-}
-
-.collabel >>> div {
-  flex-direction: column;
-}
-
-.collabel >>> .label {
-  text-align: right;
-  writing-mode: tb;
-  transform: rotate(-180deg);
-}
-
-.collabel >>> .color {
-  align-self: stretch;
-  height: 5px;
-  margin-bottom: 2px;
+  /deep/ div {
+    flex-direction: column;
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+  }
+  /deep/ .label {
+    text-align: right;
+    writing-mode: tb;
+    transform: rotate(-180deg);
+    flex: 1 1 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /deep/ .color {
+    align-self: stretch;
+    height: 5px;
+    margin-bottom: 2px;
+  }
+  /deep/ .selected {
+    color: orange;
+  }
 }
 
 .rowlabel {
@@ -771,76 +841,63 @@ export default {
   flex-direction: column;
   justify-content: center;
   line-height: normal;
+  /deep/ .color {
+    align-self: stretch;
+    width: 5px;
+    min-width: 5px;
+    margin-right: 2px;
+  }
+  /deep/ .color.hidden {
+    display: none;
+  }
+  /deep/ div {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+  }
+  /deep/ .label {
+    flex: 1 1 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /deep/ .selected {
+    color: orange;
+  }
 }
 
-.rowlabel >>> .color {
-  align-self: stretch;
-  width: 5px;
-  min-width: 5px;
-  margin-right: 2px;
+.edges {
+  /deep/ path {
+    fill: none;
+    stroke-width: 1;
+    stroke: black;
+  }
+  /deep/ path.selected {
+    stroke: orange;
+  }
 }
 
-.rowlabel >>> .color.hidden {
-  display: none;
-}
-
-.collabel >>> div,
-.rowlabel >>> div {
-  flex: 1 1 0;
-  display: flex;
-  align-items: center;
-}
-
-.collabel >>> .label,
-.rowlabel >>> .label {
-  flex: 1 1 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rowlabel >>> .selected,
-.collabel >>> .selected {
-  color: orange;
-}
-
-.edges >>> path {
-  fill: none;
-  stroke-width: 1;
-  stroke: black;
-}
-
-.edges >>> path.selected {
-  stroke: orange;
-}
-
-.nodes >>> g {
-  opacity: 0;
-  font: normal normal normal 24px/1 "Material Design Icons";
-  fill: black;
-  cursor: pointer;
-  font-size: 150%;
-  user-select: none;
-  text-anchor: middle;
-  dominant-baseline: central;
-}
-
-.nodes >>> g > circle {
-  fill: white;
-}
-
-.nodes >>> g:hover {
-  opacity: 1;
-  fill: orange;
-}
-
-.nodes >>> g:hover > text {
-  fill: orange;
-}
-
-.nodes >>> .collapsed,
-.nodes >>> .focused {
-  opacity: 1;
+.nodes {
+  /deep/ g {
+    opacity: 0;
+    font: normal normal normal 24px/1 "Material Design Icons";
+    fill: black;
+    cursor: pointer;
+    font-size: 150%;
+    user-select: none;
+    text-anchor: middle;
+    dominant-baseline: central;
+    /deep/ circle {
+      fill: white;
+    }
+    &:hover {
+      opacity: 1;
+      fill: orange;
+      /deep/ text {
+        fill: orange;
+      }
+    }
+  }
 }
 
 </style>
