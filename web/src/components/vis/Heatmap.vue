@@ -676,7 +676,10 @@ export default {
 <template>
   <div
     v-resize:throttle="onResize"
-    :class="`grid${layout === 'full' ? ' grid--large' : ''}`"
+    :class="{
+      'grid': true,
+      'grid--large': layout === 'full',
+    }"
   >
     <svg
       v-show="columnConfig.dendrogram"
