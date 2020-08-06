@@ -676,7 +676,7 @@ export default {
 <template>
   <div
     v-resize:throttle="onResize"
-    :class="layout === 'full' ? 'gridLarge' : 'grid'"
+    :class="`grid${layout === 'full' ? ' grid--large' : ''}`"
   >
     <svg
       v-show="columnConfig.dendrogram"
@@ -747,7 +747,8 @@ export default {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+
 .grid {
   position: absolute;
   top: 4px;
@@ -755,32 +756,24 @@ export default {
   right: 8px;
   bottom: 8px;
   display: grid;
-  grid-template-areas: "legend column dl"
-    "row matrix rlabel"
-    "rc clabel ll";
+  grid-template-areas: "legend column dl" "row matrix rlabel" "rc clabel ll";
   justify-content: center;
   align-content: center;
-}
-.gridLarge {
-  position: relative;
-  top: 4px;
-  left: 4px;
-  right: 8px;
-  bottom: 8px;
-  display: grid;
-  grid-template-areas: "legend column dl"
-    "row matrix rlabel"
-    "rc clabel ll";
-  justify-content: left;
-  align-content: left;
+
+  &--large {
+    position: relative;
+    justify-content: left;
+  }
 }
 
 .column {
   grid-area: column;
 }
+
 .row {
   grid-area: row;
 }
+
 .matrix {
   grid-area: matrix;
 }
@@ -795,19 +788,17 @@ export default {
   height: 1.5em;
   margin: 2em;
   position: relative;
-}
-
-.legend::before {
-  content: attr(data-from);
-  position: absolute;
-  top: 100%;
-}
-
-.legend::after {
-  content: attr(data-to);
-  position: absolute;
-  top: 100%;
-  right: 0;
+  &::before {
+    content: attr(data-from);
+    position: absolute;
+    top: 100%;
+  }
+  &::after {
+    content: attr(data-to);
+    position: absolute;
+    top: 100%;
+    right: 0;
+  }
 }
 
 .collabel {
@@ -816,22 +807,29 @@ export default {
   justify-content: center;
   overflow: hidden;
   line-height: normal;
-}
-
-.collabel >>> div {
-  flex-direction: column;
-}
-
-.collabel >>> .label {
-  text-align: right;
-  writing-mode: tb;
-  transform: rotate(-180deg);
-}
-
-.collabel >>> .color {
-  align-self: stretch;
-  height: 5px;
-  margin-bottom: 2px;
+  /deep/ div {
+    flex-direction: column;
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+  }
+  /deep/ .label {
+    text-align: right;
+    writing-mode: tb;
+    transform: rotate(-180deg);
+    flex: 1 1 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /deep/ .color {
+    align-self: stretch;
+    height: 5px;
+    margin-bottom: 2px;
+  }
+  /deep/ .selected {
+    color: orange;
+  }
 }
 
 .rowlabel {
@@ -840,76 +838,63 @@ export default {
   flex-direction: column;
   justify-content: center;
   line-height: normal;
+  /deep/ .color {
+    align-self: stretch;
+    width: 5px;
+    min-width: 5px;
+    margin-right: 2px;
+  }
+  /deep/ .color.hidden {
+    display: none;
+  }
+  /deep/ div {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+  }
+  /deep/ .label {
+    flex: 1 1 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /deep/ .selected {
+    color: orange;
+  }
 }
 
-.rowlabel >>> .color {
-  align-self: stretch;
-  width: 5px;
-  min-width: 5px;
-  margin-right: 2px;
+.edges {
+  /deep/ path {
+    fill: none;
+    stroke-width: 1;
+    stroke: black;
+  }
+  /deep/ path.selected {
+    stroke: orange;
+  }
 }
 
-.rowlabel >>> .color.hidden {
-  display: none;
-}
-
-.collabel >>> div,
-.rowlabel >>> div {
-  flex: 1 1 0;
-  display: flex;
-  align-items: center;
-}
-
-.collabel >>> .label,
-.rowlabel >>> .label {
-  flex: 1 1 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rowlabel >>> .selected,
-.collabel >>> .selected {
-  color: orange;
-}
-
-.edges >>> path {
-  fill: none;
-  stroke-width: 1;
-  stroke: black;
-}
-
-.edges >>> path.selected {
-  stroke: orange;
-}
-
-.nodes >>> g {
-  opacity: 0;
-  font: normal normal normal 24px/1 "Material Design Icons";
-  fill: black;
-  cursor: pointer;
-  font-size: 150%;
-  user-select: none;
-  text-anchor: middle;
-  dominant-baseline: central;
-}
-
-.nodes >>> g > circle {
-  fill: white;
-}
-
-.nodes >>> g:hover {
-  opacity: 1;
-  fill: orange;
-}
-
-.nodes >>> g:hover > text {
-  fill: orange;
-}
-
-.nodes >>> .collapsed,
-.nodes >>> .focused {
-  opacity: 1;
+.nodes {
+  /deep/ g {
+    opacity: 0;
+    font: normal normal normal 24px/1 "Material Design Icons";
+    fill: black;
+    cursor: pointer;
+    font-size: 150%;
+    user-select: none;
+    text-anchor: middle;
+    dominant-baseline: central;
+    /deep/ circle {
+      fill: white;
+    }
+    &:hover {
+      opacity: 1;
+      fill: orange;
+      /deep/ text {
+        fill: orange;
+      }
+    }
+  }
 }
 
 </style>
