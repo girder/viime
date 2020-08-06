@@ -15,12 +15,15 @@ export default {
     },
     threshold: {
       type: Number,
-      required: false,
       default: 0.05,
     },
     value: { // string[]
       type: Array,
       required: true,
+    },
+    errorMsg: { // error message to display if ANOVA fails, if applicable
+      type: String,
+      default: '',
     },
   },
 
@@ -52,6 +55,11 @@ export default {
 </script>
 
 <template lang="pug">
-metabolite-table(:headers="headers", :items="items", :threshold="threshold",
-    :value="value", @input="$emit('input', $event)")
+metabolite-table(
+    :headers="headers",
+    :items="items",
+    :threshold="threshold",
+    :value="value",
+    :no-data-available-msg="`ANOVA failed. ${errorMsg}`",
+    @input="$emit('input', $event)")
 </template>

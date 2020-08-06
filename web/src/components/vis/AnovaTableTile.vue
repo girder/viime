@@ -93,6 +93,7 @@ vis-tile-large(v-if="plot", title="Anova Table", :loading="plot.loading", expand
       v-if="plot.data",
       :data="tableData",
       :threshold="threshold",
+      :error-msg="plot.data.error || ''",
       v-model="selected")
 </template>
 

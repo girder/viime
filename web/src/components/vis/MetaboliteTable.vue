@@ -20,8 +20,11 @@ export default {
     },
     threshold: {
       type: Number,
-      required: false,
       default: 0.05,
+    },
+    noDataAvailableMsg: { // allows displaying a custom message when table has no data.
+      type: String,
+      default: 'No data available',
     },
   },
 
@@ -107,6 +110,8 @@ v-data-table.elevation-1.main(:headers="headers", :items="items", disable-initia
     td.cell.text-xs-right(v-for="c in headers.slice(1)",
         :class="isInteresting(props.item[c.value]) ? 'highlight' : ''")
       | {{ format(props.item[c.value]) }}
+  template(slot="no-data")
+    | {{ noDataAvailableMsg }}
 </template>
 
 <style scoped>

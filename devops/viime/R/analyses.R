@@ -77,7 +77,21 @@ anova_tukey_adjustment <- function(measurements, groups, log_transformed=FALSE) 
   OUT <- NULL
   for (n in colnames(Metab)){
     mod <- lm(Metab[[n]] ~ Group)
-    a <- Anova(mod, type="III")
+
+    # catches any possible errors thrown by ANOVA and returns them
+    a <- tryCatch(
+        Anova(mod, type="III"),
+        error=function(err) {
+            return(err)
+        }
+      )
+
+    # check if 'a' is an error by checking if it inherits
+    # from the 'error' class
+    if (inherits(a, "error")) {
+      return(data.frame(error=a$message))
+    }
+
     x1 <- cbind(n,t(a[,"Pr(>F)"] ))
 
     emm.mod <- emmeans(mod, "Group")
