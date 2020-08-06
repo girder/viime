@@ -20,12 +20,10 @@ export default {
     },
     threshold: {
       type: Number,
-      required: false,
       default: 0.05,
     },
     noDataAvailableMsg: { // allows displaying a custom message when table has no data.
       type: String,
-      required: false,
       default: 'No data available',
     },
   },

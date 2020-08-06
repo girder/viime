@@ -15,7 +15,6 @@ export default {
     },
     threshold: {
       type: Number,
-      required: false,
       default: 0.05,
     },
     value: { // string[]
@@ -24,7 +23,6 @@ export default {
     },
     errorMsg: { // error message to display if ANOVA fails, if applicable
       type: String,
-      required: false,
       default: '',
     },
   },
