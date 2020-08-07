@@ -10,7 +10,7 @@ export default function usePlotData(id: Ref<string>, plotName: string) {
   const dataset = computed(() => store.getters.dataset(id.value));
   const plot = computed(() => store.getters.plot(id.value, plotName));
 
-  // disable-eslint-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function changePlotArgs(args: any) {
     store.commit(SET_PLOT, {
       dataset_id: id.value,

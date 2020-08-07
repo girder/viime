@@ -1,4 +1,4 @@
-<script>
+<!--<script>
 import VisTileLarge from '@/components/vis/VisTileLarge.vue';
 import LayoutGrid from '@/components/LayoutGrid.vue';
 import ScorePlot from './ScorePlot.vue';
@@ -76,6 +76,89 @@ export default {
     },
   },
 };
+</script>-->
+<script lang="ts">
+import {
+  defineComponent, computed, ref, watch,
+} from '@vue/composition-api';
+import VisTileLarge from '@/components/vis/VisTileLarge.vue';
+import LayoutGrid from '@/components/LayoutGrid.vue';
+import store from '../../../store';
+import ScorePlot from './ScorePlot.vue';
+import ScreePlot from './ScreePlot.vue';
+import LoadingsPlot from './LoadingsPlot.vue';
+
+export default defineComponent({
+  props: {
+    id: {
+      type: String,
+      required: true,
+    },
+  },
+  components: {
+    ScorePlot,
+    ScreePlot,
+    LoadingsPlot,
+    VisTileLarge,
+    LayoutGrid,
+  },
+  setup(props) {
+    const pcXval = ref('1');
+    const pcYval = ref('2');
+    const numComponentsVal = ref('10');
+    const pcX = ref(1);
+    const pcY = ref(2);
+    const numComponents = ref(10);
+    const showEllipses = ref(true);
+    const showCrosshairs = ref(true);
+    const showCutoffs = ref(true);
+    const showScree = ref(true);
+    const showScore = ref(true);
+    const showLoadings = ref(true);
+
+    const ready = computed(() => {
+      const pcaReady = store.getters.ready(props.id, 'pca');
+      const loadingsReady = store.getters.ready(props.id, 'loadings');
+
+      return pcaReady && loadingsReady;
+    });
+
+    watch(pcXval, (newPcXval) => {
+      const newPcX = Number.parseInt(newPcXval, 10);
+      if (!Number.isNaN(newPcX)) {
+        pcX.value = newPcX;
+      }
+    });
+    watch(pcYval, (newPcYval) => {
+      const newPcY = Number.parseInt(newPcYval, 10);
+      if (!Number.isNaN(newPcY)) {
+        pcY.value = newPcY;
+      }
+    });
+    watch(numComponentsVal, (newNumComponentsVal) => {
+      const newNumComponents = Number.parseInt(newNumComponentsVal, 10);
+      if (!Number.isNaN(newNumComponents)) {
+        numComponents.value = newNumComponents;
+      }
+    });
+
+    return {
+      pcXval,
+      pcYval,
+      numComponentsVal,
+      pcX,
+      pcY,
+      numComponents,
+      showEllipses,
+      showCrosshairs,
+      showCutoffs,
+      showScree,
+      showScore,
+      showLoadings,
+      ready,
+    };
+  },
+});
 </script>
 
 <template lang="pug">
@@ -149,13 +232,13 @@ vis-tile-large(title="Principal Component Analysis", :loading="false")
 
   layout-grid(:cell-size="300", v-if="ready")
     score-plot(
-        v-show="showScore",
+      v-show="showScore",
         :id="id",
         :pc-x="pcX",
         :pc-y="pcY",
         :show-ellipses="showEllipses")
     loadings-plot(
-        v-show="showLoadings",
+      v-show="showLoadings",
         :id="id",
         :pc-x="pcX",
         :pc-y="pcY",
