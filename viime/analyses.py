@@ -118,12 +118,13 @@ def factor_analysis(measurements: pd.DataFrame, threshold=0.4) -> Dict[str, List
     return clean(data).to_dict(orient='list')
 
 
-def plsda(measurements: pd.DataFrame, groups: pd.DataFrame, num_of_components=5):
+def plsda(measurements: pd.DataFrame, groups: pd.DataFrame, num_of_components=5, mode="scores"):
     files = {
         'measurements': measurements.to_csv().encode(),
         'groups': groups.to_csv(header=True).encode()
     }
     data = opencpu_request('plsda', files, {
-        'num_of_components': num_of_components
+        'num_of_components': num_of_components,
+        'mode': mode
     })
     return clean(data).to_dict(orient='list')

@@ -860,17 +860,20 @@ def get_factors(validated_table: ValidatedMetaboliteTable,
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/plsda', methods=['GET'])
 @use_kwargs({
-    'num_of_components': fields.Integer(missing=5)
+    'num_of_components': fields.Integer(missing=5),
+    'mode': fields.Str(required=True, validate=validate.OneOf([
+        'scores', 'loadings'
+    ]))
 })
 @load_validated_csv_file
-def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int]):
+def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int], mode: str):
     measurements = validated_table.measurements
     groups = validated_table.groups
     errors = {}
     # TODO: validate groups
     if errors:
         return jsonify(errors), 400
-    return jsonify(plsda(measurements, groups, num_of_components))
+    return jsonify(plsda(measurements, groups, num_of_components, mode))
 
 
 #
