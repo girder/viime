@@ -301,18 +301,23 @@ factor_analysis <- function(measurements, threshold) {
 plsda <- function(measurements, groups, num_of_components) {
   library(mixOmics)
   df <- read.csv(measurements, row.names=1, check.names=FALSE)
-  groups <- read.csv(groups, row.names=1, check.names=TRUE)
+  groups <- read.csv(groups, row.names=1, check.names=FALSE)
+  groups <- as.character(groups)
   groups <- as.factor(groups)
+
+  print(groups)
+
+  return(groups)
 
   # PLS-DA (Set to scale=TRUE just for trial, for VIIME it should be FALSE since data has already been pretreated)
   mod_plsda <- mixOmics::plsda(df, groups, scale=FALSE, ncomp = num_of_components)
 
   # Save Scores
-  scores_plsda <- as.data.frame(mod_plsda$variates[1])
+  # scores_plsda <- as.data.frame(mod_plsda$variates[1])
 
-  # Save loadings
-  load_plsda <- as.data.frame(mod_plsda$loadings$X)
+  # # Save loadings
+  # load_plsda <- as.data.frame(mod_plsda$loadings$X)
 
-  OUT <- data.frame(scores=scores_plsda,
-                    loadings=load_plsda)
+  OUT <- data.frame(scores=mod_plsda$variates[1],
+                    loadings=mod_plsda$loadings$X)
 }
