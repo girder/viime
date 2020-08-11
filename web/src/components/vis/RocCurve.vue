@@ -110,9 +110,9 @@ export default {
           transform="rotate(-90)"
         >Sensitivity</text>
       </g>
-      <g :transform="`translate(${width / 2},${height + margin.top + margin.bottom})`">
+      <g :transform="`translate(${width / 2},${margin.top - 10})`">
         <text
-          style="font-size: 1.1em; font-weight: bold;"
+          class="auc-label"
           v-text="`Area Under the Curve (AUC) = ${auc.toPrecision(3)}`"
         />
       </g>
@@ -128,6 +128,11 @@ export default {
   right: 0;
   bottom: 0;
   display: flex;
+}
+
+.auc-label {
+  font-size: 1.1em;
+  font-weight: bold;
 }
 
 .rocCurve {
