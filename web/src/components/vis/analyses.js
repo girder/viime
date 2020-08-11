@@ -5,6 +5,7 @@ import AnovaVolcanoPlotTile from './AnovaVolcanoPlotTile.vue';
 import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
 import PcaPage from './PcaPage/PcaPage.vue';
+import PlsdaPage from './PlsdaPage/PlsdaPage.vue';
 import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
 import GroupPredictionTile from './GroupPredictionTile.vue';
 import { plot_types } from '../../utils/constants';
@@ -18,6 +19,16 @@ export default [
     shortName: 'PCA',
     description: 'TODO',
     component: PcaPage,
+    args: {},
+    type: plot_types.ANALYSIS,
+    icon: vuetify.icons.pca,
+  },
+  {
+    path: 'plsda',
+    name: 'Partial Least Squares Discriminant Analysis',
+    shortName: 'PLS-DA',
+    description: 'TODO',
+    component: PlsdaPage,
     args: {},
     type: plot_types.ANALYSIS,
     icon: vuetify.icons.pca,

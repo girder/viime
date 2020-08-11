@@ -726,19 +726,36 @@ def get_pca_overview(validated_table: ValidatedMetaboliteTable):
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/plsda', methods=['GET'])
 @use_kwargs({
-    'num_of_components': fields.Integer(missing=5)
+    'num_of_components': fields.Integer(required=False)
 })
 @load_validated_csv_file
-def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int]):
+def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int] = None):
     measurements = validated_table.measurements
     groups = validated_table.groups
+    if num_of_components is None:
+        num_of_components = len(measurements)
     errors = {}
     # TODO: validate groups
     if errors:
         return jsonify(errors), 400
     scores = plsda(measurements, groups, num_of_components, 'scores')
     loadings = plsda(measurements, groups, num_of_components, 'loadings')
-    return jsonify({'scores': scores, 'loadings': loadings})
+
+    # massage the data returned from opencpu to correct format for client:
+
+    column_names = list(measurements.columns)
+    formatted_loadings = [{
+        'col': col,
+        'loadings': [
+            # loading for i in range(num_of_components) for loading in loadings.get(f'comp{i+1}')
+        ]
+    } for col in column_names]
+
+    for i in range(num_of_components):
+        for j, loading in enumerate(loadings.get(f'comp{i+1}')):
+            formatted_loadings[j]['loadings'].append(loading)
+
+    return jsonify({'scores': scores, 'loadings': formatted_loadings})
 
 
 def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,
@@ -873,8 +890,6 @@ def get_factors(validated_table: ValidatedMetaboliteTable,
                 threshold: Optional[float]):
     measurements = validated_table.measurements
     return jsonify(factor_analysis(measurements, threshold))
-
-
 
 
 #
