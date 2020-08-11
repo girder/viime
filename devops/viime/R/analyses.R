@@ -309,7 +309,7 @@ plsda <- function(measurements, groups, num_of_components, mode) {
 
   if (mode == "scores") {
     # Save Scores
-    scores_plsda <- as.data.frame(mod_plsda$variates)
+    scores_plsda <- data.frame(variates=mod_plsda$variates[1], explained_variance=mod_plsda$explained_variance$X)
     return(scores_plsda)
   } else if (mode == "loadings") {
     # Save loadings

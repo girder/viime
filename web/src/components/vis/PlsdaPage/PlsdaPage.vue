@@ -1,15 +1,13 @@
 <script>
 import VisTileLarge from '@/components/vis/VisTileLarge.vue';
 import LayoutGrid from '@/components/LayoutGrid.vue';
-// import ScorePlot from './ScorePlot.vue';
-// import ScreePlot from './ScreePlot.vue';
+import ScorePlot from './ScorePlot.vue';
 import LoadingsPlot from './LoadingsPlot.vue';
 import plotData from '../mixins/plotData';
 
 export default {
   components: {
-    // ScorePlot,
-    // ScreePlot,
+    ScorePlot,
     LoadingsPlot,
     VisTileLarge,
     LayoutGrid,
@@ -53,6 +51,46 @@ export default {
       }
       return [];
     },
+    pcCoords() {
+      if (this.plot?.data?.x) {
+        return this.plot.data.x;
+      }
+      return [];
+    },
+    eigenvalues() {
+      if (this.plot?.data?.scores?.sdev) {
+        return this.plot.data.scores.sdev;
+      }
+      return [];
+    },
+    rowLabels() {
+      if (this.dataset?.row?.data) {
+        return this.dataset.row.data.filter((row) => row.row_type === 'sample').map((row) => row.row_name);
+      }
+      return [];
+    },
+    groupLabels() {
+      if (this.dataset?.validatedGroups?.data) {
+        const groupColumnName = this.dataset.validatedGroups.columnNames[0];
+        const groupLabels = {};
+        groupLabels[groupColumnName] = this.dataset.validatedGroups.data.map((group) => group);
+        return groupLabels;
+      }
+      return {};
+    },
+    columns() {
+      if (this.dataset?.column?.data) {
+        return this.dataset.column.data;
+      }
+      return [];
+    },
+
+    groupLevels() {
+      if (this.dataset?.groupLevels) {
+        return this.dataset.groupLevels;
+      }
+      return [];
+    },
   },
   watch: {
     pcXval: {
@@ -81,9 +119,6 @@ export default {
         }
       },
       immediate: true,
-    },
-    plot() {
-      console.log(this.plot);
     },
   },
 };
@@ -114,17 +149,17 @@ vis-tile-large(title="Partial Least Squares Discriminant Analysis", :loading="fa
               :disabled="!showScore && !showLoadings",
               v-model="pcYval")
 
-    //- v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-    //-   v-toolbar-title.switch-title Score Plot
-    //-     v-switch.switch(v-model="showScore", color="white", hide-details)
-    //- v-card.mb-3.mx-3(flat)
-    //-   v-card-actions
-    //-     v-layout(column)
-    //-       v-switch.ma-0.py-2(
-    //-           v-model="showEllipses",
-    //-           label="Data ellipses",
-    //-           :disabled="!showScore",
-    //-           hide-details)
+    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
+      v-toolbar-title.switch-title Score Plot
+        v-switch.switch(v-model="showScore", color="white", hide-details)
+    v-card.mb-3.mx-3(flat)
+      v-card-actions
+        v-layout(column)
+          v-switch.ma-0.py-2(
+              v-model="showEllipses",
+              label="Data ellipses",
+              :disabled="!showScore",
+              hide-details)
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title.switch-title Loadings Plot
@@ -138,33 +173,19 @@ vis-tile-large(title="Partial Least Squares Discriminant Analysis", :loading="fa
               :disabled="!showLoadings",
               hide-details)
 
-    //- v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-    //-   v-toolbar-title.switch-title Scree Plot
-    //-     v-switch.switch(v-model="showScree", color="white", hide-details)
-    v-card.mb-3.mx-3(flat)
-      v-card-actions
-        v-layout(column)
-          v-text-field.py-2(
-              :disabled="!showScree",
-              hide-details,
-              type="number",
-              label="Number of PCs",
-              min="1",
-              outline,
-              v-model="numComponentsVal")
-          v-switch.ma-0.py-2(
-              v-model="showCutoffs",
-              label="Cutoff lines",
-              :disabled="!showScree",
-              hide-details)
-
   layout-grid(:cell-size="300", v-if="ready")
-    //- score-plot(
-    //-     v-show="showScore",
-    //-     :id="id",
-    //-     :pc-x="pcX",
-    //-     :pc-y="pcY",
-    //-     :show-ellipses="showEllipses")
+    score-plot(
+        v-show="showScore",
+        :id="id",
+        :pc-x="pcX",
+        :pc-y="pcY",
+        :show-ellipses="showEllipses",
+        :pc-coords="pcCoords",
+        :row-labels="rowLabels",
+        :columns="columns",
+        :eigenvalues="eigenvalues",
+        :group-labels="groupLabels",
+        :group-levels="groupLevels")
     loadings-plot(
         v-show="showLoadings",
         :id="id",
@@ -172,13 +193,6 @@ vis-tile-large(title="Partial Least Squares Discriminant Analysis", :loading="fa
         :pc-y="pcY",
         :show-crosshairs="showCrosshairs",
         :loadings="loadings")
-    //- scree-plot(
-    //-     v-show="showScree",
-    //-     :id="id",
-    //-     :pc-x="pcX",
-    //-     :pc-y="pcY",
-    //-     :num-components="numComponents",
-    //-     :show-cutoffs="showCutoffs")
   div(v-else)
     v-progress-circular(indeterminate, size="100", width="5")
     h4.display-1.pa-3 Loading data...

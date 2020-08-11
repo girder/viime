@@ -1,7 +1,6 @@
 <script>
 import LoadingsPlot from '@/components/vis/LoadingsPlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
-import plotData from '@/components/vis/mixins/plotData';
 
 export default {
   components: {
@@ -42,7 +41,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile(title="PLS-DA Loadings Plot", :loading="false", svg-download)
+vis-tile(title="PLS-DA Loadings Plot", svg-download)
   loadings-plot(
       :points="loadings",
       :pc-x="pcX",

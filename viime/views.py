@@ -6,6 +6,7 @@ from typing import Any, Callable, cast, Dict, List, Optional
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
+from numpy import sqrt
 import pandas
 from webargs.flaskparser import use_kwargs
 from werkzeug.datastructures import FileStorage
@@ -738,11 +739,11 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
     # TODO: validate groups
     if errors:
         return jsonify(errors), 400
+
     scores = plsda(measurements, groups, num_of_components, 'scores')
     loadings = plsda(measurements, groups, num_of_components, 'loadings')
 
     # massage the data returned from opencpu to correct format for client:
-
     column_names = list(measurements.columns)
     formatted_loadings = [{
         'col': col,
@@ -755,7 +756,17 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
         for j, loading in enumerate(loadings.get(f'comp{i+1}')):
             formatted_loadings[j]['loadings'].append(loading)
 
-    return jsonify({'scores': scores, 'loadings': formatted_loadings})
+    x = [[] for i in range(num_of_components)]
+
+    for i in range(num_of_components):
+        for j, score in enumerate(scores.get(f'variates.X.comp{i+1}')):
+            x[j].append(score)
+
+    sdev = sqrt(scores.get('explained_variance')).tolist()
+
+    formatted_scores = {'x': x, 'sdev': sdev}
+
+    return jsonify({'scores': formatted_scores, 'loadings': formatted_loadings, 'x': x})
 
 
 def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,
