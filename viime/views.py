@@ -724,6 +724,23 @@ def get_pca_overview(validated_table: ValidatedMetaboliteTable):
     return Response(png_content, mimetype='image/png')
 
 
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/plsda', methods=['GET'])
+@use_kwargs({
+    'num_of_components': fields.Integer(missing=5)
+})
+@load_validated_csv_file
+def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int]):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+    errors = {}
+    # TODO: validate groups
+    if errors:
+        return jsonify(errors), 400
+    scores = plsda(measurements, groups, num_of_components, 'scores')
+    loadings = plsda(measurements, groups, num_of_components, 'loadings')
+    return jsonify({'scores': scores, 'loadings': loadings})
+
+
 def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,
                 group_column: Optional[str] = None):
     measurements = validated_table.measurements
@@ -858,22 +875,6 @@ def get_factors(validated_table: ValidatedMetaboliteTable,
     return jsonify(factor_analysis(measurements, threshold))
 
 
-@csv_bp.route('/csv/<uuid:csv_id>/analyses/plsda', methods=['GET'])
-@use_kwargs({
-    'num_of_components': fields.Integer(missing=5),
-    'mode': fields.Str(required=True, validate=validate.OneOf([
-        'scores', 'loadings'
-    ]))
-})
-@load_validated_csv_file
-def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int], mode: str):
-    measurements = validated_table.measurements
-    groups = validated_table.groups
-    errors = {}
-    # TODO: validate groups
-    if errors:
-        return jsonify(errors), 400
-    return jsonify(plsda(measurements, groups, num_of_components, mode))
 
 
 #

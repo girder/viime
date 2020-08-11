@@ -307,15 +307,13 @@ plsda <- function(measurements, groups, num_of_components, mode) {
   # PLS-DA (Set to scale=TRUE just for trial, for VIIME it should be FALSE since data has already been pretreated)
   mod_plsda <- mixOmics::plsda(df, groups, scale=FALSE, ncomp = num_of_components)
 
-  # Save Scores
-  scores_plsda <- as.data.frame(mod_plsda$variates[1])
-
-  # Save loadings
-  load_plsda <- as.data.frame(mod_plsda$loadings$X)
-
   if (mode == "scores") {
+    # Save Scores
+    scores_plsda <- as.data.frame(mod_plsda$variates)
     return(scores_plsda)
   } else if (mode == "loadings") {
+    # Save loadings
+    load_plsda <- as.data.frame(mod_plsda$loadings$X)
     return(load_plsda)
   } else {
     stop("Invalid mode for PLSDA.")
