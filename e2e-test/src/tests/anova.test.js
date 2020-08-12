@@ -2,8 +2,8 @@ import { vBtn, vListTile } from 'jest-puppeteer-vuetify';
 import { uploadDataset } from '../util';
 
 
-describe('download dataset', () => {
-  it('analyze table and select matabolite', async () => {
+describe('the ANOVA page', () => {
+  it('analyze table and select metabolite', async () => {
     let selectedMetabolites;
     await expect(page).toClickXPath(vBtn('Your Datasets'));
 

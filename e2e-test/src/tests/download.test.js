@@ -25,7 +25,7 @@ describe('download dataset', () => {
     await expect(page).toClickXPath(vListTile({ title: 'Download Data' }));
 
     // unselect 'Selected' for Metabolite Filter
-    await expect(page).toClickXPath("//div[label[contains(.,'Selected (7')]]//input");
+    await expect(page).toClickXPath("//div[label[contains(.,'Selected (7)')]]//input");
 
     // verify 24 columns has unselected
     await page.waitForXPath("//div[@class='column-header']/div[@class='column-header-cell'][contains(text(), '20 x 17')]");
@@ -39,7 +39,7 @@ describe('download dataset', () => {
     // select Transpose Table
     await expect(page).toClickXPath("//label[text()='Transpose Table']");
 
-    //  verify it is selected
+    // verify rows and columns are switched
     await page.waitForXPath("//div[@class='column-header']/div[@class='column-header-cell'][contains(text(), '17 x 15')]");
   });
 

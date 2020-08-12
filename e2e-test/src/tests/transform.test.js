@@ -2,7 +2,7 @@ import { vBtn, vListTile } from 'jest-puppeteer-vuetify';
 import { uploadDataset } from '../util';
 
 
-describe('download dataset', () => {
+describe('transform table page', () => {
   it('transform table', async () => {
     await expect(page).toClickXPath(vBtn('Your Datasets'));
 
