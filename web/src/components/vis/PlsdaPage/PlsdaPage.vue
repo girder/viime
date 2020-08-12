@@ -33,7 +33,6 @@ export default {
       showEllipses: true,
       showCrosshairs: true,
       showCutoffs: true,
-      showScree: true,
       showScore: true,
       showLoadings: true,
     };
@@ -117,6 +116,7 @@ export default {
         if (!Number.isNaN(numComponents)) {
           this.numComponents = numComponents;
         }
+        this.changePlotArgs({ num_of_components: val });
       },
       immediate: true,
     },
@@ -127,6 +127,19 @@ export default {
 <template lang="pug">
 vis-tile-large(title="Partial Least Squares Discriminant Analysis", :loading="false")
   template(#controls)
+    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
+      v-toolbar-title Components
+    v-card.mb-3.mx-3(flat)
+      v-card-actions
+        v-layout(column)
+          v-text-field.py-2(
+              hide-details,
+              type="number",
+              min="1",
+              outline,
+              label="Number of Components",
+              v-model="numComponentsVal")
+
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title PC selector
     v-card.mb-3.mx-3(flat)
