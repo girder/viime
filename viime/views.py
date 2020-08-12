@@ -734,7 +734,8 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
     measurements = validated_table.measurements
     groups = validated_table.groups
     if num_of_components is None:
-        num_of_components = len(measurements)
+        rows, cols = measurements.shape[:2]
+        num_of_components = min(rows, cols)
     errors = {}
     # TODO: validate groups
     if errors:
@@ -756,13 +757,16 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
         for j, loading in enumerate(loadings.get(f'comp{i+1}')):
             formatted_loadings[j]['loadings'].append(loading)
 
-    x = [[] for i in range(num_of_components)]
+    x = [[] for i in range(len(measurements))]
 
     for i in range(num_of_components):
         for j, score in enumerate(scores.get(f'variates.X.comp{i+1}')):
             x[j].append(score)
 
-    sdev = sqrt(scores.get('explained_variance')).tolist()
+    explained_variances = [
+        scores.get(f'explained_variance.comp.{i+1}') for i in range(num_of_components)
+    ]
+    sdev = sqrt(explained_variances).tolist()
 
     formatted_scores = {'x': x, 'sdev': sdev}
 
