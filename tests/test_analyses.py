@@ -80,21 +80,18 @@ def test_plsda(client):
     for i in range(2):  # run test on two datasets
         with (Path(__file__).parent / f'plsda/plsda{i+1}.csv').open('rb') as f:
             csv_data = f.read()
+        # Upload the csv file
         data = {'file': (BytesIO(csv_data), f'plsda/plsda{i+1}.csv', 'text/csv')}
         resp = client.post(
             url_for('csv.upload_csv_file'), data=data, content_type='multipart/form-data')
         assert resp.status_code == 201
         csv_id = resp.json['id']
 
+        # Validate the csv file
         resp = client.post(url_for('csv.save_validated_csv_file', csv_id=csv_id))
         assert resp.status_code == 201
 
-        data = {}  # no data
-        resp = client.get(url_for('csv.get_plsda', csv_id=str(csv_id)), json=data)
-        assert resp.status_code == 200
-        keys = {'scores', 'loadings'}
-        assert keys == set(resp.json.keys())
-
+        # Get column and row data
         columns = client.get(url_for('csv.list_columns', csv_id=str(csv_id))).json
         rows = client.get(url_for('csv.list_rows', csv_id=str(csv_id))).json
         columns = [
@@ -102,8 +99,14 @@ def test_plsda(client):
         ]
         rows = [row for row in rows if row['row_type'] == 'sample']
 
-        # number of components should be equal to min(columns, rows) by default
-        num_of_components = min(len(columns), len(rows))
+        # perform PLSDA with no `num_of_components` parameter
+        data = {}
+        resp = client.get(url_for('csv.get_plsda', csv_id=str(csv_id)), json=data)
+        assert resp.status_code == 200
+        keys = {'scores', 'loadings'}
+        assert keys == set(resp.json.keys())
+
+        num_of_components = min(len(columns), len(rows))  # default num_of_components
 
         loadings = resp.json.get('loadings')
         for loading in loadings:
@@ -124,6 +127,7 @@ def test_plsda(client):
         for x in scores.get('x'):
             assert len(x) == num_of_components
 
+        # perform PLSDA with `num_of_components` = 10
         num_of_components = 10
         data = {'num_of_components': num_of_components}
         resp = client.get(url_for('csv.get_plsda', csv_id=str(csv_id)), json=data)
@@ -131,7 +135,6 @@ def test_plsda(client):
         for loading in loadings:
             assert loading.get('col') in columns
             assert loading.get('loadings') is not None
-
             assert len(loading.get('loadings')) == num_of_components
 
         scores = resp.json.get('scores')
@@ -146,6 +149,7 @@ def test_plsda(client):
         for x in scores.get('x'):
             assert len(x) == num_of_components
 
+        # perform PLSDA with `number_of_components` invalid
         data = {'num_of_components': min(len(columns), len(rows)) + 1}
         resp = client.get(url_for('csv.get_plsda', csv_id=str(csv_id)), json=data)
         assert resp.status_code == 400
