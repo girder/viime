@@ -51,8 +51,8 @@ export default {
       return [];
     },
     pcCoords() {
-      if (this.plot?.data?.x) {
-        return this.plot.data.x;
+      if (this.plot?.data?.scores?.x) {
+        return this.plot.data.scores.x;
       }
       return [];
     },
@@ -116,7 +116,6 @@ export default {
         if (!Number.isNaN(numComponents)) {
           this.numComponents = numComponents;
         }
-        this.changePlotArgs({ num_of_components: val });
       },
       immediate: true,
     },
@@ -125,7 +124,7 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(title="Partial Least Squares Discriminant Analysis", :loading="false")
+vis-tile-large(title="Partial Least Squares Discriminant Analysis", :loading="plot.loading")
   template(#controls)
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
       v-toolbar-title Components
@@ -137,7 +136,9 @@ vis-tile-large(title="Partial Least Squares Discriminant Analysis", :loading="fa
               type="number",
               min="1",
               outline,
+              :disabled="plot.loading"
               label="Number of Components",
+              @change="changePlotArgs({ num_of_components: $event });"
               v-model="numComponentsVal")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")

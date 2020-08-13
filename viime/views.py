@@ -733,13 +733,15 @@ def get_pca_overview(validated_table: ValidatedMetaboliteTable):
 def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int] = None):
     measurements = validated_table.measurements
     groups = validated_table.groups
+
+    rows, cols = measurements.shape[:2]
+    max_components = min(rows, cols)
     if num_of_components is None:
-        rows, cols = measurements.shape[:2]
-        num_of_components = min(rows, cols)
-    errors = {}
-    # TODO: validate groups
-    if errors:
-        return jsonify(errors), 400
+        num_of_components = max_components
+    if num_of_components > max_components:
+        return jsonify({
+            'error': 'invalid num_of_components'
+        }), 400
 
     scores = plsda(measurements, groups, num_of_components, 'scores')
     loadings = plsda(measurements, groups, num_of_components, 'loadings')
@@ -770,7 +772,7 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
 
     formatted_scores = {'x': x, 'sdev': sdev}
 
-    return jsonify({'scores': formatted_scores, 'loadings': formatted_loadings, 'x': x})
+    return jsonify({'scores': formatted_scores, 'loadings': formatted_loadings})
 
 
 def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,
