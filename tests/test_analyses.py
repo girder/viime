@@ -75,3 +75,82 @@ def test_factor_analysis(client, test_dataset):
         assert 'factor' not in resp.json
         assert 'metabolites' not in resp.json
         assert 'variances' not in resp.json
+
+def test_plsda(client):
+    with (Path(__file__).parent / 'roc.csv').open('rb') as f:
+        csv_data = f.read()
+    data = {'file': (BytesIO(csv_data), 'roc.csv', 'text/csv')}
+    resp = client.post(
+        url_for('csv.upload_csv_file'), data=data, content_type='multipart/form-data')
+    assert resp.status_code == 201
+    csv_id = resp.json['id']
+
+    data = {'changes': [
+        {'context': 'column', 'index': 71, 'label': 'group'},
+        {'context': 'column', 'index': 1, 'label': 'measurement'}
+    ]}
+    resp = client.put(url_for('csv.batch_modify_label', csv_id=csv_id), json=data)
+    assert resp.status_code == 200
+
+    resp = client.post(url_for('csv.save_validated_csv_file', csv_id=csv_id))
+    assert resp.status_code == 201
+
+    data = {}  # no data
+    resp = client.get(url_for('csv.get_plsda', csv_id=str(csv_id)), json=data)
+    assert resp.status_code == 200
+    keys = {'scores', 'loadings'}
+    assert keys == set(resp.json.keys())
+
+    columns = client.get(url_for('csv.list_columns', csv_id=str(csv_id))).json
+    rows = client.get(url_for('csv.list_rows', csv_id=str(csv_id))).json
+    columns = [
+        column['column_header'] for column in columns if column['column_type'] == 'measurement'
+    ]
+    rows = [row for row in rows if row['row_type'] == 'sample']
+
+    # number of components should be equal to min(columns, rows) by default
+    num_of_components = min(len(columns), len(rows))
+
+    loadings = resp.json.get('loadings')
+    for loading in loadings:
+        assert loading.get('col') in columns
+        assert loading.get('loadings') is not None
+
+        assert len(loading.get('loadings')) == num_of_components
+
+    scores = resp.json.get('scores')
+
+    assert 'sdev' in scores.keys()
+    assert len(scores.get('sdev')) == num_of_components
+    assert 'x' in scores.keys()
+    assert len(scores.get('x')) == num_of_components
+
+    for sdev, x in zip(scores.get('sdev'), scores.get('x')):
+        assert len(sdev) == num_of_components
+        assert len(x) == num_of_components
+
+    num_of_components = 10
+    data = {'num_of_components': num_of_components}
+    resp = client.get(url_for('csv.get_plsda', csv_id=str(csv_id)), json=data)
+    loadings = resp.json.get('loadings')
+    for loading in loadings:
+        assert loading.get('col') in columns
+        assert loading.get('loadings') is not None
+
+        assert len(loading.get('loadings')) == num_of_components
+
+    scores = resp.json.get('scores')
+
+    assert 'sdev' in scores.keys()
+    assert len(scores.get('sdev')) == num_of_components
+    assert 'x' in scores.keys()
+    # assert len(scores.get('x')) == num_of_components
+
+    for sdev, x in zip(scores.get('sdev'), scores.get('x')):
+        # assert len(sdev) == len(columns)
+        assert len(x) == num_of_components
+
+    data = {'num_of_components': min(len(columns), len(rows)) + 1}
+    resp = client.get(url_for('csv.get_plsda', csv_id=str(csv_id)), json=data)
+    assert resp.status_code == 400
+    assert 'error' in resp.json
