@@ -111,4 +111,4 @@ docker-compose up
 This command will spin up two Docker containers named `docker_backend_1` and
 `docker_opencpu_1`.
 
-Note, the web client will still need to be started using `yarn serve`. See the [ldc README](https://github.com/Kitware/ldc#usage) for more details.
+Note, the web client will still need to be started using `yarn serve`.
