@@ -136,9 +136,9 @@ vis-tile-large(title="Partial Least Squares Discriminant Analysis", :loading="pl
               type="number",
               min="1",
               outline,
-              :disabled="plot.loading"
+              :disabled="plot.loading",
               label="Number of Components",
-              @change="changePlotArgs({ num_of_components: $event });"
+              @change="changePlotArgs({ num_of_components: $event });",
               v-model="numComponentsVal")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
