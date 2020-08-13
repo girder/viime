@@ -17,8 +17,8 @@ export default {
     this.loading = true;
 
     try {
-      const samples = await SampleService.list();
-      this.samples = samples.data;
+      const { data } = await SampleService.list();
+      this.samples = data;
     } catch (err) {
       this.samples = [];
       this.error = true;
