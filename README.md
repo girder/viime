@@ -101,16 +101,14 @@ flask db upgrade
 
 Getting started (`docker-compose`)
 ----------------------------------
-Install `ldc` from [here](https://github.com/Kitware/ldc) and start the project in Docker by running
+You can run the backend components for this project with Docker Compose:
 
 ```sh
-cd devops
-ldc up
-```
-This starts the backend in `production` mode. To switch to `development`, do
-
-```sh
-ldc dev backend
+cd devops/docker
+docker-compose up
 ```
 
-Note, the web client will still need to be started using `yarn serve`. See the [ldc README](https://github.com/Kitware/ldc#usage) for more details.
+This command will spin up two Docker containers named `docker_backend_1` and
+`docker_opencpu_1`.
+
+Note, the web client will still need to be started using `yarn serve`.
