@@ -136,11 +136,17 @@ vis-tile-large(v-if="dataset", title="Metabolite Anova Volanco Plot", :loading="
     metabolite-colorer(:dataset="dataset", v-model="metaboliteColor",
         empty-option="No Color")
 
+  // can refactor v-if to use optional chaining when viime is updated to Vue 3
   volcano-plot.main(
-      v-if="plot.data",
+      v-if="plot.data && !plot.data.error",
       :rows="chartData",
       :min-fold-change="minFoldChange",
       :min-log-p="minLogP")
+  // same for value prop here
+  v-alert(type="error",
+      v-text="`ANOVA failed. ${plot.data && plot.data.error ? plot.data.error : ''}`",
+      :value="plot.data && plot.data.error")
+
 </template>
 
 <style scoped>
