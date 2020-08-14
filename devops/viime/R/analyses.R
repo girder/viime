@@ -19,7 +19,7 @@ wilcoxon_test_z_scores <- function(measurements, groups, log_transformed=FALSE) 
     for(i in 1:ncol(Metab)) {
       a <- Metab[Group == groupA, i]
       b <- Metab[Group == groupB, i]
-      dat <- wilcox.test(a, b)
+      dat <- wilcox.test(as.numeric(a), as.numeric(b))
       result[i,1] <- as.numeric(gsub("$p.value [1]", "", dat[3]))
 
       # calculate fold change
