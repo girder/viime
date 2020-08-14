@@ -143,7 +143,8 @@ vis-tile-large(v-if="dataset", title="Metabolite Anova Volanco Plot", :loading="
       :min-fold-change="minFoldChange",
       :min-log-p="minLogP")
   // same for value prop here
-  v-alert(type="error",
+  v-alert(
+      type="error",
       v-text="`ANOVA failed. ${plot.data && plot.data.error ? plot.data.error : ''}`",
       :value="plot.data && plot.data.error")
 </template>
