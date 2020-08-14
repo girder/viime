@@ -146,7 +146,6 @@ vis-tile-large(v-if="dataset", title="Metabolite Anova Volanco Plot", :loading="
   v-alert(type="error",
       v-text="`ANOVA failed. ${plot.data && plot.data.error ? plot.data.error : ''}`",
       :value="plot.data && plot.data.error")
-
 </template>
 
 <style scoped>
