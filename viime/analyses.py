@@ -19,10 +19,15 @@ def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series,
         'log_transformed': log_transformed
     })
 
+    formatted_data = clean(data).to_dict(orient='records')
+
+    if formatted_data[0].get('error') is not None:
+        return {'error': formatted_data[0].get('error')}
+
     return {
         'groups': sorted(set(groups)),
         'pairs': [v for v in list(data)[1:] if not v.endswith('FoldChange')],
-        'data': clean(data).to_dict(orient='records')
+        'data': formatted_data
     }
 
 

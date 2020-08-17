@@ -88,7 +88,12 @@ vis-tile-large(title="Wilcoxon Test", :loading="plot.loading", expanded)
     v-btn(flat, dark, block, @click="downloadTable")
       v-icon.mr-2 {{ $vuetify.icons.save }}
       | Download Table
-  wilcoxon-plot(v-if="plot.data", :data="tableData", :threshold="threshold", v-model="selected")
+  wilcoxon-plot(
+      v-if="plot.data",
+      :data="tableData",
+      :threshold="threshold",
+      :error-msg="plot.data.error || ''",
+      v-model="selected")
 </template>
 
 <style scoped>
