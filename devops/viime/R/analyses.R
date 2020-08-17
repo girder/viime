@@ -19,7 +19,19 @@ wilcoxon_test_z_scores <- function(measurements, groups, log_transformed=FALSE) 
     for(i in 1:ncol(Metab)) {
       a <- Metab[Group == groupA, i]
       b <- Metab[Group == groupB, i]
-      dat <- wilcox.test(as.numeric(a), as.numeric(b))
+      dat <- tryCatch(
+        wilcox.test(as.numeric(a), as.numeric(b)),
+        error=function(err) {
+            return(err)
+        }
+      )
+
+      # check if 'dat' is an error by checking if it inherits
+      # from the 'error' class
+      if (inherits(dat, "error")) {
+        return(data.frame(error=dat$message))
+      }
+
       result[i,1] <- as.numeric(gsub("$p.value [1]", "", dat[3]))
 
       # calculate fold change
