@@ -22,6 +22,10 @@ export default Vue.extend({
       type: Array,
       required: true,
     },
+    errorMsg: { // error message to display if ANOVA fails, if applicable
+      type: String,
+      default: '',
+    },
   },
 
   computed: {
@@ -47,6 +51,11 @@ export default Vue.extend({
 </script>
 
 <template lang="pug">
-metabolite-table(:headers="headers", :items="items", :threshold="threshold",
-    :value="value", @input="$emit('input', $event)")
+metabolite-table(
+    :headers="headers",
+    :items="items",
+    :no-data-available-msg="`Wilcoxon Test failed. ${errorMsg}`",
+    :threshold="threshold",
+    :value="value",
+    @input="$emit('input', $event)")
 </template>
