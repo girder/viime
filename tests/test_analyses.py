@@ -1,36 +1,10 @@
-from io import BytesIO
 import json
-from pathlib import Path
 
 from flask import url_for
 
 
-def upload_test_dataset(client, file, changes=None):
-    with (Path(__file__).parent / file).open('rb') as f:
-        csv_data = f.read()
-    data = {'file': (BytesIO(csv_data), file, 'text/csv')}
-    resp = client.post(
-        url_for('csv.upload_csv_file'), data=data, content_type='multipart/form-data')
-    assert resp.status_code == 201
-    csv_id = resp.json['id']
-
-    if changes is not None:
-        data = {'changes': changes}
-        resp = client.put(url_for('csv.batch_modify_label', csv_id=csv_id), json=data)
-        assert resp.status_code == 200
-
-    resp = client.post(url_for('csv.save_validated_csv_file', csv_id=csv_id))
-    assert resp.status_code == 201
-
-    return csv_id
-
-
-def test_roc(client):
-    changes = [
-        {'context': 'column', 'index': 71, 'label': 'group'},
-        {'context': 'column', 'index': 1, 'label': 'measurement'}
-    ]
-    csv_id = upload_test_dataset(client, 'roc.csv', changes)
+def test_roc(client, test_dataset):
+    csv_id = test_dataset
     data = {
         'group1': 'C',
         'group2': 'H',
@@ -46,13 +20,8 @@ def test_roc(client):
             assert value in {'Inf', '-Inf'} or 0 <= value <= 1
 
 
-def test_factor_analysis(client):
-    changes = [
-        {'context': 'column', 'index': 71, 'label': 'group'},
-        {'context': 'column', 'index': 1, 'label': 'measurement'}
-    ]
-
-    csv_id = upload_test_dataset(client, 'roc.csv', changes)
+def test_factor_analysis(client, test_dataset):
+    csv_id = test_dataset
 
     resp = client.get(url_for('csv.get_factors', csv_id=str(csv_id)))
     assert resp.status_code == 200

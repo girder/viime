@@ -1,8 +1,10 @@
+from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from compare_csv import CSV
 import dotenv
+from flask import url_for
 import pytest
 
 from viime import models
@@ -85,3 +87,29 @@ def pathological_table(client):
 def pytest_assertrepr_compare(op, left, right):
     if op == '==' and isinstance(left, CSV) and isinstance(right, CSV):
         return left.get_pytest_error(right)
+
+
+@pytest.fixture(params=['roc.csv'])
+def test_dataset(client, request):
+    file = request.param
+    with (Path(__file__).parent / file).open('rb') as f:
+        csv_data = f.read()
+    data = {'file': (BytesIO(csv_data), file, 'text/csv')}
+    resp = client.post(
+        url_for('csv.upload_csv_file'), data=data, content_type='multipart/form-data')
+    assert resp.status_code == 201
+    csv_id = resp.json['id']
+
+    if file == 'roc.csv':
+        changes = [
+            {'context': 'column', 'index': 71, 'label': 'group'},
+            {'context': 'column', 'index': 1, 'label': 'measurement'}
+        ]
+        data = {'changes': changes}
+        resp = client.put(url_for('csv.batch_modify_label', csv_id=csv_id), json=data)
+        assert resp.status_code == 200
+
+    resp = client.post(url_for('csv.save_validated_csv_file', csv_id=csv_id))
+    assert resp.status_code == 201
+
+    yield csv_id
