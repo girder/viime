@@ -20,7 +20,6 @@ export default {
       const { data } = await SampleService.list();
       this.samples = data;
     } catch (err) {
-      this.samples = [];
       this.error = true;
     }
 
