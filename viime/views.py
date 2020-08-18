@@ -748,22 +748,20 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
 
     # massage the data returned from opencpu to correct format for client:
     column_names = list(measurements.columns)
-    formatted_loadings = [{
-        'col': col,
-        'loadings': [
-            # loading for i in range(num_of_components) for loading in loadings.get(f'comp{i+1}')
-        ]
-    } for col in column_names]
-
-    for i in range(num_of_components):
-        for j, loading in enumerate(loadings.get(f'comp{i+1}')):
-            formatted_loadings[j]['loadings'].append(loading)
-
-    x = [[] for i in range(len(measurements))]
+    formatted_loadings = []
+    x = []
 
     for i in range(num_of_components):
         for j, score in enumerate(scores.get(f'variates.X.comp{i+1}')):
+            if i == 0:
+                x.append([])
             x[j].append(score)
+        for j, loading in enumerate(loadings.get(f'comp{i+1}')):
+            if i == 0:
+                formatted_loadings.append({})
+                formatted_loadings[j]['col'] = column_names[j]
+                formatted_loadings[j]['loadings'] = []
+            formatted_loadings[j]['loadings'].append(loading)
 
     explained_variances = [
         scores.get(f'explained_variance.comp.{i+1}') for i in range(num_of_components)
