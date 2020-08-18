@@ -92,7 +92,7 @@ def test_plsda(client, test_dataset):
     data = {}
     resp = client.get(url_for('csv.get_plsda', csv_id=str(csv_id)), json=data)
     assert resp.status_code == 200
-    keys = {'scores', 'loadings'}
+    keys = {'scores', 'loadings', 'rows', 'labels'}
     assert keys == set(resp.json.keys())
 
     num_of_components = min(len(columns), len(rows))  # default num_of_components
