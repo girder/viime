@@ -745,11 +745,13 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
 
     scores = plsda(measurements, groups, num_of_components, 'scores')
     loadings = plsda(measurements, groups, num_of_components, 'loadings')
+    vip_scores = plsda(measurements, groups, num_of_components, 'vip')
 
     # massage the data returned from opencpu to correct format for client:
     column_names = list(measurements.columns)
     formatted_loadings = []
     x = []
+    formatted_vip_scores = []
 
     for i in range(num_of_components):
         for j, score in enumerate(scores.get(f'variates.X.comp{i+1}')):
@@ -762,6 +764,12 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
                 formatted_loadings[j]['col'] = column_names[j]
                 formatted_loadings[j]['loadings'] = []
             formatted_loadings[j]['loadings'].append(loading)
+        for j, vip_score in enumerate(vip_scores.get(f'comp{i+1}')):
+            if i == 0:
+                formatted_vip_scores.append({})
+                formatted_vip_scores[j]['col'] = column_names[j]
+                formatted_vip_scores[j]['vip_scores'] = []
+            formatted_vip_scores[j]['vip_scores'].append(vip_score)
 
     explained_variances = [
         scores.get(f'explained_variance.comp.{i+1}') for i in range(num_of_components)
@@ -778,7 +786,8 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
         'scores': formatted_scores,
         'loadings': formatted_loadings,
         'labels': labels,
-        'rows': rows})
+        'rows': rows,
+        'vip_scores': formatted_vip_scores})
 
 
 def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,

@@ -315,6 +315,9 @@ plsda <- function(measurements, groups, num_of_components, mode) {
     # Save loadings
     load_plsda <- as.data.frame(mod_plsda$loadings$X)
     return(load_plsda)
+  } else if (mode == "vip") {
+    vip_plsda <- vip(mod_plsda)
+    return(vip_plsda)
   } else {
     stop("Invalid mode for PLSDA.")
   }
