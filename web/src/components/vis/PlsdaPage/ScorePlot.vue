@@ -9,11 +9,6 @@ export default {
   },
 
   props: {
-    id: {
-      type: String,
-      required: true,
-    },
-
     pcX: {
       type: Number,
       validator: (prop) => Number.isInteger(prop),
@@ -61,35 +56,24 @@ export default {
       required: true,
     },
   },
-  computed: {
-    ready() {
-      return this.$store.getters.ready(this.id);
-    },
-  },
-
-  methods: {
-    maybeData(key, dflt) {
-      const {
-        plot,
-      } = this;
-      return plot?.data ? plot.data[key] : dflt;
-    },
-  },
 };
 </script>
 
-<template lang="pug">
-vis-tile(title="PLS-DA Score Plot", svg-download)
-  score-plot(
-      :pc-coords="pcCoords",
-      :row-labels="rowLabels",
-      :colors="groupLevels",
-      :group-labels="groupLabels",
-      :eigenvalues="eigenvalues",
-      :columns="columns",
-      :pc-x="pcX",
-      :pc-y="pcY",
-      :show-ellipses="showEllipses")
-  //- template(v-slot:help)
-  //-   include ../help/ScorePlotHelp.pug
+<template>
+  <vis-tile
+    title="PLS-DA Score Plot"
+    svg-download
+  >
+    <score-plot
+      :pc-coords="pcCoords"
+      :row-labels="rowLabels"
+      :colors="groupLevels"
+      :group-labels="groupLabels"
+      :eigenvalues="eigenvalues"
+      :columns="columns"
+      :pc-x="pcX"
+      :pc-y="pcY"
+      :show-ellipses="showEllipses"
+    />
+  </vis-tile>
 </template>

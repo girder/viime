@@ -40,13 +40,16 @@ export default {
 };
 </script>
 
-<template lang="pug">
-vis-tile(title="PLS-DA Loadings Plot", svg-download)
-  loadings-plot(
-      :points="loadings",
-      :pc-x="pcX",
-      :pc-y="pcY",
-      :show-crosshairs="showCrosshairs")
-  //- template(v-slot:help)
-  //-   include ../help/LoadingsPlotHelp.pug
+<template>
+  <vis-tile
+    title="PLS-DA Loadings Plot"
+    svg-download
+  >
+    <loadings-plot
+      :points="loadings"
+      :pc-x="pcX"
+      :pc-y="pcY"
+      :show-crosshairs="showCrosshairs"
+    />
+  </vis-tile>
 </template>

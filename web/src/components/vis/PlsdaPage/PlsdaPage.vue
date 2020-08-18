@@ -123,93 +123,187 @@ export default {
 };
 </script>
 
-<template lang="pug">
-vis-tile-large(title="Partial Least Squares Discriminant Analysis", :loading="plot.loading")
-  template(#controls)
-    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-      v-toolbar-title Components
-    v-card.mb-3.mx-3(flat)
-      v-card-actions
-        v-layout(column)
-          v-text-field.py-2(
-              hide-details,
-              type="number",
-              min="1",
-              outline,
-              :disabled="plot.loading",
-              label="Number of Components",
-              @change="changePlotArgs({ num_of_components: $event });",
-              v-model="numComponentsVal")
-
-    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-      v-toolbar-title PC selector
-    v-card.mb-3.mx-3(flat)
-      v-card-actions
-        v-layout(column)
-          v-text-field.py-2(
-              hide-details,
-              type="number",
-              label="PC (X Axis)",
-              min="1",
-              outline,
-              :disabled="!showScore && !showLoadings",
-              v-model="pcXval")
-          v-text-field.py-2(
-              hide-details,
-              type="number",
-              label="PC (Y Axis)",
-              min="1",
-              outline,
-              :disabled="!showScore && !showLoadings",
-              v-model="pcYval")
-
-    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-      v-toolbar-title.switch-title Score Plot
-        v-switch.switch(v-model="showScore", color="white", hide-details)
-    v-card.mb-3.mx-3(flat)
-      v-card-actions
-        v-layout(column)
-          v-switch.ma-0.py-2(
-              v-model="showEllipses",
-              label="Data ellipses",
-              :disabled="!showScore",
-              hide-details)
-
-    v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-      v-toolbar-title.switch-title Loadings Plot
-        v-switch.switch(v-model="showLoadings", color="white", hide-details)
-    v-card.mb-3.mx-3(flat)
-      v-card-actions
-        v-layout(column)
-          v-switch.ma-0.py-2(
-              v-model="showCrosshairs",
-              label="Crosshairs",
-              :disabled="!showLoadings",
-              hide-details)
-
-  layout-grid(:cell-size="300", v-if="ready")
-    score-plot(
-        v-show="showScore",
-        :id="id",
-        :pc-x="pcX",
-        :pc-y="pcY",
-        :show-ellipses="showEllipses",
-        :pc-coords="pcCoords",
-        :row-labels="rowLabels",
-        :columns="columns",
-        :eigenvalues="eigenvalues",
-        :group-labels="groupLabels",
-        :group-levels="groupLevels")
-    loadings-plot(
-        v-show="showLoadings",
-        :id="id",
-        :pc-x="pcX",
-        :pc-y="pcY",
-        :show-crosshairs="showCrosshairs",
-        :loadings="loadings")
-  div(v-else)
-    v-progress-circular(indeterminate, size="100", width="5")
-    h4.display-1.pa-3 Loading data...
+<template>
+  <vis-tile-large
+    title="Partial Least Squares Discriminant Analysis"
+    :loading="plot.loading"
+  >
+    <template #controls>
+      <v-toolbar
+        class="darken-3"
+        color="primary"
+        dark="dark"
+        flat="flat"
+        dense="dense"
+        :card="false"
+      >
+        <v-toolbar-title>Components</v-toolbar-title>
+      </v-toolbar>
+      <v-card
+        class="mb-3 mx-3"
+        flat="flat"
+      >
+        <v-card-actions>
+          <v-layout column="column">
+            <v-text-field
+              v-model="numComponentsVal"
+              class="py-2"
+              hide-details="hide-details"
+              type="number"
+              min="1"
+              outline="outline"
+              :disabled="plot.loading"
+              label="Number of Components"
+              @change="changePlotArgs({ num_of_components: $event });"
+            />
+          </v-layout>
+        </v-card-actions>
+      </v-card>
+      <v-toolbar
+        class="darken-3"
+        color="primary"
+        dark="dark"
+        flat="flat"
+        dense="dense"
+        :card="false"
+      >
+        <v-toolbar-title>PC selector</v-toolbar-title>
+      </v-toolbar>
+      <v-card
+        class="mb-3 mx-3"
+        flat="flat"
+      >
+        <v-card-actions>
+          <v-layout column="column">
+            <v-text-field
+              v-model="pcXval"
+              class="py-2"
+              hide-details="hide-details"
+              type="number"
+              label="PC (X Axis)"
+              min="1"
+              outline="outline"
+              :disabled="!showScore &amp;&amp; !showLoadings"
+            />
+            <v-text-field
+              v-model="pcYval"
+              class="py-2"
+              hide-details="hide-details"
+              type="number"
+              label="PC (Y Axis)"
+              min="1"
+              outline="outline"
+              :disabled="!showScore &amp;&amp; !showLoadings"
+            />
+          </v-layout>
+        </v-card-actions>
+      </v-card>
+      <v-toolbar
+        class="darken-3"
+        color="primary"
+        dark="dark"
+        flat="flat"
+        dense="dense"
+        :card="false"
+      >
+        <v-toolbar-title class="switch-title">
+          Score Plot
+          <v-switch
+            v-model="showScore"
+            class="switch"
+            color="white"
+            hide-details="hide-details"
+          />
+        </v-toolbar-title>
+      </v-toolbar>
+      <v-card
+        class="mb-3 mx-3"
+        flat="flat"
+      >
+        <v-card-actions>
+          <v-layout column="column">
+            <v-switch
+              v-model="showEllipses"
+              class="ma-0 py-2"
+              label="Data ellipses"
+              :disabled="!showScore"
+              hide-details="hide-details"
+            />
+          </v-layout>
+        </v-card-actions>
+      </v-card>
+      <v-toolbar
+        class="darken-3"
+        color="primary"
+        dark="dark"
+        flat="flat"
+        dense="dense"
+        :card="false"
+      >
+        <v-toolbar-title class="switch-title">
+          Loadings Plot
+          <v-switch
+            v-model="showLoadings"
+            class="switch"
+            color="white"
+            hide-details="hide-details"
+          />
+        </v-toolbar-title>
+      </v-toolbar>
+      <v-card
+        class="mb-3 mx-3"
+        flat="flat"
+      >
+        <v-card-actions>
+          <v-layout column="column">
+            <v-switch
+              v-model="showCrosshairs"
+              class="ma-0 py-2"
+              label="Crosshairs"
+              :disabled="!showLoadings"
+              hide-details="hide-details"
+            />
+          </v-layout>
+        </v-card-actions>
+      </v-card>
+    </template>
+    <layout-grid
+      v-if="ready"
+      :cell-size="300"
+    >
+      <score-plot
+        v-show="showScore"
+        :id="id"
+        :pc-x="pcX"
+        :pc-y="pcY"
+        :show-ellipses="showEllipses"
+        :pc-coords="pcCoords"
+        :row-labels="rowLabels"
+        :columns="columns"
+        :eigenvalues="eigenvalues"
+        :group-labels="groupLabels"
+        :group-levels="groupLevels"
+      />
+      <loadings-plot
+        v-show="showLoadings"
+        :id="id"
+        :pc-x="pcX"
+        :pc-y="pcY"
+        :show-crosshairs="showCrosshairs"
+        :loadings="loadings"
+      />
+    </layout-grid>
+    <div v-else>
+      <v-progress-circular
+        indeterminate="indeterminate"
+        size="100"
+        width="5"
+      />
+      <h4 class="display-1 pa-3">
+        Loading data...
+      </h4>
+    </div>
+  </vis-tile-large>
 </template>
 
 <style lang="scss" scoped>
