@@ -128,7 +128,6 @@ export default {
         dark="dark"
         flat="flat"
         dense="dense"
-        :card="false"
       >
         <v-toolbar-title>Components</v-toolbar-title>
       </v-toolbar>
@@ -158,7 +157,6 @@ export default {
         dark="dark"
         flat="flat"
         dense="dense"
-        :card="false"
       >
         <v-toolbar-title>PC selector</v-toolbar-title>
       </v-toolbar>
@@ -197,7 +195,6 @@ export default {
         dark="dark"
         flat="flat"
         dense="dense"
-        :card="false"
       >
         <v-toolbar-title class="switch-title">
           Score Plot
@@ -231,7 +228,6 @@ export default {
         dark="dark"
         flat="flat"
         dense="dense"
-        :card="false"
       >
         <v-toolbar-title class="switch-title">
           Loadings Plot
