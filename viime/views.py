@@ -770,7 +770,11 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
 
     formatted_scores = {'x': x, 'sdev': sdev}
 
-    return jsonify({'scores': formatted_scores, 'loadings': formatted_loadings})
+    labels = validated_table.sample_metadata
+    labels = clean(pandas.concat([groups, labels], axis=1)).to_dict('list')
+    rows = measurements.index.tolist()
+
+    return jsonify({'scores': formatted_scores, 'loadings': formatted_loadings, 'labels': labels, 'rows': rows})
 
 
 def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,

@@ -45,37 +45,19 @@ export default {
       return pcaReady && loadingsReady;
     },
     loadings() {
-      if (this.plot?.data?.loadings) {
-        return this.plot.data.loadings;
-      }
-      return [];
+      return this.maybeData(['loadings'], []);
     },
     pcCoords() {
-      if (this.plot?.data?.scores?.x) {
-        return this.plot.data.scores.x;
-      }
-      return [];
+      return this.maybeData(['scores', 'x'], []);
     },
     eigenvalues() {
-      if (this.plot?.data?.scores?.sdev) {
-        return this.plot.data.scores.sdev;
-      }
-      return [];
+      return this.maybeData(['scores', 'sdev'], []);
     },
     rowLabels() {
-      if (this.dataset?.row?.data) {
-        return this.dataset.row.data.filter((row) => row.row_type === 'sample').map((row) => row.row_name);
-      }
-      return [];
+      return this.maybeData(['rows'], []);
     },
     groupLabels() {
-      if (this.dataset?.validatedGroups?.data) {
-        const groupColumnName = this.dataset.validatedGroups.columnNames[0];
-        const groupLabels = {};
-        groupLabels[groupColumnName] = this.dataset.validatedGroups.data.map((group) => group);
-        return groupLabels;
-      }
-      return {};
+      return this.maybeData(['labels'], []);
     },
     columns() {
       if (this.dataset?.column?.data) {
@@ -118,6 +100,17 @@ export default {
         }
       },
       immediate: true,
+    },
+  },
+  methods: {
+    maybeData(keys, dflt) {
+      const {
+        plot,
+      } = this;
+      if (keys.length === 2) {
+        return plot.data ? plot.data[keys[0]][keys[1]] : dflt;
+      }
+      return plot.data ? plot.data[keys[0]] : dflt;
     },
   },
 };
