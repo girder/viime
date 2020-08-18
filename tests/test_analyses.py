@@ -76,6 +76,7 @@ def test_factor_analysis(client, test_dataset):
         assert 'metabolites' not in resp.json
         assert 'variances' not in resp.json
 
+
 def test_plsda(client, test_dataset):
     csv_id, filename = test_dataset
 
