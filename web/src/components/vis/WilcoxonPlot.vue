@@ -1,61 +1,62 @@
-<script>
-import Vue from 'vue';
-import MetaboliteTable from './MetaboliteTable.vue';
+<script lang="ts">
+import { PropType, defineComponent, computed } from '@vue/composition-api';
+import MetaboliteTable, { Item } from './MetaboliteTable.vue';
 
-export default Vue.extend({
-  components: {
-    MetaboliteTable,
-  },
+interface Data {
+  data?: Array<Item>;
+  pairs?: Array<string>;
+}
 
+export default defineComponent({
   props: {
     data: {
-      type: Object,
+      type: Object as PropType<Data>,
       required: true,
-      validator: (prop) => !prop || ('data' in prop && 'pairs' in prop),
     },
     threshold: {
       type: Number,
-      required: false,
       default: 0.05,
     },
-    value: { // string[]
-      type: Array,
+    value: {
+      type: Array as PropType<Array<string>>,
       required: true,
     },
-    errorMsg: { // error message to display if ANOVA fails, if applicable
+    errorMsg: { // error message to display if Wilcoxon Test fails, if applicable
       type: String,
       default: '',
     },
   },
-
-  computed: {
-    items() {
-      return (this.data && this.data.data) || [];
-    },
-    pairs() {
-      return (this.data && this.data.pairs) || [];
-    },
-    headers() {
-      return [
-        {
-          text: 'Metabolite',
-          align: 'left',
-          value: 'Metabolite',
-          isLabel: true,
-        },
-        ...this.pairs.map((text) => ({ text, value: text })),
-      ];
-    },
+  components: {
+    MetaboliteTable,
+  },
+  setup(props) {
+    const items = computed(() => (props.data && props.data.data) || []);
+    const pairs = computed(() => (props.data && props.data.pairs) || []);
+    const headers = computed(() => [
+      {
+        text: 'Metabolite',
+        align: 'left',
+        value: 'Metabolite',
+        isLabel: true,
+      },
+      ...pairs.value.map((text) => ({ text, value: text })),
+    ]);
+    return {
+      items,
+      pairs,
+      headers,
+    };
   },
 });
 </script>
 
-<template lang="pug">
-metabolite-table(
-    :headers="headers",
-    :items="items",
-    :no-data-available-msg="`Wilcoxon Test failed. ${errorMsg}`",
-    :threshold="threshold",
-    :value="value",
-    @input="$emit('input', $event)")
+<template>
+  <metabolite-table
+    :headers="headers"
+    :items="items"
+    :threshold="threshold"
+    :value="value"
+    :no-data-available-msg="`Wilcoxon Test failed. ${errorMsg}`"
+    @input="$emit('input', $event)"
+  />
 </template>
