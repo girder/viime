@@ -1,5 +1,4 @@
 <script>
-import { format } from 'd3-format';
 import { downloadSVG } from '../../utils/exporter';
 import HelpDialog from '../toolbar/HelpDialog.vue';
 
