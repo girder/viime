@@ -16,7 +16,16 @@ export default [
     path: 'pcapage',
     name: 'Principal Component Analysis',
     shortName: 'PCA',
-    description: 'TODO',
+    description() {
+      return (<div>
+        <p>Principal Component Analysis (PCA) is a method of dimensionality
+        reduction to obtain the maximum variance in the fewest number of
+          uncorrelated variables called principal components.</p>
+
+        <p>PCA is a projection based method which transforms the data by
+          projecting it onto a set of orthogonal axes.</p>
+      </div>);
+    },
     component: PcaPage,
     args: {},
     type: plot_types.ANALYSIS,
@@ -152,7 +161,13 @@ export default [
     path: 'roc',
     name: 'Group Prediction',
     shortName: 'Group Prediction',
-    description: 'wip',
+    description() {
+      return (<div>
+        <p>This analysis uses the receiver operating characteristic (ROC) curve
+          and area under the curve (AUC) for prediction of group membership
+          using either logistic regression or random forest methods.</p>
+      </div>);
+    },
     component: GroupPredictionTile,
     args: {
       columns: null,
