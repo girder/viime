@@ -166,7 +166,7 @@ const analysisList = [
 ];
 
 const analysisTable = (() => {
-  let table = {};
+  const table = {};
   analysisList.forEach((entry) => {
     table[entry.path] = entry;
   });

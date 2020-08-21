@@ -145,7 +145,7 @@ export default {
   <vis-tile-large
     v-if="plot"
     title="Group Prediction"
-    analysisPath="roc"
+    analysis-path="roc"
     :loading="plot.loading"
     expanded="expanded"
     download

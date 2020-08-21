@@ -1,7 +1,7 @@
 <script>
-import { downloadSVG } from '../../utils/exporter';
 import { analysisTable } from '@/components/vis/analyses';
 import RenderJsx from '@/utils/RenderJsx';
+import { downloadSVG } from '../../utils/exporter';
 
 export default {
   components: {
@@ -40,6 +40,7 @@ export default {
       if (this.analysisPath) {
         return analysisTable[this.analysisPath].description;
       }
+      return null;
     },
   },
 
