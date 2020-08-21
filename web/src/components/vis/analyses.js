@@ -27,7 +27,14 @@ export default [
     path: 'plsda',
     name: 'Partial Least Squares Discriminant Analysis',
     shortName: 'PLS-DA',
-    description: 'TODO',
+    description() {
+      return (<div>
+        <p>Partial least squares discriminant analysis (PLS-DA) is a supervised
+        multivariate technique used to classify values with latent variables
+        constructed by maximizing the covariance between the independent
+        variable and the dependent outcome.</p>
+      </div>);
+    },
     component: PlsdaPage,
     args: {},
     type: plot_types.ANALYSIS,
