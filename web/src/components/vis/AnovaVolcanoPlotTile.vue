@@ -110,8 +110,13 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="dataset", title="Metabolite Anova Volanco Plot", :loading="false",
-    download, expanded)
+vis-tile-large(
+    v-if="dataset",
+    title="Metabolite Anova Volanco Plot",
+    analysis-path="anova_volcano",
+    :loading="false",
+    download,
+    expanded)
   template(#controls)
     toolbar-option(v-if="hasMoreThanTwoGroups",
         :value="combination || defaultCombination", @change="combination = $event",

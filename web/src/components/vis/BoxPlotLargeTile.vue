@@ -69,8 +69,13 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="dataset", title="Metabolite Box Plot", :loading="false",
-    download, expanded)
+vis-tile-large(
+    v-if="dataset",
+    title="Metabolite Box Plot",
+    analysis-path="boxplot",
+    :loading="false",
+    download,
+    expanded)
   template(#controls)
     metabolite-filter(:dataset="dataset", v-model="metaboliteFilter")
     sample-filter(:dataset="dataset", v-model="sampleFilter",

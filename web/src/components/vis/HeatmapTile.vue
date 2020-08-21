@@ -117,7 +117,13 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl="download",
+vis-tile-large(
+    v-if="plot",
+    title="Heatmap",
+    analysis-path="heatmap",
+    expanded,
+    download,
+    :download-impl="download",
     :loading="plot.loading || !dataset.ready || !values || values.length === 0")
   template(#controls)
     metabolite-filter(:dataset="dataset", v-model="metaboliteFilter")
