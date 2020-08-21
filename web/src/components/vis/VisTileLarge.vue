@@ -76,7 +76,7 @@ v-layout(v-else, row, fill-height)
         v-btn(flat, dark, block, v-on="on")
           v-icon.mr-2 {{ $vuetify.icons.help }}
           | What is this?
-      v-card
+      v-card(max-width=300)
         render-jsx(:f="helpText")
 
   v-layout(v-if="loading", justify-center, align-center)
