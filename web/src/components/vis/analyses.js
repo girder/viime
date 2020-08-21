@@ -11,7 +11,7 @@ import { plot_types } from '../../utils/constants';
 import { correlation_methods } from './constants';
 import vuetify from '../../utils/vuetifyConfig';
 
-export default [
+const analysisList = [
   {
     path: 'pcapage',
     name: 'Principal Component Analysis',
@@ -164,3 +164,17 @@ export default [
     icon: vuetify.icons.pca,
   },
 ];
+
+const analysisTable = (() => {
+  let table = {};
+  analysisList.forEach((entry) => {
+    table[entry.path] = entry;
+  });
+
+  return table;
+})();
+
+export default analysisList;
+export {
+  analysisTable,
+};

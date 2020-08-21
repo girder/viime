@@ -1,11 +1,21 @@
 <script>
 import { downloadSVG } from '../../utils/exporter';
+import { analysisTable } from '@/components/vis/analyses';
+import RenderJsx from '@/utils/RenderJsx';
 
 export default {
+  components: {
+    RenderJsx,
+  },
+
   props: {
     title: {
       type: String,
       required: true,
+    },
+    analysisPath: {
+      type: String,
+      default: '',
     },
     loading: {
       type: Boolean,
@@ -24,6 +34,12 @@ export default {
   computed: {
     hasControls() {
       return !!this.$slots.controls || !!this.$scopedSlots.controls;
+    },
+
+    helpText() {
+      if (this.analysisPath) {
+        return analysisTable[this.analysisPath].description;
+      }
     },
   },
 
@@ -54,6 +70,14 @@ v-layout(v-else, row, fill-height)
       v-btn(flat, dark, block, @click="downloadImage")
         v-icon.mr-2 {{ $vuetify.icons.save }}
         | Download PNG
+
+    v-menu(v-if="helpText", offset-y)
+      template(v-slot:activator="{ on }")
+        v-btn(flat, dark, block, v-on="on")
+          v-icon.mr-2 {{ $vuetify.icons.help }}
+          | What is this?
+      v-card
+        render-jsx(:f="helpText")
 
   v-layout(v-if="loading", justify-center, align-center)
     v-progress-circular(indeterminate, size="100", width="5")
