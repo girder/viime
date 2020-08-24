@@ -252,6 +252,7 @@ factor_analysis <- function(measurements, threshold) {
   #- (Eigenvalues higher than 1) -#
 
   # Principal Component Analysis to get eigenvalues
+  m.df <- m.df[ , which(apply(m.df, 2, var) != 0)]
   pca_a <- prcomp(m.df, center=T, scale=T)
 
   #getting the eigenvalues
