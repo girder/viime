@@ -11,7 +11,7 @@ import { plot_types } from '../../utils/constants';
 import { correlation_methods } from './constants';
 import vuetify from '../../utils/vuetifyConfig';
 
-export default [
+const analysisList = [
   {
     path: 'pcapage',
     name: 'Principal Component Analysis',
@@ -179,3 +179,14 @@ export default [
     icon: vuetify.icons.pca,
   },
 ];
+
+// Create a path-indexable map version of the analysis list.
+const analysisMap = Object.freeze(analysisList.reduce((map, entry) => ({
+  ...map,
+  [entry.path]: entry,
+}), {}));
+
+export default analysisList;
+export {
+  analysisMap,
+};

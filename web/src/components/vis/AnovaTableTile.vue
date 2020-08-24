@@ -73,7 +73,12 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="plot", title="Anova Table", :loading="plot.loading", expanded)
+vis-tile-large(
+    v-if="plot",
+    title="Anova Table",
+    analysis-path="anova",
+    :loading="plot.loading",
+    expanded)
   template(#controls)
     metabolite-filter(:dataset="dataset", v-model="metaboliteFilter", hide-selection)
     metabolite-colorer(:dataset="dataset", v-model="metaboliteColor", hide-selection,
