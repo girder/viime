@@ -63,6 +63,8 @@ v-flex.white.rounded.main(shrink=1)
   position: relative;
   display: flex;
   flex-direction: column;
+  grid-column: span 2;
+  grid-row: span 2;
 }
 .rounded {
   border-radius: 5px;
