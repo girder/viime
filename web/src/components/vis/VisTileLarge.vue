@@ -1,5 +1,5 @@
 <script>
-import { analysisTable } from '@/components/vis/analyses';
+import { analysisMap } from '@/components/vis/analyses';
 import RenderJsx from '@/utils/RenderJsx';
 import { downloadSVG } from '../../utils/exporter';
 
@@ -38,7 +38,7 @@ export default {
 
     helpText() {
       if (this.analysisPath) {
-        return analysisTable[this.analysisPath].description;
+        return analysisMap[this.analysisPath].description;
       }
       return null;
     },

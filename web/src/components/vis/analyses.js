@@ -165,16 +165,13 @@ const analysisList = [
   },
 ];
 
-const analysisTable = (() => {
-  const table = {};
-  analysisList.forEach((entry) => {
-    table[entry.path] = entry;
-  });
-
-  return table;
-})();
+// Create a path-indexable map version of the analysis list.
+const analysisMap = Object.freeze(analysisList.reduce((map, entry) => ({
+  ...map,
+  [entry.path]: entry,
+}), {}));
 
 export default analysisList;
 export {
-  analysisTable,
+  analysisMap,
 };
