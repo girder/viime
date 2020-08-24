@@ -114,4 +114,4 @@ This command will spin up two Docker containers named `docker_backend_1` and
 Note, the web client will still need to be started using `yarn serve`.
 
 Once the client is running, you can use it to upload the CSV files found
-in the `samples/data` directory of this repository.
+in the [sample data](samples/data) directory of this repository.
