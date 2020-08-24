@@ -181,10 +181,10 @@ const analysisList = [
 ];
 
 // Create a path-indexable map version of the analysis list.
-const analysisMap = Object.freeze(analysisList.reduce((map, entry) => ({
-  ...map,
-  [entry.path]: entry,
-}), {}));
+const analysisMap = Object.freeze(analysisList.reduce((map, entry) => {
+  map[entry.path] = entry;
+  return map;
+}, {}));
 
 export default analysisList;
 export {
