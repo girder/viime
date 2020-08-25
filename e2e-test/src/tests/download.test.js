@@ -17,9 +17,9 @@ describe('download dataset', () => {
 
     // select 7 rows: Alanine, Glutamine, Nicotinurate, Sarcosine, Aspartate, Glucose, Glutathione
     /* eslint prefer-template: "off" */
-    await expect(page).toClickXPath("//*[text()='C26 - C26.Fol']" + vBtn({ title: 'Adds the highlighted Metabolites to the selected set' }));
-    await expect(page).toClickXPath("//*[text()='C26 - Fol']" + vBtn({ title: 'Adds the highlighted Metabolites to the selected set' }));
-    await expect(page).toClickXPath("//*[text()='C26 - Veh']" + vBtn({ title: 'Adds the highlighted Metabolites to the selected set' }));
+    await expect(page).toClickXPath("//th[contains(.,'C26 - C26.Fol')]" + vBtn({ title: 'Adds the highlighted Metabolites to the selected set' }));
+    await expect(page).toClickXPath("//th[contains(.,'C26 - Fol')]" + vBtn({ title: 'Adds the highlighted Metabolites to the selected set' }));
+    await expect(page).toClickXPath("//th[contains(.,'C26 - Veh')]" + vBtn({ title: 'Adds the highlighted Metabolites to the selected set' }));
 
     // click download data
     await expect(page).toClickXPath(vListTile({ title: 'Download Data' }));
@@ -58,9 +58,9 @@ describe('download dataset', () => {
 
     // select 7 rows: Alanine, Glutamine, Nicotinurate, Sarcosine, Aspartate, Glucose, Glutathione
     /* eslint prefer-template: "off" */
-    await expect(page).toClickXPath("//*[text()='C26 - C26.Fol']" + vBtn({ title: 'Adds the highlighted Metabolites to the selected set' }));
-    await expect(page).toClickXPath("//*[text()='C26 - Fol']" + vBtn({ title: 'Adds the highlighted Metabolites to the selected set' }));
-    await expect(page).toClickXPath("//*[text()='C26 - Veh']" + vBtn({ title: 'Adds the highlighted Metabolites to the selected set' }));
+    await expect(page).toClickXPath("//th[contains(.,'C26 - C26.Fol')]" + vBtn({ title: 'Adds the highlighted Metabolites to the selected set' }));
+    await expect(page).toClickXPath("//th[contains(.,'C26 - Fol')]" + vBtn({ title: 'Adds the highlighted Metabolites to the selected set' }));
+    await expect(page).toClickXPath("//th[contains(.,'C26 - Veh')]" + vBtn({ title: 'Adds the highlighted Metabolites to the selected set' }));
 
     // click download data
     await expect(page).toClickXPath(vListTile({ title: 'Download Data' }));
