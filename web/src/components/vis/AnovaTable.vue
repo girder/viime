@@ -3,8 +3,8 @@ import { PropType, defineComponent, computed } from '@vue/composition-api';
 import MetaboliteTable, { Item } from './MetaboliteTable.vue';
 
 interface Data {
-  data?: Array<Item>;
-  pairs?: Array<string>;
+  data?: Item[];
+  pairs?: string[];
 }
 
 export default defineComponent({
@@ -18,7 +18,7 @@ export default defineComponent({
       default: 0.05,
     },
     value: {
-      type: Array as PropType<Array<string>>,
+      type: Array as PropType<string[]>,
       required: true,
     },
     errorMsg: { // error message to display if ANOVA fails, if applicable
@@ -31,8 +31,8 @@ export default defineComponent({
   },
 
   setup(props) {
-    const items = computed(() => (props.data && props.data.data) || []);
-    const pairs = computed(() => (props.data && props.data.pairs) || []);
+    const items = computed(() => (props.data?.data) || []);
+    const pairs = computed(() => (props.data?.pairs) || []);
     const headers = computed(() => [
       {
         text: 'Metabolite',

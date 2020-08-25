@@ -22,15 +22,15 @@ interface Header {
 export default defineComponent({
   props: {
     items: {
-      type: Array as PropType<Array<Item>>,
+      type: Array as PropType<Item[]>,
       required: true,
     },
     value: {
-      type: Array as PropType<Array<string>>,
+      type: Array as PropType<string[]>,
       required: true,
     },
     headers: {
-      type: Array as PropType<Array<Header>>,
+      type: Array as PropType<Header[]>,
       required: true,
     },
     threshold: {
@@ -46,8 +46,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const format = ref(d3Format('.4e'));
     const pagination = reactive({ rowsPerPage: -1 });
-    const headercell = ref('headerCell');
-    const selectedItems = computed<Array<Item>>({
+    const selectedItems = computed<Item[]>({
       get() {
         const s = new Set(props.value);
         return props.items.filter((d) => s.has(d.Metabolite));
@@ -90,7 +89,6 @@ export default defineComponent({
     return {
       format,
       pagination,
-      headercell,
       colors,
       selectedItems,
       isInteresting,
@@ -112,7 +110,7 @@ export default defineComponent({
     :pagination.sync="pagination"
     select-all="select-all"
   >
-    <template v-slot:[headercell]="{ header }">
+    <template v-slot:headerCell="{ header }">
       {{ header.text }}<v-btn
         v-if="!header.isLabel"
         class="toggle"
