@@ -173,11 +173,11 @@ def test_multiple_invalid_errors(pathological_table):
 
 def test_non_numeric_warning(client):
     table = """
-id,group,col1,col2
-w,a,-1,2
-x,a,0,0
-y,a,x,1
-z,b,5,2
+id,group,col1,col2,col3
+w,a,-1,2,3
+x,a,0,0,1
+y,a,x,1,4
+z,b,5,2,5
 """
 
     csv_file = csv_file_schema.load({'table': table, 'name': 'table.csv'})
@@ -195,11 +195,11 @@ z,b,5,2
 
 def test_missing_percent_warning(client):
     table = """
-id,group,col1,col2
-w,a,-1,2
-x,a,0,0
-y,a,,1
-z,b,,
+id,group,col1,col2,col3
+w,a,-1,2,1
+x,a,0,0,5
+y,a,,1,7
+z,b,,1,5
 """
 
     csv_file = csv_file_schema.load({'table': table, 'name': 'table.csv'})
@@ -220,7 +220,7 @@ def test_low_variance_warning(client):
     table = """
 id,group,col1,col2
 w,a,0,2
-x,a,0,0
+x,a,1e-8,0
 y,a,0,1
 z,b,0,10
 """

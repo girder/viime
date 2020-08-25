@@ -43,7 +43,7 @@ def test_list_columns(client, table):
     }, {
         'column_header': 'meta',
         'column_index': 2,
-        'column_type': 'measurement',
+        'column_type': 'masked',
         'subtype': None,
         'meta': {}
     }, {
