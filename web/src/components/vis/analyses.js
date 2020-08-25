@@ -159,7 +159,12 @@ const analysisList = [
         between the two metabolites it connects.</p>
 
         <p>You can click and drag on nodes to move them around. This allows you
-        to, e.g., visually isolate clusters of correlated variables.</p>
+        to, e.g., visually isolate clusters of correlated variables. Click again on
+        a node to unpin it.</p>
+
+        <p>To only display part of the network, use the search controls on the left.
+        You can manually add to the searched metabolites by holding shift and
+        clicking on a node.</p>
       </div>);
     },
     component: CorrelationTile,
