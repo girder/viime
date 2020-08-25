@@ -77,6 +77,12 @@ def pathological_table(client):
             'table': f.read(),
             'name': 'pathological.csv'
         })
+
+        # undo the guessed structure to exercise validation code
+        for row in csv_file.rows[1:]:
+            row['row_type'] = 'sample'
+        for column in csv_file.columns[2:]:
+            row['row_type'] = 'metabolite'
     db.session.add(csv_file)
     db.session.commit()
     yield csv_file
