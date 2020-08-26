@@ -1,0 +1,15 @@
+FROM node:lts-alpine as build-stage
+WORKDIR /app
+COPY ./web/package*.json ./web/yarn.lock ./
+RUN yarn install
+COPY ./web/ .
+RUN NODE_ENV=development yarn run build
+
+FROM nginx:stable-alpine as production-stage
+RUN rm -v /etc/nginx/nginx.conf
+ADD devops/docker/nginx.conf.template /etc/nginx/
+ADD devops/docker/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+COPY --from=build-stage /app/dist /www/data
+EXPOSE 80
+CMD /app/start.sh
