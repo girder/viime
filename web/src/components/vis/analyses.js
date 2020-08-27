@@ -146,9 +146,27 @@ const analysisList = [
     path: 'correlation',
     name: 'Correlation Network',
     shortName: 'Correlation Network',
-    description: `Is a graphical representation of the pairwise correlations between variables.
-    The different colors of the connections show the direction of the correlation and the wider
-    the connection, the stronger the correlation`,
+    description() {
+      return (<div>
+        <p>An interactive node-link display of the pairwise correlation between
+        variables.</p>
+
+        <p>Thicker links represent stronger correlations. Gray means positive
+        correlation, while orange means negative.</p>
+
+        <p>You can hover your mouse over a node to see what metabolite it
+        represents, and hovering over a link will show the correlation value
+        between the two metabolites it connects.</p>
+
+        <p>You can click and drag on nodes to move them around. This allows you
+        to, e.g., visually isolate clusters of correlated variables. Click again on
+        a node to unpin it.</p>
+
+        <p>To only display part of the network, use the search controls on the left.
+        You can manually add to the searched metabolites by holding shift and
+        clicking on a node.</p>
+      </div>);
+    },
     component: CorrelationTile,
     args: {
       min_correlation: 0.6,
