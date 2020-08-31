@@ -116,8 +116,13 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="dataset", title="Metabolite Wilcoxon Volanco Plot", :loading="false",
-    download, expanded)
+vis-tile-large(
+    v-if="dataset",
+    title="Metabolite Wilcoxon Volanco Plot",
+    analysis-path="wilcoxon_volcano",
+    :loading="false",
+    download,
+    expanded)
   template(#controls)
     toolbar-option(:value="score", @change="score = $event", title="p-Value", :options="scores")
     toolbar-option(v-if="hasMoreThanTwoGroups",

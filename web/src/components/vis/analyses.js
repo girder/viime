@@ -9,12 +9,21 @@ import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
 import GroupPredictionTile from './GroupPredictionTile.vue';
 import vuetify from '../../utils/vuetifyConfig';
 
-export default [
+const analysisList = [
   {
     path: 'pcapage',
     name: 'Principal Component Analysis',
     shortName: 'PCA',
-    description: 'TODO',
+    description() {
+      return (<div>
+        <p>Principal Component Analysis (PCA) is a method of dimensionality
+        reduction to obtain the maximum variance in the fewest number of
+          uncorrelated variables called principal components.</p>
+
+        <p>PCA is a projection based method which transforms the data by
+          projecting it onto a set of orthogonal axes.</p>
+      </div>);
+    },
     component: PcaPage,
     icon: vuetify.icons.pca,
   },
@@ -116,9 +125,27 @@ export default [
     path: 'correlation',
     name: 'Correlation Network',
     shortName: 'Correlation Network',
-    description: `Is a graphical representation of the pairwise correlations between variables.
-    The different colors of the connections show the direction of the correlation and the wider
-    the connection, the stronger the correlation`,
+    description() {
+      return (<div>
+        <p>An interactive node-link display of the pairwise correlation between
+        variables.</p>
+
+        <p>Thicker links represent stronger correlations. Gray means positive
+        correlation, while orange means negative.</p>
+
+        <p>You can hover your mouse over a node to see what metabolite it
+        represents, and hovering over a link will show the correlation value
+        between the two metabolites it connects.</p>
+
+        <p>You can click and drag on nodes to move them around. This allows you
+        to, e.g., visually isolate clusters of correlated variables. Click again on
+        a node to unpin it.</p>
+
+        <p>To only display part of the network, use the search controls on the left.
+        You can manually add to the searched metabolites by holding shift and
+        clicking on a node.</p>
+      </div>);
+    },
     component: CorrelationTile,
     icon: vuetify.icons.graph,
   },
@@ -126,8 +153,25 @@ export default [
     path: 'roc',
     name: 'Group Prediction',
     shortName: 'Group Prediction',
-    description: 'wip',
+    description() {
+      return (<div>
+        <p>This analysis uses the receiver operating characteristic (ROC) curve
+          and area under the curve (AUC) for prediction of group membership
+          using either logistic regression or random forest methods.</p>
+      </div>);
+    },
     component: GroupPredictionTile,
     icon: vuetify.icons.pca,
   },
 ];
+
+// Create a path-indexable map version of the analysis list.
+const analysisMap = Object.freeze(analysisList.reduce((map, entry) => {
+  map[entry.path] = entry;
+  return map;
+}, {}));
+
+export default analysisList;
+export {
+  analysisMap,
+};

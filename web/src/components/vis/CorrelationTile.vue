@@ -145,8 +145,13 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large.correlation(v-if="plot", title="Correlation Network", :loading="plot.loading",
-    expanded, download)
+vis-tile-large.correlation(
+    v-if="plot",
+    title="Correlation Network",
+    analysis-path="correlation",
+    :loading="plot.loading",
+    expanded,
+    download)
   template(#controls)
     toolbar-option(title="Method", :value="plot.args.method",
         :options="correlation_methods",

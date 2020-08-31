@@ -22,7 +22,7 @@ export default {
   data() {
     return {
       margin: {
-        top: 40,
+        top: 30,
         right: 20,
         bottom: 50,
         left: 150,
@@ -34,7 +34,7 @@ export default {
       return 1000 - this.margin.left - this.margin.right;
     },
     height() {
-      return 800 - this.margin.top - this.margin.bottom;
+      return 850 - this.margin.top - this.margin.bottom;
     },
     xScale() {
       return scaleLinear()
@@ -73,10 +73,6 @@ export default {
 
 <template>
   <div class="rocContainer">
-    <span
-      style="margin: 10px; font-weight: bold;"
-      v-text="`AUC = ${auc.toPrecision(3)}`"
-    />
     <svg
       :width="width + margin.left + margin.right"
       :height="height + margin.top + margin.bottom"
@@ -102,15 +98,23 @@ export default {
         </g>
         <text
           text-anchor="end"
+          class="label"
           :y="height - 6"
           :x="width"
         >1 - Specificity</text>
         <text
           text-anchor="end"
+          class="label"
           y="6"
           dy=".75em"
           transform="rotate(-90)"
         >Sensitivity</text>
+      </g>
+      <g :transform="`translate(${width / 2},${margin.top - 10})`">
+        <text
+          class="auc-label"
+          v-text="`Area Under the Curve (AUC) = ${auc.toPrecision(3)}`"
+        />
       </g>
     </svg>
   </div>
@@ -125,17 +129,32 @@ export default {
   bottom: 0;
   display: flex;
 }
+
+.auc-label {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
 .rocCurve {
   fill: none;
   stroke: steelblue;
-  stroke-width: 1.5px;
+  stroke-width: 3px;
 }
 
 .diagonal {
   fill: none;
   stroke: black;
-  stroke-width: 1.5px;
+  stroke-width: 3px;
   stroke-dasharray: 5,5;
+}
+
+g {
+  font-size: 1.2em;
+  stroke-width: 3px;
+}
+
+.label {
+  font-size: 1.5em;
 }
 
 </style>
