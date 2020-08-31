@@ -26,7 +26,7 @@ export async function uploadDataset(datasetName) {
  * @param {string} analysis
  */
 export async function analyzeTable(analysis) {
-  if (await page.$x(`//div[contains(@class, "v-list__group__header--active")]/div${vListTile({ title: 'Analyze Table' })}`).length === 0) {
+  if ((await page.$x(`//div[contains(@class, "v-list__group__header--active")]/div${vListTile({ title: 'Analyze Table' })}`)).length === 0) {
     // only click on the Analyze Table nav item if it isn't open already
     await expect(page).toClickXPath(vListTile({ title: 'Analyze Table' }));
     await new Promise((resolve) => setTimeout(resolve, 1000));
