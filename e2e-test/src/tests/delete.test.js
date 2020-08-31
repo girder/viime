@@ -37,10 +37,10 @@ describe('delete dataset', () => {
     await page.waitForXPath(vListTile({ title: 'deleteTest1.csv ', content: 'Dataset ready for analysis' }));
 
     await uploadDataset('deleteTest2');
-    await page.waitForXPath(vListTile({ title: 'deleteTest2.csv ', content: 'Dataset processed with 1 validation failures' }));
+    await page.waitForXPath(vListTile({ title: 'deleteTest2.csv ', content: 'Dataset ready for analysis' }));
 
     await uploadDataset('deleteTest3');
-    await page.waitForXPath(vListTile({ title: 'deleteTest3.csv ', content: 'Dataset processed with 1 validation failures' }));
+    await page.waitForXPath(vListTile({ title: 'deleteTest3.csv ', content: 'Dataset ready for analysis' }));
 
     // wait for data sets to be all uploaded before deletion
     await new Promise((resolve) => setTimeout(resolve, 1000));
