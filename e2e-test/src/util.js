@@ -20,3 +20,18 @@ export async function uploadDataset(datasetName) {
   await fileInputElementHandle.uploadFile(filePath);
   await page.waitForXPath(vListTile({ title: fileName }));
 }
+
+/**
+ * Opens the Analysis nav tab and clicks on the given analysis
+ * @param {string} analysis
+ */
+export async function analyzeTable(analysis) {
+  if (await page.$x(`//div[contains(@class, "v-list__group__header--active")]/div${vListTile({ title: 'Analyze Table' })}`).length === 0) {
+    // only click on the Analyze Table nav item if it isn't open already
+    await expect(page).toClickXPath(vListTile({ title: 'Analyze Table' }));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  // click the desired analysis
+  await expect(page).toClickXPath(vListTile({ title: analysis }));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+}

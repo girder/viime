@@ -1,5 +1,5 @@
 import { vBtn, vListTile } from 'jest-puppeteer-vuetify';
-import { uploadDataset } from '../util';
+import { uploadDataset, analyzeTable } from '../util';
 
 
 describe('the ANOVA page', () => {
@@ -10,11 +10,8 @@ describe('the ANOVA page', () => {
     await uploadDataset('anovaTest');
     await expect(page).toClickXPath(vListTile({ title: 'anovaTest.csv ', content: 'Dataset ready for analysis.' }) + vBtn('View Data'));
 
-    // click analyze table
-    await expect(page).toClickXPath(vListTile({ title: 'Analyze Table' }));
-
-    // click ANOVA
-    await expect(page).toClickXPath(vListTile({ title: 'ANOVA' }));
+    // open ANOVA analysis
+    await analyzeTable('ANOVA');
 
     // select some metabolites from ANOVA by adding the highlighted Metabolites to the selected set
     /* eslint prefer-template: "off" */
