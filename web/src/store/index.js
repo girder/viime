@@ -5,8 +5,8 @@ import Vuex from 'vuex';
 import {
   convertCsvToRows, RangeList, mapValidationErrors, parsePandasDataFrame,
 } from '../utils';
-import analyses from '../components/vis/analyses';
 import { plot_types } from '../utils/constants';
+import { correlation_methods } from '../components/vis/constants';
 import ApiService, { CSVService, ExcelService, SampleService } from '../common/api.service';
 
 import {
@@ -97,21 +97,83 @@ const plotDefaults = {
     args: {},
     type: plot_types.TRANSFORM,
   },
-};
-
-analyses.forEach(({
-  args,
-  path,
-  type,
-}) => {
-  plotDefaults[path] = {
+  pcaPage: {
     data: null,
     valid: false,
     loading: false,
-    args,
-    type,
-  };
-});
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
+  boxplot: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
+  wilcoxon: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
+  wilcoxon_volcano: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
+  anova: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
+  anova_volcano: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
+  heatmap: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {
+      column: null,
+      column_filter: null,
+      row: null,
+      row_filter: null,
+    },
+    type: plot_types.ANALYSIS,
+  },
+  correlation: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {
+      min_correlation: 0.6,
+      method: correlation_methods[0].value,
+    },
+    type: plot_types.ANALYSIS,
+  },
+  roc: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {
+      columns: null,
+      group1: null,
+      group2: null,
+      method: 'random_forest',
+    },
+    type: plot_types.ANALYSIS,
+  },
+};
 
 const appstate = {
   datasets: {},

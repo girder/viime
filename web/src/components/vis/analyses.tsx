@@ -7,11 +7,21 @@ import CorrelationTile from './CorrelationTile.vue';
 import PcaPage from './PcaPage/PcaPage.vue';
 import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
 import GroupPredictionTile from './GroupPredictionTile.vue';
-import { plot_types } from '../../utils/constants';
-import { correlation_methods } from './constants';
 import vuetify from '../../utils/vuetifyConfig';
 
-const analysisList = [
+interface Analysis {
+  path: string;
+  name: string;
+  shortName: string;
+  description: string | (() => JSX.Element);
+  component: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  icon: string;
+  iconStyle?: {
+    transform: string;
+  };
+}
+
+const analysisList: Analysis[] = [
   {
     path: 'pcapage',
     name: 'Principal Component Analysis',
@@ -27,8 +37,6 @@ const analysisList = [
       </div>);
     },
     component: PcaPage,
-    args: {},
-    type: plot_types.ANALYSIS,
     icon: vuetify.icons.pca,
   },
   {
@@ -42,11 +50,11 @@ const analysisList = [
           using a series of box plots.
         </p>
         <p>Each metabolite appears along the y-axis, with a horizontal box plot showing
-          the four quartile values, emphasizing
-          the interquartile range (IQR) with solid bars. Individual outliers appear as well:
-          normal ones, falling at
-          least 1.5 IQRs away from the interquartile range, as dots; and "far-out" outliers,
-          falling at least 3 IQRs away from the interquartile range, as larger dots.
+        the four quartile values, emphasizing
+        the interquartile range (IQR) with solid bars. Individual outliers appear as well:
+        normal ones, falling at
+        least 1.5 IQRs away from the interquartile range, as dots; and "far-out" outliers,
+        falling at least 3 IQRs away from the interquartile range, as larger dots.
         </p>
         <p>
           Hovering the mouse pointer over various parts of the plot will show detailed
@@ -56,8 +64,6 @@ const analysisList = [
       </div>);
     },
     component: BoxPlotLargeTile,
-    args: {},
-    type: plot_types.ANALYSIS,
     icon: vuetify.icons.boxplot,
     iconStyle: {
       transform: 'rotate(90deg)scale(-1,1)',
@@ -89,8 +95,6 @@ const analysisList = [
       </div>);
     },
     component: WilcoxonPlotTile,
-    args: {},
-    type: plot_types.ANALYSIS,
     icon: vuetify.icons.metaboliteTable,
   },
   {
@@ -103,8 +107,6 @@ const analysisList = [
       </div>);
     },
     component: WilcoxonVolcanoPlotTile,
-    args: {},
-    type: plot_types.ANALYSIS,
     icon: vuetify.icons.pca,
   },
   {
@@ -113,8 +115,6 @@ const analysisList = [
     shortName: 'ANOVA',
     description: 'Test to compare 3 or more groups assuming normal distribution, the group pairwise comparisons are adjusted with Tukey HSD',
     component: AnovaTableTile,
-    args: {},
-    type: plot_types.ANALYSIS,
     icon: vuetify.icons.metaboliteTable,
   },
   {
@@ -123,8 +123,6 @@ const analysisList = [
     shortName: 'ANOVA Volcano Plot',
     description: 'Test to compare 3 or more groups assuming normal distribution, the group pairwise comparisons are adjusted with Tukey HSD',
     component: AnovaVolcanoPlotTile,
-    args: {},
-    type: plot_types.ANALYSIS,
     icon: vuetify.icons.pca,
   },
   {
@@ -133,13 +131,6 @@ const analysisList = [
     shortName: 'Heatmap',
     description: 'Is a graphical representation of the concentration differences between variables and samples',
     component: HeatmapTile,
-    args: {
-      column: null,
-      column_filter: null,
-      row: null,
-      row_filter: null,
-    },
-    type: plot_types.ANALYSIS,
     icon: vuetify.icons.heatmap,
   },
   {
@@ -168,11 +159,6 @@ const analysisList = [
       </div>);
     },
     component: CorrelationTile,
-    args: {
-      min_correlation: 0.6,
-      method: correlation_methods[0].value,
-    },
-    type: plot_types.ANALYSIS,
     icon: vuetify.icons.graph,
   },
   {
@@ -182,18 +168,11 @@ const analysisList = [
     description() {
       return (<div>
         <p>This analysis uses the receiver operating characteristic (ROC) curve
-          and area under the curve (AUC) for prediction of group membership
+        and area under the curve (AUC) for prediction of group membership
           using either logistic regression or random forest methods.</p>
       </div>);
     },
     component: GroupPredictionTile,
-    args: {
-      columns: null,
-      group1: null,
-      group2: null,
-      method: 'random_forest',
-    },
-    type: plot_types.ANALYSIS,
     icon: vuetify.icons.pca,
   },
 ];
@@ -202,7 +181,7 @@ const analysisList = [
 const analysisMap = Object.freeze(analysisList.reduce((map, entry) => {
   map[entry.path] = entry;
   return map;
-}, {}));
+}, {} as { [key: string]: Analysis }));
 
 export default analysisList;
 export {
