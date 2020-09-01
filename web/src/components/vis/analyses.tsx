@@ -9,7 +9,19 @@ import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
 import GroupPredictionTile from './GroupPredictionTile.vue';
 import vuetify from '../../utils/vuetifyConfig';
 
-const analysisList = [
+interface Analysis {
+  path: string;
+  name: string;
+  shortName: string;
+  description: string | (() => JSX.Element);
+  component: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  icon: string;
+  iconStyle?: {
+    transform: string;
+  };
+}
+
+const analysisList: Analysis[] = [
   {
     path: 'pcapage',
     name: 'Principal Component Analysis',
@@ -156,7 +168,7 @@ const analysisList = [
     description() {
       return (<div>
         <p>This analysis uses the receiver operating characteristic (ROC) curve
-          and area under the curve (AUC) for prediction of group membership
+        and area under the curve (AUC) for prediction of group membership
           using either logistic regression or random forest methods.</p>
       </div>);
     },
@@ -169,7 +181,7 @@ const analysisList = [
 const analysisMap = Object.freeze(analysisList.reduce((map, entry) => {
   map[entry.path] = entry;
   return map;
-}, {}));
+}, {} as { [key: string]: Analysis }));
 
 export default analysisList;
 export {
