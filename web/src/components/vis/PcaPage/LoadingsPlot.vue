@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, computed } from '@vue/composition-api';
+import { defineComponent, computed, toRef } from '@vue/composition-api';
 import LoadingsPlot from '@/components/vis/LoadingsPlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
 import usePlotData from '../use/usePlotData';
@@ -25,9 +25,7 @@ export default defineComponent({
   },
   components: { LoadingsPlot, VisTile },
   setup(props) {
-    // TODO this won't be necessary in Vue 3
-    const id = computed(() => props.id);
-    const { plot } = usePlotData(id, 'loadings');
+    const { plot } = usePlotData(toRef(props, 'id'), 'loadings');
     return { plot };
   },
 });

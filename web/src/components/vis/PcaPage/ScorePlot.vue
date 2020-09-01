@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, computed } from '@vue/composition-api';
+import { defineComponent, computed, toRef } from '@vue/composition-api';
 import ScorePlot from '@/components/vis/ScorePlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
 import usePlotData from '../use/usePlotData';
@@ -25,9 +25,7 @@ export default defineComponent({
   },
   components: { ScorePlot, VisTile },
   setup(props) {
-    // TODO this won't be necessary in Vue 3
-    const id = computed(() => props.id);
-    const { plot, dataset } = usePlotData(id, 'pca');
+    const { plot, dataset } = usePlotData(toRef(props, 'id'), 'pca');
     return {
       plot,
       dataset,
