@@ -346,6 +346,55 @@ Range Scaling, Vast Scaling, Level Scaling). All preprocessing functions were
 programmed in R. After preprocessing, the dataset is ready for input into the
 analysis methods.
 
+# Related Work
+
+One of the most commonly used tools for the analysis of metabolomics data is
+MetaboAnalyst, initially released in 2009 (Xia et al., MetaboAnalyst: a web
+server for metabolomics data analysis and integration, Nucleic Acids Research,
+37, W652, 2009) and currently on version 4 (Chong et al., Using MetaboAnalyst
+4.0 for Comprehensive and Integrative Metabolomics Data Analysis, Curr.
+Protocols in Bioinformatics, 68, e86, 2019). MetaboAnalyst has a wide range
+of capabilities including data processing, statistical analysis and pathway
+enrichment analyses.
+
+The initial motivation for the development of Viime was to readily ingest,
+integrate and analyze metabolomics data from multiple platforms--a unique
+capability compared with MetaboAnalyst. Data ingestion in Viime is highly
+interactive, enabling data files with different formats to be uploaded and
+formatted within the application. Separate datasets can be individually
+optimized prior to integration. For example, the optimal normalization,
+transformation and scaling parameters used for metabolomics data from NMR could
+be very different from those required for mass spectrometry data. In Viime, each
+dataset is processed independently, then integrated using three different
+alogorithms, including simple data fusion (i.e. concatenation), mid-level data
+fusion, and multi-block data fusion. The resulting fused datasets offer expanded
+metabolome coverage, enabling an analysis of the correlated behavior of
+metabolites detected by different platforms.
+
+Viime offers another value-added feature during data ingestion: imputation of
+missing data. MetaboAnalyst replaces all missing values with 1/5 of the positive
+values of the corresponding column. Viime uses a more sophisticated imputation
+strategy (Armitage EG, Godzien J, Alonso-Herranz V, López-Gonzálvez A, Barbas C.
+Missing value imputation strategies for metabolomics data. Electrophoresis 2015,
+36, 3050–3060. https://doi.org/10.1002/elps.201500352), heuristically
+classifying missing data as Missing Not At Random (MNAR) or Missing Completely
+At Random (MCAR). For MNAR data, the user can choose to replace the values with
+either zeros or half of the minimum value of that variable, while the MCAR
+options include imputation by Random Forest, K-Nearest Neighbors, the mean
+value, or the median value.
+
+Finally, Viime includes powerful interactive data manipulation and visualization
+tools, improving upon tools such as MetaboAnalyst.  Both platforms enable a
+range of univariate and multivariate analyses. In Viime, the data table for both
+Wilcoxon and ANOVA yield p-values (including Tukey post-hoc values for ANOVA).
+An interactive table enables the selection of specific metabolites for further
+visualization based on user choice (e.g. to evaluate metabolites from a specific
+pathway) or based on p-values, only including metabolites showing a
+statistically significant difference between the groups. Viime's resulting
+visualizations, such as heatmaps, volcano plots, and network correlation
+diagrams, are therefore much more useful and interpretable as the
+non-informative metabolites have been removed.
+
 # Acknowledgments
 
 This project has been funded in whole or in part with Federal funds from the
