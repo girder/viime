@@ -349,13 +349,9 @@ analysis methods.
 # Related Work
 
 One of the most commonly used tools for the analysis of metabolomics data is
-MetaboAnalyst, initially released in 2009 (Xia et al., MetaboAnalyst: a web
-server for metabolomics data analysis and integration, Nucleic Acids Research,
-37, W652, 2009) and currently on version 4 (Chong et al., Using MetaboAnalyst
-4.0 for Comprehensive and Integrative Metabolomics Data Analysis, Curr.
-Protocols in Bioinformatics, 68, e86, 2019). MetaboAnalyst has a wide range
-of capabilities including data processing, statistical analysis and pathway
-enrichment analyses.
+MetaboAnalyst, initially released in 2009 [@xia:2009] and currently on version 4
+[@chong:2018]. MetaboAnalyst has a wide range of capabilities including data
+processing, statistical analysis and pathway enrichment analyses.
 
 The initial motivation for the development of Viime was to readily ingest,
 integrate and analyze metabolomics data from multiple platforms--a unique
@@ -374,14 +370,11 @@ metabolites detected by different platforms.
 Viime offers another value-added feature during data ingestion: imputation of
 missing data. MetaboAnalyst replaces all missing values with 1/5 of the positive
 values of the corresponding column. Viime uses a more sophisticated imputation
-strategy (Armitage EG, Godzien J, Alonso-Herranz V, López-Gonzálvez A, Barbas C.
-Missing value imputation strategies for metabolomics data. Electrophoresis 2015,
-36, 3050–3060. https://doi.org/10.1002/elps.201500352), heuristically
-classifying missing data as Missing Not At Random (MNAR) or Missing Completely
-At Random (MCAR). For MNAR data, the user can choose to replace the values with
-either zeros or half of the minimum value of that variable, while the MCAR
-options include imputation by Random Forest, K-Nearest Neighbors, the mean
-value, or the median value.
+strategy [@armitage:2015], heuristically classifying missing data as Missing Not
+At Random (MNAR) or Missing Completely At Random (MCAR). For MNAR data, the user
+can choose to replace the values with either zeros or half of the minimum value
+of that variable, while the MCAR options include imputation by Random Forest,
+K-Nearest Neighbors, the mean value, or the median value.
 
 Finally, Viime includes powerful interactive data manipulation and visualization
 tools, improving upon tools such as MetaboAnalyst.  Both platforms enable a
