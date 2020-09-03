@@ -18,3 +18,17 @@ services:
       - "5000:5000"
     volumes:
       - '../../viime:/app/viime'
+
+  client:
+    build:
+      context: ../../
+      dockerfile: devops/docker/Dockerfile.client
+    env_file: 
+      - .env_docker
+    depends_on: 
+      - backend
+    environment:
+      BACKEND_URL: "http://backend:5000"
+      DNS_ADDRESS: "127.0.0.11"
+    ports:
+      - "8000:80"

@@ -1,10 +1,16 @@
 /* eslint-disable */
 const path = require('path');
-const GitRevisionPlugin = require('git-revision-webpack-plugin');
 const webpack = require('webpack');
 
-const gitRevisionPlugin = new GitRevisionPlugin();
 const proxyTarget = 'http://localhost:5000';
+
+let COMMITHASH = null;
+
+if (process.env.NODE_ENV == 'production') {
+  const GitRevisionPlugin = require('git-revision-webpack-plugin');
+  const gitRevisionPlugin = new GitRevisionPlugin();
+  COMMITHASH = JSON.stringify(gitRevisionPlugin.commithash());
+}
 
 module.exports = {
   lintOnSave: false,
@@ -24,9 +30,7 @@ module.exports = {
       },
     },
     plugins: [
-      new webpack.DefinePlugin({
-        COMMITHASH: JSON.stringify(gitRevisionPlugin.commithash()),
-      }),
+      new webpack.DefinePlugin({ COMMITHASH }),
     ],
   },
   chainWebpack: (config) => {
