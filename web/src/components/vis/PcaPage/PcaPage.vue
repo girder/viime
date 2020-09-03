@@ -102,7 +102,7 @@ export default defineComponent({
               label="PC (X Axis)"
               min="1"
               outline="outline"
-              :disabled="!showScore &amp;&amp; !showLoadings"
+              :disabled="!showScore && !showLoadings"
             />
             <v-text-field
               v-model="pcYval"
@@ -112,7 +112,7 @@ export default defineComponent({
               label="PC (Y Axis)"
               min="1"
               outline="outline"
-              :disabled="!showScore &amp;&amp; !showLoadings"
+              :disabled="!showScore && !showLoadings"
             />
           </v-layout>
         </v-card-actions>
