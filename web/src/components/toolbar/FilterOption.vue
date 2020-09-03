@@ -81,32 +81,48 @@ export default defineComponent({
 });
 </script>
 
-<template lang="pug">
-div(v-if="hasOptions")
-  v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-    v-toolbar-title
-      slot(name=title) {{ title }}
-
-  v-card.mx-3(flat)
-    v-card-actions(style="display: block")
-      v-select.my-0(
-        v-model="selected",
-        v-if="showSelect",
-        hide-details,
-        :disabled="disabled",
-        :items="options",
-        item-text="name"
-      )
-      v-checkbox.my-0.option(
-        v-model="filter",
-        v-for="o in filterOptions",
-        :key="o.name",
-        :label="o.name",
-        :value="o.value",
-        :title="o.name",
-        hide-details,
-        :color="o.color"
-      )
+<template>
+  <div v-if="hasOptions">
+    <v-toolbar
+      class="darken-3"
+      color="primary"
+      dark="dark"
+      flat="flat"
+      dense="dense"
+      :card="false"
+    >
+      <v-toolbar-title>
+        <slot>{{ title }}</slot>
+      </v-toolbar-title>
+    </v-toolbar>
+    <v-card
+      class="mx-3"
+      flat="flat"
+    >
+      <v-card-actions style="display: block">
+        <v-select
+          v-if="showSelect"
+          v-model="selected"
+          class="my-0"
+          hide-details="hide-details"
+          :disabled="disabled"
+          :items="options"
+          item-text="name"
+        />
+        <v-checkbox
+          v-for="o in filterOptions"
+          :key="o.name"
+          v-model="filter"
+          class="my-0 option"
+          :label="o.name"
+          :value="o.value"
+          :title="o.name"
+          hide-details="hide-details"
+          :color="o.color"
+        />
+      </v-card-actions>
+    </v-card>
+  </div>
 </template>
 
 <style scoped>
