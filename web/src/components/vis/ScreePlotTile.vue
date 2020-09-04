@@ -1,5 +1,7 @@
 <script lang="ts">
-import { defineComponent, computed, ref } from '@vue/composition-api';
+import {
+  defineComponent, computed, ref, toRef,
+} from '@vue/composition-api';
 import ScreePlot from '@/components/vis/ScreePlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
 import usePlotData from './use/usePlotData';
@@ -15,13 +17,11 @@ export default defineComponent({
   components: { ScreePlot, VisTile },
 
   setup(props) {
-    // TODO this won't be necessary in Vue 3
-    const id = computed(() => props.id);
     const showCutoffs = ref(true);
     const numComponentsText = ref('10');
     const numComponents = computed(() => Number.parseInt(numComponentsText.value, 10));
 
-    const { plot } = usePlotData(id, 'pca');
+    const { plot } = usePlotData(toRef(props, 'id'), 'pca');
 
     return {
       numComponentsText,
