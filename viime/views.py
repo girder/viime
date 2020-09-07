@@ -764,7 +764,7 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
             formatted_loadings[j]['loadings'].append(loading)
 
     explained_variances = [
-        scores.get(f'explained_variance.comp.{i+1}') for i in range(num_of_components)
+        scores.get(f'explained_variance.comp.{i+1}')[0] for i in range(num_of_components)
     ]
     sdev = sqrt(explained_variances).tolist()
 
