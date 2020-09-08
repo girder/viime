@@ -57,7 +57,7 @@ export default {
       return this.maybeData(['rows'], []);
     },
     groupLabels() {
-      return this.maybeData(['labels'], []);
+      return this.maybeData(['labels'], {});
     },
     columns() {
       if (this.dataset?.column?.data) {
