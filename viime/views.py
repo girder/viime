@@ -13,7 +13,7 @@ from werkzeug.datastructures import FileStorage
 
 from viime import opencpu, samples
 from viime.analyses import anova_test, factor_analysis, hierarchical_clustering,\
-    pairwise_correlation, plsda, roc_analysis, wilcoxon_test
+    oplsda, pairwise_correlation, plsda, roc_analysis, wilcoxon_test
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from viime.models import AXIS_NAME_TYPES, clean, CSVFile, CSVFileSchema, db, \
     GroupLevelSchema, ModifyLabelListSchema, \
@@ -779,6 +779,56 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
         'loadings': formatted_loadings,
         'labels': labels,
         'rows': rows})
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/oplsda', methods=['GET'])
+@load_validated_csv_file
+def get_oplsda(validated_table: ValidatedMetaboliteTable):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+
+    scores = oplsda(measurements, groups, 'scores')
+    loadings = oplsda(measurements, groups, 'loadings')
+    modeldf = oplsda(measurements, groups, 'modeldf')
+
+    # TODO: add vip scores to the response
+    # vip = next(iter(oplsda(measurements, groups, 'vip').values()))
+
+    column_names = list(measurements.columns)
+
+    # TODO: verify this is the correct value to derive "sdev"
+    r2 = modeldf['R2Y']
+    formatted_loadings = []
+    x = []
+    sdev = []
+
+    component_names = ['p1', 'o1', 'o2', 'o3', 'o4', 'o5']
+    for i, component_name in enumerate(component_names):
+        for j, score in enumerate(scores.get(component_name)):
+            if i == 0:
+                x.append([])
+            x[j].append(score)
+        for j, loading in enumerate(loadings.get(component_name)):
+            if i == 0:
+                formatted_loadings.append({})
+                formatted_loadings[j]['col'] = column_names[j]
+                formatted_loadings[j]['loadings'] = []
+            formatted_loadings[j]['loadings'].append(loading)
+
+        sdev.append(sqrt(r2[i]))
+
+    formatted_scores = {'x': x, 'sdev': sdev}
+
+    labels = validated_table.sample_metadata
+    labels = clean(pandas.concat([groups, labels], axis=1)).to_dict('list')
+    rows = measurements.index.tolist()
+
+    return jsonify({
+        'scores': formatted_scores,
+        'loadings': formatted_loadings,
+        'labels': labels,
+        'rows': rows,
+    })
 
 
 def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,
