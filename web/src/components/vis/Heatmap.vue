@@ -737,7 +737,7 @@ export default {
       :data-update="reactiveRowLabelUpdate"
     />
     <div
-      v-show="columnConfig.dendrogram &amp;&amp; rowConfig.dendrogram"
+      v-show="columnConfig.dendrogram && rowConfig.dendrogram"
       class="legend-wrapper"
     >
       <div
