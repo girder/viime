@@ -1,80 +1,106 @@
-<script>
+<script lang="ts">
+import {
+  PropType, defineComponent, computed, watch, toRefs,
+} from '@vue/composition-api';
 import ColorerOption from './ColorerOption.vue';
-import metaboliteMixin from './mixins/metaboliteMixin';
 import { colors } from '../../utils/constants';
+import useMetabolite, { metaboliteProps } from './use/useMetabolite';
 
-export default {
-  components: {
-    ColorerOption,
-  },
-  mixins: [metaboliteMixin],
+interface Colorer {
+  option: string | null;
+  levels: {
+    name: string;
+    color: string[];
+  };
+  apply?: (row: string) => string | null;
+}
+
+export default defineComponent({
   props: {
     title: {
       type: String,
       required: false,
       default: 'Metabolite Color',
     },
-    value: { // {option: string | null,
-    // levels: {name: string, color: string}[], apply(row: string) => string | null}
-      type: Object,
+    value: {
+      type: Object as PropType<Colorer>,
       required: false,
       default: null,
     },
+    ...metaboliteProps,
   },
-  computed: {
-    validatedValue() {
-      if (this.value) {
-        return this.value.option;
-      }
-      if (this.options.length === 0) {
-        return null;
-      }
-      const v = this.options[0].value;
-      this.changeValue(v);
-      return v;
-    },
+  components: {
+    ColorerOption,
   },
-  watch: {
-    selectionLookup() {
-      // trigger update upon selection change
-      if (this.value && this.value.option === 'selection') {
-        this.changeValue('selection');
-      }
-    },
-  },
-  methods: {
-    generateColorer(value) {
-      if (!value || value === this.emptyOption) {
+  setup(props, context) {
+    const {
+      options,
+      selectionLookup,
+      categoricalMetaData,
+      columnToIndex,
+    } = useMetabolite(toRefs(props), context);
+    function generateColorer(value: string) {
+      if (!value || value === props.emptyOption) {
         return () => null;
       }
       if (value === 'selection') {
-        const isSelected = this.selectionLookup;
-        return (column) => (isSelected(column) ? colors.selected : this.notSelectedColor);
+        const isSelected = selectionLookup.value;
+        return (column: string) => (isSelected(column) ? colors.selected : props.notSelectedColor);
       }
-      const meta = this.categoricalMetaData.find((d) => d.name === value);
+      const meta = categoricalMetaData.value.find((d) => d.name === value);
+      if (!meta) {
+        return () => null;
+      }
       const lookup = new Map(meta.levels.map(({ name, color }) => [name, color]));
-      const toIndex = this.columnToIndex;
-      return (column) => lookup.get(meta.data[toIndex(column)]);
-    },
-    generateLevels(value) {
-      if (!value || value === this.emptyOption) {
+      const toIndex = columnToIndex.value;
+      return (column: string) => lookup.get(meta.data[toIndex(column)]);
+    }
+    function generateLevels(value: string) {
+      if (!value || value === props.emptyOption) {
         return [];
       }
-      return this.options.find((d) => d.value === value).options;
-    },
-    changeValue(value) {
+      return options.value.find((d) => d.value === value)?.options || [];
+    }
+    function changeValue(value: string) {
       const wrapper = {
         option: value,
-        levels: this.generateLevels(value),
-        apply: this.generateColorer(value),
+        levels: generateLevels(value),
+        apply: generateColorer(value),
       };
-      this.$emit('input', wrapper);
-    },
+      context.emit('input', wrapper);
+    }
+    const validatedValue = computed(() => {
+      if (props.value) {
+        return props.value.option;
+      }
+      if (options.value.length === 0) {
+        return null;
+      }
+      const v = options.value[0].value;
+      changeValue(v);
+      return v;
+    });
+    watch(selectionLookup, () => {
+      // trigger update upon selection change
+      if (props.value?.option === 'selection') {
+        changeValue('selection');
+      }
+    });
+    return {
+      options,
+      validatedValue,
+      changeValue,
+    };
   },
-};
+});
 </script>
 
-<template lang="pug">
-colorer-option(:title="title", :disabled="disabled",
-    :options="options", :value="validatedValue", @input="changeValue($event)")
+<template>
+  <colorer-option
+    :title="title"
+    :disabled="disabled"
+    :options="options"
+    :value="validatedValue"
+    @input="changeValue($event)"
+  />
 </template>
