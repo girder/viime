@@ -53,8 +53,6 @@ const analysisList: Analysis[] = [
       </div>);
     },
     component: PlsdaPage,
-    args: {},
-    type: plot_types.ANALYSIS,
     icon: vuetify.icons.pca,
   },
   {
