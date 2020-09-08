@@ -59,13 +59,40 @@ def clean(df: pandas.DataFrame) -> pandas.DataFrame:
 
 
 def _guess_table_structure(table: pandas.DataFrame) -> Tuple[List[str], List[str]]:
-    # TODO: Implement this for real, this is just a dumb placeholder
-    rows = [TABLE_ROW_TYPES.INDEX] + [
-        TABLE_ROW_TYPES.DATA for i in range(table.shape[0] - 1)
-    ]
-    columns = [TABLE_COLUMN_TYPES.INDEX, TABLE_COLUMN_TYPES.GROUP] + [
-        TABLE_COLUMN_TYPES.DATA for i in range(table.shape[1] - 2)
-    ]
+    """Infer table structure by inspecting data.
+
+    For simplicity, this method assumes the key row/column is always first.  This
+    appears to be true for the vast majority of cases.
+    """
+    rows: List[str] = [TABLE_ROW_TYPES.INDEX]
+    columns: List[str] = [TABLE_COLUMN_TYPES.INDEX]
+
+    # mask any row that is either all strings (or nan's) or has 0 variance
+    for i in range(1, table.shape[0]):
+        row_variance = pandas.to_numeric(table.iloc[i, 1:], errors='coerce').var()
+        if row_variance != row_variance or row_variance == 0:
+            rows.append(TABLE_ROW_TYPES.MASK)
+        else:
+            rows.append(TABLE_ROW_TYPES.DATA)
+
+    # mask any column that is either all strings (or nan's) or has 0 variance
+    # the first such column is marked as the group
+    has_group = False
+    for i in range(1, table.shape[1]):
+        column_variance = pandas.to_numeric(table.iloc[1:, i], errors='coerce').var()
+        if column_variance != column_variance and not has_group:
+            has_group = True
+            columns.append(TABLE_COLUMN_TYPES.GROUP)
+        elif column_variance != column_variance or column_variance == 0:
+            columns.append(TABLE_COLUMN_TYPES.MASK)
+        else:
+            columns.append(TABLE_COLUMN_TYPES.DATA)
+
+    # fall back to setting the second column as the group column as was
+    # done before
+    if not has_group:
+        columns[1] = TABLE_COLUMN_TYPES.GROUP
+
     return rows, columns
 
 

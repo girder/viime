@@ -112,3 +112,6 @@ This command will spin up two Docker containers named `docker_backend_1` and
 `docker_opencpu_1`.
 
 Note, the web client will still need to be started using `yarn serve`.
+
+Once the client is running, you can use it to upload the CSV files found
+in the [sample data](samples/data) directory of this repository.

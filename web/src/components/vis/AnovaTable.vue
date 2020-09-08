@@ -1,24 +1,24 @@
-<script>
-import MetaboliteTable from './MetaboliteTable.vue';
+<script lang="ts">
+import { PropType, defineComponent, computed } from '@vue/composition-api';
+import MetaboliteTable, { Item } from './MetaboliteTable.vue';
 
-export default {
+interface Data {
+  data?: Item[];
+  pairs?: string[];
+}
 
-  components: {
-    MetaboliteTable,
-  },
-
+export default defineComponent({
   props: {
     data: {
-      type: Object,
-      validator: (prop) => !prop || ('data' in prop && 'pairs' in prop),
-      required: true,
+      type: Object as PropType<Data>,
+      required: false,
     },
     threshold: {
       type: Number,
       default: 0.05,
     },
-    value: { // string[]
-      type: Array,
+    value: {
+      type: Array as PropType<string[]>,
       required: true,
     },
     errorMsg: { // error message to display if ANOVA fails, if applicable
@@ -26,40 +26,43 @@ export default {
       default: '',
     },
   },
-
-  computed: {
-    items() {
-      return (this.data && this.data.data) || [];
-    },
-    pairs() {
-      return (this.data && this.data.pairs) || [];
-    },
-    headers() {
-      return [
-        {
-          text: 'Metabolite',
-          align: 'left',
-          value: 'Metabolite',
-          isLabel: true,
-        },
-        {
-          text: 'Group',
-          value: 'Group',
-          isLabel: true,
-        },
-        ...this.pairs.map((text) => ({ text, value: text })),
-      ];
-    },
+  components: {
+    MetaboliteTable,
   },
-};
+
+  setup(props) {
+    const items = computed(() => (props.data?.data) || []);
+    const pairs = computed(() => (props.data?.pairs) || []);
+    const headers = computed(() => [
+      {
+        text: 'Metabolite',
+        align: 'left',
+        value: 'Metabolite',
+        isLabel: true,
+      },
+      {
+        text: 'Group',
+        value: 'Group',
+        isLabel: true,
+      },
+      ...pairs.value.map((text) => ({ text, value: text })),
+    ]);
+    return {
+      items,
+      pairs,
+      headers,
+    };
+  },
+});
 </script>
 
-<template lang="pug">
-metabolite-table(
-    :headers="headers",
-    :items="items",
-    :threshold="threshold",
-    :value="value",
-    :no-data-available-msg="`ANOVA failed. ${errorMsg}`",
-    @input="$emit('input', $event)")
+<template>
+  <metabolite-table
+    :headers="headers"
+    :items="items"
+    :threshold="threshold"
+    :value="value"
+    :no-data-available-msg="`ANOVA failed. ${errorMsg}`"
+    @input="$emit('input', $event)"
+  />
 </template>
