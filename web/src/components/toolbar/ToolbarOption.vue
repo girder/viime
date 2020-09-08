@@ -1,10 +1,8 @@
-<script>
+<script lang="ts">
+import { PropType, defineComponent } from '@vue/composition-api';
 import HelpDialog from './HelpDialog.vue';
 
-export default {
-  components: {
-    HelpDialog,
-  },
+export default defineComponent({
   props: {
     title: {
       type: String,
@@ -18,35 +16,71 @@ export default {
     disabled: {
       type: Boolean,
       required: false,
+      default: false,
     },
-    options: { // {label: string, value: string, helpText?: string}
-      type: Array,
+    options: {
+      type: Array as PropType<Array<{
+        label: string; value: string;
+        helpText?: string;
+      }>>,
       required: true,
     },
   },
-};
+  components: {
+    HelpDialog,
+  },
+});
 </script>
 
-<template lang="pug">
-div
-  v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-    v-toolbar-title
-      slot(name=title) {{title}}
-
-  v-card.mx-3(flat)
-    v-card-actions
-      v-radio-group.my-0(:value="value",
-          hide-details, :disabled="disabled",
-          @change="$emit('change', $event)")
-        v-radio.wide.mr-0(v-for="m in options",
-            :value="m.value", :key="m.value")
-          template(#label)
-            span.grow.groupCombinationContainer(v-bind:title="m.label")
-              | {{ m.label }}
-            help-dialog(
-                v-if="m.helpText",
-                :title="`${m.label} ${title}`",
-                :text="m.helpText", outline)
+<template>
+  <div>
+    <v-toolbar
+      class="darken-3"
+      color="primary"
+      dark="dark"
+      flat="flat"
+      dense="dense"
+      :card="false"
+    >
+      <v-toolbar-title>
+        <slot>{{ title }}</slot>
+      </v-toolbar-title>
+    </v-toolbar>
+    <v-card
+      class="mx-3"
+      flat="flat"
+    >
+      <v-card-actions>
+        <v-radio-group
+          class="my-0"
+          :value="value"
+          hide-details="hide-details"
+          :disabled="disabled"
+          @change="$emit('change', $event)"
+        >
+          <v-radio
+            v-for="m in options"
+            :key="m.value"
+            class="wide mr-0"
+            :value="m.value"
+          >
+            <template #label>
+              <span
+                class="grow groupCombinationContainer"
+                :title="m.label"
+              >{{ m.label }}</span>
+              <help-dialog
+                v-if="m.helpText"
+                :title="`${m.label} ${title}`"
+                :text="m.helpText"
+                outline="outline"
+              />
+            </template>
+          </v-radio>
+        </v-radio-group>
+      </v-card-actions>
+    </v-card>
+  </div>
 </template>
 
 <style scoped>
