@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, computed } from '@vue/composition-api';
+import { defineComponent, computed, toRef } from '@vue/composition-api';
 import ScreePlot from '@/components/vis/ScreePlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
 import usePlotData from '../use/usePlotData';
@@ -30,9 +30,7 @@ export default defineComponent({
   },
   components: { ScreePlot, VisTile },
   setup(props) {
-    // TODO this won't be necessary in Vue 3
-    const id = computed(() => props.id);
-    const { plot } = usePlotData(id, 'pca');
+    const { plot } = usePlotData(toRef(props, 'id'), 'pca');
     return { plot };
   },
 });

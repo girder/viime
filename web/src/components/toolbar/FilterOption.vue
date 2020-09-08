@@ -1,81 +1,128 @@
-<script>
-export default {
+<script lang="ts">
+import { PropType, defineComponent, computed } from '@vue/composition-api';
+
+export default defineComponent({
   props: {
     title: {
       type: String,
       required: false,
       default: '',
     },
-    value: { // {option: string | null, filter: string[]}
-      type: Object,
+    value: {
+      type: Object as PropType<{
+        option: string | null;
+        filter: string[];
+      }>,
       required: true,
     },
     disabled: {
       type: Boolean,
       required: false,
+      default: false,
     },
-    options: { // {name: string, options: {name: string, color?: string, value: string}[]}[]
-      type: Array,
+    options: {
+      type: Array as PropType<Array<{
+        name: string;
+        value: string;
+        options: Array<{
+          color?: string;
+          value: string;
+        }>;
+      }>>,
       required: true,
     },
   },
-  computed: {
-    showSelect() {
-      return !this.value || this.options.length > 1;
-    },
-    selected: {
+  setup(props, { emit }) {
+    const showSelect = computed(() => !props.value || props.options.length > 1);
+    const selected = computed({
       get() {
-        return this.value ? this.value.option : null;
+        return props.value?.option;
       },
-      set(value) {
+      set(value: string | null) {
         if (!value) {
-          this.$emit('input', { option: null, filter: [] });
+          emit('input', { option: null, filter: [] });
         } else {
-          const selected = this.options.find((d) => d.value === value);
-          this.$emit('input', { option: value, filter: selected.options.map((d) => d.value) });
+          const selectedOption = props.options.find((d) => d.value === value);
+          if (selectedOption) {
+            emit('input', { option: value, filter: selectedOption.options.map((d) => d.value) });
+          }
         }
       },
-    },
-    filterOptions() {
-      const selected = this.options.find((d) => d.value === this.selected);
-      return selected ? selected.options : [];
-    },
-    filter: {
+    });
+    const filterOptions = computed(() => {
+      const selectedOption = props.options.find((d) => d.value === selected.value);
+      return selectedOption ? selectedOption.options : [];
+    });
+    const filter = computed({
       get() {
-        return this.value ? this.value.filter : [];
+        return props.value ? props.value.filter : [];
       },
       set(values) {
-        this.$emit('input', { ...this.value, filter: values });
+        emit('input', { ...props.value, filter: values });
       },
-    },
-    hasOptions() {
-      if (this.options.length === 0) {
+    });
+    const hasOptions = computed(() => {
+      if (props.options.length === 0) {
         return false;
       }
-      if (this.options.length === 1 && !this.options[0].value) {
+      if (props.options.length === 1 && !props.options[0].value) {
         return false;
       }
       return true;
-    },
+    });
+    return {
+      showSelect,
+      selected,
+      filterOptions,
+      filter,
+      hasOptions,
+    };
   },
-};
+});
 </script>
 
-<template lang="pug">
-div(v-if="hasOptions")
-  v-toolbar.darken-3(color="primary", dark, flat, dense, :card="false")
-    v-toolbar-title
-      slot(name=title) {{title}}
-
-  v-card.mx-3(flat)
-    v-card-actions(style="display: block")
-      v-select.my-0(v-model="selected", v-if="showSelect",
-          hide-details, :disabled="disabled",
-          :items="options", item-text="name")
-      v-checkbox.my-0.option(v-model="filter",
-          v-for="o in filterOptions", :key="o.name",
-          :label="o.name", :value="o.value", :title="o.name",
-          hide-details, :color="o.color")
+<template>
+  <div v-if="hasOptions">
+    <v-toolbar
+      class="darken-3"
+      color="primary"
+      dark="dark"
+      flat="flat"
+      dense="dense"
+      :card="false"
+    >
+      <v-toolbar-title>
+        <slot>{{ title }}</slot>
+      </v-toolbar-title>
+    </v-toolbar>
+    <v-card
+      class="mx-3"
+      flat="flat"
+    >
+      <v-card-actions style="display: block">
+        <v-select
+          v-if="showSelect"
+          v-model="selected"
+          class="my-0"
+          hide-details="hide-details"
+          :disabled="disabled"
+          :items="options"
+          item-text="name"
+        />
+        <v-checkbox
+          v-for="o in filterOptions"
+          :key="o.name"
+          v-model="filter"
+          class="my-0 option"
+          :label="o.name"
+          :value="o.value"
+          :title="o.name"
+          hide-details="hide-details"
+          :color="o.color"
+        />
+      </v-card-actions>
+    </v-card>
+  </div>
 </template>
 
 <style scoped>
