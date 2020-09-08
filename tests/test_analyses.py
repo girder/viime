@@ -111,8 +111,6 @@ def test_plsda(client, test_dataset):
     assert 'x' in scores.keys()
     assert len(scores.get('x')) == len(rows)
 
-    for sdev in scores.get('sdev'):
-        assert len(sdev) == len(rows)
     for x in scores.get('x'):
         assert len(x) == num_of_components
 
@@ -133,8 +131,6 @@ def test_plsda(client, test_dataset):
     assert 'x' in scores.keys()
     assert len(scores.get('x')) == len(rows)
 
-    for sdev in scores.get('sdev'):
-        assert len(sdev) == len(rows)
     for x in scores.get('x'):
         assert len(x) == num_of_components
 
