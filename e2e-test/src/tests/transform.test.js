@@ -10,6 +10,7 @@ describe('transform table page', () => {
     await expect(page).toClickXPath(vListTile({ title: 'transformTest.csv ', content: 'Dataset ready for analysis.' }) + vBtn('View Data'));
 
     // click transform table
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     await expect(page).toClickXPath(vListTile({ title: 'Transform Table' }));
 
     // change normalize to 'Min Max'
