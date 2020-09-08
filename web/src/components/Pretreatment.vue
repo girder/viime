@@ -1,10 +1,10 @@
 <script lang="ts">
-import { defineComponent, ref } from '@vue/composition-api';
-import store from '../store';
+import { defineComponent, inject, ref } from '@vue/composition-api';
+import VueRouter from 'vue-router';
 import { LOAD_DATASET } from '../store/actions.type';
 import { INTIALIZE_DATASET, SET_SELECTION } from '../store/mutations.type';
-import router from '../router';
 import analyses from './vis/analyses';
+import store from '../store';
 
 interface Dataset {
   id: string;
@@ -31,6 +31,8 @@ export default defineComponent({
     },
   },
   setup(props) {
+    // TODO Use injected router instead of importing to avoid circular import
+    const router = inject('router') as VueRouter;
     const datasets = ref(store.state.datasets);
 
     function valid(dataset: Dataset) {

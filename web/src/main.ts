@@ -52,5 +52,9 @@ Vue.use(VueGtag, {
 new Vue({
   router,
   store,
+  // TODO provide the router to avoid circular imports
+  provide: {
+    router,
+  },
   render: (h) => h(App),
 }).$mount('#app');
