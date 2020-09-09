@@ -1,7 +1,8 @@
 <script lang="ts">
-import { defineComponent, computed, toRef } from '@vue/composition-api';
+import { defineComponent, toRef } from '@vue/composition-api';
 import ScreePlot from '@/components/vis/ScreePlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
+import ScreePlotHelp from '../help/ScreePlotHelp.vue';
 import usePlotData from '../use/usePlotData';
 
 export default defineComponent({
@@ -28,7 +29,11 @@ export default defineComponent({
       required: true,
     },
   },
-  components: { ScreePlot, VisTile },
+  components: {
+    ScreePlot,
+    ScreePlotHelp,
+    VisTile,
+  },
   setup(props) {
     const { plot } = usePlotData(toRef(props, 'id'), 'pca');
     return { plot };
@@ -36,15 +41,22 @@ export default defineComponent({
 });
 </script>
 
-<template lang="pug">
-vis-tile(title="PCA Scree Plot", :loading="plot.loading", svg-download)
-  scree-plot(
-      v-if="plot.data",
-      :eigenvalues="plot.data.sdev",
-      :pc-x="pcX",
-      :pc-y="pcY",
-      :num-components="numComponents",
-      :show-cutoffs="showCutoffs")
-  template(v-slot:help)
-    include ../help/ScreePlotHelp.pug
+<template>
+  <vis-tile
+    title="PCA Scree Plot"
+    :loading="plot.loading"
+    svg-download="svg-download"
+  >
+    <scree-plot
+      v-if="plot.data"
+      :eigenvalues="plot.data.sdev"
+      :pc-x="pcX"
+      :pc-y="pcY"
+      :num-components="numComponents"
+      :show-cutoffs="showCutoffs"
+    />
+    <template v-slot:help>
+      <ScreePlotHelp />
+    </template>
+  </vis-tile>
 </template>
