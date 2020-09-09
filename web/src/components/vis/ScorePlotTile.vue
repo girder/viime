@@ -1,11 +1,13 @@
 <script>
 import ScorePlot from '@/components/vis/ScorePlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
+import ScorePlotHelp from './help/ScorePlotHelp.vue';
 import plotData from './mixins/plotData';
 
 export default {
   components: {
     ScorePlot,
+    ScorePlotHelp,
     VisTile,
   },
 
@@ -69,41 +71,76 @@ export default {
 
 </script>
 
-<template lang="pug">
-vis-tile(title="PCA Score Plot", svg-download)
-  score-plot(
-      :pc-coords="pcCoords",
-      :row-labels="rowLabels",
-      :colors="dataset.groupLevels",
-      :group-labels="groupLabels",
-      :eigenvalues="eigenvalues",
-      :columns="columns",
-      :pc-x="pcX",
-      :pc-y="pcY",
-      :show-ellipses="showEllipses")
-  template(v-slot:controls)
-    v-menu(bottom, offset-y, left, :min-width="150", :close-on-content-click="false")
-      template(v-slot:activator="{ on }")
-        v-btn(v-on="on", icon)
-          v-icon.mdi.mdi-dots-vertical
-
-      v-card.pa-1(flat)
-        v-layout.px-2(column)
-          v-text-field.py-2(
-              hide-details,
-              type="number",
-              label="PC (X Axis)",
-              min="1",
-              outline,
-              v-model="pcXval")
-          v-text-field.py-2(
-              hide-details,
-              type="number",
-              label="PC (Y Axis)",
-              min="1",
-              outline,
-              v-model="pcYval")
-          v-switch.py-2(v-model="showEllipses", label="Data ellipses", hide-details)
-  template(v-slot:help)
-    include help/ScorePlotHelp.pug
+<template>
+  <vis-tile
+    title="PCA Score Plot"
+    svg-download="svg-download"
+  >
+    <score-plot
+      :pc-coords="pcCoords"
+      :row-labels="rowLabels"
+      :colors="dataset.groupLevels"
+      :group-labels="groupLabels"
+      :eigenvalues="eigenvalues"
+      :columns="columns"
+      :pc-x="pcX"
+      :pc-y="pcY"
+      :show-ellipses="showEllipses"
+    />
+    <template v-slot:controls>
+      <v-menu
+        bottom="bottom"
+        offset-y="offset-y"
+        left="left"
+        :min-width="150"
+        :close-on-content-click="false"
+      >
+        <template v-slot:activator="{ on }">
+          <v-btn
+            icon="icon"
+            v-on="on"
+          >
+            <v-icon class="mdi mdi-dots-vertical" />
+          </v-btn>
+        </template>
+        <v-card
+          class="pa-1"
+          flat="flat"
+        >
+          <v-layout
+            class="px-2"
+            column="column"
+          >
+            <v-text-field
+              v-model="pcXval"
+              class="py-2"
+              hide-details="hide-details"
+              type="number"
+              label="PC (X Axis)"
+              min="1"
+              outline="outline"
+            />
+            <v-text-field
+              v-model="pcYval"
+              class="py-2"
+              hide-details="hide-details"
+              type="number"
+              label="PC (Y Axis)"
+              min="1"
+              outline="outline"
+            />
+            <v-switch
+              v-model="showEllipses"
+              class="py-2"
+              label="Data ellipses"
+              hide-details="hide-details"
+            />
+          </v-layout>
+        </v-card>
+      </v-menu>
+    </template>
+    <template v-slot:help>
+      <ScorePlotHelp />
+    </template>
+  </vis-tile>
 </template>
