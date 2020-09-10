@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, computed, toRef } from '@vue/composition-api';
+import { defineComponent, toRef } from '@vue/composition-api';
 import ScreePlot from '@/components/vis/ScreePlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
 import usePlotData from '../use/usePlotData';

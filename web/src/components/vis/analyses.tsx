@@ -5,6 +5,7 @@ import AnovaVolcanoPlotTile from './AnovaVolcanoPlotTile.vue';
 import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
 import PcaPage from './PcaPage/PcaPage.vue';
+import PlsdaPage from './PlsdaPage/PlsdaPage.vue';
 import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
 import GroupPredictionTile from './GroupPredictionTile.vue';
 import vuetify from '../../utils/vuetifyConfig';
@@ -37,6 +38,21 @@ const analysisList: Analysis[] = [
       </div>);
     },
     component: PcaPage,
+    icon: vuetify.icons.pca,
+  },
+  {
+    path: 'plsda',
+    name: 'Partial Least Squares Discriminant Analysis',
+    shortName: 'PLS-DA',
+    description() {
+      return (<div>
+        <p>Partial least squares discriminant analysis (PLS-DA) is a supervised
+        multivariate technique used to classify values with latent variables
+        constructed by maximizing the covariance between the independent
+        variable and the dependent outcome.</p>
+      </div>);
+    },
+    component: PlsdaPage,
     icon: vuetify.icons.pca,
   },
   {
