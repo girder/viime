@@ -104,6 +104,13 @@ const plotDefaults = {
     args: {},
     type: plot_types.ANALYSIS,
   },
+  plsda: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
   boxplot: {
     data: null,
     valid: false,
