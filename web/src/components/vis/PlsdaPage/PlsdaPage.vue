@@ -116,7 +116,7 @@ export default defineComponent({
               outline="outline"
               :disabled="plot.loading"
               label="Number of Components"
-              @change="changePlotArgs({ num_of_components: $event });"
+              @change="plot.valid=false;changePlotArgs({ num_of_components: $event });"
             />
           </v-layout>
         </v-card-actions>
