@@ -1,29 +1,29 @@
-<script>
+<script lang="ts">
 import VisTileLarge from '@/components/vis/VisTileLarge.vue';
 import LayoutGrid from '@/components/LayoutGrid.vue';
 import ScorePlot from './ScorePlot.vue';
 import LoadingsPlot from './LoadingsPlot.vue';
 import plotData from '../mixins/plotData';
+import { computed, defineComponent, reactive, ref, toRef, toRefs, watchEffect } from '@vue/composition-api';
+import usePlotData from '../use/usePlotData';
+import store from '../../../store';
 
-export default {
-  components: {
-    ScorePlot,
-    LoadingsPlot,
-    VisTileLarge,
-    LayoutGrid,
-  },
-
-  mixins: [plotData('plsda')],
-
+export default defineComponent({
   props: {
     id: {
       type: String,
       required: true,
     },
   },
-
-  data() {
-    return {
+  components: {
+    ScorePlot,
+    LoadingsPlot,
+    VisTileLarge,
+    LayoutGrid,
+  },
+  setup(props) {
+    const { dataset, plot, changePlotArgs } = usePlotData(toRef(props, 'id'), 'plsda');
+    const controls = reactive({
       pcXval: '1',
       pcYval: '2',
       numComponentsVal: '10',
@@ -35,85 +35,55 @@ export default {
       showCutoffs: true,
       showScore: true,
       showLoadings: true,
+    });
+
+    const ready = computed(() => {
+      const pcaReady = store.getters.ready(props.id, 'plsda_scores');
+      const loadingsReady = store.getters.ready(props.id, 'plsda_loadings');
+      return pcaReady && loadingsReady;
+    });
+    const loadings = computed(() => plot.value.data?.loadings || []);
+    const pcCoords = computed(() => plot.value.data?.scores.x || []);
+    const eigenvalues = computed(() => plot.value.data?.scores.sdev || []);
+    const rowLabels = computed(() => plot.value.data?.rows || []);
+    const groupLabels = computed(() => plot.value.data?.labels || {});
+    const columns = computed(() => dataset.value?.column.data || []);
+    const groupLevels = computed(() => dataset.value?.groupLevels || []);
+
+    watchEffect(() => {
+      const pcX = Number.parseInt(controls.pcXval, 10);
+      if (!Number.isNaN(pcX)) {
+        controls.pcX = pcX;
+      }
+    });
+    watchEffect(() => {
+      const pcY = Number.parseInt(controls.pcYval, 10);
+      if (!Number.isNaN(pcY)) {
+        controls.pcY = pcY;
+      }
+    });
+    watchEffect(() => {
+      const numComponents = Number.parseInt(controls.numComponentsVal, 10);
+      if (!Number.isNaN(numComponents)) {
+        controls.numComponents = numComponents;
+      }
+    });
+
+    return {
+      plot,
+      changePlotArgs,
+      ...toRefs(controls),
+      ready,
+      loadings,
+      pcCoords,
+      eigenvalues,
+      rowLabels,
+      groupLabels,
+      columns,
+      groupLevels,
     };
   },
-
-  computed: {
-    ready() {
-      const pcaReady = this.$store.getters.ready(this.id, 'plsda_scores');
-      const loadingsReady = this.$store.getters.ready(this.id, 'plsda_loadings');
-      return pcaReady && loadingsReady;
-    },
-    loadings() {
-      return this.maybeData(['loadings'], []);
-    },
-    pcCoords() {
-      return this.maybeData(['scores', 'x'], []);
-    },
-    eigenvalues() {
-      return this.maybeData(['scores', 'sdev'], []);
-    },
-    rowLabels() {
-      return this.maybeData(['rows'], []);
-    },
-    groupLabels() {
-      return this.maybeData(['labels'], {});
-    },
-    columns() {
-      if (this.dataset?.column?.data) {
-        return this.dataset.column.data;
-      }
-      return [];
-    },
-
-    groupLevels() {
-      if (this.dataset?.groupLevels) {
-        return this.dataset.groupLevels;
-      }
-      return [];
-    },
-  },
-  watch: {
-    pcXval: {
-      handler(val) {
-        const pcX = Number.parseInt(val, 10);
-        if (!Number.isNaN(pcX)) {
-          this.pcX = pcX;
-        }
-      },
-      immediate: true,
-    },
-    pcYval: {
-      handler(val) {
-        const pcY = Number.parseInt(val, 10);
-        if (!Number.isNaN(pcY)) {
-          this.pcY = pcY;
-        }
-      },
-      immediate: true,
-    },
-    numComponentsVal: {
-      handler(val) {
-        const numComponents = Number.parseInt(val, 10);
-        if (!Number.isNaN(numComponents)) {
-          this.numComponents = numComponents;
-        }
-      },
-      immediate: true,
-    },
-  },
-  methods: {
-    maybeData(keys, dflt) {
-      const {
-        plot,
-      } = this;
-      if (keys.length === 2) {
-        return plot.data ? plot.data[keys[0]][keys[1]] : dflt;
-      }
-      return plot.data ? plot.data[keys[0]] : dflt;
-    },
-  },
-};
+});
 </script>
 
 <template>
