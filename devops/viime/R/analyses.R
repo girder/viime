@@ -320,3 +320,46 @@ plsda <- function(measurements, groups, num_of_components, mode) {
     stop("Invalid mode for PLSDA.")
   }
 }
+
+#' oplsda
+#'
+#' @export
+oplsda <- function(measurements, groups, mode) {
+  library(ropls)
+  df <- read.csv(measurements, row.names=1, check.names=FALSE)
+  groups <- read.csv(groups, row.names=1, check.names=FALSE)
+  groups <- as.factor(groups[,1])
+
+  # Perform OPLS-DA
+  ropls_oplsda <- ropls::opls(df, groups, scaleC="none", orthoI=NA)
+
+  if (mode == "scores") {
+    #Main Score
+    ropls_scores_x  <- as.data.frame(ropls_oplsda@scoreMN)
+    #Orthogonal
+    ropls_scores_y  <- as.data.frame(ropls_oplsda@orthoScoreMN)
+    #Save scores together
+    oplsda_scores <- cbind(ropls_scores_x , ropls_scores_y)
+
+    return(oplsda_scores)
+  } else if (mode == "loadings") {
+    # Save loadings
+    #Main loadings
+    ropls_loadings_x  <- as.data.frame(ropls_oplsda@loadingMN)
+    #Orthogonal loadings
+    ropls_loadings_y  <- as.data.frame(ropls_oplsda@orthoLoadingMN)
+    #Save loadings together
+    oplsda_loadings <- cbind(ropls_loadings_x , ropls_loadings_y)
+
+    return(oplsda_loadings)
+  } else if (mode == "vip") {
+    #VIP Scores
+    ropls_vip <- as.data.frame(ropls_oplsda@vipVn)
+
+    return(ropls_vip)
+  } else if (mode == "modeldf") {
+    return(ropls_oplsda@modelDF)
+  } else {
+    stop("Invalid mode for PLSDA.")
+  }
+}
