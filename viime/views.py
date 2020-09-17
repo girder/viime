@@ -828,6 +828,7 @@ def get_oplsda(validated_table: ValidatedMetaboliteTable):
         'loadings': formatted_loadings,
         'labels': labels,
         'rows': rows,
+        'r2': r2,
     })
 
 
