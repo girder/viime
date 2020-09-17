@@ -1,10 +1,11 @@
 <script lang="ts">
 import VisTileLarge from '@/components/vis/VisTileLarge.vue';
 import LayoutGrid from '@/components/LayoutGrid.vue';
+import {
+  computed, defineComponent, reactive, toRef, toRefs, watchEffect,
+} from '@vue/composition-api';
 import ScorePlot from './ScorePlot.vue';
 import LoadingsPlot from './LoadingsPlot.vue';
-import plotData from '../mixins/plotData';
-import { computed, defineComponent, reactive, ref, toRef, toRefs, watchEffect } from '@vue/composition-api';
 import usePlotData from '../use/usePlotData';
 import store from '../../../store';
 
