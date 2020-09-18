@@ -348,45 +348,65 @@ analysis methods.
 
 # Related Work
 
-One of the most commonly used tools for the analysis of metabolomics data is
-MetaboAnalyst, initially released in 2009 [@xia:2009] and currently on version 4
-[@chong:2018]. MetaboAnalyst has a wide range of capabilities including data
-processing, statistical analysis and pathway enrichment analyses.
+New analytical approaches to effectively measure more and more of the metabolome
+are continually being developed. The data produced from these different
+approaches requires different handling in order to transform the data into
+useful biological information. Recently, Spicer et al. [@spicer:2017] reviewed
+the most popular freely-available software tools for metabolomics analysis.
+Based on their intended functionality the tools were classified into the
+following five groups: pre-processing, annotation, post-processing, statistical
+analysis, and workflows. Pre-processing and annotation tools are often very
+specific to the type, make, and model of the analytical instrument used to
+collect the data and therefore require specific tools. Once these steps are
+carried out, more general workflow tools can be used to complete the analysis.
+The intent of Viime package is to pick up the workflow after preprocessing and
+annotation and go all the way through statistical analysis and visualization.
+Note that annotation is not required and data can be analyzed that is
+unannotated or incompletely annotated.
 
-The initial motivation for the development of Viime was to readily ingest,
-integrate and analyze metabolomics data from multiple platforms--a unique
-capability compared with MetaboAnalyst. Data ingestion in Viime is highly
-interactive, enabling data files with different formats to be uploaded and
-formatted within the application. Separate datasets can be individually
-optimized prior to integration. For example, the optimal normalization,
-transformation and scaling parameters used for metabolomics data from NMR could
-be very different from those required for mass spectrometry data. In Viime, each
-dataset is processed independently, then integrated using three different
-alogorithms, including simple data fusion (i.e. concatenation), mid-level data
-fusion, and multi-block data fusion. The resulting fused datasets offer expanded
-metabolome coverage, enabling an analysis of the correlated behavior of
-metabolites detected by different platforms.
+Spicer et al., briefly described seven popular metabolomics workflow packages
+that met a threshold of at least 50 citations on Web of Science (as of August 2016)
+or were reported in a recent survey of the Metabolomics Society. The
+packages MZmine [@pluskal:2010] and MAIT [@fernandez:2014] specifically focus on
+the analysis of mass-spectrometry data. The MAVEN package [@melamud:2010;
+@clasquin:2012] is focused on isotope tracer studies. The Workflow4Metabolomics
+[@giacomoni:2014] and Galaxy-M [@davidson:2016] packages are built upon the
+Galaxy web-based platform and are composed of various modules and workflows.
+Among the most well-known metabolomics workflow tools are MetaboAnalyst
+[@chong:2020] and XCMS Online [@tautenhahn:2012]. These are both workflow tools
+which include MS spectral processing and have statistical analyses and
+visualization tools that are generally similar to Viime.
+
+An exhaustive feature comparison of with these other platforms is beyond the
+scope of this paper, but a major distinguishing feature of Viime is its emphasis
+on ease of use and interactivity. Only XCMS and MetaboAnalyst are simple,
+readily accessible web applications that require no existing package (e.g. R),
+downloads or connection to the Galaxy platform. The unique user interactivity in
+Viime starts with the ability to simply drag and drop CSV or Excel files and
+interactively assign the sample identifiers, comparison groups, metadata, and
+metabolites. Dynamic visualization of the PCA scores and loadings plots with
+different types of data (e.g. NMR, LC-MS, and GC-MS) and data treatments (e.g.
+normalization, scaling and transformation) aids in selecting the optimal data
+treatment. Viime also enables integration between different data modalities,
+offering simple (i.e., concatenative), mid-level, and multi-block data fusion
+approaches. The resulting fused datasets offer expanded metabolome coverage,
+enabling an analysis of the correlated behavior of metabolites detected by
+different platforms.
 
 Viime offers another value-added feature during data ingestion: imputation of
-missing data. MetaboAnalyst replaces all missing values with 1/5 of the positive
-values of the corresponding column. Viime uses a more sophisticated imputation
-strategy [@armitage:2015], heuristically classifying missing data as Missing Not
-At Random (MNAR) or Missing Completely At Random (MCAR). For MNAR data, the user
-can choose to replace the values with either zeros or half of the minimum value
-of that variable, while the MCAR options include imputation by Random Forest,
-K-Nearest Neighbors, the mean value, or the median value.
+missing data. Viime uses a sophisticated imputation strategy [@armitage:2015],
+heuristically classifying missing data as Missing Not At Random (MNAR) or
+Missing Completely At Random (MCAR). For MNAR data, the user can choose to
+replace the values with either zeros or half of the minimum value of that
+variable, while the MCAR options include imputation by Random Forest, K-Nearest
+Neighbors, the mean value, or the median value.
 
-Finally, Viime includes powerful interactive data manipulation and visualization
-tools, improving upon tools such as MetaboAnalyst.  Both platforms enable a
-range of univariate and multivariate analyses. In Viime, the data table for both
-Wilcoxon and ANOVA yield p-values (including Tukey post-hoc values for ANOVA).
-An interactive table enables the selection of specific metabolites for further
-visualization based on user choice (e.g. to evaluate metabolites from a specific
-pathway) or based on p-values, only including metabolites showing a
-statistically significant difference between the groups. Viime's resulting
-visualizations, such as heatmaps, volcano plots, and network correlation
-diagrams, are therefore much more useful and interpretable as the
-non-informative metabolites have been removed.
+finally, Visualization of heatmaps, volcano plots, and network correlation
+diagrams, which all offer state-of-the-art web-based interactivity, can all be
+adjusted to include user selected subsets of data based on statistical
+significance or the particular interest of the investigator. This philosophy of
+interactivity will drive further development in viime as the platform expands
+its capabilities for further types of data analyses and visualization.
 
 # Acknowledgments
 
