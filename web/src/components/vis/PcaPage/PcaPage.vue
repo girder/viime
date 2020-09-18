@@ -81,37 +81,37 @@ export default defineComponent({
       <v-toolbar
         class="darken-3"
         color="primary"
-        dark="dark"
-        flat="flat"
-        dense="dense"
+        dark
+        flat
+        dense
         :card="false"
       >
         <v-toolbar-title>PC selector</v-toolbar-title>
       </v-toolbar>
       <v-card
         class="mb-3 mx-3"
-        flat="flat"
+        flat
       >
         <v-card-actions>
-          <v-layout column="column">
+          <v-layout column>
             <v-text-field
               v-model="pcXval"
               class="py-2"
-              hide-details="hide-details"
+              hide-details
               type="number"
               label="PC (X Axis)"
               min="1"
-              outline="outline"
+              outline
               :disabled="!showScore && !showLoadings"
             />
             <v-text-field
               v-model="pcYval"
               class="py-2"
-              hide-details="hide-details"
+              hide-details
               type="number"
               label="PC (Y Axis)"
               min="1"
-              outline="outline"
+              outline
               :disabled="!showScore && !showLoadings"
             />
           </v-layout>
@@ -120,32 +120,33 @@ export default defineComponent({
       <v-toolbar
         class="darken-3"
         color="primary"
-        dark="dark"
-        flat="flat"
-        dense="dense"
+        dark
+        flat
+        dense
         :card="false"
       >
         <v-toolbar-title class="switch-title">
-          Score Plot<v-switch
+          Score Plot
+          <v-switch
             v-model="showScore"
             class="switch"
             color="white"
-            hide-details="hide-details"
+            hide-details
           />
         </v-toolbar-title>
       </v-toolbar>
       <v-card
         class="mb-3 mx-3"
-        flat="flat"
+        flat
       >
         <v-card-actions>
-          <v-layout column="column">
+          <v-layout column>
             <v-switch
               v-model="showEllipses"
               class="ma-0 py-2"
               label="Data ellipses"
               :disabled="!showScore"
-              hide-details="hide-details"
+              hide-details
             />
           </v-layout>
         </v-card-actions>
@@ -153,32 +154,33 @@ export default defineComponent({
       <v-toolbar
         class="darken-3"
         color="primary"
-        dark="dark"
-        flat="flat"
-        dense="dense"
+        dark
+        flat
+        dense
         :card="false"
       >
         <v-toolbar-title class="switch-title">
-          Loadings Plot<v-switch
+          Loadings Plot
+          <v-switch
             v-model="showLoadings"
             class="switch"
             color="white"
-            hide-details="hide-details"
+            hide-details
           />
         </v-toolbar-title>
       </v-toolbar>
       <v-card
         class="mb-3 mx-3"
-        flat="flat"
+        flat
       >
         <v-card-actions>
-          <v-layout column="column">
+          <v-layout column>
             <v-switch
               v-model="showCrosshairs"
               class="ma-0 py-2"
               label="Crosshairs"
               :disabled="!showLoadings"
-              hide-details="hide-details"
+              hide-details
             />
           </v-layout>
         </v-card-actions>
@@ -186,42 +188,43 @@ export default defineComponent({
       <v-toolbar
         class="darken-3"
         color="primary"
-        dark="dark"
-        flat="flat"
-        dense="dense"
+        dark
+        flat
+        dense
         :card="false"
       >
         <v-toolbar-title class="switch-title">
-          Scree Plot<v-switch
+          Scree Plot
+          <v-switch
             v-model="showScree"
             class="switch"
             color="white"
-            hide-details="hide-details"
+            hide-details
           />
         </v-toolbar-title>
       </v-toolbar>
       <v-card
         class="mb-3 mx-3"
-        flat="flat"
+        flat
       >
         <v-card-actions>
-          <v-layout column="column">
+          <v-layout column>
             <v-text-field
               v-model="numComponentsVal"
               class="py-2"
               :disabled="!showScree"
-              hide-details="hide-details"
+              hide-details
               type="number"
               label="Number of PCs"
               min="1"
-              outline="outline"
+              outline
             />
             <v-switch
               v-model="showCutoffs"
               class="ma-0 py-2"
               label="Cutoff lines"
               :disabled="!showScree"
-              hide-details="hide-details"
+              hide-details
             />
           </v-layout>
         </v-card-actions>
@@ -256,7 +259,7 @@ export default defineComponent({
     </layout-grid>
     <div v-else>
       <v-progress-circular
-        indeterminate="indeterminate"
+        indeterminate
         size="100"
         width="5"
       />

@@ -147,37 +147,37 @@ export default {
     title="Group Prediction"
     analysis-path="roc"
     :loading="plot.loading"
-    expanded="expanded"
+    expanded
     download
   >
     <template #controls>
       <v-toolbar
         class="darken-3"
         color="primary"
-        dark="dark"
-        flat="flat"
-        dense="dense"
+        dark
+        flat
+        dense
         :card="false"
       >
         <v-toolbar-title>Metabolite Source</v-toolbar-title>
       </v-toolbar>
       <v-card
         class="mx-3 px-2"
-        flat="flat"
+        flat
       >
         <v-select
           v-model="metaboliteSource"
           class="py-2"
-          hide-details="hide-details"
+          hide-details
           :items="metaboliteSourceOptions"
         />
       </v-card>
       <v-toolbar
         class="darken-3"
         color="primary"
-        dark="dark"
-        flat="flat"
-        dense="dense"
+        dark
+        flat
+        dense
         :card="false"
       >
         <v-toolbar-title>
@@ -202,16 +202,16 @@ export default {
       </v-toolbar>
       <v-card
         class="mx-3"
-        flat="flat"
+        flat
       >
         <v-card-actions>
-          <v-layout column="column">
+          <v-layout column>
             <v-slider
               class="my-1 minCorrelation"
               :value="threshold"
               label="0"
               thumb-label="always"
-              hide-details="hide-details"
+              hide-details
               min="0"
               max="1"
               step="0.1"
@@ -224,40 +224,40 @@ export default {
       <v-toolbar
         class="darken-3"
         color="primary"
-        dark="dark"
-        flat="flat"
-        dense="dense"
+        dark
+        flat
+        dense
         :card="false"
       >
         <v-toolbar-title v-text="`Metabolites (${metabolites.length})`" />
       </v-toolbar>
       <v-card
         class="mx-3 px-1"
-        flat="flat"
+        flat
       >
         <v-autocomplete
           v-model="metabolites"
           :items="columns"
-          chips="chips"
-          dense="dense"
+          chips
+          dense
           multiple
           clearable
-          deletable-chips="deletable-chips"
-          auto-select-first="auto-select-first"
-          hide-selected="hide-selected"
-          hide-details="hide-details"
+          deletable-chips
+          auto-select-first
+          hide-selected
+          hide-details
           @change="changePlotArgs({columns: JSON.stringify(metabolites)})"
         >
           <template v-slot:selection="data">
-            <v-tooltip right="right">
+            <v-tooltip right>
               <template v-slot:activator="{ on }">
                 <v-chip
-                  small="small"
+                  small
                   v-on="on"
                 >
                   <v-icon
                     class="closePillButton pr-1"
-                    small="small"
+                    small
                     @click.stop="removeMetabolite(data.item)"
                   >
                     mdi-close
@@ -271,63 +271,63 @@ export default {
       <v-toolbar
         class="darken-3"
         color="primary"
-        dark="dark"
-        flat="flat"
-        dense="dense"
+        dark
+        flat
+        dense
         :card="false"
       >
         <v-toolbar-title>Group 1</v-toolbar-title>
       </v-toolbar>
       <v-card
         class="mx-3 px-2"
-        flat="flat"
+        flat
       >
         <v-select
           v-model="group1"
           class="py-2"
-          hide-details="hide-details"
+          hide-details
           :items="groups"
         />
       </v-card>
       <v-toolbar
         class="darken-3"
         color="primary"
-        dark="dark"
-        flat="flat"
-        dense="dense"
+        dark
+        flat
+        dense
         :card="false"
       >
         <v-toolbar-title>Group 2</v-toolbar-title>
       </v-toolbar>
       <v-card
         class="mx-3 px-2"
-        flat="flat"
+        flat
       >
         <v-select
           v-model="group2"
           class="py-2"
-          hide-details="hide-details"
+          hide-details
           :items="groups"
         />
       </v-card>
       <v-toolbar
         class="darken-3"
         color="primary"
-        dark="dark"
-        flat="flat"
-        dense="dense"
+        dark
+        flat
+        dense
         :card="false"
       >
         <v-toolbar-title>Method</v-toolbar-title>
       </v-toolbar>
       <v-card
         class="mx-3 px-2"
-        flat="flat"
+        flat
       >
         <v-select
           v-model="method"
           class="py-2"
-          hide-details="hide-details"
+          hide-details
           :items="methodOptions"
           @change="changePlotArgs({method: $event})"
         />

@@ -46,7 +46,7 @@ export default {
     v-if="plot"
     title="PCA Loadings Plot"
     :loading="plot.loading"
-    svg-download="svg-download"
+    svg-download
   >
     <loadings-plot
       :points="plot.data"
@@ -56,15 +56,15 @@ export default {
     />
     <template v-slot:controls>
       <v-menu
-        bottom="bottom"
-        offset-y="offset-y"
-        left="left"
+        bottom
+        offset-y
+        left
         :min-width="150"
         :close-on-content-click="false"
       >
         <template v-slot:activator="{ on }">
           <v-btn
-            icon="icon"
+            icon
             v-on="on"
           >
             <v-icon class="mdi mdi-dots-vertical" />
@@ -72,31 +72,31 @@ export default {
         </template>
         <v-card
           class="pa-1"
-          flat="flat"
+          flat
         >
-          <v-layout column="column">
+          <v-layout column>
             <v-text-field
               v-model="pcXval"
               class="pa-2"
-              hide-details="hide-details"
+              hide-details
               type="number"
               label="PC (X Axis)"
               min="1"
-              outline="outline"
+              outline
             />
             <v-text-field
               v-model="pcYval"
               class="pa-2"
-              hide-details="hide-details"
+              hide-details
               type="number"
               label="PC (Y Axis)"
               min="1"
-              outline="outline"
+              outline
             />
             <v-switch
               v-model="showCrosshairs"
               class="ma-2"
-              hide-details="hide-details"
+              hide-details
               label="Show crosshairs"
             />
           </v-layout>
