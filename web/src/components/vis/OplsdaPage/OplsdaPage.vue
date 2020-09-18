@@ -60,7 +60,7 @@ export default defineComponent({
     return {
       plot,
       changePlotArgs,
-      ...toRefs(controls),
+      controls,
       ready,
       r2,
       loadings,
@@ -97,7 +97,7 @@ export default defineComponent({
         <v-card-actions>
           <v-layout column="column">
             <v-text-field
-              v-model="pcYval"
+              v-model="controls.pcYval"
               class="py-2"
               hide-details="hide-details"
               type="number"
@@ -105,7 +105,7 @@ export default defineComponent({
               min="1"
               max="5"
               outline="outline"
-              :disabled="!showScore &amp;&amp; !showLoadings"
+              :disabled="!controls.showScore && !controls.showLoadings"
             />
           </v-layout>
         </v-card-actions>
@@ -113,8 +113,8 @@ export default defineComponent({
           <div
             v-for="(r2Val,index) in r2"
             :key="index"
-            :class="(index===pcY-1)? 'font-weight-bold':''"
-            @click="if (index !== 0) pcYval=index"
+            :class="(index===controls.pcY-1)? 'font-weight-bold':''"
+            @click="if (index !== 0) controls.pcYval=index"
           >
             <template v-if="index === 0">
               P
@@ -136,7 +136,7 @@ export default defineComponent({
         <v-toolbar-title class="switch-title">
           Score Plot
           <v-switch
-            v-model="showScore"
+            v-model="controls.showScore"
             class="switch"
             color="white"
             hide-details="hide-details"
@@ -150,10 +150,10 @@ export default defineComponent({
         <v-card-actions>
           <v-layout column="column">
             <v-switch
-              v-model="showEllipses"
+              v-model="controls.showEllipses"
               class="ma-0 py-2"
               label="Data ellipses"
-              :disabled="!showScore"
+              :disabled="!controls.showScore"
               hide-details="hide-details"
             />
           </v-layout>
@@ -169,7 +169,7 @@ export default defineComponent({
         <v-toolbar-title class="switch-title">
           Loadings Plot
           <v-switch
-            v-model="showLoadings"
+            v-model="controls.showLoadings"
             class="switch"
             color="white"
             hide-details="hide-details"
@@ -183,10 +183,10 @@ export default defineComponent({
         <v-card-actions>
           <v-layout column="column">
             <v-switch
-              v-model="showCrosshairs"
+              v-model="controls.showCrosshairs"
               class="ma-0 py-2"
               label="Crosshairs"
-              :disabled="!showLoadings"
+              :disabled="!controls.showLoadings"
               hide-details="hide-details"
             />
           </v-layout>
@@ -198,11 +198,11 @@ export default defineComponent({
       :cell-size="300"
     >
       <score-plot
-        v-show="showScore"
+        v-show="controls.showScore"
         :id="id"
         :pc-x="1"
-        :pc-y="pcY"
-        :show-ellipses="showEllipses"
+        :pc-y="controls.pcY"
+        :show-ellipses="controls.showEllipses"
         :pc-coords="pcCoords"
         :row-labels="rowLabels"
         :columns="columns"
@@ -211,11 +211,11 @@ export default defineComponent({
         :group-levels="groupLevels"
       />
       <loadings-plot
-        v-show="showLoadings"
+        v-show="controls.showLoadings"
         :id="id"
         :pc-x="1"
-        :pc-y="pcY"
-        :show-crosshairs="showCrosshairs"
+        :pc-y="controls.pcY"
+        :show-crosshairs="controls.showCrosshairs"
         :loadings="loadings"
       />
     </layout-grid>
