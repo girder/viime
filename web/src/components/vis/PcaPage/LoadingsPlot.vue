@@ -2,6 +2,7 @@
 import { defineComponent, toRef } from '@vue/composition-api';
 import LoadingsPlot from '@/components/vis/LoadingsPlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
+import LoadingsPlotHelp from '../help/LoadingsPlotHelp.vue';
 import usePlotData from '../use/usePlotData';
 
 export default defineComponent({
@@ -23,7 +24,11 @@ export default defineComponent({
       required: true,
     },
   },
-  components: { LoadingsPlot, VisTile },
+  components: {
+    LoadingsPlot,
+    LoadingsPlotHelp,
+    VisTile,
+  },
   setup(props) {
     const { plot } = usePlotData(toRef(props, 'id'), 'loadings');
     return { plot };
@@ -31,13 +36,20 @@ export default defineComponent({
 });
 </script>
 
-<template lang="pug">
-vis-tile(title="PCA Loadings Plot", :loading="plot.loading", svg-download)
-  loadings-plot(
-      :points="plot.data",
-      :pc-x="pcX",
-      :pc-y="pcY",
-      :show-crosshairs="showCrosshairs")
-  template(v-slot:help)
-    include ../help/LoadingsPlotHelp.pug
+<template>
+  <vis-tile
+    title="PCA Loadings Plot"
+    :loading="plot.loading"
+    svg-download="svg-download"
+  >
+    <loadings-plot
+      :points="plot.data"
+      :pc-x="pcX"
+      :pc-y="pcY"
+      :show-crosshairs="showCrosshairs"
+    />
+    <template v-slot:help>
+      <LoadingsPlotHelp />
+    </template>
+  </vis-tile>
 </template>
