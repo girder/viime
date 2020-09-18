@@ -797,8 +797,7 @@ def get_oplsda(validated_table: ValidatedMetaboliteTable):
     column_names = list(measurements.columns)
 
     # TODO: verify this is the correct value to derive "sdev"
-    # Last element of r2 is always NaN, slice it off
-    r2 = modeldf['R2Y'][:-1]
+    r2 = modeldf['R2Y']
     formatted_loadings = []
     x = []
     sdev = []
@@ -829,7 +828,6 @@ def get_oplsda(validated_table: ValidatedMetaboliteTable):
         'loadings': formatted_loadings,
         'labels': labels,
         'rows': rows,
-        'r2': r2,
     })
 
 
