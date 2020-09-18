@@ -145,7 +145,7 @@ export default defineComponent({
               label="PC (X Axis)"
               min="1"
               outline="outline"
-              :disabled="!showScore &amp;&amp; !showLoadings"
+              :disabled="!controls.showScore && !controls.showLoadings"
             />
             <v-text-field
               v-model="controls.pcYval"
@@ -155,7 +155,7 @@ export default defineComponent({
               label="PC (Y Axis)"
               min="1"
               outline="outline"
-              :disabled="!showScore &amp;&amp; !showLoadings"
+              :disabled="!controls.showScore && !controls.showLoadings"
             />
           </v-layout>
         </v-card-actions>
@@ -187,7 +187,7 @@ export default defineComponent({
               v-model="controls.showEllipses"
               class="ma-0 py-2"
               label="Data ellipses"
-              :disabled="!showScore"
+              :disabled="!controls.showScore"
               hide-details="hide-details"
             />
           </v-layout>
@@ -220,7 +220,7 @@ export default defineComponent({
               v-model="controls.showCrosshairs"
               class="ma-0 py-2"
               label="Crosshairs"
-              :disabled="!showLoadings"
+              :disabled="!controls.showLoadings"
               hide-details="hide-details"
             />
           </v-layout>
