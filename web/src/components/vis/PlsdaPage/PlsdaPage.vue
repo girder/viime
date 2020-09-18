@@ -1,29 +1,30 @@
-<script>
+<script lang="ts">
 import VisTileLarge from '@/components/vis/VisTileLarge.vue';
 import LayoutGrid from '@/components/LayoutGrid.vue';
+import {
+  computed, defineComponent, reactive, toRef, toRefs, watchEffect,
+} from '@vue/composition-api';
 import ScorePlot from './ScorePlot.vue';
 import LoadingsPlot from './LoadingsPlot.vue';
-import plotData from '../mixins/plotData';
+import usePlotData from '../use/usePlotData';
+import store from '../../../store';
 
-export default {
-  components: {
-    ScorePlot,
-    LoadingsPlot,
-    VisTileLarge,
-    LayoutGrid,
-  },
-
-  mixins: [plotData('plsda')],
-
+export default defineComponent({
   props: {
     id: {
       type: String,
       required: true,
     },
   },
-
-  data() {
-    return {
+  components: {
+    ScorePlot,
+    LoadingsPlot,
+    VisTileLarge,
+    LayoutGrid,
+  },
+  setup(props) {
+    const { dataset, plot, changePlotArgs } = usePlotData(toRef(props, 'id'), 'plsda');
+    const controls = reactive({
       pcXval: '1',
       pcYval: '2',
       numComponentsVal: '10',
@@ -35,85 +36,55 @@ export default {
       showCutoffs: true,
       showScore: true,
       showLoadings: true,
+    });
+
+    const ready = computed(() => {
+      const pcaReady = store.getters.ready(props.id, 'plsda_scores');
+      const loadingsReady = store.getters.ready(props.id, 'plsda_loadings');
+      return pcaReady && loadingsReady;
+    });
+    const loadings = computed(() => plot.value.data?.loadings || []);
+    const pcCoords = computed(() => plot.value.data?.scores.x || []);
+    const eigenvalues = computed(() => plot.value.data?.scores.sdev || []);
+    const rowLabels = computed(() => plot.value.data?.rows || []);
+    const groupLabels = computed(() => plot.value.data?.labels || {});
+    const columns = computed(() => dataset.value?.column.data || []);
+    const groupLevels = computed(() => dataset.value?.groupLevels || []);
+
+    watchEffect(() => {
+      const pcX = Number.parseInt(controls.pcXval, 10);
+      if (!Number.isNaN(pcX)) {
+        controls.pcX = pcX;
+      }
+    });
+    watchEffect(() => {
+      const pcY = Number.parseInt(controls.pcYval, 10);
+      if (!Number.isNaN(pcY)) {
+        controls.pcY = pcY;
+      }
+    });
+    watchEffect(() => {
+      const numComponents = Number.parseInt(controls.numComponentsVal, 10);
+      if (!Number.isNaN(numComponents)) {
+        controls.numComponents = numComponents;
+      }
+    });
+
+    return {
+      plot,
+      changePlotArgs,
+      controls,
+      ready,
+      loadings,
+      pcCoords,
+      eigenvalues,
+      rowLabels,
+      groupLabels,
+      columns,
+      groupLevels,
     };
   },
-
-  computed: {
-    ready() {
-      const pcaReady = this.$store.getters.ready(this.id, 'plsda_scores');
-      const loadingsReady = this.$store.getters.ready(this.id, 'plsda_loadings');
-      return pcaReady && loadingsReady;
-    },
-    loadings() {
-      return this.maybeData(['loadings'], []);
-    },
-    pcCoords() {
-      return this.maybeData(['scores', 'x'], []);
-    },
-    eigenvalues() {
-      return this.maybeData(['scores', 'sdev'], []);
-    },
-    rowLabels() {
-      return this.maybeData(['rows'], []);
-    },
-    groupLabels() {
-      return this.maybeData(['labels'], {});
-    },
-    columns() {
-      if (this.dataset?.column?.data) {
-        return this.dataset.column.data;
-      }
-      return [];
-    },
-
-    groupLevels() {
-      if (this.dataset?.groupLevels) {
-        return this.dataset.groupLevels;
-      }
-      return [];
-    },
-  },
-  watch: {
-    pcXval: {
-      handler(val) {
-        const pcX = Number.parseInt(val, 10);
-        if (!Number.isNaN(pcX)) {
-          this.pcX = pcX;
-        }
-      },
-      immediate: true,
-    },
-    pcYval: {
-      handler(val) {
-        const pcY = Number.parseInt(val, 10);
-        if (!Number.isNaN(pcY)) {
-          this.pcY = pcY;
-        }
-      },
-      immediate: true,
-    },
-    numComponentsVal: {
-      handler(val) {
-        const numComponents = Number.parseInt(val, 10);
-        if (!Number.isNaN(numComponents)) {
-          this.numComponents = numComponents;
-        }
-      },
-      immediate: true,
-    },
-  },
-  methods: {
-    maybeData(keys, dflt) {
-      const {
-        plot,
-      } = this;
-      if (keys.length === 2) {
-        return plot.data ? plot.data[keys[0]][keys[1]] : dflt;
-      }
-      return plot.data ? plot.data[keys[0]] : dflt;
-    },
-  },
-};
+});
 </script>
 
 <template>
@@ -138,7 +109,7 @@ export default {
         <v-card-actions>
           <v-layout column="column">
             <v-text-field
-              v-model="numComponentsVal"
+              v-model="controls.numComponentsVal"
               class="py-2"
               hide-details="hide-details"
               type="number"
@@ -146,7 +117,7 @@ export default {
               outline="outline"
               :disabled="plot.loading"
               label="Number of Components"
-              @change="changePlotArgs({ num_of_components: $event });"
+              @change="plot.valid=false;changePlotArgs({ num_of_components: $event });"
             />
           </v-layout>
         </v-card-actions>
@@ -167,24 +138,24 @@ export default {
         <v-card-actions>
           <v-layout column="column">
             <v-text-field
-              v-model="pcXval"
+              v-model="controls.pcXval"
               class="py-2"
               hide-details="hide-details"
               type="number"
               label="PC (X Axis)"
               min="1"
               outline="outline"
-              :disabled="!showScore &amp;&amp; !showLoadings"
+              :disabled="!controls.showScore && !controls.showLoadings"
             />
             <v-text-field
-              v-model="pcYval"
+              v-model="controls.pcYval"
               class="py-2"
               hide-details="hide-details"
               type="number"
               label="PC (Y Axis)"
               min="1"
               outline="outline"
-              :disabled="!showScore &amp;&amp; !showLoadings"
+              :disabled="!controls.showScore && !controls.showLoadings"
             />
           </v-layout>
         </v-card-actions>
@@ -199,7 +170,7 @@ export default {
         <v-toolbar-title class="switch-title">
           Score Plot
           <v-switch
-            v-model="showScore"
+            v-model="controls.showScore"
             class="switch"
             color="white"
             hide-details="hide-details"
@@ -213,10 +184,10 @@ export default {
         <v-card-actions>
           <v-layout column="column">
             <v-switch
-              v-model="showEllipses"
+              v-model="controls.showEllipses"
               class="ma-0 py-2"
               label="Data ellipses"
-              :disabled="!showScore"
+              :disabled="!controls.showScore"
               hide-details="hide-details"
             />
           </v-layout>
@@ -232,7 +203,7 @@ export default {
         <v-toolbar-title class="switch-title">
           Loadings Plot
           <v-switch
-            v-model="showLoadings"
+            v-model="controls.showLoadings"
             class="switch"
             color="white"
             hide-details="hide-details"
@@ -246,10 +217,10 @@ export default {
         <v-card-actions>
           <v-layout column="column">
             <v-switch
-              v-model="showCrosshairs"
+              v-model="controls.showCrosshairs"
               class="ma-0 py-2"
               label="Crosshairs"
-              :disabled="!showLoadings"
+              :disabled="!controls.showLoadings"
               hide-details="hide-details"
             />
           </v-layout>
@@ -261,11 +232,11 @@ export default {
       :cell-size="300"
     >
       <score-plot
-        v-show="showScore"
+        v-show="controls.showScore"
         :id="id"
-        :pc-x="pcX"
-        :pc-y="pcY"
-        :show-ellipses="showEllipses"
+        :pc-x="controls.pcX"
+        :pc-y="controls.pcY"
+        :show-ellipses="controls.showEllipses"
         :pc-coords="pcCoords"
         :row-labels="rowLabels"
         :columns="columns"
@@ -274,11 +245,11 @@ export default {
         :group-levels="groupLevels"
       />
       <loadings-plot
-        v-show="showLoadings"
+        v-show="controls.showLoadings"
         :id="id"
-        :pc-x="pcX"
-        :pc-y="pcY"
-        :show-crosshairs="showCrosshairs"
+        :pc-x="controls.pcX"
+        :pc-y="controls.pcY"
+        :show-crosshairs="controls.showCrosshairs"
         :loadings="loadings"
       />
     </layout-grid>
