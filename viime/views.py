@@ -6,13 +6,14 @@ from typing import Any, Callable, cast, Dict, List, Optional
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
+from numpy import sqrt
 import pandas
 from webargs.flaskparser import use_kwargs
 from werkzeug.datastructures import FileStorage
 
 from viime import opencpu, samples
 from viime.analyses import anova_test, factor_analysis, hierarchical_clustering,\
-    pairwise_correlation, roc_analysis, wilcoxon_test
+    oplsda, pairwise_correlation, plsda, roc_analysis, wilcoxon_test
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
 from viime.models import AXIS_NAME_TYPES, clean, CSVFile, CSVFileSchema, db, \
     GroupLevelSchema, ModifyLabelListSchema, \
@@ -722,6 +723,114 @@ def get_pca_overview(validated_table: ValidatedMetaboliteTable):
     png_content = opencpu.generate_image('/viime/R/pca_overview_plot',
                                          validated_table.measurements)
     return Response(png_content, mimetype='image/png')
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/plsda', methods=['GET'])
+@use_kwargs({
+    'num_of_components': fields.Integer(required=False)
+})
+@load_validated_csv_file
+def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int] = None):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+
+    rows, cols = measurements.shape[:2]
+    max_components = min(rows, cols)
+    if num_of_components is None:
+        num_of_components = max_components
+    if num_of_components > max_components:
+        return jsonify({
+            'error': 'invalid num_of_components'
+        }), 400
+
+    scores = plsda(measurements, groups, num_of_components, 'scores')
+    loadings = plsda(measurements, groups, num_of_components, 'loadings')
+
+    # massage the data returned from opencpu to correct format for client:
+    column_names = list(measurements.columns)
+    formatted_loadings = []
+    x = []
+
+    for i in range(num_of_components):
+        for j, score in enumerate(scores.get(f'variates.X.comp{i+1}')):
+            if i == 0:
+                x.append([])
+            x[j].append(score)
+        for j, loading in enumerate(loadings.get(f'comp{i+1}')):
+            if i == 0:
+                formatted_loadings.append({})
+                formatted_loadings[j]['col'] = column_names[j]
+                formatted_loadings[j]['loadings'] = []
+            formatted_loadings[j]['loadings'].append(loading)
+
+    explained_variances = [
+        scores.get(f'explained_variance.comp.{i+1}')[0] for i in range(num_of_components)
+    ]
+    sdev = sqrt(explained_variances).tolist()
+
+    formatted_scores = {'x': x, 'sdev': sdev}
+
+    labels = validated_table.sample_metadata
+    labels = clean(pandas.concat([groups, labels], axis=1)).to_dict('list')
+    rows = measurements.index.tolist()
+
+    return jsonify({
+        'scores': formatted_scores,
+        'loadings': formatted_loadings,
+        'labels': labels,
+        'rows': rows})
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/oplsda', methods=['GET'])
+@load_validated_csv_file
+def get_oplsda(validated_table: ValidatedMetaboliteTable):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+
+    scores = oplsda(measurements, groups, 'scores')
+    loadings = oplsda(measurements, groups, 'loadings')
+    modeldf = oplsda(measurements, groups, 'modeldf')
+
+    # TODO: add vip scores to the response
+    # vip = next(iter(oplsda(measurements, groups, 'vip').values()))
+
+    column_names = list(measurements.columns)
+
+    # TODO: verify this is the correct value to derive "sdev"
+    # Last element of r2 is always NaN, slice it off
+    r2 = modeldf['R2Y'][:-1]
+    formatted_loadings = []
+    x = []
+    sdev = []
+
+    component_names = ['p1', 'o1', 'o2', 'o3', 'o4', 'o5']
+    for i, component_name in enumerate(component_names):
+        for j, score in enumerate(scores.get(component_name)):
+            if i == 0:
+                x.append([])
+            x[j].append(score)
+        for j, loading in enumerate(loadings.get(component_name)):
+            if i == 0:
+                formatted_loadings.append({})
+                formatted_loadings[j]['col'] = column_names[j]
+                formatted_loadings[j]['loadings'] = []
+            formatted_loadings[j]['loadings'].append(loading)
+
+        sdev.append(sqrt(r2[i]))
+
+    formatted_scores = {'x': x, 'sdev': sdev}
+
+    labels = validated_table.sample_metadata
+    labels = clean(pandas.concat([groups, labels], axis=1)).to_dict('list')
+    rows = measurements.index.tolist()
+
+    return jsonify({
+        'scores': formatted_scores,
+        'loadings': formatted_loadings,
+        'labels': labels,
+        'rows': rows,
+        'r2': r2,
+    })
 
 
 def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,

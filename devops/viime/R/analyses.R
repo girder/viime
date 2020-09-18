@@ -240,7 +240,7 @@ roc_analysis <- function(measurements, groups, group1_name, group2_name, column_
 #'
 #' @export
 factor_analysis <- function(measurements, threshold) {
-  library(psych) 
+  library(psych)
 
   m.df <- read.csv(measurements, row.names=1, check.names=FALSE)
 
@@ -256,7 +256,7 @@ factor_analysis <- function(measurements, threshold) {
   pca_a <- prcomp(m.df, center=T, scale=T)
 
   #getting the eigenvalues
-  MS.eig <- (pca_a$sdev)^2 
+  MS.eig <- (pca_a$sdev)^2
 
   #Eigenvalues higher than 1 to see how many factors we need
   ncomp <- sum(MS.eig >= 1)
@@ -266,7 +266,7 @@ factor_analysis <- function(measurements, threshold) {
 
   # Factor analysis
   #Using ncomp, number of components with eigenvalue higher than 1
-  fitpsy <- psych::fa(m.df, nfactors=ncomp, rotate="varimax") 
+  fitpsy <- psych::fa(m.df, nfactors=ncomp, rotate="varimax")
 
   #Save some results from factor analysis
   eigen.values <- fitpsy$e.values #eigenvalues
@@ -294,4 +294,72 @@ factor_analysis <- function(measurements, threshold) {
     OUT <- rbind(OUT,b)
   }
   out <- OUT
+}
+
+#' plsda
+#'
+#' @export
+plsda <- function(measurements, groups, num_of_components, mode) {
+  library(mixOmics)
+  df <- read.csv(measurements, row.names=1, check.names=FALSE)
+  groups <- read.csv(groups, row.names=1, check.names=FALSE)
+  groups <- as.factor(groups[,1])
+
+  # PLS-DA (Set to scale=TRUE just for trial, for VIIME it should be FALSE since data has already been pretreated)
+  mod_plsda <- mixOmics::plsda(df, groups, scale=FALSE, ncomp = num_of_components)
+
+  if (mode == "scores") {
+    # Save Scores
+    scores_plsda <- data.frame(variates=mod_plsda$variates[1], explained_variance=as.list(mod_plsda$explained_variance$X))
+    return(scores_plsda)
+  } else if (mode == "loadings") {
+    # Save loadings
+    load_plsda <- as.data.frame(mod_plsda$loadings$X)
+    return(load_plsda)
+  } else {
+    stop("Invalid mode for PLSDA.")
+  }
+}
+
+#' oplsda
+#'
+#' @export
+oplsda <- function(measurements, groups, mode) {
+  library(ropls)
+  df <- read.csv(measurements, row.names=1, check.names=FALSE)
+  groups <- read.csv(groups, row.names=1, check.names=FALSE)
+  groups <- as.factor(groups[,1])
+
+  # Perform OPLS-DA
+  ropls_oplsda <- ropls::opls(df, groups, scaleC="none", orthoI=NA)
+
+  if (mode == "scores") {
+    #Main Score
+    ropls_scores_x  <- as.data.frame(ropls_oplsda@scoreMN)
+    #Orthogonal
+    ropls_scores_y  <- as.data.frame(ropls_oplsda@orthoScoreMN)
+    #Save scores together
+    oplsda_scores <- cbind(ropls_scores_x , ropls_scores_y)
+
+    return(oplsda_scores)
+  } else if (mode == "loadings") {
+    # Save loadings
+    #Main loadings
+    ropls_loadings_x  <- as.data.frame(ropls_oplsda@loadingMN)
+    #Orthogonal loadings
+    ropls_loadings_y  <- as.data.frame(ropls_oplsda@orthoLoadingMN)
+    #Save loadings together
+    oplsda_loadings <- cbind(ropls_loadings_x , ropls_loadings_y)
+
+    return(oplsda_loadings)
+  } else if (mode == "vip") {
+    #VIP Scores
+    ropls_vip <- as.data.frame(ropls_oplsda@vipVn)
+
+    return(ropls_vip)
+  } else if (mode == "modeldf") {
+    return(ropls_oplsda@modelDF)
+  } else {
+    stop("Invalid mode for PLSDA.")
+  }
 }
