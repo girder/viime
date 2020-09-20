@@ -401,7 +401,7 @@ replace the values with either zeros or half of the minimum value of that
 variable, while the MCAR options include imputation by Random Forest, K-Nearest
 Neighbors, the mean value, or the median value.
 
-Finally, Visualization of heatmaps, volcano plots, and network correlation
+Finally, visualization of heatmaps, volcano plots, and network correlation
 diagrams, which all offer state-of-the-art web-based interactivity, can all be
 adjusted to include user selected subsets of data based on statistical
 significance or the particular interest of the investigator. This philosophy of
