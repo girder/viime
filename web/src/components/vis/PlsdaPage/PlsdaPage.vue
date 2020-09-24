@@ -2,7 +2,7 @@
 import VisTileLarge from '@/components/vis/VisTileLarge.vue';
 import LayoutGrid from '@/components/LayoutGrid.vue';
 import {
-  computed, defineComponent, reactive, toRef, toRefs, watchEffect,
+  computed, ComputedRef, defineComponent, reactive, toRef, watch, watchEffect,
 } from '@vue/composition-api';
 import ScorePlot from './ScorePlot.vue';
 import LoadingsPlot from './LoadingsPlot.vue';
@@ -27,10 +27,10 @@ export default defineComponent({
     const controls = reactive({
       pcXval: '1',
       pcYval: '2',
-      numComponentsVal: '10',
+      numComponentsVal: '3',
       pcX: 1,
       pcY: 2,
-      numComponents: 10,
+      numComponents: 3,
       showEllipses: true,
       showCrosshairs: true,
       showCutoffs: true,
@@ -43,6 +43,9 @@ export default defineComponent({
       const loadingsReady = store.getters.ready(props.id, 'plsda_loadings');
       return pcaReady && loadingsReady;
     });
+    const r2: ComputedRef<number[]> = computed(() => plot.value.data?.r2 || []);
+    const q2: ComputedRef<number[]> = computed(() => plot.value.data?.q2 || []);
+    const r2q2Table = computed(() => r2.value.map((r2Val, i) => ({ name: `PC${i + 1}`, r2: r2Val.toFixed(3), q2: q2.value[i].toFixed(3) })));
     const loadings = computed(() => plot.value.data?.loadings || []);
     const pcCoords = computed(() => plot.value.data?.scores.x || []);
     const eigenvalues = computed(() => plot.value.data?.scores.sdev || []);
@@ -53,20 +56,24 @@ export default defineComponent({
 
     watchEffect(() => {
       const pcX = Number.parseInt(controls.pcXval, 10);
-      if (!Number.isNaN(pcX)) {
+      if (!Number.isNaN(pcX) && pcX <= controls.numComponents) {
         controls.pcX = pcX;
       }
     });
     watchEffect(() => {
       const pcY = Number.parseInt(controls.pcYval, 10);
-      if (!Number.isNaN(pcY)) {
+      if (!Number.isNaN(pcY) && pcY <= controls.numComponents) {
         controls.pcY = pcY;
       }
     });
-    watchEffect(() => {
+    watch(() => controls.numComponentsVal, () => {
       const numComponents = Number.parseInt(controls.numComponentsVal, 10);
       if (!Number.isNaN(numComponents)) {
         controls.numComponents = numComponents;
+        if (plot.value) {
+          plot.value.valid = false;
+        }
+        changePlotArgs({ num_of_components: controls.numComponents });
       }
     });
 
@@ -76,6 +83,7 @@ export default defineComponent({
       controls,
       ready,
       loadings,
+      r2q2Table,
       pcCoords,
       eigenvalues,
       rowLabels,
@@ -117,7 +125,6 @@ export default defineComponent({
               outline="outline"
               :disabled="plot.loading"
               label="Number of Components"
-              @change="plot.valid=false;changePlotArgs({ num_of_components: $event });"
             />
           </v-layout>
         </v-card-actions>
@@ -159,6 +166,29 @@ export default defineComponent({
             />
           </v-layout>
         </v-card-actions>
+        <v-card-text class="subheading">
+          <table>
+            <tbody>
+              <tr>
+                <th class="px-3" />
+                <th class="px-3">
+                  R<sup>2</sup>
+                </th>
+                <th class="px-3">
+                  Q<sup>2</sup>
+                </th>
+              </tr>
+              <tr
+                v-for="pc in r2q2Table"
+                :key="pc.name"
+              >
+                <td>{{ pc.name }}</td>
+                <td>{{ pc.r2 }}</td>
+                <td>{{ pc.q2 }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </v-card-text>
       </v-card>
       <v-toolbar
         class="darken-3"

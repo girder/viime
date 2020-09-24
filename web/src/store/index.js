@@ -108,14 +108,18 @@ const plotDefaults = {
     data: null,
     valid: false,
     loading: false,
-    args: {},
+    args: {
+      num_of_components: 3,
+    },
     type: plot_types.ANALYSIS,
   },
   oplsda: {
     data: null,
     valid: false,
     loading: false,
-    args: {},
+    args: {
+      num_of_components: 3,
+    },
     type: plot_types.ANALYSIS,
   },
   boxplot: {
