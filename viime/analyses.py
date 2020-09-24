@@ -130,12 +130,13 @@ def plsda(measurements: pd.DataFrame, groups: pd.DataFrame, num_of_components: i
     return clean(data).to_dict(orient='list')
 
 
-def oplsda(measurements: pd.DataFrame, groups: pd.DataFrame, mode='scores'):
+def oplsda(measurements: pd.DataFrame, groups: pd.DataFrame, num_of_components: int, mode='scores'):
     files = {
         'measurements': measurements.to_csv().encode(),
         'groups': groups.to_csv(header=True).encode()
     }
     data = opencpu_request('oplsda', files, {
+        'num_of_components': num_of_components,
         'mode': mode
     })
     return clean(data).to_dict(orient='list')

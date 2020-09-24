@@ -727,10 +727,10 @@ def get_pca_overview(validated_table: ValidatedMetaboliteTable):
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/plsda', methods=['GET'])
 @use_kwargs({
-    'num_of_components': fields.Integer(required=False)
+    'num_of_components': fields.Integer(required=True)
 })
 @load_validated_csv_file
-def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int] = None):
+def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int] = 3):
     measurements = validated_table.measurements
     groups = validated_table.groups
 
@@ -745,6 +745,9 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
 
     scores = plsda(measurements, groups, num_of_components, 'scores')
     loadings = plsda(measurements, groups, num_of_components, 'loadings')
+    vip = plsda(measurements, groups, num_of_components, 'vip')
+    r2 = plsda(measurements, groups, num_of_components, 'r2')
+    q2 = plsda(measurements, groups, num_of_components, 'q2')
 
     # massage the data returned from opencpu to correct format for client:
     column_names = list(measurements.columns)
@@ -769,6 +772,8 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
     sdev = sqrt(explained_variances).tolist()
 
     formatted_scores = {'x': x, 'sdev': sdev}
+    formatted_r2 = [r2[comp][0] for comp in r2.keys()]
+    formatted_q2 = [q2[comp][0] for comp in q2.keys()]
 
     labels = validated_table.sample_metadata
     labels = clean(pandas.concat([groups, labels], axis=1)).to_dict('list')
@@ -778,18 +783,27 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
         'scores': formatted_scores,
         'loadings': formatted_loadings,
         'labels': labels,
-        'rows': rows})
+        'rows': rows,
+        'r2': formatted_r2,
+        'q2': formatted_q2,
+    })
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/oplsda', methods=['GET'])
+@use_kwargs({
+    'num_of_components': fields.Integer(required=True)
+})
 @load_validated_csv_file
-def get_oplsda(validated_table: ValidatedMetaboliteTable):
+def get_oplsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int] = 3):
+
     measurements = validated_table.measurements
     groups = validated_table.groups
 
-    scores = oplsda(measurements, groups, 'scores')
-    loadings = oplsda(measurements, groups, 'loadings')
-    modeldf = oplsda(measurements, groups, 'modeldf')
+    scores = oplsda(measurements, groups, num_of_components, 'scores')
+    loadings = oplsda(measurements, groups, num_of_components, 'loadings')
+    vip = oplsda(measurements, groups, num_of_components, 'vip')
+    modeldf = oplsda(measurements, groups, num_of_components, 'modeldf')
+    summarydf = oplsda(measurements, groups, num_of_components, 'summarydf')
 
     # TODO: add vip scores to the response
     # vip = next(iter(oplsda(measurements, groups, 'vip').values()))
@@ -799,12 +813,14 @@ def get_oplsda(validated_table: ValidatedMetaboliteTable):
     # TODO: verify this is the correct value to derive "sdev"
     # Last element of r2 is always NaN, slice it off
     r2 = modeldf['R2Y'][:-1]
+    q2 = modeldf['Q2'][:-1]
+    r2cum = summarydf['R2Y(cum)'][0]
+    q2cum = summarydf['Q2(cum)'][0]
     formatted_loadings = []
     x = []
     sdev = []
 
-    component_names = ['p1', 'o1', 'o2', 'o3', 'o4', 'o5']
-    for i, component_name in enumerate(component_names):
+    for i, component_name in enumerate(scores.keys()):
         for j, score in enumerate(scores.get(component_name)):
             if i == 0:
                 x.append([])
@@ -819,6 +835,7 @@ def get_oplsda(validated_table: ValidatedMetaboliteTable):
         sdev.append(sqrt(r2[i]))
 
     formatted_scores = {'x': x, 'sdev': sdev}
+    formatted_vip = vip['ropls_oplsda@vipVn']
 
     labels = validated_table.sample_metadata
     labels = clean(pandas.concat([groups, labels], axis=1)).to_dict('list')
@@ -827,9 +844,13 @@ def get_oplsda(validated_table: ValidatedMetaboliteTable):
     return jsonify({
         'scores': formatted_scores,
         'loadings': formatted_loadings,
+        'vip': formatted_vip,
         'labels': labels,
         'rows': rows,
         'r2': r2,
+        'q2': q2,
+        'r2cum': r2cum,
+        'q2cum': q2cum,
     })
 
 
