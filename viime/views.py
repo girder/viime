@@ -727,7 +727,7 @@ def get_pca_overview(validated_table: ValidatedMetaboliteTable):
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/plsda', methods=['GET'])
 @use_kwargs({
-    'num_of_components': fields.Integer(required=True)
+    'num_of_components': fields.Integer(required=False)
 })
 @load_validated_csv_file
 def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int] = 3):
@@ -745,7 +745,7 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
 
     scores = plsda(measurements, groups, num_of_components, 'scores')
     loadings = plsda(measurements, groups, num_of_components, 'loadings')
-    vip = plsda(measurements, groups, num_of_components, 'vip')
+    # TODO vip = plsda(measurements, groups, num_of_components, 'vip')
     r2 = plsda(measurements, groups, num_of_components, 'r2')
     q2 = plsda(measurements, groups, num_of_components, 'q2')
 
