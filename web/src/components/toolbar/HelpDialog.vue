@@ -34,15 +34,15 @@ export default defineComponent({
     <template v-slot:activator="{ on }">
       <v-btn
         class="ml-auto mr-0"
-        icon="icon"
-        small="small"
-        depressed="depressed"
-        flat="flat"
+        icon
+        small
+        depressed
+        flat
         v-on="on"
       >
         <v-icon
           :color="outline ? 'rgba(0,0,0,0.25)' : undefined"
-          small="small"
+          small
         >
           {{ outline ? $vuetify.icons.helpOutline : $vuetify.icons.help }}
         </v-icon>

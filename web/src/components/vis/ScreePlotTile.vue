@@ -43,7 +43,7 @@ export default defineComponent({
     v-if="plot"
     title="PCA Scree Plot"
     :loading="plot.loading"
-    svg-download="svg-download"
+    svg-download
   >
     <scree-plot
       v-if="plot.data"
@@ -52,15 +52,15 @@ export default defineComponent({
       :show-cutoffs="showCutoffs"
     /><template v-slot:controls>
       <v-menu
-        bottom="bottom"
-        offset-y="offset-y"
-        left="left"
+        bottom
+        offset-y
+        left
         :min-width="150"
         :close-on-content-click="false"
       >
         <template v-slot:activator="{ on }">
           <v-btn
-            icon="icon"
+            icon
             v-on="on"
           >
             <v-icon class="mdi mdi-dots-vertical" />
@@ -68,26 +68,26 @@ export default defineComponent({
         </template>
         <v-card
           class="pa-1"
-          flat="flat"
+          flat
         >
           <v-layout
             class="px-2"
-            column="column"
+            column
           >
             <v-text-field
               v-model="numComponentsText"
               class="py-2"
-              hide-details="hide-details"
+              hide-details
               type="number"
               label="Principal Components"
               min="1"
-              outline="outline"
+              outline
             />
             <v-switch
               v-model="showCutoffs"
               class="py-2"
               label="Diagnostic cutoffs"
-              hide-details="hide-details"
+              hide-details
             />
           </v-layout>
         </v-card>

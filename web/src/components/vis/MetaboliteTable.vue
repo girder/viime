@@ -105,17 +105,17 @@ export default defineComponent({
     class="elevation-1 main"
     :headers="headers"
     :items="items"
-    disable-initial-sort="disable-initial-sort"
+    disable-initial-sort
     item-key="Metabolite"
     :pagination.sync="pagination"
-    select-all="select-all"
+    select-all
   >
     <template v-slot:headerCell="{ header }">
       {{ header.text }}<v-btn
         v-if="!header.isLabel"
         class="toggle"
-        icon="icon"
-        small="small"
+        icon
+        small
         title="Adds the highlighted Metabolites to the selected set"
         @click="toggleHighlighted(header, $event, true)"
       >
@@ -127,8 +127,8 @@ export default defineComponent({
       <v-btn
         v-if="!header.isLabel"
         class="toggle"
-        icon="icon"
-        small="small"
+        icon
+        small
         title="Removes the highlighted Metabolites from the selected set"
         @click="toggleHighlighted(header, $event, false)"
       >
@@ -142,7 +142,7 @@ export default defineComponent({
       <td class="cell">
         <v-checkbox
           v-model="props.selected"
-          hide-details="hide-details"
+          hide-details
           :color="colors.selected"
         />
       </td>

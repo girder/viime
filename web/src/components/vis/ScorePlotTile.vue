@@ -74,7 +74,7 @@ export default {
 <template>
   <vis-tile
     title="PCA Score Plot"
-    svg-download="svg-download"
+    svg-download
   >
     <score-plot
       :pc-coords="pcCoords"
@@ -89,15 +89,15 @@ export default {
     />
     <template v-slot:controls>
       <v-menu
-        bottom="bottom"
-        offset-y="offset-y"
-        left="left"
+        bottom
+        offset-y
+        left
         :min-width="150"
         :close-on-content-click="false"
       >
         <template v-slot:activator="{ on }">
           <v-btn
-            icon="icon"
+            icon
             v-on="on"
           >
             <v-icon class="mdi mdi-dots-vertical" />
@@ -105,35 +105,35 @@ export default {
         </template>
         <v-card
           class="pa-1"
-          flat="flat"
+          flat
         >
           <v-layout
             class="px-2"
-            column="column"
+            column
           >
             <v-text-field
               v-model="pcXval"
               class="py-2"
-              hide-details="hide-details"
+              hide-details
               type="number"
               label="PC (X Axis)"
               min="1"
-              outline="outline"
+              outline
             />
             <v-text-field
               v-model="pcYval"
               class="py-2"
-              hide-details="hide-details"
+              hide-details
               type="number"
               label="PC (Y Axis)"
               min="1"
-              outline="outline"
+              outline
             />
             <v-switch
               v-model="showEllipses"
               class="py-2"
               label="Data ellipses"
-              hide-details="hide-details"
+              hide-details
             />
           </v-layout>
         </v-card>

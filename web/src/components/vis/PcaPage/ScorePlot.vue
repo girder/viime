@@ -43,7 +43,7 @@ export default defineComponent({
   <vis-tile
     title="PCA Score Plot"
     :loading="plot.loading"
-    svg-download="svg-download"
+    svg-download
   >
     <score-plot
       v-if="plot.data && dataset"
