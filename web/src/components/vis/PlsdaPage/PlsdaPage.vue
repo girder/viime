@@ -151,6 +151,7 @@ export default defineComponent({
               type="number"
               label="PC (X Axis)"
               min="1"
+              :max="controls.numComponents"
               outline="outline"
               :disabled="!controls.showScore && !controls.showLoadings"
             />
@@ -161,6 +162,7 @@ export default defineComponent({
               type="number"
               label="PC (Y Axis)"
               min="1"
+              :max="controls.numComponents"
               outline="outline"
               :disabled="!controls.showScore && !controls.showLoadings"
             />
