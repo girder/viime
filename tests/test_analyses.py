@@ -93,7 +93,7 @@ def test_plsda(client, test_dataset):
     data = {'num_of_components': num_of_components}
     resp = client.get(url_for('csv.get_plsda', csv_id=str(csv_id)), json=data)
     assert resp.status_code == 200
-    keys = {'scores', 'loadings', 'rows', 'labels', 'r2', 'q2'}
+    keys = {'scores', 'loadings', 'vip_scores', 'rows', 'labels', 'r2', 'q2'}
     assert keys == set(resp.json.keys())
 
     loadings = resp.json.get('loadings')
