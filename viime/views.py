@@ -745,7 +745,7 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
 
     scores = plsda(measurements, groups, num_of_components, 'scores')
     loadings = plsda(measurements, groups, num_of_components, 'loadings')
-    # TODO vip = plsda(measurements, groups, num_of_components, 'vip')
+    vip_scores = plsda(measurements, groups, num_of_components, 'vip')
     r2 = plsda(measurements, groups, num_of_components, 'r2')
     q2 = plsda(measurements, groups, num_of_components, 'q2')
 
@@ -766,6 +766,14 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
                 formatted_loadings[j]['loadings'] = []
             formatted_loadings[j]['loadings'].append(loading)
 
+    formatted_vip_scores = [
+        [
+            {'col': column_names[j], 'vip': vip}
+            for j, vip in enumerate(vip_scores[f'comp{i}'])
+        ]
+        for i in range(1, num_of_components + 1)
+    ]
+
     explained_variances = [
         scores.get(f'explained_variance.comp.{i+1}')[0] for i in range(num_of_components)
     ]
@@ -782,6 +790,7 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
     return jsonify({
         'scores': formatted_scores,
         'loadings': formatted_loadings,
+        'vip_scores': formatted_vip_scores,
         'labels': labels,
         'rows': rows,
         'r2': formatted_r2,
@@ -815,7 +824,7 @@ def get_oplsda(validated_table: ValidatedMetaboliteTable,
 
     scores = oplsda(measurements, groups, num_of_components, 'scores')
     loadings = oplsda(measurements, groups, num_of_components, 'loadings')
-    vip = oplsda(measurements, groups, num_of_components, 'vip')
+    vip_scores = oplsda(measurements, groups, num_of_components, 'vip')['ropls_oplsda@vipVn']
     modeldf = oplsda(measurements, groups, num_of_components, 'modeldf')
     summarydf = oplsda(measurements, groups, num_of_components, 'summarydf')
 
@@ -848,9 +857,11 @@ def get_oplsda(validated_table: ValidatedMetaboliteTable,
 
         sdev.append(sqrt(r2[i]))
 
-    formatted_scores = {'x': x, 'sdev': sdev}
-    formatted_vip = vip['ropls_oplsda@vipVn']
+    formatted_vip_scores = [
+        {'col': column_names[i], 'vip': vip} for i, vip in enumerate(vip_scores)
+    ]
 
+    formatted_scores = {'x': x, 'sdev': sdev}
     labels = validated_table.sample_metadata
     labels = clean(pandas.concat([groups, labels], axis=1)).to_dict('list')
     rows = measurements.index.tolist()
@@ -858,7 +869,7 @@ def get_oplsda(validated_table: ValidatedMetaboliteTable,
     return jsonify({
         'scores': formatted_scores,
         'loadings': formatted_loadings,
-        'vip': formatted_vip,
+        'vip_scores': formatted_vip_scores,
         'labels': labels,
         'rows': rows,
         'r2': r2,
