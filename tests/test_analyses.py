@@ -88,36 +88,14 @@ def test_plsda(client, test_dataset):
     ]
     rows = [row for row in rows if row['row_type'] == 'sample']
 
-    # perform PLSDA with no `num_of_components` parameter
-    data = {}
-    resp = client.get(url_for('csv.get_plsda', csv_id=str(csv_id)), json=data)
-    assert resp.status_code == 200
-    keys = {'scores', 'loadings', 'rows', 'labels'}
-    assert keys == set(resp.json.keys())
-
-    num_of_components = min(len(columns), len(rows))  # default num_of_components
-
-    loadings = resp.json.get('loadings')
-    for loading in loadings:
-        assert loading.get('col') in columns
-        assert loading.get('loadings') is not None
-
-        assert len(loading.get('loadings')) == num_of_components
-
-    scores = resp.json.get('scores')
-
-    assert 'sdev' in scores.keys()
-    assert len(scores.get('sdev')) == num_of_components
-    assert 'x' in scores.keys()
-    assert len(scores.get('x')) == len(rows)
-
-    for x in scores.get('x'):
-        assert len(x) == num_of_components
-
     # perform PLSDA with `num_of_components` = 10
     num_of_components = 10
     data = {'num_of_components': num_of_components}
     resp = client.get(url_for('csv.get_plsda', csv_id=str(csv_id)), json=data)
+    assert resp.status_code == 200
+    keys = {'scores', 'loadings', 'rows', 'labels', 'r2', 'q2'}
+    assert keys == set(resp.json.keys())
+
     loadings = resp.json.get('loadings')
     for loading in loadings:
         assert loading.get('col') in columns

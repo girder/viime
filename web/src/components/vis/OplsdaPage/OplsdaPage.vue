@@ -2,7 +2,7 @@
 import VisTileLarge from '@/components/vis/VisTileLarge.vue';
 import LayoutGrid from '@/components/LayoutGrid.vue';
 import {
-  computed, defineComponent, reactive, toRef, toRefs, watchEffect,
+  computed, ComputedRef, defineComponent, reactive, toRef, watch, watchEffect,
 } from '@vue/composition-api';
 import ScorePlot from './ScorePlot.vue';
 import LoadingsPlot from './LoadingsPlot.vue';
@@ -26,7 +26,9 @@ export default defineComponent({
     const { dataset, plot, changePlotArgs } = usePlotData(toRef(props, 'id'), 'oplsda');
     const controls = reactive({
       pcYval: '1',
+      numComponentsVal: '3',
       pcY: 2,
+      numComponents: 3,
       showEllipses: true,
       showCrosshairs: true,
       showCutoffs: true,
@@ -39,7 +41,16 @@ export default defineComponent({
       const loadingsReady = store.getters.ready(props.id, 'plsda_loadings');
       return pcaReady && loadingsReady;
     });
-    const r2 = computed(() => plot.value.data?.r2 || []);
+    const r2: ComputedRef<number[]> = computed(() => plot.value.data?.r2 || []);
+    const q2: ComputedRef<number[]> = computed(() => plot.value.data?.q2 || []);
+    const r2q2Table = computed(() => r2.value.map((r2Val, i) => {
+      if (i === 0) {
+        return { name: 'P', r2: r2Val.toFixed(3), q2: q2.value[i].toFixed(3) };
+      }
+      return {
+        name: `O${i}`, r2: r2Val.toFixed(3), q2: q2.value[i].toFixed(3), index: i,
+      };
+    }));
     const loadings = computed(() => plot.value.data?.loadings || []);
     const pcCoords = computed(() => plot.value.data?.scores.x || []);
     const eigenvalues = computed(() => plot.value.data?.scores.sdev || []);
@@ -50,10 +61,20 @@ export default defineComponent({
 
     watchEffect(() => {
       const pcY = Number.parseInt(controls.pcYval, 10);
-      if (!Number.isNaN(pcY)) {
+      if (!Number.isNaN(pcY) && pcY <= controls.numComponents) {
         // The first of the 6 components is always pcX
         // We want to express pcY as an integer in [1..5], but use it as a number in [2..6]
         controls.pcY = pcY + 1;
+      }
+    });
+    watch(() => controls.numComponentsVal, () => {
+      const numComponents = Number.parseInt(controls.numComponentsVal, 10);
+      if (!Number.isNaN(numComponents)) {
+        controls.numComponents = numComponents;
+        if (plot.value) {
+          plot.value.valid = false;
+        }
+        changePlotArgs({ num_of_components: controls.numComponents });
       }
     });
 
@@ -63,6 +84,7 @@ export default defineComponent({
       controls,
       ready,
       r2,
+      r2q2Table,
       loadings,
       pcCoords,
       eigenvalues,
@@ -88,6 +110,34 @@ export default defineComponent({
         flat
         dense
       >
+        <v-toolbar-title>Components</v-toolbar-title>
+      </v-toolbar>
+      <v-card
+        class="mb-3 mx-3"
+        flat
+      >
+        <v-card-actions>
+          <v-layout column>
+            <v-text-field
+              v-model="controls.numComponentsVal"
+              class="py-2"
+              hide-details
+              type="number"
+              min="1"
+              outline
+              :disabled="plot.loading"
+              label="Number of Components"
+            />
+          </v-layout>
+        </v-card-actions>
+      </v-card>
+      <v-toolbar
+        class="darken-3"
+        color="primary"
+        dark
+        flat
+        dense
+      >
         <v-toolbar-title>PC selector</v-toolbar-title>
       </v-toolbar>
       <v-card
@@ -101,7 +151,7 @@ export default defineComponent({
               class="py-2"
               hide-details
               type="number"
-              label="O (Y Axis)"
+              label="Orthogonal (Y Axis)"
               min="1"
               max="5"
               outline
@@ -110,20 +160,29 @@ export default defineComponent({
           </v-layout>
         </v-card-actions>
         <v-card-text class="subheading">
-          <div
-            v-for="(r2Val,index) in r2"
-            :key="index"
-            :class="(index===controls.pcY-1)? 'font-weight-bold':''"
-            @click="if (index !== 0) controls.pcYval=index"
-          >
-            <template v-if="index === 0">
-              P
-            </template>
-            <template v-else>
-              O{{ index }}
-            </template>
-            R<sup>2</sup>: {{ r2Val }}
-          </div>
+          <table>
+            <tbody>
+              <tr>
+                <th class="px-3" />
+                <th class="px-3">
+                  R<sup>2</sup>
+                </th>
+                <th class="px-3">
+                  Q<sup>2</sup>
+                </th>
+              </tr>
+              <tr
+                v-for="pc in r2q2Table"
+                :key="pc.name"
+                :class="(pc.index===controls.pcY-1)? 'font-weight-bold':''"
+                @click="if (pc.index) controls.pcYval=pc.index"
+              >
+                <td>{{ pc.name }}</td>
+                <td>{{ pc.r2 }}</td>
+                <td>{{ pc.q2 }}</td>
+              </tr>
+            </tbody>
+          </table>
         </v-card-text>
       </v-card>
       <v-toolbar

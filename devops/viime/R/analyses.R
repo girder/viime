@@ -316,6 +316,22 @@ plsda <- function(measurements, groups, num_of_components, mode) {
     # Save loadings
     load_plsda <- as.data.frame(mod_plsda$loadings$X)
     return(load_plsda)
+  } else if (mode == "vip") {
+    # VIP scores/vip
+    vip <- vip(mod_plsda)
+    return(vip)
+  } else if (mode == "r2") {
+    # R2 values
+    Group_num <- as.numeric(as.factor(groups))
+    mod_pls <- mixOmics::pls(df, Group_num, scale=FALSE, ncomp = num_of_components)
+    qr <- mixOmics::perf(mod_pls, validation='loo')
+    return(qr$R2)
+  } else if (mode == "q2") {
+    # Q2 values
+    Group_num <- as.numeric(as.factor(groups))
+    mod_pls <- mixOmics::pls(df, Group_num, scale=FALSE, ncomp = num_of_components)
+    qr <- mixOmics::perf(mod_pls, validation='loo')
+    return(qr$Q2)
   } else {
     stop("Invalid mode for PLSDA.")
   }
@@ -324,14 +340,14 @@ plsda <- function(measurements, groups, num_of_components, mode) {
 #' oplsda
 #'
 #' @export
-oplsda <- function(measurements, groups, mode) {
+oplsda <- function(measurements, groups, num_of_components, mode) {
   library(ropls)
   df <- read.csv(measurements, row.names=1, check.names=FALSE)
   groups <- read.csv(groups, row.names=1, check.names=FALSE)
   groups <- as.factor(groups[,1])
 
   # Perform OPLS-DA
-  ropls_oplsda <- ropls::opls(df, groups, scaleC="none", orthoI=NA)
+  ropls_oplsda <- ropls::opls(df, groups, scaleC="none", orthoI=num_of_components)
 
   if (mode == "scores") {
     #Main Score
@@ -355,10 +371,11 @@ oplsda <- function(measurements, groups, mode) {
   } else if (mode == "vip") {
     #VIP Scores
     ropls_vip <- as.data.frame(ropls_oplsda@vipVn)
-
     return(ropls_vip)
   } else if (mode == "modeldf") {
     return(ropls_oplsda@modelDF)
+  } else if (mode == "summarydf") {
+    return(ropls_oplsda@summaryDF)
   } else {
     stop("Invalid mode for PLSDA.")
   }
