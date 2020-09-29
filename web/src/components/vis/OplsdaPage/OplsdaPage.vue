@@ -60,7 +60,7 @@ export default defineComponent({
     const groupLabels = computed(() => plot.value.data?.labels || {});
     const columns = computed(() => dataset.value?.column.data || []);
     const groupLevels = computed(() => dataset.value?.groupLevels || []);
-    const groupNames = computed(() => groupLevels.value.map(level => level.name));
+    const groupNames = computed(() => groupLevels.value.map((level) => level.name));
 
     watchEffect(() => {
       const pcY = Number.parseInt(controls.pcYval, 10);
@@ -110,7 +110,7 @@ export default defineComponent({
       controls.group1 = dataset.value?.groupLevels[0]?.name || '';
       controls.group2 = dataset.value?.groupLevels[1]?.name || '';
       changePlotArgs({ group1: controls.group1, group2: controls.group2 });
-    })
+    });
 
     return {
       plot,
@@ -223,14 +223,9 @@ export default defineComponent({
       <v-toolbar
         class="darken-3"
         color="primary"
-        <<<<<<<
-        Updated
-        upstream
         dark
         flat
-        dense=======dark="dark"
-        flat="flat"
-        dense="dense"
+        dense
         :card="false"
       >
         <v-toolbar-title>Group 1</v-toolbar-title>
@@ -273,8 +268,7 @@ export default defineComponent({
         dark="dark"
         flat="flat"
         dense="dense"
-      >>>>>>> Stashed changes
-        >
+      >
         <v-toolbar-title class="switch-title">
           Score Plot
           <v-switch
