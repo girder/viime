@@ -60,7 +60,9 @@ export default defineComponent({
     const groupLabels = computed(() => plot.value.data?.labels || {});
     const columns = computed(() => dataset.value?.column.data || []);
     const groupLevels = computed(() => dataset.value?.groupLevels || []);
-    const groupNames = computed(() => groupLevels.value.map((level: { name: string }) => level.name));
+    const groupNames = computed(() => groupLevels.value.map(
+      (level: { name: string }) => level.name,
+    ));
 
     watchEffect(() => {
       const pcY = Number.parseInt(controls.pcYval, 10);
