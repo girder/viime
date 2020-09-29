@@ -6,6 +6,7 @@ import {
 } from '@vue/composition-api';
 import ScorePlot from './ScorePlot.vue';
 import LoadingsPlot from './LoadingsPlot.vue';
+import VipPlot from './VipPlot.vue';
 import usePlotData from '../use/usePlotData';
 import store from '../../../store';
 
@@ -19,6 +20,7 @@ export default defineComponent({
   components: {
     ScorePlot,
     LoadingsPlot,
+    VipPlot,
     VisTileLarge,
     LayoutGrid,
   },
@@ -36,6 +38,10 @@ export default defineComponent({
       showCutoffs: true,
       showScore: true,
       showLoadings: true,
+      showVip: true,
+      vipComponentVal: '1',
+      vipComponent: 1,
+      sortVip: false,
     });
 
     const ready = computed(() => {
@@ -47,6 +53,19 @@ export default defineComponent({
     const q2: ComputedRef<number[]> = computed(() => plot.value.data?.q2 || []);
     const r2q2Table = computed(() => r2.value.map((r2Val, i) => ({ name: `PC${i + 1}`, r2: r2Val.toFixed(3), q2: q2.value[i].toFixed(3) })));
     const loadings = computed(() => plot.value.data?.loadings || []);
+    const allVipScores = computed(() => plot.value.data?.vip_scores || []);
+    const sortedVipScores = computed(() => {
+      const selectedVipScores = allVipScores.value[controls.vipComponent - 1];
+      if (!selectedVipScores) {
+        return [];
+      }
+      if (controls.sortVip) {
+        const copy = [...selectedVipScores];
+        copy.sort((a, b) => b.vip - a.vip);
+        return copy;
+      }
+      return selectedVipScores;
+    });
     const pcCoords = computed(() => plot.value.data?.scores.x || []);
     const eigenvalues = computed(() => plot.value.data?.scores.sdev || []);
     const rowLabels = computed(() => plot.value.data?.rows || []);
@@ -76,6 +95,12 @@ export default defineComponent({
         changePlotArgs({ num_of_components: controls.numComponents });
       }
     });
+    watchEffect(() => {
+      const vipComponent = Number.parseInt(controls.vipComponentVal, 10);
+      if (!Number.isNaN(vipComponent) && vipComponent <= controls.numComponents) {
+        controls.vipComponent = vipComponent;
+      }
+    });
 
     return {
       plot,
@@ -83,6 +108,7 @@ export default defineComponent({
       controls,
       ready,
       loadings,
+      sortedVipScores,
       r2q2Table,
       pcCoords,
       eigenvalues,
@@ -258,6 +284,50 @@ export default defineComponent({
           </v-layout>
         </v-card-actions>
       </v-card>
+      <v-toolbar
+        class="darken-3"
+        color="primary"
+        dark
+        flat
+        dense
+      >
+        <v-toolbar-title class="switch-title">
+          VIP Plot
+          <v-switch
+            v-model="controls.showVip"
+            class="switch"
+            color="white"
+            hide-details
+          />
+        </v-toolbar-title>
+      </v-toolbar>
+      <v-card
+        class="mb-3 mx-3"
+        flat
+      >
+        <v-card-actions>
+          <v-layout column>
+            <v-text-field
+              v-model="controls.vipComponentVal"
+              class="py-2"
+              hide-details
+              type="number"
+              label="VIP Plot Component"
+              min="1"
+              :max="controls.numComponents"
+              outline
+              :disabled="!controls.showVip"
+            />
+            <v-switch
+              v-model="controls.sortVip"
+              class="ma-0 py-2"
+              label="Sort VIP plot values"
+              :disabled="!controls.showVip"
+              hide-details
+            />
+          </v-layout>
+        </v-card-actions>
+      </v-card>
     </template>
     <layout-grid
       v-if="ready"
@@ -283,6 +353,10 @@ export default defineComponent({
         :pc-y="controls.pcY"
         :show-crosshairs="controls.showCrosshairs"
         :loadings="loadings"
+      />
+      <vip-plot
+        v-show="controls.showVip"
+        :vip-scores="sortedVipScores"
       />
     </layout-grid>
     <div v-else>

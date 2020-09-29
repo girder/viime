@@ -6,6 +6,7 @@ import {
 } from '@vue/composition-api';
 import ScorePlot from './ScorePlot.vue';
 import LoadingsPlot from './LoadingsPlot.vue';
+import VipPlot from './VipPlot.vue';
 import usePlotData from '../use/usePlotData';
 import store from '../../../store';
 
@@ -19,6 +20,7 @@ export default defineComponent({
   components: {
     ScorePlot,
     LoadingsPlot,
+    VipPlot,
     VisTileLarge,
     LayoutGrid,
   },
@@ -29,13 +31,15 @@ export default defineComponent({
       numComponentsVal: '3',
       pcY: 2,
       numComponents: 3,
+      group1: dataset.value?.groupLevels[0]?.name || '',
+      group2: dataset.value?.groupLevels[1]?.name || '',
       showEllipses: true,
       showCrosshairs: true,
       showCutoffs: true,
       showScore: true,
       showLoadings: true,
-      group1: dataset.value?.groupLevels[0]?.name || '',
-      group2: dataset.value?.groupLevels[1]?.name || '',
+      showVip: true,
+      sortVip: false,
     });
 
     const ready = computed(() => {
@@ -54,13 +58,24 @@ export default defineComponent({
       };
     }));
     const loadings = computed(() => plot.value.data?.loadings || []);
+    const vipScores = computed(() => plot.value.data?.vip_scores || []);
+    const sortedVipScores = computed(() => {
+      if (controls.sortVip) {
+        const copy = [...vipScores.value];
+        copy.sort((a, b) => b.vip - a.vip);
+        return copy;
+      }
+      return vipScores.value;
+    });
     const pcCoords = computed(() => plot.value.data?.scores.x || []);
     const eigenvalues = computed(() => plot.value.data?.scores.sdev || []);
     const rowLabels = computed(() => plot.value.data?.rows || []);
     const groupLabels = computed(() => plot.value.data?.labels || {});
     const columns = computed(() => dataset.value?.column.data || []);
     const groupLevels = computed(() => dataset.value?.groupLevels || []);
-    const groupNames = computed(() => groupLevels.value.map((level: { name: string }) => level.name));
+    const groupNames = computed(() => groupLevels.value.map(
+      (level: { name: string }) => level.name,
+    ));
 
     watchEffect(() => {
       const pcY = Number.parseInt(controls.pcYval, 10);
@@ -120,6 +135,7 @@ export default defineComponent({
       r2,
       r2q2Table,
       loadings,
+      sortedVipScores,
       pcCoords,
       eigenvalues,
       rowLabels,
@@ -328,6 +344,39 @@ export default defineComponent({
           </v-layout>
         </v-card-actions>
       </v-card>
+      <v-toolbar
+        class="darken-3"
+        color="primary"
+        dark
+        flat
+        dense
+      >
+        <v-toolbar-title class="switch-title">
+          VIP Plot
+          <v-switch
+            v-model="controls.showVip"
+            class="switch"
+            color="white"
+            hide-details
+          />
+        </v-toolbar-title>
+      </v-toolbar>
+      <v-card
+        class="mb-3 mx-3"
+        flat
+      >
+        <v-card-actions>
+          <v-layout column>
+            <v-switch
+              v-model="controls.sortVip"
+              class="ma-0 py-2"
+              label="Sort VIP plot values"
+              :disabled="!controls.showVip"
+              hide-details
+            />
+          </v-layout>
+        </v-card-actions>
+      </v-card>
     </template>
     <layout-grid
       v-if="ready"
@@ -353,6 +402,11 @@ export default defineComponent({
         :pc-y="controls.pcY"
         :show-crosshairs="controls.showCrosshairs"
         :loadings="loadings"
+      />
+      <vip-plot
+        v-show="controls.showVip"
+        :vip-scores="sortedVipScores"
+        :sort-vip="controls.sortVip"
       />
     </layout-grid>
     <div v-else>
