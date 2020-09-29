@@ -40,7 +40,7 @@ export default defineComponent({
   <vis-tile
     title="PCA Loadings Plot"
     :loading="plot.loading"
-    svg-download="svg-download"
+    svg-download
   >
     <loadings-plot
       :points="plot.data"

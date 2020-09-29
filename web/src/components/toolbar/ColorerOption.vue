@@ -59,9 +59,9 @@ export default defineComponent({
     <v-toolbar
       class="darken-3"
       color="primary"
-      dark="dark"
-      flat="flat"
-      dense="dense"
+      dark
+      flat
+      dense
       :card="false"
     >
       <v-toolbar-title>
@@ -70,14 +70,14 @@ export default defineComponent({
     </v-toolbar>
     <v-card
       class="mx-3"
-      flat="flat"
+      flat
     >
       <v-card-actions style="display: block">
         <v-select
           v-if="showSelect"
           class="my-0"
           :value="value"
-          hide-details="hide-details"
+          hide-details
           :disabled="disabled"
           :items="options"
           item-text="name"

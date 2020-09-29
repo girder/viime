@@ -37,9 +37,9 @@ export default defineComponent({
     <v-toolbar
       class="darken-3"
       color="primary"
-      dark="dark"
-      flat="flat"
-      dense="dense"
+      dark
+      flat
+      dense
       :card="false"
     >
       <v-toolbar-title>
@@ -48,13 +48,13 @@ export default defineComponent({
     </v-toolbar>
     <v-card
       class="mx-3"
-      flat="flat"
+      flat
     >
       <v-card-actions>
         <v-radio-group
           class="my-0"
           :value="value"
-          hide-details="hide-details"
+          hide-details
           :disabled="disabled"
           @change="$emit('change', $event)"
         >
@@ -73,7 +73,7 @@ export default defineComponent({
                 v-if="m.helpText"
                 :title="`${m.label} ${title}`"
                 :text="m.helpText"
-                outline="outline"
+                outline
               />
             </template>
           </v-radio>
