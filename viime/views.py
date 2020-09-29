@@ -796,13 +796,16 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
     'group2': fields.String(required=False),
 })
 @load_validated_csv_file
-def get_oplsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int] = 3, group1: Optional[str] = None, group2: Optional[str] = None):
+def get_oplsda(validated_table: ValidatedMetaboliteTable,
+               num_of_components: Optional[int] = 3,
+               group1: Optional[str] = None,
+               group2: Optional[str] = None):
 
     measurements = validated_table.measurements
     groups = validated_table.groups
     group_column_name = groups.columns[0]
     # Initial page loads will not have groups selected yet, so default to the first two groups
-    if group1 == None and group2 == None:
+    if group1 is None and group2 is None:
         group1 = groups[group_column_name].unique()[0]
         group2 = groups[group_column_name].unique()[1]
 
