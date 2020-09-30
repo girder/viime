@@ -47,6 +47,7 @@ if (process.env.CONTEXT === 'production') {
 Vue.use(VueGtag, {
   config: { id: process.env.VUE_APP_GOOGLE_ANALYTICS_ID },
   enabled: process.env.NODE_ENV === 'production' && process.env.VUE_APP_GOOGLE_ANALYTICS_ID,
+  includes: [{ id: process.env.VUE_APP_GOOGLE_ANALYTICS_ID }],
 }, router);
 
 new Vue({
