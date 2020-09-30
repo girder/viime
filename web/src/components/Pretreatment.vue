@@ -78,21 +78,21 @@ export default defineComponent({
 <template>
   <v-layout
     class="pretreatment-component"
-    row="row"
+    row
     fill-height="fill-height"
   >
     <v-navigation-drawer
       class="navigation"
-      floating="floating"
-      permanent="permanent"
+      floating
+      permanent
       style="min-width: 220px; width: 220px;"
-      touchless="touchless"
+      touchless
       disable-resize-watcher="disable-resize-watcher"
-      stateless="stateless"
+      stateless
     >
       <v-list
         class="py-0"
-        dense="dense"
+        dense
       >
         <v-list-group
           v-for="(dataset) in datasets"
@@ -105,7 +105,7 @@ export default defineComponent({
               class="mr-0 pr-2"
               active-class="font-weight-bold"
               :to="{ name: 'Pretreat Data', params: { id: dataset.id } }"
-              exact="exact"
+              exact
               @click.stop=""
             >
               <v-list-tile-title class="grow">
@@ -129,7 +129,7 @@ export default defineComponent({
           </template>
           <v-list-tile
             :to="{ name: 'Clean Up Table', params: { id: dataset.id } }"
-            exact="exact"
+            exact
             active-class="font-weight-bold"
           >
             <v-list-tile-action class="action-style">
@@ -161,12 +161,12 @@ export default defineComponent({
                 <span v-if="problemData.data">({{ problemData.data.length }})</span>
                 <v-tooltip
                   v-else
-                  top="top"
+                  top
                 >
                   <template #activator="{ on }">
                     <v-icon
                       class="pr-1"
-                      small="small"
+                      small
                       v-on="on"
                     >
                       {{ $vuetify.icons.info }}
@@ -211,7 +211,7 @@ export default defineComponent({
                 <v-list-tile
                   :to="{ name: 'Analyze Data', params: { id: dataset.id } }"
                   :disabled="!valid(dataset)"
-                  exact="exact"
+                  exact
                   active-class="font-weight-bold"
                 >
                   <v-list-tile-action class="action-style">

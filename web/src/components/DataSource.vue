@@ -181,14 +181,14 @@ export default defineComponent({
 <template>
   <v-layout
     class="data-source"
-    row="row"
+    row
     fill-height="fill-height"
   >
     <v-container
       v-if="dataset && ready"
       class="grow-overflow ma-0"
       grid-list-lg="grid-list-lg"
-      fluid="fluid"
+      fluid
     >
       <v-container
         class="pa-2"
@@ -198,7 +198,7 @@ export default defineComponent({
           <v-text-field
             label="Data Source Name"
             :value="dataset.name"
-            required="required"
+            required
             :rules="requiredRules"
             @change="setName($event)"
           />
@@ -211,21 +211,21 @@ export default defineComponent({
             label="Creation Date"
             :value="dataset.created.toISOString().slice(0, -1)"
             type="datetime-local"
-            readonly="readonly"
+            readonly
           />
           <v-text-field
             label="File Size"
             :value="formatSize(dataset.size)"
-            readonly="readonly"
+            readonly
           />
           <v-text-field
             label="File Dimensions"
             :value="`${dataset.width} x ${dataset.height}`"
-            readonly="readonly"
+            readonly
           />
           <v-list
             v-if="isMerged"
-            subheader="subheader"
+            subheader
           >
             <merge-methods v-model="method" />
             <v-subheader>
@@ -262,7 +262,7 @@ export default defineComponent({
               <v-list-tile-action>
                 <v-btn
                   :to="{ name: '', params: { id: dataset.id } }"
-                  icon="icon"
+                  icon
                 >
                   <v-icon>{{ $vuetify.icons.eye }}</v-icon>
                 </v-btn>
@@ -281,15 +281,15 @@ export default defineComponent({
                 <v-text-field
                   placeholder="Name"
                   :value="props.item.name"
-                  required="required"
-                  readonly="readonly"
+                  required
+                  readonly
                 />
               </td>
               <td>
                 <v-text-field
                   placeholder="Label"
                   :value="props.item.label"
-                  required="required"
+                  required
                   @change="changeGroupLevel(props.item, { label: $event })"
                 />
               </td>
@@ -305,7 +305,7 @@ export default defineComponent({
                   placeholder="Color"
                   :value="props.item.color"
                   type="color"
-                  required="required"
+                  required
                   @change="changeGroupLevel(props.item, { color: $event.currentTarget.value })"
                 >
               </td>
@@ -320,7 +320,7 @@ export default defineComponent({
       align-center="align-center"
     >
       <v-progress-circular
-        indeterminate="indeterminate"
+        indeterminate
         size="100"
         width="5"
       />
