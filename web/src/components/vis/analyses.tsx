@@ -5,6 +5,8 @@ import AnovaVolcanoPlotTile from './AnovaVolcanoPlotTile.vue';
 import HeatmapTile from './HeatmapTile.vue';
 import CorrelationTile from './CorrelationTile.vue';
 import PcaPage from './PcaPage/PcaPage.vue';
+import PlsdaPage from './PlsdaPage/PlsdaPage.vue';
+import OplsdaPage from './OplsdaPage/OplsdaPage.vue';
 import BoxPlotLargeTile from './BoxPlotLargeTile.vue';
 import GroupPredictionTile from './GroupPredictionTile.vue';
 import vuetify from '../../utils/vuetifyConfig';
@@ -37,6 +39,37 @@ const analysisList: Analysis[] = [
       </div>);
     },
     component: PcaPage,
+    icon: vuetify.icons.pca,
+  },
+  {
+    path: 'plsda',
+    name: 'Partial Least Squares Discriminant Analysis',
+    shortName: 'PLS-DA',
+    description() {
+      return (<div>
+        <p>Partial least squares discriminant analysis (PLS-DA) is a supervised
+        multivariate technique used to classify values with latent variables
+        constructed by maximizing the covariance between the independent
+        variable and the dependent outcome.</p>
+      </div>);
+    },
+    component: PlsdaPage,
+    icon: vuetify.icons.pca,
+  },
+  {
+    path: 'oplsda',
+    name: 'Orthogonal Partial Least Squares Discriminant Analysis',
+    shortName: 'OPLS-DA',
+    description() {
+      return (<div>
+        <p>OPLSDA is an alternative version of the PLSDA wherein only a single component is used
+        as a predictor for the class, while the other components describe the variation
+        orthogonal to the first predictive component. This enables a simpler interpretation of the
+        metabolic features that discriminate the groups as they fall along a single dimension.
+        </p>
+      </div>);
+    },
+    component: OplsdaPage,
     icon: vuetify.icons.pca,
   },
   {

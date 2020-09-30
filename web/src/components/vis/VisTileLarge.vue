@@ -63,24 +63,24 @@ export default defineComponent({
 <template>
   <v-layout
     ref="el"
-    row="row"
-    fill-height="fill-height"
+    row
+    fill-height
   >
     <v-navigation-drawer
       v-if="hasControls"
       class="primary darken-3 nav-drawer"
-      permanent="permanent"
+      permanent
       style="width: 215px;min-width: 215px;"
-      touchless="touchless"
-      disable-resize-watcher="disable-resize-watcher"
-      stateless="stateless"
+      touchless
+      disable-resize-watcher
+      stateless
     >
       <slot name="controls" />
       <div v-if="download">
         <v-btn
-          flat="flat"
-          dark="dark"
-          block="block"
+          flat
+          dark
+          block
           @click="downloadImage"
         >
           <v-icon class="mr-2">
@@ -90,13 +90,13 @@ export default defineComponent({
       </div>
       <v-menu
         v-if="helpText"
-        offset-y="offset-y"
+        offset-y
       >
         <template v-slot:activator="{ on }">
           <v-btn
-            flat="flat"
-            dark="dark"
-            block="block"
+            flat
+            dark
+            block
             v-on="on"
           >
             <v-icon class="mr-2">
@@ -111,11 +111,11 @@ export default defineComponent({
     </v-navigation-drawer>
     <v-layout
       v-if="loading"
-      justify-center="justify-center"
-      align-center="align-center"
+      justify-center
+      align-center
     >
       <v-progress-circular
-        indeterminate="indeterminate"
+        indeterminate
         size="100"
         width="5"
       />
@@ -125,12 +125,12 @@ export default defineComponent({
     </v-layout>
     <v-layout
       v-else
-      column="column"
+      column
     >
       <v-container
         class="grow-overflow ma-0 mainContainer"
-        grid-list-lg="grid-list-lg"
-        fluid="fluid"
+        grid-list-lg
+        fluid
       >
         <slot />
       </v-container>

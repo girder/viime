@@ -1,55 +1,55 @@
-<script lang="ts">
-import { defineComponent, toRef } from '@vue/composition-api';
+<script>
 import LoadingsPlot from '@/components/vis/LoadingsPlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
-import LoadingsPlotHelp from '../help/LoadingsPlotHelp.vue';
-import usePlotData from '../use/usePlotData';
 
-export default defineComponent({
+export default {
+  components: {
+    LoadingsPlot,
+    VisTile,
+  },
+
   props: {
     id: {
       type: String,
       required: true,
     },
+
     pcX: {
       type: Number,
+      validator: (prop) => Number.isInteger(prop),
       required: true,
     },
+
     pcY: {
       type: Number,
+      validator: (prop) => Number.isInteger(prop),
       required: true,
     },
+
     showCrosshairs: {
       type: Boolean,
       required: true,
     },
+
+    loadings: {
+      type: Array,
+      required: true,
+    },
   },
-  components: {
-    LoadingsPlot,
-    LoadingsPlotHelp,
-    VisTile,
-  },
-  setup(props) {
-    const { plot } = usePlotData(toRef(props, 'id'), 'loadings');
-    return { plot };
-  },
-});
+
+};
 </script>
 
 <template>
   <vis-tile
-    title="PCA Loadings Plot"
-    :loading="plot.loading"
+    title="PLS-DA Loadings Plot"
     svg-download
   >
     <loadings-plot
-      :points="plot.data"
+      :points="loadings"
       :pc-x="pcX"
       :pc-y="pcY"
       :show-crosshairs="showCrosshairs"
     />
-    <template v-slot:help>
-      <LoadingsPlotHelp />
-    </template>
   </vis-tile>
 </template>

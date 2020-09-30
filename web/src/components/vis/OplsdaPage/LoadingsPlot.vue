@@ -1,11 +1,13 @@
 <script lang="ts">
-import { defineComponent, toRef } from '@vue/composition-api';
 import LoadingsPlot from '@/components/vis/LoadingsPlot.vue';
 import VisTile from '@/components/vis/VisTile.vue';
-import LoadingsPlotHelp from '../help/LoadingsPlotHelp.vue';
-import usePlotData from '../use/usePlotData';
+import { defineComponent } from '@vue/composition-api';
 
 export default defineComponent({
+  components: {
+    LoadingsPlot,
+    VisTile,
+  },
   props: {
     id: {
       type: String,
@@ -23,33 +25,24 @@ export default defineComponent({
       type: Boolean,
       required: true,
     },
-  },
-  components: {
-    LoadingsPlot,
-    LoadingsPlotHelp,
-    VisTile,
-  },
-  setup(props) {
-    const { plot } = usePlotData(toRef(props, 'id'), 'loadings');
-    return { plot };
+    loadings: {
+      type: Array,
+      required: true,
+    },
   },
 });
 </script>
 
 <template>
   <vis-tile
-    title="PCA Loadings Plot"
-    :loading="plot.loading"
+    title="OPLS-DA Loadings Plot"
     svg-download
   >
     <loadings-plot
-      :points="plot.data"
+      :points="loadings"
       :pc-x="pcX"
       :pc-y="pcY"
       :show-crosshairs="showCrosshairs"
     />
-    <template v-slot:help>
-      <LoadingsPlotHelp />
-    </template>
   </vis-tile>
 </template>
