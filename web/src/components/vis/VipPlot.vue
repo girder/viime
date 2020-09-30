@@ -113,7 +113,6 @@ export default defineComponent({
           .duration(fadeInDuration)
           .attr('x', (d) => scaleX.value(d.col))
           .attr('y', (d) => scaleY.value(d.vip))
-          .attr('width', scaleX.value.bandwidth())
           .attr('height', (d) => dheight.value - scaleY.value(d.vip));
 
         svg.select('g.label.x')
