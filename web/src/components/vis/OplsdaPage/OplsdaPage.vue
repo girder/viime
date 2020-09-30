@@ -9,6 +9,7 @@ import LoadingsPlot from './LoadingsPlot.vue';
 import VipPlot from './VipPlot.vue';
 import usePlotData from '../use/usePlotData';
 import store from '../../../store';
+import { downloadCSV } from '../../../utils/exporter';
 
 export default defineComponent({
   props: {
@@ -59,7 +60,7 @@ export default defineComponent({
     }));
     const loadings = computed(() => plot.value.data?.loadings || []);
     const vipScores = computed(() => plot.value.data?.vip_scores || []);
-    const sortedVipScores = computed(() => {
+    const sortedVipScores = computed((): { col: string; vip: number }[] => {
       if (controls.sortVip) {
         const copy = [...vipScores.value];
         copy.sort((a, b) => b.vip - a.vip);
@@ -127,6 +128,11 @@ export default defineComponent({
       changePlotArgs({ group1: controls.group1, group2: controls.group2 });
     });
 
+    function downloadVipScores() {
+      const rows: string[] = sortedVipScores.value.map((v) => `${v.col},${v.vip}`);
+      downloadCSV(`Metabolite,VIP_Score\n${rows.join('\n')}`, `${dataset.value.name}_OPLSDA_VIP_Scores`);
+    }
+
     return {
       plot,
       changePlotArgs,
@@ -143,6 +149,7 @@ export default defineComponent({
       columns,
       groupLevels,
       groupNames,
+      downloadVipScores,
     };
   },
 });
@@ -374,6 +381,15 @@ export default defineComponent({
               :disabled="!controls.showVip"
               hide-details
             />
+            <v-btn
+              class="my-0 mx-0"
+              text
+              flat
+              @click="downloadVipScores"
+            >
+              <v-icon> {{ $vuetify.icons.fileDownload }}</v-icon>
+              VIP Scores
+            </v-btn>
           </v-layout>
         </v-card-actions>
       </v-card>
