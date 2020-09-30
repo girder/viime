@@ -806,8 +806,10 @@ def get_oplsda(validated_table: ValidatedMetaboliteTable,
     group_column_name = groups.columns[0]
     # Initial page loads will not have groups selected yet, so default to the first two groups
     if group1 is None and group2 is None:
-        group1 = groups[group_column_name].unique()[0]
-        group2 = groups[group_column_name].unique()[1]
+        group_names = groups[group_column_name].unique()
+        group_names.sort()
+        group1 = group_names[0]
+        group2 = group_names[1]
 
     # Filter groups and measurements by the selected groups
     groups = groups.loc[groups[group_column_name].isin((group1, group2))]
