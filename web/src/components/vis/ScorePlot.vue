@@ -523,7 +523,7 @@ export default {
       select(this.$refs.chart)
         .select('.c3-custom-ellipses')
         .selectAll('ellipse')
-        .data(confidenceEllipses)
+        .data(confidenceEllipses, (d) => d.category)
         .join(
           (enter) => enter
             .append('ellipse')
