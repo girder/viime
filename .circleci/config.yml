@@ -44,6 +44,57 @@ jobs:
           working_directory: ./web
           command: yarn test:unit
 
+  test_e2e:
+    docker:
+      - image: circleci/python:3.6-node-browsers
+      - image: viime/opencpu-base
+        command: |
+          /bin/sh -c "chmod a+w /usr/local/lib/R/site-library && service cron start && /usr/lib/rstudio-server/bin/rserver && apachectl -DFOREGROUND"
+    steps:
+      - checkout
+      - run:
+          name: Create a virtualenv for installation
+          command: |
+            python3 -m venv install_env
+            . install_env/bin/activate
+      - run:
+          name: Upgrade pip
+          command: pip install -U pip
+      - run:
+          name: Install python
+          command: |
+            pip install .
+            pip install sentry-sdk[flask]
+            pip install --upgrade sentry-sdk
+      - run:
+          working_directory: ./viime
+          name: Start the development server
+          command: flask run
+          background: true
+      - run:
+          working_directory: ./web
+          name: Install dependencies
+          command: yarn
+      - run:
+          working_directory: ./web
+          name: Serve the website
+          command: yarn serve
+          background: true
+      - run:
+          working_directory: ./e2e-test
+          name: Install dependencies
+          command: yarn install
+      - run:
+          working_directory: ./e2e-test
+          name: Run lint tests
+          command: yarn run lint
+      - run:
+          working_directory: ./e2e-test
+          name: Run E2E tests
+          command: yarn run test
+          environment:
+            CLIENT_URL: http://localhost:8080
+
   release:
     docker:
       - image: node:10
@@ -141,17 +192,19 @@ workflows:
     jobs:
       - test_python
       - test_web
+      - test_e2e:
+          requires:
+            - test_python
+            - test_web
       - release:
           requires:
-            - test_web
-            - test_python
+            - test_e2e
           filters:
             branches:
               only: master
       - publish:
           requires:
-            - test_web
-            - test_python
+            - test_e2e
           filters:
             branches:
               only: master

@@ -82,7 +82,7 @@ export default {
       const scoreKey = this.hasMoreThanTwoGroups ? `${c} ${this.score}` : this.score;
       const foldChangeKey = this.hasMoreThanTwoGroups ? `${c} Log2FoldChange` : 'Log2FoldChange';
 
-      data = data.map(row => ({
+      data = data.map((row) => ({
         name: row.Metabolite,
         pValue: row[scoreKey],
         log2FoldChange: row[foldChangeKey],
@@ -90,11 +90,11 @@ export default {
 
       if (this.metaboliteFilter && this.metaboliteFilter) {
         const filter = this.metaboliteFilter.apply;
-        data = data.filter(d => filter(d.name));
+        data = data.filter((d) => filter(d.name));
       }
       if (this.metaboliteColor) {
         const colorer = this.metaboliteColor.apply;
-        data = data.map(row => ({ ...row, color: colorer(row.name) }));
+        data = data.map((row) => ({ ...row, color: colorer(row.name) }));
       }
 
       return data;
@@ -102,13 +102,13 @@ export default {
   },
   methods: {
     setSelection() {
-      this.selected = this.chartData.map(d => ({
+      this.selected = this.chartData.map((d) => ({
         name: d.name,
         x: d.log2FoldChange,
         y: -Math.log10(d.pValue),
       }))
-        .filter(d => Math.abs(d.x) >= this.minFoldChange && d.y >= this.minLogP)
-        .map(d => d.name);
+        .filter((d) => Math.abs(d.x) >= this.minFoldChange && d.y >= this.minLogP)
+        .map((d) => d.name);
     },
   },
 };
@@ -116,8 +116,13 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="dataset", title="Metabolite Wilcoxon Volanco Plot", :loading="false",
-    download, expanded)
+vis-tile-large(
+    v-if="dataset",
+    title="Metabolite Wilcoxon Volanco Plot",
+    analysis-path="wilcoxon_volcano",
+    :loading="false",
+    download,
+    expanded)
   template(#controls)
     toolbar-option(:value="score", @change="score = $event", title="p-Value", :options="scores")
     toolbar-option(v-if="hasMoreThanTwoGroups",

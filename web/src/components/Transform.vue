@@ -57,7 +57,7 @@ export default {
   methods: {
     async transformTable(value, category, argument, methods) {
       /* If there's no argument and there should be, pick the firt from the list */
-      const method = methods.find(v => v.value === value);
+      const method = methods.find((v) => v.value === value);
       if (!method) {
         throw new Error('invalid method');
       }
@@ -78,8 +78,8 @@ export default {
       const _type = opts[1]; // sample, metadata, group, metabolite, etc.
       const value = opts[2]; // name, header, index, etc.
       return this.dataset[order]
-        .data.filter(v => v[`${order}_type`] === _type)
-        .map(v => v[`${order}_${value}`]);
+        .data.filter((v) => v[`${order}_type`] === _type)
+        .map((v) => v[`${order}_${value}`]);
     },
   },
 };

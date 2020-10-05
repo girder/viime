@@ -6,19 +6,20 @@ from typing import Any, Callable, cast, Dict, List, Optional
 
 from flask import Blueprint, current_app, jsonify, request, Response, send_file
 from marshmallow import fields, validate, ValidationError
+from numpy import sqrt
 import pandas
 from webargs.flaskparser import use_kwargs
 from werkzeug.datastructures import FileStorage
 
 from viime import opencpu, samples
-from viime.analyses import anova_test, hierarchical_clustering, pairwise_correlation, wilcoxon_test
-from viime.cache import csv_file_cache
+from viime.analyses import anova_test, factor_analysis, hierarchical_clustering,\
+    oplsda, pairwise_correlation, plsda, roc_analysis, wilcoxon_test
 from viime.imputation import IMPUTE_MCAR_METHODS, IMPUTE_MNAR_METHODS
-from viime.models import AXIS_NAME_TYPES, CSVFile, CSVFileSchema, db, \
+from viime.models import AXIS_NAME_TYPES, clean, CSVFile, CSVFileSchema, db, \
     GroupLevelSchema, ModifyLabelListSchema, \
     TABLE_COLUMN_TYPES, TABLE_ROW_TYPES, \
-    TableColumn, TableColumnSchema, TableRow, \
-    TableRowSchema, ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
+    TableColumnSchema, TableRowSchema, \
+    ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
 from viime.normalization import validate_normalization_method
 from viime.plot import pca
 from viime.scaling import SCALING_METHODS
@@ -28,8 +29,8 @@ from viime.transformation import TRANSFORMATION_METHODS
 
 csv_file_schema = CSVFileSchema()
 modify_label_list_schema = ModifyLabelListSchema()
-table_column_schema = TableColumnSchema(exclude=['csv_file'])
-table_row_schema = TableRowSchema(exclude=['csv_file'])
+table_column_schema = TableColumnSchema()
+table_row_schema = TableRowSchema()
 validation_schema = ValidationSchema()
 validated_metabolite_table_schema = ValidatedMetaboliteTableSchema()
 
@@ -39,7 +40,7 @@ csv_bp = Blueprint('csv', __name__)
 def load_validated_csv_file(func):
 
     @wraps(func)
-    def wrapped(csv_id, *arg, **kwargs):
+    def wrapped(csv_id: str, *arg, **kwargs):
         csv_file = ValidatedMetaboliteTable.query \
             .filter_by(csv_file_id=csv_id) \
             .first_or_404()
@@ -48,14 +49,13 @@ def load_validated_csv_file(func):
     return wrapped
 
 
-@csv_file_cache
-def _serialize_csv_file(csv_file):
+def _serialize_csv_file(csv_file: CSVFile) -> Dict[str, Any]:
     csv_file_schema = CSVFileSchema()
     return csv_file_schema.dump(csv_file)
 
 
 class JSONDictStr(fields.Dict):
-    def _deserialize(self, value, *args, **kwargs):
+    def _deserialize(self, value: str, *args, **kwargs):
         try:
             value = json.loads(value)
         except Exception:
@@ -68,7 +68,7 @@ class JSONDictStr(fields.Dict):
     'file': fields.Field(location='files'),
     'meta': JSONDictStr(missing=dict)
 })
-def upload_csv_file(file, meta):
+def upload_csv_file(file: FileStorage, meta: Dict[str, Any]):
     csv_file = None
 
     try:
@@ -94,8 +94,8 @@ def upload_csv_file(file, meta):
     'file': fields.Field(location='files', required=True),
     'meta': JSONDictStr(missing={})
 })
-def upload_excel_file(file: FileStorage, meta: Dict):
-    excel_sheets = pandas.read_excel(file, sheet_name=None)  # type: Dict[str, pandas.DataFrame]
+def upload_excel_file(file: FileStorage, meta: Dict[str, Any]):
+    excel_sheets: Dict[str, pandas.DataFrame] = pandas.read_excel(file, sheet_name=None)
     excel_sheets = {sheet: data for (sheet, data) in excel_sheets.items() if not data.empty}
 
     basename = PurePath(cast(str, file.filename)).with_suffix('')
@@ -165,21 +165,19 @@ def merge_csv_files(name: str, description: str, method: str, datasets: List[str
         if row_types:
             # update the row types
             for row, row_type in zip(csv_file.rows, row_types):
-                row.row_type = row_type['type']
-                row.subtype = row_type.get('subtype')
-                row.meta = row_type.get('meta')
-                db.session.add(row)
+                row['row_type'] = row_type['type']
+                row['subtype'] = row_type.get('subtype')
+                row['meta'] = row_type.get('meta')
 
         if column_types:
             # update the row types
             for column, column_type in zip(csv_file.columns, column_types):
-                column.column_type = column_type['type']
-                column.subtype = column_type.get('subtype')
-                column.meta = column_type.get('meta')
-                db.session.add(column)
+                column['column_type'] = column_type['type']
+                column['subtype'] = column_type.get('subtype')
+                column['meta'] = column_type.get('meta')
 
         # need to call it manually since we might have changed the column types
-        csv_file.derive_group_levels(clear_caches=True)
+        csv_file.derive_group_levels()
 
         db.session.add(csv_file)
         db.session.flush()
@@ -213,7 +211,7 @@ def create_csv_file():
 
 
 @csv_bp.route('/csv/<uuid:csv_id>', methods=['GET'])
-def get_csv_file(csv_id):
+def get_csv_file(csv_id: str):
     csv_file = _serialize_csv_file(CSVFile.query.get_or_404(csv_id))
 
     # inject properties from the validated table model (normalization, transformation, etc.)
@@ -231,13 +229,13 @@ def get_csv_file(csv_id):
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/validation', methods=['GET'])
-def get_csv_file_validation(csv_id):
+def get_csv_file_validation(csv_id: str):
     csv_file = CSVFile.query.get_or_404(csv_id)
     return jsonify(validation_schema.dump(csv_file.table_validation, many=True))
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/metadata', methods=['PUT'])
-def set_csv_file_metadata(csv_id):
+def set_csv_file_metadata(csv_id: str):
     try:
         csv_file = CSVFile.query.get_or_404(csv_id)
         csv_file.meta = request.json
@@ -253,7 +251,7 @@ def set_csv_file_metadata(csv_id):
 @use_kwargs({
     'name': fields.Str(required=True)
 })
-def set_csv_file_name(csv_id, name):
+def set_csv_file_name(csv_id: str, name: str):
     try:
         csv_file = CSVFile.query.get_or_404(csv_id)
         csv_file.name = name
@@ -269,7 +267,7 @@ def set_csv_file_name(csv_id, name):
 @use_kwargs({
     'description': fields.Str(required=True)
 })
-def set_csv_file_description(csv_id, description):
+def set_csv_file_description(csv_id: str, description: str):
     try:
         csv_file = CSVFile.query.get_or_404(csv_id)
         csv_file.description = description
@@ -286,7 +284,7 @@ def set_csv_file_description(csv_id, description):
     'group_levels': fields.List(fields.Nested(GroupLevelSchema(exclude=['csv_file_id'])),
                                 required=True)
 })
-def set_csv_file_group_levels(csv_id, group_levels):
+def set_csv_file_group_levels(csv_id: str, group_levels: List[Dict]):
     try:
         csv_file = CSVFile.query.get_or_404(csv_id)
         csv_file.group_levels = group_levels
@@ -302,7 +300,7 @@ def set_csv_file_group_levels(csv_id, group_levels):
 @use_kwargs({
     'columns': fields.List(fields.Str, required=True)
 })
-def set_csv_file_selected_columns(csv_id, columns):
+def set_csv_file_selected_columns(csv_id: str, columns: List[str]):
     try:
         csv_file = CSVFile.query.get_or_404(csv_id)
         csv_file.selected_columns = columns
@@ -316,7 +314,7 @@ def set_csv_file_selected_columns(csv_id, columns):
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/download', methods=['GET'])
-def download_csv_file(csv_id):
+def download_csv_file(csv_id: str):
     csv_file = CSVFile.query.get_or_404(csv_id)
     name = PurePath(csv_file.name).with_suffix('.csv').name
     fp = BytesIO(csv_file.table.to_csv(header=False, index=False).encode())
@@ -324,12 +322,10 @@ def download_csv_file(csv_id):
 
 
 @csv_bp.route('/csv/<uuid:csv_id>', methods=['DELETE'])
-def delete_csv_file(csv_id):
+def delete_csv_file(csv_id: str):
     csv_file = CSVFile.query.get_or_404(csv_id)
 
     try:
-        TableRow.query.filter_by(csv_file_id=csv_id).delete()
-        TableColumn.query.filter_by(csv_file_id=csv_id).delete()
         db.session.delete(csv_file)
         db.session.commit()
     except Exception:
@@ -343,9 +339,10 @@ def delete_csv_file(csv_id):
 
     return '', 204
 
+
 # Missing data imputation options
 @csv_bp.route('/csv/<uuid:csv_id>/imputation', methods=['GET'])
-def get_imputation_options(csv_id):
+def get_imputation_options(csv_id: str):
     csv_file = CSVFile.query.get_or_404(csv_id)
     return jsonify({
         'imputation_mcar': csv_file.imputation_mcar,
@@ -358,7 +355,7 @@ def get_imputation_options(csv_id):
     'mcar': fields.Str(validate=validate.OneOf(IMPUTE_MCAR_METHODS)),
     'mnar': fields.Str(validate=validate.OneOf(IMPUTE_MNAR_METHODS))
 })
-def set_imputation_options(csv_id, **kwargs):
+def set_imputation_options(csv_id: str, **kwargs):
     csv_file = CSVFile.query.get_or_404(csv_id)
 
     try:
@@ -379,23 +376,20 @@ def set_imputation_options(csv_id, **kwargs):
 
 # Row/Column API
 @csv_bp.route('/csv/<uuid:csv_id>/column', methods=['GET'])
-def list_columns(csv_id):
-    CSVFile.query.get_or_404(csv_id)  # ensure the file exists
-    return jsonify(table_column_schema.dump(
-        TableColumn.query.filter_by(csv_file_id=csv_id),
-        many=True
-    ))
+def list_columns(csv_id: str):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    return jsonify(csv_file.columns)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/column/<int:column_index>', methods=['GET'])
-def get_column(csv_id, column_index):
-    return jsonify(table_column_schema.dump(
-        TableColumn.query.get_or_404((csv_id, column_index))
-    ))
+def get_column(csv_id: str, column_index: int):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    column = csv_file.columns[column_index]
+    return jsonify(column)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/batch/label', methods=['PUT'])
-def batch_modify_label(csv_id):
+def batch_modify_label(csv_id: str):
     csv_file = CSVFile.query.get_or_404(csv_id)
     args = modify_label_list_schema.load(request.json or {})
     row_column_dump_schema = CSVFileSchema(only=['rows', 'columns', 'group_levels'])
@@ -404,22 +398,18 @@ def batch_modify_label(csv_id):
         index = change['index']
         label = change['label']
         context = change['context']
-
         if context == AXIS_NAME_TYPES.ROW:
-            row = TableRow.query.get_or_404((csv_id, index))
+            row = csv_file.rows[index]
             if label == TABLE_ROW_TYPES.INDEX:
                 csv_file.header_row_index = index
-            setattr(row, 'row_type', label)
-            db.session.add(row)
-
+            row['row_type'] = label
         elif context == AXIS_NAME_TYPES.COLUMN:
-            column = TableColumn.query.get_or_404((csv_id, index))
+            column = csv_file.columns[index]
             if label == TABLE_COLUMN_TYPES.INDEX:
                 csv_file.key_column_index = index
             elif label == TABLE_COLUMN_TYPES.GROUP:
                 csv_file.group_column_index = index
-            setattr(column, 'column_type', label)
-            db.session.add(column)
+            column['column_type'] = label
 
     db.session.add(csv_file)
 
@@ -432,19 +422,16 @@ def batch_modify_label(csv_id):
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/row', methods=['GET'])
-def list_rows(csv_id):
-    CSVFile.query.get_or_404(csv_id)  # ensure the file exists
-    return jsonify(table_row_schema.dump(
-        TableRow.query.filter_by(csv_file_id=csv_id),
-        many=True
-    ))
+def list_rows(csv_id: str):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    return jsonify(csv_file.rows)
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/row/<int:row_index>', methods=['GET'])
-def get_row(csv_id, row_index):
-    return jsonify(table_row_schema.dump(
-        TableRow.query.get_or_404((csv_id, row_index))
-    ))
+def get_row(csv_id: str, row_index: int):
+    csv_file = CSVFile.query.get_or_404(csv_id)
+    row = csv_file.rows[row_index]
+    return jsonify(row)
 
 
 def _update_row_types(csv_file: CSVFile, row_types: Optional[List[Dict[str, Any]]]):
@@ -455,10 +442,9 @@ def _update_row_types(csv_file: CSVFile, row_types: Optional[List[Dict[str, Any]
     count_current = len(csv_file.rows)
     # update the row types
     for row, row_type in zip(csv_file.rows, row_types):
-        row.row_type = row_type['type']
-        row.subtype = row_type.get('subtype')
-        row.meta = row_type.get('meta')
-        db.session.add(row)
+        row['row_type'] = row_type['type']
+        row['subtype'] = row_type.get('subtype')
+        row['meta'] = row_type.get('meta')
 
     if count_target > count_current:
         # create missing
@@ -468,7 +454,7 @@ def _update_row_types(csv_file: CSVFile, row_types: Optional[List[Dict[str, Any]
                 'row_type': row_type
             })
             csv_file.rows.append(row)
-            db.session.add(row)
+
     elif count_target < count_current:
         # delete extra
         for row in csv_file.rows[count_target:]:
@@ -485,10 +471,9 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[List[Dict[str
     # update the column types
 
     for column, column_type in zip(csv_file.columns, column_types):
-        column.column_type = column_type['type']
-        column.subtype = column_type.get('subtype')
-        column.meta = column_type.get('meta')
-        db.session.add(column)
+        column['column_type'] = column_type['type']
+        column['subtype'] = column_type.get('subtype')
+        column['meta'] = column_type.get('meta')
 
     if count_target > count_current:
         # create missing
@@ -498,7 +483,6 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[List[Dict[str
                 'column_type': column_type
             })
             csv_file.columns.append(column)
-            db.session.add(column)
 
     elif count_target < count_current:
         # delete extra
@@ -510,7 +494,7 @@ def _update_column_types(csv_file: CSVFile, column_types: Optional[List[Dict[str
 @use_kwargs({
     'method': fields.Str(missing=None, validate=validate.OneOf(merge_methods.keys())),
 })
-def remerge_csv_file(csv_id, method):
+def remerge_csv_file(csv_id: str, method: Optional[str]):
     try:
         csv_file: CSVFile = CSVFile.query.get_or_404(csv_id)
         if 'merged' not in csv_file.meta:
@@ -523,7 +507,7 @@ def remerge_csv_file(csv_id, method):
         tables = [ValidatedMetaboliteTable.query.filter_by(csv_file_id=id).first_or_404()
                   for id in datasets]
 
-        merged, column_types, row_types = merge_methods[method](tables)
+        merged, column_types, row_types = merge_methods[cast(str, method)](tables)
 
         csv_file.save_table(merged)
 
@@ -531,7 +515,7 @@ def remerge_csv_file(csv_id, method):
         _update_row_types(csv_file, row_types)
 
         # need to call it manually since we might have changed the column types
-        csv_file.derive_group_levels(clear_caches=True)
+        csv_file.derive_group_levels()
 
         meta = csv_file.meta.copy()
         meta.update({
@@ -549,7 +533,7 @@ def remerge_csv_file(csv_id, method):
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/validate', methods=['POST'])
-def save_validated_csv_file(csv_id):
+def save_validated_csv_file(csv_id: str):
     csv_file = CSVFile.query.get_or_404(csv_id)
     fatal_errors = get_fatal_index_errors(csv_file)
     if fatal_errors:
@@ -557,7 +541,7 @@ def save_validated_csv_file(csv_id):
 
     old_table = ValidatedMetaboliteTable.query.filter_by(csv_file_id=csv_id).first()
     try:
-        old = {}
+        old: Dict[str, Any] = {}
         if old_table is not None:
             transformation_schema = ValidatedMetaboliteTableSchema(
                 only=['normalization', 'normalization_argument',
@@ -578,9 +562,11 @@ def save_validated_csv_file(csv_id):
         raise
 
 
-def serialize_validated_table(validated_table):
+def serialize_validated_table(validated_table: ValidatedMetaboliteTable):
     try:
         return validated_metabolite_table_schema.dump(validated_table)
+    except ValidationError as ve:
+        raise ve
     except Exception as e:
         current_app.logger.exception(e)
         raise ValidationError('Error applying data transformation')
@@ -593,7 +579,7 @@ def serialize_validated_table(validated_table):
     'argument': fields.Str(allow_none=True)
 }, validate=validate_normalization_method)
 @load_validated_csv_file
-def set_normalization_method(validated_table, **kwargs):
+def set_normalization_method(validated_table: ValidatedMetaboliteTable, **kwargs):
     method = kwargs['method']
     argument = kwargs.get('argument', None)
 
@@ -611,7 +597,7 @@ def set_normalization_method(validated_table, **kwargs):
 
 @csv_bp.route('/csv/<uuid:csv_id>/transformation', methods=['PUT'])
 @load_validated_csv_file
-def set_transformation_method(validated_table):
+def set_transformation_method(validated_table: ValidatedMetaboliteTable):
     args = request.json
     method = args['method']
     if method is not None and method not in TRANSFORMATION_METHODS:
@@ -629,7 +615,7 @@ def set_transformation_method(validated_table):
 
 @csv_bp.route('/csv/<uuid:csv_id>/scaling', methods=['PUT'])
 @load_validated_csv_file
-def set_scaling_method(validated_table):
+def set_scaling_method(validated_table: ValidatedMetaboliteTable):
     args = request.json
     method = args['method']
     if method is not None and method not in SCALING_METHODS:
@@ -687,7 +673,7 @@ def download_validated_csv_file(validated_table: ValidatedMetaboliteTable,
                      attachment_filename=name)
 
 
-def _get_pca_data(validated_table):
+def _get_pca_data(validated_table: ValidatedMetaboliteTable):
     table = validated_table.measurements
 
     max_components = request.args.get('max_components')
@@ -702,7 +688,7 @@ def _get_pca_data(validated_table):
     # insert per row label metadata information
     labels = validated_table.sample_metadata
     groups = validated_table.groups
-    data['labels'] = pandas.concat([groups, labels], axis=1).to_dict('list')
+    data['labels'] = clean(pandas.concat([groups, labels], axis=1)).to_dict('list')
     data['rows'] = table.index.tolist()
 
     return data
@@ -710,7 +696,7 @@ def _get_pca_data(validated_table):
 
 @csv_bp.route('/csv/<uuid:csv_id>/plot/pca', methods=['GET'])
 @load_validated_csv_file
-def get_pca_plot(validated_table):
+def get_pca_plot(validated_table: ValidatedMetaboliteTable):
     return jsonify(_get_pca_data(validated_table)), 200
 
 
@@ -727,16 +713,145 @@ def _get_loadings_data(validated_table):
 
 @csv_bp.route('/csv/<uuid:csv_id>/plot/loadings', methods=['GET'])
 @load_validated_csv_file
-def get_loadings_plot(validated_table):
+def get_loadings_plot(validated_table: ValidatedMetaboliteTable):
     return jsonify(_get_loadings_data(validated_table)), 200
 
 
 @csv_bp.route('/csv/<uuid:csv_id>/pca-overview', methods=['GET'])
 @load_validated_csv_file
-def get_pca_overview(validated_table):
+def get_pca_overview(validated_table: ValidatedMetaboliteTable):
     png_content = opencpu.generate_image('/viime/R/pca_overview_plot',
                                          validated_table.measurements)
     return Response(png_content, mimetype='image/png')
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/plsda', methods=['GET'])
+@use_kwargs({
+    'num_of_components': fields.Integer(required=False)
+})
+@load_validated_csv_file
+def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int] = 3):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+
+    rows, cols = measurements.shape[:2]
+    max_components = min(rows, cols)
+    if num_of_components is None:
+        num_of_components = max_components
+    if num_of_components > max_components:
+        return jsonify({
+            'error': 'invalid num_of_components'
+        }), 400
+
+    scores = plsda(measurements, groups, num_of_components, 'scores')
+    loadings = plsda(measurements, groups, num_of_components, 'loadings')
+    # TODO vip = plsda(measurements, groups, num_of_components, 'vip')
+    r2 = plsda(measurements, groups, num_of_components, 'r2')
+    q2 = plsda(measurements, groups, num_of_components, 'q2')
+
+    # massage the data returned from opencpu to correct format for client:
+    column_names = list(measurements.columns)
+    formatted_loadings = []
+    x = []
+
+    for i in range(num_of_components):
+        for j, score in enumerate(scores.get(f'variates.X.comp{i+1}')):
+            if i == 0:
+                x.append([])
+            x[j].append(score)
+        for j, loading in enumerate(loadings.get(f'comp{i+1}')):
+            if i == 0:
+                formatted_loadings.append({})
+                formatted_loadings[j]['col'] = column_names[j]
+                formatted_loadings[j]['loadings'] = []
+            formatted_loadings[j]['loadings'].append(loading)
+
+    explained_variances = [
+        scores.get(f'explained_variance.comp.{i+1}')[0] for i in range(num_of_components)
+    ]
+    sdev = sqrt(explained_variances).tolist()
+
+    formatted_scores = {'x': x, 'sdev': sdev}
+    formatted_r2 = [r2[comp][0] for comp in r2.keys()]
+    formatted_q2 = [q2[comp][0] for comp in q2.keys()]
+
+    labels = validated_table.sample_metadata
+    labels = clean(pandas.concat([groups, labels], axis=1)).to_dict('list')
+    rows = measurements.index.tolist()
+
+    return jsonify({
+        'scores': formatted_scores,
+        'loadings': formatted_loadings,
+        'labels': labels,
+        'rows': rows,
+        'r2': formatted_r2,
+        'q2': formatted_q2,
+    })
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/oplsda', methods=['GET'])
+@use_kwargs({
+    'num_of_components': fields.Integer(required=True)
+})
+@load_validated_csv_file
+def get_oplsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int] = 3):
+
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+
+    scores = oplsda(measurements, groups, num_of_components, 'scores')
+    loadings = oplsda(measurements, groups, num_of_components, 'loadings')
+    vip = oplsda(measurements, groups, num_of_components, 'vip')
+    modeldf = oplsda(measurements, groups, num_of_components, 'modeldf')
+    summarydf = oplsda(measurements, groups, num_of_components, 'summarydf')
+
+    # TODO: add vip scores to the response
+    # vip = next(iter(oplsda(measurements, groups, 'vip').values()))
+
+    column_names = list(measurements.columns)
+
+    # TODO: verify this is the correct value to derive "sdev"
+    # Last element of r2 is always NaN, slice it off
+    r2 = modeldf['R2Y'][:-1]
+    q2 = modeldf['Q2'][:-1]
+    r2cum = summarydf['R2Y(cum)'][0]
+    q2cum = summarydf['Q2(cum)'][0]
+    formatted_loadings = []
+    x = []
+    sdev = []
+
+    for i, component_name in enumerate(scores.keys()):
+        for j, score in enumerate(scores.get(component_name)):
+            if i == 0:
+                x.append([])
+            x[j].append(score)
+        for j, loading in enumerate(loadings.get(component_name)):
+            if i == 0:
+                formatted_loadings.append({})
+                formatted_loadings[j]['col'] = column_names[j]
+                formatted_loadings[j]['loadings'] = []
+            formatted_loadings[j]['loadings'].append(loading)
+
+        sdev.append(sqrt(r2[i]))
+
+    formatted_scores = {'x': x, 'sdev': sdev}
+    formatted_vip = vip['ropls_oplsda@vipVn']
+
+    labels = validated_table.sample_metadata
+    labels = clean(pandas.concat([groups, labels], axis=1)).to_dict('list')
+    rows = measurements.index.tolist()
+
+    return jsonify({
+        'scores': formatted_scores,
+        'loadings': formatted_loadings,
+        'vip': formatted_vip,
+        'labels': labels,
+        'rows': rows,
+        'r2': r2,
+        'q2': q2,
+        'r2cum': r2cum,
+        'q2cum': q2cum,
+    })
 
 
 def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,
@@ -747,7 +862,7 @@ def _group_test(method: Callable, validated_table: ValidatedMetaboliteTable,
     group = groups.iloc[:, 0] if group_column is None else groups.loc[:, group_column]
     if group is None:
         raise ValidationError(
-            'invalid group column', field_name='group_column', data=group_column)
+            'invalid group column', field_name='group_column', data=dict(group_column=group_column))
 
     is_log = validated_table.transformation in ['log10', 'log2']
     data = method(measurements, group, log_transformed=is_log)
@@ -827,6 +942,50 @@ def get_correlation(validated_table: ValidatedMetaboliteTable,
     data = pairwise_correlation(table, min_correlation, method)
 
     return jsonify(data), 200
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/roc', methods=['GET'])
+@use_kwargs({
+    'group1': fields.Str(required=True),
+    'group2': fields.Str(required=True),
+    'columns': fields.Str(required=True),
+    'method': fields.Str(required=True, validate=validate.OneOf([
+        'logistic_regression', 'random_forest'
+    ]))
+})
+@load_validated_csv_file
+def get_roc(validated_table: ValidatedMetaboliteTable,
+            group1: str, group2: str, columns: str, method: str):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+    errors = {}
+    try:
+        columns = json.loads(columns)
+        if len(columns) == 0:
+            errors['columns'] = ['Invalid columns, must be non-empty']
+    except ValueError:
+        errors['columns'] = ['Invalid columns, must be a list']
+    if not (groups == group1).sum().sum():
+        errors['group1'] = ['Invalid group name']
+    if not (groups == group2).sum().sum():
+        errors['group2'] = ['Invalid group name']
+    for i, column in enumerate(columns):
+        if column not in measurements.keys():
+            errors[f'columns[{i}]'] = [f'Invalid column name "{column}"']
+    if errors:
+        return jsonify(errors), 400
+    return jsonify(roc_analysis(measurements, groups, group1, group2, columns, method))
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/factors', methods=['GET'])
+@use_kwargs({
+    'threshold': fields.Float(missing=0.4)
+})
+@load_validated_csv_file
+def get_factors(validated_table: ValidatedMetaboliteTable,
+                threshold: Optional[float]):
+    measurements = validated_table.measurements
+    return jsonify(factor_analysis(measurements, threshold))
 
 
 #

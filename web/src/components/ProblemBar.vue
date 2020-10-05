@@ -19,7 +19,7 @@ export default {
       return this.$store.state.datasets[this.id];
     },
     problemData() {
-      return this.dataset.validation.find(v => v.type === this.problem);
+      return this.dataset.validation.find((v) => v.type === this.problem);
     },
   },
   methods: {
@@ -43,7 +43,7 @@ export default {
     },
     async maskAll() {
       const { problemData } = this;
-      const changes = problemData.data.map(error => ({
+      const changes = problemData.data.map((error) => ({
         context: problemData.context,
         index: error.index,
         label: 'masked',

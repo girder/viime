@@ -2,20 +2,16 @@ import os
 
 import dotenv
 from flask import current_app, Flask, jsonify
+from flask_cors import CORS
 from flask_migrate import Migrate
 from marshmallow import ValidationError
 from webargs.flaskparser import parser
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from viime.cache import clear_cache, persistent_region
+from viime.cache import clear_cache
 from viime.models import db
 from viime.opencpu import OpenCPUException
 from viime.views import csv_bp
-
-try:
-    import pylibmc
-except ImportError:
-    pylibmc = None
 
 
 def handle_validation_error(e):
@@ -56,6 +52,9 @@ def create_app(config=None):
     config = config or {}
     app = Flask(__name__)
 
+    # enable CORS for all API calls
+    CORS(app, resources={'/api/*': {'origins': '*'}})
+
     app.wsgi_app = ProxyFix(app.wsgi_app)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
@@ -82,16 +81,6 @@ def create_app(config=None):
     app.register_error_handler(OpenCPUException, handle_opencpu_error)
     if app.config['ENV'] == 'production':
         app.register_error_handler(500, handle_general_error)
-
-    if 'MEMCACHED_URI' in os.environ and pylibmc:
-        persistent_region.configure(
-            'dogpile.cache.pylibmc',
-            arguments={
-                'url': os.environ['MEMCACHED_URI'],
-                'binary': True
-            },
-            replace_existing_backend=True
-        )
 
     @app.after_request
     def clear_cache_after_request(response):

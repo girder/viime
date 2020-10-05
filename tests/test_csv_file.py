@@ -1,4 +1,9 @@
-from viime.models import CSVFileSchema, db
+from io import StringIO
+
+import pandas as pd
+import pytest
+
+from viime.models import _guess_table_structure, CSVFileSchema, db
 
 csv_file_schema = CSVFileSchema()
 
@@ -134,3 +139,68 @@ h1,h2,h3,h4
 
         table = csv.measurement_table
         assert table.applymap(lambda s: isinstance(s, (float, int))).all().all()
+
+
+GUESS_TABLE_DATA = [(
+    """
+h1,h2,h3,h4,h5
+ a, g1, 2, 3, 4
+ b, g2, a, 6, 1
+ c, g3, 8, 9, 0
+""",
+    ['sample', 'sample', 'sample'],
+    ['group', 'measurement', 'measurement', 'measurement'],
+), (
+    """
+h1,h2,h3,h4
+ a, 2, g1, 3
+ b, 1, g2, 6
+ c, 8, g3, 9
+""",
+    ['sample', 'sample', 'sample'],
+    ['measurement', 'group', 'measurement'],
+), (
+    """
+h1,h2,h3,h4,h5
+ a, a, g1, 3, 1
+ b, b, g2, 6, 4
+ c, c, g3, 9, 5
+""",
+    ['sample', 'sample', 'sample'],
+    ['group', 'masked', 'measurement', 'measurement'],
+), (
+    """
+h1,h2,h3,h4
+ 1, 2, 3, 3
+ 0, 0, 1, 6
+ 5, 1, 0, 9
+""",
+    ['sample', 'sample', 'sample'],
+    ['group', 'measurement', 'measurement'],
+), (
+    """
+h1,h2,h3,h4
+ 1, 2, 3, 3
+ a, b, c, d
+ 5, 1, 0, 9
+""",
+    ['sample', 'masked', 'sample'],
+    ['group', 'measurement', 'measurement'],
+), (
+    """
+h1,h2,h3,h4,h5
+ a, g1, 1, 3, 3
+ b, g2, 1, d, 9
+ c, g3, 1, 9, 5
+""",
+    ['sample', 'sample', 'sample'],
+    ['group', 'masked', 'measurement', 'measurement'],
+)]
+
+
+@pytest.mark.parametrize('table_data,rows,columns', GUESS_TABLE_DATA)
+def test_guess_table_structure(table_data, rows, columns):
+    table = pd.read_csv(StringIO(table_data), index_col=None, header=None)
+    r, c = _guess_table_structure(table)
+    assert rows == r[1:]
+    assert columns == c[1:]

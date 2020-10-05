@@ -1,0 +1,7 @@
+version: "3.8"
+services:
+  backend:
+    environment:
+      - FLASK_APP=viime/wsgi
+      - FLASK_ENV=development
+    entrypoint: ["./start.sh"]

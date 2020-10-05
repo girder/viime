@@ -4,25 +4,22 @@ from viime.models import CSVFileSchema, db, TABLE_COLUMN_TYPES, TABLE_ROW_TYPES
 from viime.table_validation import get_low_variance_warnings, \
     get_missing_percent_warnings, get_non_numeric_warnings, \
     get_validation_list, ValidationSchema
-
 csv_file_schema = CSVFileSchema()
 validation_schema = ValidationSchema()
 
 
 @fixture
 def valid_table(pathological_table):
-    pathological_table.rows[0].row_type = TABLE_ROW_TYPES.MASK
-    pathological_table.rows[1].row_type = TABLE_ROW_TYPES.MASK
-    pathological_table.rows[2].row_type = TABLE_ROW_TYPES.INDEX
-    pathological_table.rows[3].row_type = TABLE_ROW_TYPES.METADATA
-    pathological_table.rows[10].row_type = TABLE_ROW_TYPES.MASK
+    pathological_table.rows[0]['row_type'] = TABLE_ROW_TYPES.MASK
+    pathological_table.rows[1]['row_type'] = TABLE_ROW_TYPES.MASK
+    pathological_table.rows[2]['row_type'] = TABLE_ROW_TYPES.INDEX
+    pathological_table.rows[3]['row_type'] = TABLE_ROW_TYPES.METADATA
+    pathological_table.rows[10]['row_type'] = TABLE_ROW_TYPES.MASK
 
-    pathological_table.columns[0].column_type = TABLE_COLUMN_TYPES.MASK
-    pathological_table.columns[1].column_type = TABLE_COLUMN_TYPES.INDEX
-    pathological_table.columns[2].column_type = TABLE_COLUMN_TYPES.GROUP
+    pathological_table.columns[0]['column_type'] = TABLE_COLUMN_TYPES.MASK
+    pathological_table.columns[1]['column_type'] = TABLE_COLUMN_TYPES.INDEX
+    pathological_table.columns[2]['column_type'] = TABLE_COLUMN_TYPES.GROUP
 
-    db.session.add_all(pathological_table.rows)
-    db.session.add_all(pathological_table.columns)
     db.session.add(pathological_table)
     db.session.commit()
     yield pathological_table
@@ -30,8 +27,9 @@ def valid_table(pathological_table):
 
 def test_no_index(csv_file):
     index_column = csv_file.columns[0]
-    index_column.column_type = TABLE_COLUMN_TYPES.MASK
-    db.session.add(index_column)
+    index_column['column_type'] = TABLE_COLUMN_TYPES.MASK
+    db.session.add(csv_file)
+
     db.session.commit()
 
     validation_list = validation_schema.dump(get_validation_list(csv_file), many=True)
@@ -45,8 +43,9 @@ def test_no_index(csv_file):
 
 def test_no_header(csv_file):
     header_row = csv_file.rows[0]
-    header_row.row_type = TABLE_ROW_TYPES.MASK
-    db.session.add(header_row)
+    header_row['row_type'] = TABLE_ROW_TYPES.MASK
+
+    db.session.add(csv_file)
     db.session.commit()
 
     validation_list = validation_schema.dump(get_validation_list(csv_file), many=True)
@@ -60,8 +59,9 @@ def test_no_header(csv_file):
 
 def test_no_group(csv_file):
     group_column = csv_file.columns[1]
-    group_column.column_type = TABLE_COLUMN_TYPES.MASK
-    db.session.add(group_column)
+    group_column['column_type'] = TABLE_COLUMN_TYPES.MASK
+
+    db.session.add(csv_file)
     db.session.commit()
 
     validation_list = validation_schema.dump(get_validation_list(csv_file), many=True)
@@ -75,8 +75,9 @@ def test_no_group(csv_file):
 
 def test_invalid_index(valid_table):
     column = valid_table.columns[0]
-    column.column_type = TABLE_COLUMN_TYPES.INDEX
-    db.session.add(column)
+    column['column_type'] = TABLE_COLUMN_TYPES.INDEX
+
+    db.session.add(valid_table)
     db.session.commit()
 
     validation_list = validation_schema.dump(get_validation_list(valid_table), many=True)
@@ -92,8 +93,9 @@ def test_invalid_index(valid_table):
 
 def test_invalid_group(valid_table):
     column = valid_table.columns[0]
-    column.column_type = TABLE_COLUMN_TYPES.GROUP
-    db.session.add(column)
+    column['column_type'] = TABLE_COLUMN_TYPES.GROUP
+
+    db.session.add(valid_table)
     db.session.commit()
 
     validation_list = validation_schema.dump(get_validation_list(valid_table), many=True)
@@ -108,18 +110,15 @@ def test_invalid_group(valid_table):
 
 
 def test_multiple_missing_errors(pathological_table):
-    pathological_table.rows[0].row_type = TABLE_ROW_TYPES.MASK
+    pathological_table.rows[0]['row_type'] = TABLE_ROW_TYPES.MASK
 
-    pathological_table.columns[0].column_type = TABLE_COLUMN_TYPES.MASK
-    pathological_table.columns[1].column_type = TABLE_COLUMN_TYPES.MASK
+    pathological_table.columns[0]['column_type'] = TABLE_COLUMN_TYPES.MASK
 
-    db.session.add_all(pathological_table.rows)
-    db.session.add_all(pathological_table.columns)
+    pathological_table.columns[1]['column_type'] = TABLE_COLUMN_TYPES.MASK
+
     db.session.add(pathological_table)
     db.session.commit()
-
     validation_list = validation_schema.dump(get_validation_list(pathological_table), many=True)
-
     assert validation_list == [
         {
             'severity': 'error',
@@ -174,11 +173,11 @@ def test_multiple_invalid_errors(pathological_table):
 
 def test_non_numeric_warning(client):
     table = """
-id,group,col1,col2
-w,a,-1,2
-x,a,0,0
-y,a,x,1
-z,b,5,2
+id,group,col1,col2,col3
+w,a,-1,2,3
+x,a,0,0,1
+y,a,x,1,4
+z,b,5,2,5
 """
 
     csv_file = csv_file_schema.load({'table': table, 'name': 'table.csv'})
@@ -196,11 +195,11 @@ z,b,5,2
 
 def test_missing_percent_warning(client):
     table = """
-id,group,col1,col2
-w,a,-1,2
-x,a,0,0
-y,a,,1
-z,b,,
+id,group,col1,col2,col3
+w,a,-1,2,1
+x,a,0,0,5
+y,a,,1,7
+z,b,,1,5
 """
 
     csv_file = csv_file_schema.load({'table': table, 'name': 'table.csv'})
@@ -221,7 +220,7 @@ def test_low_variance_warning(client):
     table = """
 id,group,col1,col2
 w,a,0,2
-x,a,0,0
+x,a,1e-8,0
 y,a,0,1
 z,b,0,10
 """

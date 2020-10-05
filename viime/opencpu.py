@@ -1,5 +1,6 @@
 from io import BytesIO
 import json
+from typing import Any, Dict, Optional
 
 from flask import current_app, Response
 import pandas
@@ -7,7 +8,7 @@ import requests
 
 
 class OpenCPUException(Exception):
-    def __init__(self, msg, method, response):
+    def __init__(self, msg: str, method: str, response):
         super().__init__(self, msg)
         self.method = method
         self.response = response
@@ -18,7 +19,8 @@ class OpenCPUException(Exception):
                         mimetype='text/plain')
 
 
-def opencpu_request(method, files=None, params=None, return_type='csv'):
+def opencpu_request(method: str, files: Optional[Dict[str, Any]] = None,
+                    params: Optional[Dict[str, Any]] = None, return_type='csv'):
     files = files or {}
     params = params or {}
     params = {
@@ -37,7 +39,7 @@ def opencpu_request(method, files=None, params=None, return_type='csv'):
     try:
         resp = requests.post(url, files=files, data=params)
     except requests.exceptions.RequestException as e:
-        raise OpenCPUException(f'Error connecting to OpenCPU server', method, e.response)
+        raise OpenCPUException('Error connecting to OpenCPU server', method, e.response)
 
     if not resp.ok:
         current_app.logger.error(resp.content)
@@ -51,7 +53,7 @@ def opencpu_request(method, files=None, params=None, return_type='csv'):
     return result
 
 
-def process_table(method, table, params=None):
+def process_table(method: str, table: pandas.DataFrame, params: Optional[Dict[str, Any]] = None):
     files = {
         'table': ('table.csv', table.to_csv().encode())
     }
@@ -59,7 +61,7 @@ def process_table(method, table, params=None):
     return Response(result.to_csv(), mimetype='text/csv')
 
 
-def generate_image(method, table, params=None):
+def generate_image(method: str, table: pandas.DataFrame, params: Optional[Dict[str, Any]] = None):
     files = {
         'table': ('table.csv', table.to_csv().encode())
     }

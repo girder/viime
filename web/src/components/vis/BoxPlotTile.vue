@@ -25,7 +25,7 @@ export default {
       }
       return df.columnNames.map((name, i) => ({
         name,
-        values: df.data.map(row => row[i]),
+        values: df.data.map((row) => row[i]),
       }));
     },
   },

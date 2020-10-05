@@ -1,10 +1,24 @@
-<script>
-import { SET_SELECTION } from '@/store/mutations.type';
-import { loadDataset } from '@/utils/mixins';
+<script lang="ts">
+import { defineComponent, inject, ref } from '@vue/composition-api';
+import VueRouter from 'vue-router';
+import { LOAD_DATASET } from '../store/actions.type';
+import { INTIALIZE_DATASET, SET_SELECTION } from '../store/mutations.type';
 import analyses from './vis/analyses';
+import store from '../store';
 
-export default {
-  mixins: [loadDataset],
+interface Dataset {
+  id: string;
+}
+
+interface Problem {
+  multi: boolean;
+  type: string;
+  context: string;
+  row_index?: string;
+  column_index?: string;
+}
+
+export default defineComponent({
   props: {
     problem: {
       type: String,
@@ -12,270 +26,248 @@ export default {
     },
     id: {
       type: String,
+      required: true,
       default: null,
     },
   },
-  data() {
-    return {
-      datasets: this.$store.state.datasets,
-      analyses,
-    };
-  },
-  methods: {
-    stopPropagation(evt) {
-      evt.stopPropagation();
-    },
-    valid(dataset) {
-      return this.$store.getters.valid(dataset.id);
-    },
-    isMerged(dataset) {
-      return this.$store.getters.isMerged(dataset.id);
-    },
-    problemNav(problem) {
-      const { id } = this;
+  setup(props) {
+    // TODO Use injected router instead of importing to avoid circular import
+    const router = inject('router') as VueRouter;
+    const datasets = ref(store.state.datasets);
+
+    function valid(dataset: Dataset) {
+      return store.getters.valid(dataset.id);
+    }
+    function isMerged(dataset: Dataset) {
+      return store.getters.isMerged(dataset.id);
+    }
+    function problemNav(problem: Problem, id: string) {
       if (problem.multi) {
-        this.$router.push({ name: 'Problem', params: { id, problem: problem.type } });
+        router.push({ name: 'Problem', params: { id, problem: problem.type } }).catch(() => { });
       } else {
-        this.$router.push({ name: 'Clean Up Table', params: { id } });
-        this.$store.commit(SET_SELECTION, {
+        router.push({ name: 'Clean Up Table', params: { id } }).catch(() => { });
+        store.commit(SET_SELECTION, {
           key: id,
           event: {},
           axis: problem.context,
-          idx: problem[`${problem.context}_index`],
+          // eslint-disable-next-line no-nested-ternary
+          idx: (problem.context === 'row') ? problem.row_index
+            : (problem.context === 'column') ? problem.column_index
+              : undefined,
         });
       }
-    },
+    }
+
+    const dataset = store.getters.dataset(props.id);
+    if (!dataset.value) {
+      // initialize the dataset to prevent NPE race conditions during slow loads
+      store.commit(INTIALIZE_DATASET, { dataset_id: props.id });
+      store.dispatch(LOAD_DATASET, { dataset_id: props.id });
+    }
+    return {
+      datasets,
+      analyses,
+      valid,
+      isMerged,
+      problemNav,
+    };
   },
-};
+});
 </script>
 
-<template lang="pug">
-v-layout.pretreatment-component(row, fill-height)
-
-  v-navigation-drawer.navigation(floating, permanent, style="min-width: 220px; width: 220px;",
-      touchless, disable-resize-watcher, stateless)
-    v-list
-      v-list-group.root-level(v-for="(dataset, index) in datasets",
-          :key="dataset.id",
-          :class="{ active: $route.name === 'Pretreat Data' && dataset.id === id}",
-          :value="dataset.id === id")
-        template(#activator)
-          v-list-tile.dataset-level(:to="{ name: 'Pretreat Data', params: { id: dataset.id } }",
-              exact, @click="stopPropagation")
-            v-list-tile-title.title
-              | {{ dataset.name }}
-            v-list-tile-action
-              v-icon(color="warning", v-if="dataset.validation.length")
-                | {{ $vuetify.icons.warning }}
-              v-icon(color="success", v-else)
-                | {{ $vuetify.icons.check }}
-
-        v-list-tile.top-level(:to="{ name: 'Clean Up Table', params: { id: dataset.id } }", exact)
-          v-list-tile-title
-            v-icon.drawericon {{ $vuetify.icons.tableEdit }}
-            | Clean Up Table
-
-        v-list-tile.sub-level(v-for="problemData in dataset.validation",
-            @click="problemNav(problemData)",
-            :class="{ active: problemData.type === problem && dataset.id === id}",
-            :inactive="!problemData.clickable",
-            :key="problemData.title")
-          v-list-tile-title
-            v-icon.drawericon(
-                :color="problemData.severity") {{ $vuetify.icons[problemData.severity] }}
-            | {{ problemData.title }}
-            span(v-if="problemData.data") ({{ problemData.data.length }})
-            v-tooltip(v-else, top)
-              template(#activator="{ on }")
-                v-icon(small, @click="", v-on="on") {{ $vuetify.icons.info }}
-              span {{ problemData.description }}
-
-        v-list-tile.sub-level(:to="{ name: 'Impute Table', params: { id: dataset.id } }",
-            v-show="!isMerged(dataset)")
-          v-list-tile-title
-            v-icon.drawericon {{ $vuetify.icons.tableEdit }}
-            | Impute Table
-
-        v-list-tile.top-level(:to="{ name: 'Transform Table', params: { id: dataset.id } }",
-            :disabled="!valid(dataset)", v-show="!isMerged(dataset)")
-          v-list-tile-title
-            v-icon.pr-1.drawericon {{ $vuetify.icons.bubbles }}
-            | Transform Table
-
-        v-list-group.top-level(sub-group,
-            :class="{ active: $route.name === 'Analyze Data' && dataset.id === id}",
-            value="true")
-          template(#activator)
-            v-list-tile.top-level(:to="{ name: 'Analyze Data', params: { id: dataset.id } }", exact,
-                :disabled="!valid(dataset)",
-                @click="stopPropagation")
-              v-list-tile-title
-                v-icon.drawericon {{ $vuetify.icons.cogs }}
-                | Analyze Table
-          v-list-tile.sub-level(v-for="a in analyses", :key="a.path",
-              :to="{ name: a.shortName, params: { id: dataset.id } }",
-              :disabled="!valid(dataset)")
-            v-list-tile-title
-              v-icon.drawericon(:style="a.iconStyle") {{ a.icon || $vuetify.icons.compare }}
-              | {{a.shortName}}
-
-        v-list-tile.top-level(:to="{ name: 'Download Data', params: { id: dataset.id } }",
-            :disabled="!valid(dataset)")
-          v-list-tile-title
-            v-icon.pr-1.drawericon {{ $vuetify.icons.fileDownload }}
-            | Download Data
-
-  router-view
+<template>
+  <v-layout
+    class="pretreatment-component"
+    row
+    fill-height="fill-height"
+  >
+    <v-navigation-drawer
+      class="navigation"
+      floating
+      permanent
+      style="min-width: 220px; width: 220px;"
+      touchless
+      disable-resize-watcher="disable-resize-watcher"
+      stateless
+    >
+      <v-list
+        class="py-0"
+        dense
+      >
+        <v-list-group
+          v-for="(dataset) in datasets"
+          :key="dataset.id"
+          :class="{ active: $route.name === 'Pretreat Data' && dataset.id === id }"
+          :value="dataset.id === id"
+        >
+          <template #activator>
+            <v-list-tile
+              class="mr-0 pr-2"
+              active-class="font-weight-bold"
+              :to="{ name: 'Pretreat Data', params: { id: dataset.id } }"
+              exact
+              @click.stop=""
+            >
+              <v-list-tile-title class="grow">
+                {{ dataset.name }}
+              </v-list-tile-title>
+              <v-list-tile-action class="action-style">
+                <v-icon
+                  v-if="dataset.validation.length"
+                  color="warning"
+                >
+                  {{ $vuetify.icons.warning }}
+                </v-icon>
+                <v-icon
+                  v-else
+                  color="success"
+                >
+                  {{ $vuetify.icons.check }}
+                </v-icon>
+              </v-list-tile-action>
+            </v-list-tile>
+          </template>
+          <v-list-tile
+            :to="{ name: 'Clean Up Table', params: { id: dataset.id } }"
+            exact
+            active-class="font-weight-bold"
+          >
+            <v-list-tile-action class="action-style">
+              <v-icon>{{ $vuetify.icons.tableEdit }}</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Clean Up Table</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-list-tile
+            v-for="problemData in dataset.validation"
+            :key="problemData.title"
+            :class="{ active: problemData.type === problem && dataset.id === id }"
+            :inactive="!problemData.clickable"
+            active-class="font-weight-bold"
+            @click="problemNav(problemData, dataset.id)"
+          >
+            <v-list-tile-action class="action-style">
+              <v-icon
+                class="pr-1"
+                :color="problemData.severity"
+              >
+                {{ $vuetify.icons[problemData.severity] }}
+              </v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>
+                {{ problemData.title }}
+                <span v-if="problemData.data">({{ problemData.data.length }})</span>
+                <v-tooltip
+                  v-else
+                  top
+                >
+                  <template #activator="{ on }">
+                    <v-icon
+                      class="pr-1"
+                      small
+                      v-on="on"
+                    >
+                      {{ $vuetify.icons.info }}
+                    </v-icon>
+                  </template><span>{{ problemData.description }}</span>
+                </v-tooltip>
+              </v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-list-tile
+            v-show="!isMerged(dataset)"
+            :to="{ name: 'Impute Table', params: { id: dataset.id } }"
+            active-class="font-weight-bold"
+          >
+            <v-list-tile-action class="action-style">
+              <v-icon class="pr-1">
+                {{ $vuetify.icons.tableEdit }}
+              </v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Impute Table</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-list-tile
+            v-show="!isMerged(dataset)"
+            :to="{ name: 'Transform Table', params: { id: dataset.id } }"
+            :disabled="!valid(dataset)"
+            active-class="font-weight-bold"
+          >
+            <v-list-tile-action class="action-style">
+              <v-icon class="pr-1">
+                {{ $vuetify.icons.bubbles }}
+              </v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Transform Table</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-list class="py-0">
+            <v-list-group :class="{ active: $route.name === 'Analyze Data' && dataset.id === id }">
+              <template #activator>
+                <v-list-tile
+                  :to="{ name: 'Analyze Data', params: { id: dataset.id } }"
+                  :disabled="!valid(dataset)"
+                  exact
+                  active-class="font-weight-bold"
+                >
+                  <v-list-tile-action class="action-style">
+                    <v-icon class="pr-1">
+                      {{ $vuetify.icons.cogs }}
+                    </v-icon>
+                  </v-list-tile-action>
+                  <v-list-tile-content>
+                    <v-list-tile-title>Analyze Table</v-list-tile-title>
+                  </v-list-tile-content>
+                </v-list-tile>
+              </template>
+              <v-list-tile
+                v-for="a in analyses"
+                :key="a.path"
+                :to="{ name: a.shortName, params: { id: dataset.id } }"
+                :disabled="!valid(dataset)"
+                active-class="font-weight-bold"
+              >
+                <v-list-tile-action class="action-style">
+                  <v-icon
+                    class="pr-1"
+                    :style="a.iconStyle"
+                  >
+                    {{ a.icon || $vuetify.icons.compare }}
+                  </v-icon>
+                </v-list-tile-action>
+                <v-list-tile-content>
+                  <v-list-tile-title>{{ a.shortName }}</v-list-tile-title>
+                </v-list-tile-content>
+              </v-list-tile>
+            </v-list-group>
+          </v-list>
+          <v-list-tile
+            :to="{ name: 'Download Data', params: { id: dataset.id } }"
+            :disabled="!valid(dataset)"
+            active-class="font-weight-bold"
+          >
+            <v-list-tile-action class="action-style">
+              <v-icon class="pr-1">
+                {{ $vuetify.icons.fileDownload }}
+              </v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Download Data</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+        </v-list-group>
+      </v-list>
+    </v-navigation-drawer>
+    <router-view />
+  </v-layout>
 </template>
 
-<style lang="scss">
-.navigation {
-  display: flex;
-  flex-direction: column;
-
-  > .v-list {
-    padding: 0;
-    flex: 1 1 0;
-    overflow: auto;
-
-    > .v-list__group > .v-list__group__items {
-      padding: 8px 0;
-    }
-  }
-
-  .v-list__group__header.v-list__group__header--sub-group
-    .v-list__group__header__prepend-icon .v-icon,
-  .v-list__group__header
-    .v-list__group__header__append-icon .v-icon {
-    transform: rotate(-90deg);
-  }
-  .v-list__group__header--active.v-list__group__header--sub-group
-    .v-list__group__header__prepend-icon .v-icon,
-  .v-list__group__header--active
-    .v-list__group__header__append-icon .v-icon {
-    transform: unset;
-  }
-
-  .drawericon {
-    vertical-align: top;
-    margin-right: 4px;
-  }
-
-  .root-level > .v-list__group__header--active {
-    background: unset;
-  }
-
-  .root-level.active > .v-list__group__header {
-    background-color: #37474f;
-  }
-
-  .root-level.active > .v-list__group__header,
-  .top-level.active > .v-list__group__header {
-    .v-list__group__header__prepend-icon > .v-icon,
-    .v-list__group__header__append-icon > .v-icon,
-    .v-list__tile__title {
-      color: white !important;
-    }
-  }
-
-  .dataset-level {
-    order: 2;
-
-    .v-list__tile {
-      padding: 0 8px 0 0;
-      color: black !important;
-
-      &:hover {
-        background: unset;
-      }
-    }
-
-    .v-list__tile__action {
-      min-width: unset;
-    }
-  }
-
-  .top-level {
-    .v-list__group__header {
-      position: relative;
-
-      &:hover {
-        background: unset;
-      }
-
-      .v-list__tile {
-        padding-left: 16px;
-
-      }
-    }
-
-    .v-list__group__header__prepend-icon {
-      min-width: unset;
-      padding: 0;
-      margin: 0;
-      justify-content: flex-end;
-      z-index: 1;
-      position: absolute;
-      left: 8px;
-      top: 0;
-      height: 100%;
-    }
-  }
-
-
-  .sub-level {
-    margin: 4px 0 4px 24px;
-
-    .v-list__tile {
-      height: 32px;
-    }
-  }
-
-  > .v-list {
-    .top-level {
-      > .v-list__tile {
-        margin-left: 8px;
-
-        .v-list__tile__title  {
-          padding-left: 8px;
-        }
-      }
-    }
-
-    .sub-level {
-      > .v-list__tile {
-        margin-left: 8px;
-
-        .v-list__tile__title  {
-          padding-left: 4px;
-        }
-      }
-    }
-
-    .top-level,
-    .sub-level {
-      > .v-list__tile {
-        border-radius: 24px 0 0 24px;
-
-        .v-list__tile__title  {
-          font-size: 16px;
-        }
-      }
-
-      > .v-list__tile--active {
-        background-color: #37474f;
-        color: white;
-
-        &:hover {
-          background-color: #4b616d;
-        }
-
-        i,
-        .v-list__tile__title {
-          color: white;
-        }
-      }
-    }
-  }
+<style scoped>
+.action-style {
+  min-width: 40px !important;
 }
 </style>

@@ -1,101 +1,125 @@
-<script>
+<script lang="ts">
+import {
+  PropType, defineComponent, toRefs, computed,
+} from '@vue/composition-api';
 import FilterOption from './FilterOption.vue';
-import sampleMixin from './mixins/sampleMixin';
+import useSample, { sampleProps } from './use/useSample';
 
-// interface IGroup {
-//   name: string;
-//   color: string;
-//   indices: number[];
-//   rows: string[];
-// }
-// interface ISampleFilter {
-//   option: string | null;
-//   filter: string[];
-//   apply(row: string): boolean;
-//   groupBy(row string[]): IGroup[];
-// }
+interface Group {
+  name: string;
+  color: string;
+  indices: number[];
+  columns?: string[];
+  rows?: string[];
+}
+interface Filter {
+  option: string | null;
+  filter: string[];
+  apply?: (column: string) => boolean;
+  groupBy?: (columns: string[]) => Group[];
+}
 
-export default {
-  components: {
-    FilterOption,
-  },
-  mixins: [sampleMixin],
+export default defineComponent({
   props: {
     title: {
       type: String,
       required: false,
       default: 'Sample Filter',
     },
-    value: { // ISampleFilter
-      type: Object,
+    value: {
+      type: Object as PropType<Filter>,
       required: false,
       default: null,
     },
+    ...sampleProps,
   },
-  computed: {
-    validatedValue() {
-      if (this.value) {
-        return this.value;
-      }
-      if (this.options.length === 0) {
-        return {
-          option: null,
-          filter: [],
-          apply: () => true,
-        };
-      }
-      const firstOption = this.options[0];
-      const v = {
-        option: firstOption.value,
-        filter: firstOption.options.map(d => d.value),
-      };
-      this.changeValue(v);
-      return v;
-    },
+  components: {
+    FilterOption,
   },
-  methods: {
-    generateFilter(value) {
+  setup(props, context) {
+    const { options, categoricalMetaData, rowToIndex } = useSample(toRefs(props), context);
+    function generateFilter(value: Filter) {
       if (!value.option) {
         return () => true;
       }
-      const meta = this.categoricalMetaData.find(d => d.value === value.option);
+      const meta = categoricalMetaData.value.find((d) => d.value === value.option);
+      if (!meta) {
+        return () => true;
+      }
       const lookup = new Set(value.filter);
-      const toIndex = this.rowToIndex;
-      return row => lookup.has(meta.data[toIndex(row)]);
-    },
-    generateGroupBy(value) {
+      const toIndex = rowToIndex.value;
+      return (row: string) => lookup.has(meta.data[toIndex(row)]);
+    }
+    function generateGroupBy(value: Filter) {
       if (!value.option) {
-        return rows => [{
+        return (rows: string[]) => [{
           name: 'default',
           color: '#ffffff',
           rows,
           indices: rows.map((_, i) => i),
         }];
       }
-      const meta = this.categoricalMetaData.find(d => d.value === value.option);
+      const meta = categoricalMetaData.value.find((d) => d.value === value.option);
+      if (!meta) {
+        return (rows: string[]) => [{
+          name: 'default',
+          color: '#ffffff',
+          rows,
+          indices: rows.map((_, i) => i),
+        }];
+      }
       const lookup = new Set(value.filter);
-      const options = meta.levels.filter(o => lookup.has(o.name));
-      const toIndex = this.rowToIndex;
-      return rows => options.map((v) => {
-        const subset = rows.filter(row => meta.data[toIndex(row)] === v.name);
+      const levels = meta.levels.filter((o) => lookup.has(o.name));
+      const toIndex = rowToIndex.value;
+      return (rows: string[]) => levels.map((v) => {
+        const subset = rows.filter((row) => meta.data[toIndex(row)] === v.name);
         return {
           name: v.label,
           color: v.color,
           rows: subset,
-          indices: subset.map(r => toIndex(r)),
+          indices: subset.map((r) => toIndex(r)),
         };
       });
-    },
-    changeValue(value) {
-      value.apply = this.generateFilter(value);
-      value.groupBy = this.generateGroupBy(value);
-      this.$emit('input', value);
-    },
+    }
+    function changeValue(value: Filter) {
+      value.apply = generateFilter(value);
+      value.groupBy = generateGroupBy(value);
+      context.emit('input', value);
+    }
+    const validatedValue = computed(() => {
+      if (props.value) {
+        return props.value;
+      }
+      if (options.value.length === 0) {
+        return {
+          option: null,
+          filter: [],
+          apply: () => true,
+        };
+      }
+      const firstOption = options.value[0];
+      const v = {
+        option: firstOption.value,
+        filter: firstOption.options.map((d) => d.value),
+      };
+      changeValue(v);
+      return v;
+    });
+    return {
+      options,
+      validatedValue,
+      changeValue,
+    };
   },
-};
+});
 </script>
 
-<template lang="pug">
-filter-option(:title="title", :disabled="disabled",
-    :options="options", :value="validatedValue", @input="changeValue($event)")
+<template>
+  <filter-option
+    :title="title"
+    :disabled="disabled"
+    :options="options"
+    :value="validatedValue"
+    @input="changeValue($event)"
+  />
 </template>

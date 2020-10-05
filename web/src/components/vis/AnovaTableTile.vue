@@ -50,11 +50,11 @@ export default {
 
       if (this.metaboliteFilter) {
         const filter = this.metaboliteFilter.apply;
-        data = data.filter(row => filter(row.Metabolite));
+        data = data.filter((row) => filter(row.Metabolite));
       }
       if (this.metaboliteColor) {
         const colorer = this.metaboliteColor.apply;
-        data = data.map(row => ({ ...row, color: colorer(row.Metabolite) }));
+        data = data.map((row) => ({ ...row, color: colorer(row.Metabolite) }));
       }
 
       return {
@@ -73,7 +73,12 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="plot", title="Anova Table", :loading="plot.loading", expanded)
+vis-tile-large(
+    v-if="plot",
+    title="Anova Table",
+    analysis-path="anova",
+    :loading="plot.loading",
+    expanded)
   template(#controls)
     metabolite-filter(:dataset="dataset", v-model="metaboliteFilter", hide-selection)
     metabolite-colorer(:dataset="dataset", v-model="metaboliteColor", hide-selection,
@@ -89,10 +94,19 @@ vis-tile-large(v-if="plot", title="Anova Table", :loading="plot.loading", expand
     v-btn(flat, dark, block, @click="downloadTable")
       v-icon.mr-2 {{ $vuetify.icons.save }}
       | Download Table
-  anova-table(v-if="plot.data", :data="tableData", :threshold="threshold", v-model="selected")
+  anova-table.horizontalScrollable(
+      v-if="plot.data",
+      :data="tableData",
+      :threshold="threshold",
+      :error-msg="plot.data.error || ''",
+      v-model="selected")
 </template>
 
 <style scoped>
+.horizontalScrollable {
+  position: absolute;
+}
+
 .minCorrelation {
   padding-top: 16px;
 }

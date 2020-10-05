@@ -5,8 +5,8 @@ from uuid import uuid4
 from sqlalchemy.orm.session import make_transient
 
 from .models import CSVFile, CSVFileSchema, db, GroupLevel, \
-    SampleGroup, SampleGroupSchema, TableColumn, TableRow, \
-    ValidatedMetaboliteTable, ValidatedMetaboliteTableSchema
+    SampleGroup, SampleGroupSchema, ValidatedMetaboliteTable, \
+    ValidatedMetaboliteTableSchema
 
 
 def is_sample_file(csv: CSVFile) -> bool:
@@ -28,10 +28,15 @@ def import_files(files: List[CSVFile]):
         table = csv.table
 
         # remove from session
-        for sub in csv.columns + csv.rows + csv.group_levels:
+        for sub in csv.columns + csv.rows:
+            sub['csv_file_id'] = str(new_id)
+
+        for sub in csv.group_levels:
             db.session.expunge(sub)
             make_transient(sub)
-            sub.csv_file_id = new_id
+            sub.id = uuid4()
+            sub.csv_file_id = str(new_id)
+            db.session.add(sub)
 
         db.session.expunge(csv)
         make_transient(csv)
@@ -61,8 +66,6 @@ def import_files(files: List[CSVFile]):
             csv.meta['merged'] = new_merged_ids
 
         db.session.add(csv)
-        for sub in csv.columns + csv.rows + csv.group_levels:
-            db.session.add(sub)
 
         imported.append(csv)
 
@@ -164,8 +167,8 @@ def upload(json: Dict[str, Any]):
             validated[key] = json.pop(key)
 
     # remove not auto imported things
-    columns: List[Any] = json.pop('columns', [])
-    rows: List[Any] = json.pop('rows', [])
+    json.pop('columns', [])
+    json.pop('rows', [])
     group_levels: List[Any] = json.pop('group_levels', [])
     sample_group = json.pop('sample_group', None)
     selected_columns = json.pop('selected_columns', [])
@@ -173,20 +176,6 @@ def upload(json: Dict[str, Any]):
         json['description'] = ''
 
     csv = CSVFileSchema().load(json)
-
-    # update types afterwards since the default is auto generated
-
-    def update(acts, templates, model):
-        if not templates:
-            return
-        for act, template in zip(acts, templates):
-            for col in model.__table__.columns.keys():
-                if col in template:
-                    setattr(act, col, template[col])
-            db.session.add(act)
-
-    update(csv.columns, columns, TableColumn)
-    update(csv.rows, rows, TableRow)
 
     if group_levels:
         csv.group_levels = [GroupLevel(**g) for g in group_levels]

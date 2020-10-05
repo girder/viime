@@ -10,7 +10,6 @@ import {
 import { formatter, textColor } from '../utils';
 import HelpDialog from './toolbar/HelpDialog.vue';
 
-
 export default {
   components: {
     DataTable,
@@ -36,7 +35,7 @@ export default {
     ready() { return this.$store.getters.ready(this.id); },
 
     rowHeaders() {
-      return this.dataframe.rowNames.map(text => ({ text, clazz: ['type-key'] }));
+      return this.dataframe.rowNames.map((text) => ({ text, clazz: ['type-key'] }));
     },
     columns() {
       const { columnNames, data, rowNames } = this.dataframe;
@@ -52,7 +51,7 @@ export default {
     },
 
     missingColumns() {
-      const indices = new Set(this.missingCells.map(a => a[0]));
+      const indices = new Set(this.missingCells.map((a) => a[0]));
       return this.dataframe.columnNames.filter((_, i) => indices.has(i));
     },
 
@@ -197,6 +196,5 @@ v-layout.impute-component(row, fill-height)
 .impute_table {
   flex: 1 1 0;
 }
-
 
 </style>

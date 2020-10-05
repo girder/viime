@@ -6,7 +6,6 @@ import { downloadCSV, download } from '../utils/exporter';
 import { CSVService } from '../common/api.service';
 import { colors } from '../utils/constants';
 
-
 export default {
   components: {
     DataTable,
@@ -39,7 +38,7 @@ export default {
       if (!this.dataset.validatedGroups || !this.dataset.groupLevels) {
         return [];
       }
-      const levelLookup = new Map(this.dataset.groupLevels.map(level => [level.name, level]));
+      const levelLookup = new Map(this.dataset.groupLevels.map((level) => [level.name, level]));
       const groups = this.dataset.validatedGroups;
       return new Map(groups.rowNames.map((row, i) => [row, levelLookup.get(groups.data[i][0])]));
     },
@@ -49,7 +48,7 @@ export default {
         return [];
       }
       const groups = this.dataset.validatedGroups.data;
-      return this.dataset.groupLevels.map(level => ({
+      return this.dataset.groupLevels.map((level) => ({
         ...level,
         count: groups.reduce((acc, row) => acc + (row[0] === level.name ? 1 : 0), 0),
       }));
@@ -98,7 +97,7 @@ export default {
         extras = this.dataset.validatedSampleMetaData.columnNames;
       }
 
-      return extras.map(text => ({
+      return extras.map((text) => ({
         text,
         clazz: ['type-metadata'],
       }));
@@ -144,7 +143,7 @@ export default {
         return [];
       }
       const { data } = this.dataframe;
-      const f = v => (typeof v === 'number' ? v.toFixed(3) : v);
+      const f = (v) => (typeof v === 'number' ? v.toFixed(3) : v);
 
       const { validatedSampleMetaData, validatedMeasurementsMetaData } = this.dataset;
       const extras = this.extraRowHeaders;
@@ -205,7 +204,7 @@ export default {
         transpose: this.transpose,
       };
       if (this.hiddenGroups.length > 0) {
-        args.rows = this.dataset.groupLevels.filter(g => !this.hiddenGroups.includes(g.name)).map(d => d.name).join(',');
+        args.rows = this.dataset.groupLevels.filter((g) => !this.hiddenGroups.includes(g.name)).map((d) => d.name).join(',');
       }
       if (!this.showSelected && this.showNotSelected) {
         args.columns = 'not-selected';
@@ -220,12 +219,12 @@ export default {
     downloadMetabolites() {
       const metabolites = this.filteredColumnNames;
 
-      downloadCSV(`Metabolites\n${metabolites.map(d => d.text).join('\n')}`, `${this.dataset.name}_Metabolites`);
+      downloadCSV(`Metabolites\n${metabolites.map((d) => d.text).join('\n')}`, `${this.dataset.name}_Metabolites`);
     },
     downloadSamples() {
       const samples = this.filteredRowNames;
 
-      downloadCSV(`Samples\n${samples.map(d => d.text).join('\n')}`, `${this.dataset.name}_Samples`);
+      downloadCSV(`Samples\n${samples.map((d) => d.text).join('\n')}`, `${this.dataset.name}_Samples`);
     },
   },
 };

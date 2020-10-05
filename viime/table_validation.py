@@ -1,13 +1,14 @@
 """
 This module contains methods related to validation of csv data contained
-in the CSVFile model.
+in the models.CSVFile model.
 """
 from collections import namedtuple
+from typing import List, Optional
 
 from marshmallow import fields, post_dump, Schema, validate
-from pandas import Index, to_numeric
+from pandas import DataFrame, Index, Series, to_numeric
 
-from viime.cache import region
+from viime import models
 
 SEVERITY_VALUES = ['error', 'warning']
 CONTEXT_VALUES = ['table', 'column', 'row']
@@ -140,7 +141,7 @@ class ValidationSchema(Schema):
     type_ = fields.Str(required=True, data_key='type')
     title = fields.Str(required=True)
     severity = fields.Str(required=True, validate=validate.OneOf(SEVERITY_VALUES))
-    context = fields.Str(required=True, validate=validate.OneOf(CONTEXT_VALUES))
+    context = fields.Str(required=True, validate=validate.OneOf(CONTEXT_VALUES))  # type: ignore
     row_index = fields.Int(required=False)
     column_index = fields.Int(required=False)
     group = fields.Str(required=False)
@@ -151,7 +152,7 @@ class ValidationSchema(Schema):
         return {k: v for k, v in data.items() if v is not None}
 
 
-def get_validation_list(csv_file):
+def get_validation_list(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     errors = get_fatal_index_errors(csv_file)
 
     if not errors:
@@ -160,8 +161,8 @@ def get_validation_list(csv_file):
     return errors
 
 
-def get_missing_index_errors(csv_file):
-    errors = []
+def get_missing_index_errors(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
+    errors: List[ValidationTuple] = []
     if csv_file.key_column_index is None:
         errors.append(PrimaryKeyMissing())
     if csv_file.header_row_index is None:
@@ -171,8 +172,7 @@ def get_missing_index_errors(csv_file):
     return errors
 
 
-@region.cache_on_arguments()
-def get_fatal_index_errors(csv_file):
+def get_fatal_index_errors(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     errors = get_missing_index_errors(csv_file)
     if not errors:
         errors = get_invalid_index_errors(csv_file)
@@ -181,25 +181,27 @@ def get_fatal_index_errors(csv_file):
     return errors
 
 
-def check_valid_index(series):
+def check_valid_index(series: Series) -> Optional[str]:
     """Check if pandas series can be a valid index."""
     index = Index(series)
     if index.hasnans:
         return "Contains NaN's"
     if not index.is_unique:
         return 'Values are not unique'
+    return None
 
 
-def check_valid_groups(groups):
+def check_valid_groups(groups: DataFrame) -> Optional[str]:
     index = Index(groups.iloc[:, 0])
     if index.hasnans or '' in index:
         return 'Contains empty values'
+    return None
 
 
-def get_invalid_index_errors(csv_file):
+def get_invalid_index_errors(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     from viime.models import TABLE_COLUMN_TYPES, TABLE_ROW_TYPES
 
-    errors = []
+    errors: List[ValidationTuple] = []
     table = csv_file.filter_table_by_types(
         TABLE_ROW_TYPES.DATA, TABLE_COLUMN_TYPES.INDEX).iloc[:, 0]
     error_data = check_valid_index(table)
@@ -219,8 +221,8 @@ def get_invalid_index_errors(csv_file):
     return errors
 
 
-def get_non_numeric_errors(csv_file):
-    errors = []
+def get_non_numeric_errors(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
+    errors: List[ValidationTuple] = []
     raw_table = csv_file.raw_measurement_table
 
     for index in range(raw_table.shape[0]):
@@ -229,7 +231,7 @@ def get_non_numeric_errors(csv_file):
         if nans / raw_table.shape[1] > MAX_NAN_THRESHOLD:
             row = csv_file.get_row_by_name(raw_table.index[index])
             errors.append(
-                NonNumericRow(row_index=row.row_index,
+                NonNumericRow(row_index=row['row_index'],
                               data=f'Contains {nans} non-numeric values')
             )
 
@@ -239,13 +241,13 @@ def get_non_numeric_errors(csv_file):
         if nans / raw_table.shape[0] > MAX_NAN_THRESHOLD:
             column = csv_file.get_column_by_name(raw_table.columns[index])
             errors.append(
-                NonNumericColumn(column_index=column.column_index,
+                NonNumericColumn(column_index=column['column_index'],
                                  data=f'Contains {nans} non-numeric values')
             )
     return errors
 
 
-def _count_non_numeric(value):
+def _count_non_numeric(value) -> int:
     try:
         float(value)
         return 0
@@ -253,16 +255,15 @@ def _count_non_numeric(value):
         return 1
 
 
-@region.cache_on_arguments()
-def get_warnings(csv_file):
+def get_warnings(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     warnings = get_non_numeric_warnings(csv_file)
     warnings.extend(get_missing_percent_warnings(csv_file))
     warnings.extend(get_low_variance_warnings(csv_file))
     return warnings
 
 
-def get_non_numeric_warnings(csv_file):
-    warnings = []
+def get_non_numeric_warnings(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
+    warnings: List[ValidationTuple] = []
     non_numeric_count = int(csv_file.raw_measurement_table.applymap(_count_non_numeric).sum().sum())
     if non_numeric_count > 0:
         # maybe return actual indices if useful to the client
@@ -272,7 +273,7 @@ def get_non_numeric_warnings(csv_file):
     return warnings
 
 
-def get_missing_percent_warnings(csv_file):
+def get_missing_percent_warnings(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     table = csv_file.raw_measurement_table
     groups = csv_file.groups
 
@@ -282,7 +283,7 @@ def get_missing_percent_warnings(csv_file):
     percent_missing = missing / total
     over_threshold = (percent_missing > GROUP_MISSING_THRESHOLD).all()
 
-    warnings = []
+    warnings: List[ValidationTuple] = []
     for column_name, warn in over_threshold.items():
         if not warn:
             continue
@@ -290,16 +291,16 @@ def get_missing_percent_warnings(csv_file):
         warnings.append(
             MissingData(
                 context='column',
-                column_index=column.column_index,
+                column_index=column['column_index'],
                 data=f'All groups exceed {int(GROUP_MISSING_THRESHOLD * 100)}% missing data'
             )
         )
     return warnings
 
 
-def get_low_variance_warnings(csv_file):
+def get_low_variance_warnings(csv_file: 'models.CSVFile') -> List[ValidationTuple]:
     table = csv_file.raw_measurement_table
-    warnings = []
+    warnings: List[ValidationTuple] = []
 
     for column_name, value in table.var().items():
         if value != value or value > LOW_VARIANCE_THRESHOLD:
@@ -309,7 +310,7 @@ def get_low_variance_warnings(csv_file):
         warnings.append(
             LowVariance(
                 context='column',
-                column_index=column.column_index,
+                column_index=column['column_index'],
                 data=f'Low column data variance ({value:.2e})'
             )
         )

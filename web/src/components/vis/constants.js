@@ -1,4 +1,3 @@
-
 export const correlation_methods = [
   {
     label: 'Pearson',

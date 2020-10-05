@@ -76,7 +76,7 @@ export default {
       const scoreKey = c;
       const foldChangeKey = `${c} Log2FoldChange`;
 
-      data = data.map(row => ({
+      data = data.map((row) => ({
         name: row.Metabolite,
         pValue: row[scoreKey],
         log2FoldChange: row[foldChangeKey],
@@ -84,11 +84,11 @@ export default {
 
       if (this.metaboliteFilter && this.metaboliteFilter) {
         const filter = this.metaboliteFilter.apply;
-        data = data.filter(d => filter(d.name));
+        data = data.filter((d) => filter(d.name));
       }
       if (this.metaboliteColor) {
         const colorer = this.metaboliteColor.apply;
-        data = data.map(row => ({ ...row, color: colorer(row.name) }));
+        data = data.map((row) => ({ ...row, color: colorer(row.name) }));
       }
 
       return data;
@@ -96,13 +96,13 @@ export default {
   },
   methods: {
     setSelection() {
-      this.selected = this.chartData.map(d => ({
+      this.selected = this.chartData.map((d) => ({
         name: d.name,
         x: d.log2FoldChange,
         y: -Math.log10(d.pValue),
       }))
-        .filter(d => Math.abs(d.x) >= this.minFoldChange && d.y >= this.minLogP)
-        .map(d => d.name);
+        .filter((d) => Math.abs(d.x) >= this.minFoldChange && d.y >= this.minLogP)
+        .map((d) => d.name);
     },
   },
 };
@@ -110,8 +110,13 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="dataset", title="Metabolite Anova Volanco Plot", :loading="false",
-    download, expanded)
+vis-tile-large(
+    v-if="dataset",
+    title="Metabolite Anova Volanco Plot",
+    analysis-path="anova_volcano",
+    :loading="false",
+    download,
+    expanded)
   template(#controls)
     toolbar-option(v-if="hasMoreThanTwoGroups",
         :value="combination || defaultCombination", @change="combination = $event",
@@ -136,11 +141,17 @@ vis-tile-large(v-if="dataset", title="Metabolite Anova Volanco Plot", :loading="
     metabolite-colorer(:dataset="dataset", v-model="metaboliteColor",
         empty-option="No Color")
 
+  // TODO: can refactor v-if to use optional chaining when viime is updated to Vue 3
   volcano-plot.main(
-      v-if="plot.data",
+      v-if="plot.data && !plot.data.error",
       :rows="chartData",
       :min-fold-change="minFoldChange",
       :min-log-p="minLogP")
+  // TODO: same for value prop here
+  v-alert(
+      type="error",
+      v-text="`ANOVA failed. ${plot.data && plot.data.error ? plot.data.error : ''}`",
+      :value="plot.data && plot.data.error")
 </template>
 
 <style scoped>

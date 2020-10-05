@@ -1,12 +1,14 @@
+from typing import Any, Dict, Optional
+
 from marshmallow import ValidationError
+import pandas as pd
 from sklearn import preprocessing
 
-from viime.cache import persistent_region
 
 NORMALIZATION_METHODS = {'minmax', 'sum', 'reference-sample', 'weight-volume'}
 
 
-def validate_normalization_method(args):
+def validate_normalization_method(args: Dict[str, Any]):
     method = args.get('method', None)
     argument = args.get('argument', None)
     if method is not None and method not in NORMALIZATION_METHODS:
@@ -15,8 +17,9 @@ def validate_normalization_method(args):
         raise ValidationError('Method requires argument', data=argument)
 
 
-@persistent_region.cache_on_arguments()
-def normalize(method, table, argument=None, measurement_metadata=None, sample_metadata=None):
+def normalize(method: str, table: pd.DataFrame, argument: Optional[Dict[str, Any]] = None,
+              measurement_metadata: Optional[pd.DataFrame] = None,
+              sample_metadata: Optional[pd.DataFrame] = None) -> pd.DataFrame:
     if method is None:
         pass
     elif method == 'minmax':
@@ -36,13 +39,15 @@ def normalize(method, table, argument=None, measurement_metadata=None, sample_me
     return table
 
 
-def sum(table):
+def sum(table: pd.DataFrame) -> pd.DataFrame:
     return 1000 * table.div(table.sum(axis=1), axis=0)
 
 
-def reference_sample(table, argument):
+def reference_sample(table: pd.DataFrame, argument) -> pd.DataFrame:
     return table.loc[argument].sum() * table.div(table.sum(axis=1), axis=0)
 
 
-def weight_volume(table, argument, sample_metadata):
+def weight_volume(table: pd.DataFrame, argument, sample_metadata: pd.DataFrame):
+    if sample_metadata.dtypes[argument].name != 'float64':
+        raise ValidationError('Column contains non-numeric data')
     return 100 * table.div(sample_metadata.loc[:, argument], axis=0)

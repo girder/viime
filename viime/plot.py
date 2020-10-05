@@ -1,8 +1,9 @@
 from numpy import sqrt
+import pandas as pd
 from sklearn.decomposition import PCA
 
 
-def pca(measurements, max_components):
+def pca(measurements: pd.DataFrame, max_components: int):
     pca = PCA(n_components=max_components)
     x = pca.fit_transform(measurements)
     rotation = pca.components_.T

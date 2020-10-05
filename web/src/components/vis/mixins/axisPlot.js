@@ -27,19 +27,9 @@ export const axisPlot = {
       svg: null,
       width: 100,
       height: 100,
-      refsMounted: false, // to force an rendering after mounting
     };
   },
   computed: {
-    reactiveUpdate() {
-      if (!this.refsMounted) {
-        return '';
-      }
-      if (this.$refs.svg) {
-        this.update();
-      }
-      return '';
-    },
     dwidth() {
       const { width, margin } = this;
       return width - margin.left - margin.right;
@@ -77,12 +67,9 @@ export const axisPlot = {
     axisY() {
       return axisLeft(this.scaleY);
     },
-
   },
   mounted() {
     this.onResize();
-    this.refsMounted = true;
-    this.update();
   },
   methods: {
     axisPlot(svg) {
@@ -150,8 +137,8 @@ export const axisPlot = {
 
       labelAxis(svg.select('.label.x'),
         msg,
-        bbox => dwidth / 2 - bbox.width / 2,
-        bbox => dheight + margin.bottom / 2 + bbox.height / 2,
+        (bbox) => dwidth / 2 - bbox.width / 2,
+        (bbox) => dheight + margin.bottom / 2 + bbox.height / 2,
         0);
     },
 
@@ -168,8 +155,8 @@ export const axisPlot = {
 
       labelAxis(svg.select('.label.y'),
         msg,
-        bbox => -margin.left / 2 - bbox.height / 2,
-        bbox => dheight / 2 + bbox.width / 2,
+        (bbox) => -margin.left / 2 - bbox.height / 2,
+        (bbox) => dheight / 2 + bbox.width / 2,
         -90);
     },
     onResize() {

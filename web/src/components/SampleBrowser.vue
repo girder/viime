@@ -2,12 +2,12 @@
 import { IMPORT_SAMPLE, IMPORT_SAMPLE_GROUP } from '../store/actions.type';
 import { SampleService } from '../common/api.service';
 
-
 export default {
   data() {
     return {
       loading: true,
       samples: [],
+      error: false,
     };
   },
   computed: {
@@ -15,7 +15,14 @@ export default {
   },
   async created() {
     this.loading = true;
-    this.samples = (await SampleService.list()).data;
+
+    try {
+      const { data } = await SampleService.list();
+      this.samples = data;
+    } catch (err) {
+      this.error = true;
+    }
+
     this.loading = false;
   },
   methods: {
@@ -39,6 +46,8 @@ export default {
 .root
   .text-xs-center(v-if="loading")
     v-progress-circular(indeterminate, color="primary")
+  v-alert(:value="!loading && error", type="error")
+    | Could not reach the server
   v-alert(:value="!loading && samples.length === 0", type="info")
     | No Sample Data Sources available
   v-expansion-panel.sample-panels.elevation-0(v-if="!loading && samples.length > 0", :value="0")

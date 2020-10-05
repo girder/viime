@@ -62,6 +62,10 @@ function covar(xs, ys) {
 // Port of Python function from:
 //      https://matplotlib.org/gallery/statistics/confidence_ellipse.html
 function confidenceEllipse(x, y, std, xScale, yScale) {
+  if (x.length < 2 || y.length < 2) {
+    // cannot generate an ellipse for less than two data points
+    return { rx: 0, ry: 0, transform: '' };
+  }
   // cov = np.cov(x, y)
   const xdev = deviation(x);
   const ydev = deviation(y);
@@ -128,17 +132,17 @@ export default {
     pcCoords: {
       required: true,
       type: Array,
-      validator: prop => prop.every(coord => coord.every(Number.isFinite)),
+      validator: (prop) => prop.every((coord) => coord.every(Number.isFinite)),
     },
     rowLabels: {
       required: true,
       type: Array,
-      validator: prop => prop.every(val => typeof val !== 'object'),
+      validator: (prop) => prop.every((val) => typeof val !== 'object'),
     },
     colors: {
       required: true,
       type: Array,
-      validator: prop => prop.every(val => ['name', 'color'].every(key => Object.prototype.hasOwnProperty.call(val, key))),
+      validator: (prop) => prop.every((val) => ['name', 'color'].every((key) => Object.prototype.hasOwnProperty.call(val, key))),
     },
     groupLabels: {
       required: true,
@@ -147,12 +151,12 @@ export default {
     eigenvalues: {
       required: true,
       type: Array,
-      validator: prop => prop.every(Number.isFinite),
+      validator: (prop) => prop.every(Number.isFinite),
     },
     columns: {
       required: true,
       type: Array,
-      validator: prop => prop.every(column => ['column_header', 'column_type'].every(key => Object.prototype.hasOwnProperty.call(column, key))),
+      validator: (prop) => prop.every((column) => ['column_header', 'column_type'].every((key) => Object.prototype.hasOwnProperty.call(column, key))),
     },
   },
 
@@ -175,8 +179,8 @@ export default {
         pcY,
       } = this;
 
-      const x = pcCoords.map(p => p[pcX - 1]);
-      const y = pcCoords.map(p => p[pcY - 1]);
+      const x = pcCoords.map((p) => p[pcX - 1]);
+      const y = pcCoords.map((p) => p[pcY - 1]);
 
       return [x, y];
     },
@@ -205,7 +209,7 @@ export default {
 
     group() {
       const { columns } = this;
-      const column = columns.find(elem => elem.column_type === 'group');
+      const column = columns.find((elem) => elem.column_type === 'group');
 
       return column.column_header;
     },
@@ -410,6 +414,7 @@ export default {
 
     toggleEllipse(which) {
       this.ellipseVisible[which] = !this.ellipseVisible[which];
+      this.update();
       return this.ellipseVisible[which];
     },
 
@@ -438,6 +443,13 @@ export default {
         return;
       }
 
+      const [xData, yData] = pcPoints;
+      if (xData.includes(undefined) || yData.includes(undefined)) {
+        // undefined data indicates an out of bounds pcX or pcY
+        // no point in trying to render invalid data
+        return;
+      }
+
       const fmt = format('.2%');
       const x = `PC${pcX} (${fmt(pcVariances[0])})`;
       const y = `PC${pcY} (${fmt(pcVariances[1])})`;
@@ -452,7 +464,6 @@ export default {
         height,
       });
 
-      const [xData, yData] = pcPoints;
       const grouped = this.grouped(xData, yData);
 
       const groups = Object.keys(grouped);
@@ -462,10 +473,10 @@ export default {
       groups.forEach((g) => {
         const xName = `${g}_x`;
 
-        columns.push([xName, ...grouped[g].map(d => d.x)]);
-        columns.push([g, ...grouped[g].map(d => d.y)]);
+        columns.push([xName, ...grouped[g].map((d) => d.x)]);
+        columns.push([g, ...grouped[g].map((d) => d.y)]);
 
-        labels[g] = [...grouped[g].map(d => d.label)];
+        labels[g] = [...grouped[g].map((d) => d.label)];
 
         xs[g] = xName;
       });
@@ -473,11 +484,11 @@ export default {
       this.labels = labels;
 
       // Collect the existing and incoming column names.
-      const oldCols = this.chart.data().map(d => d.id);
-      const newCols = columns.map(d => d[0])
-        .filter(d => !d.endsWith('_x'));
+      const oldCols = this.chart.data().map((d) => d.id);
+      const newCols = columns.map((d) => d[0])
+        .filter((d) => !d.endsWith('_x'));
 
-      // Draw the C3 chart, unloding the existing data first if the column names
+      // Draw the C3 chart, unloading the existing data first if the column names
       // have changed.
       await c3LoadWait(this.chart, {
         columns,
@@ -494,8 +505,8 @@ export default {
       const cmap = this.chart.internal.color;
 
       const confidenceEllipses = Object.keys(grouped).map((group) => {
-        const groupx = grouped[group].map(d => d.x);
-        const groupy = grouped[group].map(d => d.y);
+        const groupx = grouped[group].map((d) => d.x);
+        const groupy = grouped[group].map((d) => d.y);
 
         return {
           ...confidenceEllipse(groupx, groupy, 1, scaleX, scaleY),
@@ -512,30 +523,30 @@ export default {
       select(this.$refs.chart)
         .select('.c3-custom-ellipses')
         .selectAll('ellipse')
-        .data(confidenceEllipses)
+        .data(confidenceEllipses, (d) => d.category)
         .join(
-          enter => enter
+          (enter) => enter
             .append('ellipse')
-            .attr('class', d => `ellipse-${fixCSS(d.category)}`)
+            .attr('class', (d) => `ellipse-${fixCSS(d.category)}`)
             .classed('ellipse', true)
             .style('fill', 'none')
-            .style('stroke', d => cmap(d.category))
+            .style('stroke', (d) => cmap(d.category))
             .style('stroke-width', 1)
             .attr('vector-effect', 'non-scaling-stroke')
-            .attr('rx', d => d.rx)
-            .attr('ry', d => d.ry)
-            .attr('transform', d => d.transform)
+            .attr('rx', (d) => d.rx)
+            .attr('ry', (d) => d.ry)
+            .attr('transform', (d) => d.transform)
             .style('opacity', 1),
-          update => update
-            .attr('class', d => `ellipse-${fixCSS(d.category)}`)
+          (update) => update
+            .attr('class', (d) => `ellipse-${fixCSS(d.category)}`)
             .classed('ellipse', true)
-            .style('display', d => (showEllipses && ellipseVisible[d.category] ? null : 'none'))
+            .style('display', (d) => (showEllipses && ellipseVisible[d.category] ? null : 'none'))
             .transition()
             .duration(300)
-            .attr('rx', d => d.rx)
-            .attr('ry', d => d.ry)
-            .attr('transform', d => d.transform),
-          exit => exit.transition('exit')
+            .attr('rx', (d) => d.rx)
+            .attr('ry', (d) => d.ry)
+            .attr('transform', (d) => d.transform),
+          (exit) => exit.transition('exit')
             .duration(duration)
             .style('opacity', 0)
             .remove(),

@@ -1,12 +1,14 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from compare_csv import CSV
 import dotenv
 import pytest
 
 from viime import models
 from viime.app import create_app
-from viime.models import CSVFileSchema, db
+from viime.models import CSVFileSchema, db, ValidatedMetaboliteTable
+
 
 csv_file_schema = CSVFileSchema()
 pathological_file_path = Path(__file__).parent / 'pathological.csv'
@@ -33,7 +35,7 @@ def app():
     with TemporaryDirectory() as upload_folder:
         app = create_app({
             'ENV': 'testing',
-            'SQLALCHEMY_DATABASE_URI': f'sqlite://',
+            'SQLALCHEMY_DATABASE_URI': 'sqlite://',
             'UPLOAD_FOLDER': upload_folder,
             'OPENCPU_API_ROOT': 'http://localhost:8004/ocpu/library'
         })
@@ -62,12 +64,30 @@ def csv_file(client):
 
 
 @pytest.fixture
+def validated_csv_file(client, csv_file):
+    db.session.add(ValidatedMetaboliteTable.create_from_csv_file(csv_file))
+    db.session.commit()
+    yield csv_file
+
+
+@pytest.fixture
 def pathological_table(client):
     with open(pathological_file_path) as f:
         csv_file = csv_file_schema.load({
             'table': f.read(),
             'name': 'pathological.csv'
         })
+
+        # undo the guessed structure to exercise validation code
+        for row in csv_file.rows[1:]:
+            row['row_type'] = 'sample'
+        for column in csv_file.columns[2:]:
+            row['row_type'] = 'metabolite'
     db.session.add(csv_file)
     db.session.commit()
     yield csv_file
+
+
+def pytest_assertrepr_compare(op, left, right):
+    if op == '==' and isinstance(left, CSV) and isinstance(right, CSV):
+        return left.get_pytest_error(right)

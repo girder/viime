@@ -5,8 +5,8 @@ import Vuex from 'vuex';
 import {
   convertCsvToRows, RangeList, mapValidationErrors, parsePandasDataFrame,
 } from '../utils';
-import analyses from '../components/vis/analyses';
 import { plot_types } from '../utils/constants';
+import { correlation_methods } from '../components/vis/constants';
 import ApiService, { CSVService, ExcelService, SampleService } from '../common/api.service';
 
 import {
@@ -91,27 +91,107 @@ const plotDefaults = {
     type: plot_types.TRANSFORM,
   },
   loadings: {
-    data: null,
+    data: [],
     valid: false,
     loading: false,
     args: {},
     type: plot_types.TRANSFORM,
   },
-};
-
-analyses.forEach(({
-  args,
-  path,
-  type,
-}) => {
-  plotDefaults[path] = {
+  pcaPage: {
     data: null,
     valid: false,
     loading: false,
-    args,
-    type,
-  };
-});
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
+  plsda: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {
+      num_of_components: 3,
+    },
+    type: plot_types.ANALYSIS,
+  },
+  oplsda: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {
+      num_of_components: 3,
+    },
+    type: plot_types.ANALYSIS,
+  },
+  boxplot: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
+  wilcoxon: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
+  wilcoxon_volcano: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
+  anova: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
+  anova_volcano: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {},
+    type: plot_types.ANALYSIS,
+  },
+  heatmap: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {
+      column: null,
+      column_filter: null,
+      row: null,
+      row_filter: null,
+    },
+    type: plot_types.ANALYSIS,
+  },
+  correlation: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {
+      min_correlation: 0.6,
+      method: correlation_methods[0].value,
+    },
+    type: plot_types.ANALYSIS,
+  },
+  roc: {
+    data: null,
+    valid: false,
+    loading: false,
+    args: {
+      columns: null,
+      group1: null,
+      group2: null,
+      method: 'random_forest',
+    },
+    type: plot_types.ANALYSIS,
+  },
+};
 
 const appstate = {
   datasets: {},
@@ -124,18 +204,17 @@ const appstate = {
 };
 
 const getters = {
-  dataset: state => id => state.datasets[id],
-  ready: state => id => state.datasets[id] && state.datasets[id].ready,
+  dataset: (state) => (id) => state.datasets[id],
+  ready: (state) => (id) => state.datasets[id] && state.datasets[id].ready,
   // valid indicates fatal errors, and will be true even if there are warnings
-  valid: state => id => getters.ready(state)(id)
-    && state.datasets[id].validation.filter(v => v.severity === 'error').length === 0,
-  txType: state => (id, category) => getters.ready(state)(id)
+  valid: (state) => (id) => getters.ready(state)(id)
+    && state.datasets[id].validation.filter((v) => v.severity === 'error').length === 0,
+  txType: (state) => (id, category) => getters.ready(state)(id)
     && state.datasets[id][category],
-  plot: state => (id, name) => getters.ready(state)(id) && state.plots[id][name],
-  isMerged: state => id => getters.ready(id) && Array.isArray(state.datasets[id].meta.merged),
-  waiting: state => state.loading || state.saving,
+  plot: (state) => (id, name) => getters.ready(state)(id) && state.plots[id][name],
+  isMerged: (state) => (id) => getters.ready(id) && Array.isArray(state.datasets[id].meta.merged),
+  waiting: (state) => state.loading || state.saving,
 };
-
 
 const mutations = {
   /**
@@ -143,7 +222,7 @@ const mutations = {
    */
   [INVALIDATE_PLOTS](state, { dataset_id }) {
     const plots = Object.keys(plotDefaults);
-    plots.forEach(name => Vue.set(state.plots[dataset_id][name], 'valid', false));
+    plots.forEach((name) => Vue.set(state.plots[dataset_id][name], 'valid', false));
   },
 
   /**
@@ -219,8 +298,8 @@ const mutations = {
 
     const toMeta = ({ meta, subtype }) => ({ ...(meta || {}), subtype });
 
-    base.columnMetaData = ds.column.data.filter(d => d.column_type === 'measurement').map(toMeta);
-    base.rowMetaData = ds.row.data.filter(d => d.row_type === 'sample').map(toMeta);
+    base.columnMetaData = ds.column.data.filter((d) => d.column_type === 'measurement').map(toMeta);
+    base.rowMetaData = ds.row.data.filter((d) => d.row_type === 'sample').map(toMeta);
 
     const validatedMeasurements = parsePandasDataFrame(data.measurements, base);
     const validatedGroups = parsePandasDataFrame(data.groups, base);
@@ -229,14 +308,14 @@ const mutations = {
 
     // inject meta data
 
-    validatedGroups.columnMetaData = ds.column.data.filter(d => d.column_type === 'group').map(toMeta);
+    validatedGroups.columnMetaData = ds.column.data.filter((d) => d.column_type === 'group').map(toMeta);
 
     if (ds.groupLevels && validatedGroups.columnMetaData.length > 0) {
       validatedGroups.columnMetaData[0].levels = ds.groupLevels;
     }
 
-    validatedSampleMetaData.columnMetaData = ds.column.data.filter(d => d.column_type === 'metadata').map(toMeta);
-    validatedMeasurementsMetaData.rowMetaData = ds.row.data.filter(d => d.row_type === 'metadata').map(toMeta);
+    validatedSampleMetaData.columnMetaData = ds.column.data.filter((d) => d.column_type === 'metadata').map(toMeta);
+    validatedMeasurementsMetaData.rowMetaData = ds.row.data.filter((d) => d.row_type === 'metadata').map(toMeta);
 
     const delta = {
       imputationInfo: data.imputation_info || { mcar: [], mnar: [] },
@@ -273,11 +352,11 @@ const mutations = {
     const colsSorted = columns.sort((a, b) => a.column_index - b.column_index);
 
     Vue.set(ds, 'row', {
-      labels: rowsSorted.map(r => r.row_type),
+      labels: rowsSorted.map((r) => r.row_type),
       data: rowsSorted,
     });
     Vue.set(ds, 'column', {
-      labels: colsSorted.map(c => c.column_type),
+      labels: colsSorted.map((c) => c.column_type),
       data: colsSorted,
     });
     Vue.set(ds, 'groupLevels', group_levels);
@@ -383,7 +462,7 @@ const actions = {
     commit(SET_SAVING, true);
     try {
       const { data } = await ExcelService.upload(file);
-      const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
+      const promiseList = data.map((dataFile) => dispatch(ADD_DATASET, dataFile));
       await Promise.all(promiseList);
       state.store.save(state, state.session_id);
       commit(SET_SAVING, false);
@@ -398,7 +477,7 @@ const actions = {
     commit(SET_SAVING, true);
     try {
       const { data } = await SampleService.importSample(sampleId);
-      const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
+      const promiseList = data.map((dataFile) => dispatch(ADD_DATASET, dataFile));
       await Promise.all(promiseList);
       state.store.save(state, state.session_id);
       commit(SET_SAVING, false);
@@ -413,7 +492,7 @@ const actions = {
     commit(SET_SAVING, true);
     try {
       const { data } = await SampleService.importSampleGroup(group);
-      const promiseList = data.map(dataFile => dispatch(ADD_DATASET, dataFile));
+      const promiseList = data.map((dataFile) => dispatch(ADD_DATASET, dataFile));
       await Promise.all(promiseList);
       state.store.save(state, state.session_id);
       commit(SET_SAVING, false);
@@ -489,7 +568,7 @@ const actions = {
           commit(SET_LOADING, false);
           commit(SET_PLOT, { dataset_id, name, obj: { loading: false, data: d, valid: true } });
         } catch (err) {
-          commit(SET_PLOT, { dataset_id, name, obj: { loading: false, valid: false } });
+          commit(SET_PLOT, { dataset_id, name, obj: { loading: false, valid: true } });
           commit(SET_LOADING, err);
           throw err;
         }

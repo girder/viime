@@ -34,11 +34,11 @@ export default {
     return {
       colors,
       row: {
-        dendogram: true,
+        dendrogram: true,
         colorer: this.columnColor,
       },
       column: {
-        dendogram: true,
+        dendrogram: true,
         colorer: this.rowColor,
       },
       dummy: false,
@@ -56,8 +56,17 @@ export default {
       if (!this.plot.data) {
         return [];
       }
+
       // TODO swap
       return this.plot.data ? this.plot.data.values : [];
+    },
+
+    original() {
+      if (!this.plot.data) {
+        return {};
+      }
+
+      return this.plot.data ? this.plot.data.original : {};
     },
   },
   watch: {
@@ -108,7 +117,13 @@ export default {
 </script>
 
 <template lang="pug">
-vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl="download",
+vis-tile-large(
+    v-if="plot",
+    title="Heatmap",
+    analysis-path="heatmap",
+    expanded,
+    download,
+    :download-impl="download",
     :loading="plot.loading || !dataset.ready || !values || values.length === 0")
   template(#controls)
     metabolite-filter(:dataset="dataset", v-model="metaboliteFilter")
@@ -118,18 +133,26 @@ vis-tile-large(v-if="plot", title="Heatmap", expanded, download, :download-impl=
     sample-colorer(:dataset="dataset", v-model="sampleColor")
 
     v-toolbar.darken-3(color="primary", dark, flat, dense)
-      v-toolbar-title Dendogram
+      v-toolbar-title Dendrogram
     v-card.mx-3(flat)
       v-card-actions(:style="{display: 'block'}")
-        v-checkbox.my-0(v-model="row.dendogram", label="Metabolite", hide-details)
-        v-checkbox.my-0(v-model="column.dendogram", label="Sample", hide-details)
+        v-checkbox.my-0(
+            v-model="row.dendrogram",
+            label="Metabolite",
+            hide-details)
+        v-checkbox.my-0(
+            v-model="column.dendrogram",
+            label="Sample",
+            hide-details)
     toolbar-option(title="Layout", :value="layout",
         :options="layouts",
         @change="layout = $event")
 
   heatmap(ref="heatmap",
       v-if="plot && plot.data && dataset.ready && values",
-      :values="values", transposed,
+      :values="values",
+      :original="original",
+      transposed,
       :column-config="column", :row-config="row", :layout="layout",
       :row-clustering="plot.data ? plot.data.column : null",
       :column-clustering="plot.data ? plot.data.row : null")
