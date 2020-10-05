@@ -31,8 +31,8 @@ export default defineComponent({
       numComponentsVal: '3',
       pcY: 2,
       numComponents: 3,
-      group1: dataset.value?.groupLevels[0]?.name || '',
-      group2: dataset.value?.groupLevels[1]?.name || '',
+      group1: dataset.value?.groupLevels[0]?.name || null,
+      group2: dataset.value?.groupLevels[1]?.name || null,
       showEllipses: true,
       showCrosshairs: true,
       showCutoffs: true,
@@ -71,7 +71,7 @@ export default defineComponent({
     const eigenvalues = computed(() => plot.value.data?.scores.sdev || []);
     const rowLabels = computed(() => plot.value.data?.rows || []);
     const groupLabels = computed(() => plot.value.data?.labels || {});
-    const columns = computed(() => dataset.value?.column.data || []);
+    const columns = computed(() => dataset.value?.column?.data || []);
     const groupLevels = computed(() => dataset.value?.groupLevels || []);
     const groupNames = computed(() => groupLevels.value.map(
       (level: { name: string }) => level.name,
@@ -104,7 +104,8 @@ export default defineComponent({
         controls.group2 = oldGroup;
         changePlotArgs({ group2: oldGroup });
       }
-      if (plot.value) {
+      // only force a refresh if both groups are set
+      if (plot.value && controls.group1 && controls.group2) {
         plot.value.valid = false;
       }
     });
@@ -115,16 +116,10 @@ export default defineComponent({
         controls.group1 = oldGroup;
         changePlotArgs({ group1: oldGroup });
       }
-      if (plot.value) {
+      // only force a refresh if both groups are set
+      if (plot.value && controls.group1 && controls.group2) {
         plot.value.valid = false;
       }
-    });
-
-    // If no groups are selected after the plot loads, select the first two groups
-    watch(() => dataset.value, () => {
-      controls.group1 = dataset.value?.groupLevels[0]?.name || '';
-      controls.group2 = dataset.value?.groupLevels[1]?.name || '';
-      changePlotArgs({ group1: controls.group1, group2: controls.group2 });
     });
 
     return {
