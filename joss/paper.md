@@ -183,7 +183,7 @@ and multivariate ANOVA can be carried out on data with two or more groups, respe
 the ANOVA, a post-hoc Tukey test is automatically applied so that p-values for
 each of the inter-group comparisons are calculated for all metabolites.
 Metabolites that are significantly different in each of the intergroup
-comparison can be selected for further analysis with a check box at the top of
+comparisons can be selected for further analysis with a check box at the top of
 each column.  This enables very large datasets with potentially hundreds of
 metabolites to be easily reduced to datasets containing only significantly
 altered metabolites.  
