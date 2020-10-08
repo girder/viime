@@ -154,7 +154,7 @@ transformation.  Often times, data is transformed to bring the distribution
 closer to normality and to compress the dynamic range.  The options in this step
 are  Log10, Log2, square root and cube root.
 
-Lastly, the data can be scaled.  This also addresses the issue of large dynamic
+The final step is scaling.  This also addresses the issue of large dynamic
 range by scaling the variance of the data.  The options here include
 Autoscaling, Pareto scaling, Range scaling, Vast scaling and Level scaling.  
 
