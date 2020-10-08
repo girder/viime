@@ -127,7 +127,7 @@ immediate feedback when adjusting pretreatment options.](figures/figure3.png)
 
 ## Dataset Details
 
-VIIME includes a dataset details page which includes size, creation time, and
+Viime includes a dataset details page which includes size, creation time, and
 enables the user to update the name and description for each dataset (see Figure
 4). It is also a central location for assigning colors and descriptions to
 groups, and keeping track of provenance for merged datasets.
@@ -177,7 +177,7 @@ which is typically not a biologically plausible condition [@vandenberg:2006].
 
 ## Data Analysis and Visualization
 
-VIIME supports several downstream analyses and visualizations. Univariate analyses using the Wilcoxon
+Viime supports several downstream analyses and visualizations. Univariate analyses using the Wilcoxon
 rank sum test
 and multivariate ANOVA can be carried out on data with two or more groups, respectively.  For
 the ANOVA, a post-hoc Tukey test is automatically applied so that p-values for
@@ -239,11 +239,11 @@ cleaner visualization of selected metabolite groups.  Hovering over nodes or
 edges brings up the metabolite identification information and the strength of
 the correlations respectively.
 
-VIIME also includes a fully interactive heatmap with row and column dendrograms
+Viime also includes a fully interactive heatmap with row and column dendrograms
 (see Figure 6). Selected metabolites are highlighted in orange on the left.
 Sample groups are colored along the bottom to provide additional context.
 
-Unique to VIIME is a metabolite correlation network diagram (see Figure 7). The
+Unique to Viime is a metabolite correlation network diagram (see Figure 7). The
 color in the diagram represents whether the metabolite was significantly
 different across groups (orange) or not (blue). Metabolites are linked if the
 correlation coefficient between them exceeds a configurable value. Negative
@@ -271,7 +271,7 @@ different context, such as the heatmap view or correlation network.
 
 ## Data Integration
 
-VIIME supports multiple approaches for combining multiple data sources into a
+Viime supports multiple approaches for combining multiple data sources into a
 joint analysis. From the data upload page, the user may initiate a dataset
 merge, selecting the datasets to merge along with the algorithm to perform the
 integration.
@@ -295,7 +295,7 @@ integration.](figures/figure9.png)
 
 # Backend Processing
 
-VIIME’s processing backend is implemented as a RESTful API using the Flask web
+Viime’s processing backend is implemented as a RESTful API using the Flask web
 framework. Data persistence is provided through normalized CSV files stored on a
 filesystem and associated data in a SQLite database through SQLAlchemy’s ORM.
 Files stored internally are linked with rows in the database using custom fields
