@@ -34,6 +34,8 @@ export default defineComponent({
       showCutoffs: true,
       showScore: true,
       showLoadings: true,
+      group1: dataset.value?.groupLevels[0]?.name || null,
+      group2: dataset.value?.groupLevels[1]?.name || null,
     });
 
     const ready = computed(() => {
@@ -56,8 +58,11 @@ export default defineComponent({
     const eigenvalues = computed(() => plot.value.data?.scores.sdev || []);
     const rowLabels = computed(() => plot.value.data?.rows || []);
     const groupLabels = computed(() => plot.value.data?.labels || {});
-    const columns = computed(() => dataset.value?.column.data || []);
+    const columns = computed(() => dataset.value?.column?.data || []);
     const groupLevels = computed(() => dataset.value?.groupLevels || []);
+    const groupNames = computed(() => groupLevels.value.map(
+      (level: { name: string }) => level.name,
+    ));
 
     watchEffect(() => {
       const pcY = Number.parseInt(controls.pcYval, 10);
@@ -78,6 +83,32 @@ export default defineComponent({
       }
     });
 
+    // These two watchers prevent the same group from being selected twice.
+    watch(() => controls.group1, (newGroup, oldGroup) => {
+      changePlotArgs({ group1: newGroup });
+      // When setting the same group twice, switch them instead
+      if (controls.group2 === newGroup) {
+        controls.group2 = oldGroup;
+        changePlotArgs({ group2: oldGroup });
+      }
+      // only force a refresh if both groups are set
+      if (plot.value && controls.group1 && controls.group2) {
+        plot.value.valid = false;
+      }
+    });
+    watch(() => controls.group2, (newGroup, oldGroup) => {
+      changePlotArgs({ group2: newGroup });
+      // When setting the same group twice, switch them instead
+      if (controls.group1 === newGroup) {
+        controls.group1 = oldGroup;
+        changePlotArgs({ group1: oldGroup });
+      }
+      // only force a refresh if both groups are set
+      if (plot.value && controls.group1 && controls.group2) {
+        plot.value.valid = false;
+      }
+    });
+
     return {
       plot,
       changePlotArgs,
@@ -92,6 +123,7 @@ export default defineComponent({
       groupLabels,
       columns,
       groupLevels,
+      groupNames,
     };
   },
 });
@@ -153,7 +185,7 @@ export default defineComponent({
               type="number"
               label="Orthogonal (Y Axis)"
               min="1"
-              max="5"
+              :max="controls.numComponents"
               outline
               :disabled="!controls.showScore && !controls.showLoadings"
             />
@@ -191,6 +223,48 @@ export default defineComponent({
         dark
         flat
         dense
+        :card="false"
+      >
+        <v-toolbar-title>Group 1</v-toolbar-title>
+      </v-toolbar>
+      <v-card
+        class="mx-3 px-2"
+        flat="flat"
+      >
+        <v-select
+          v-model="controls.group1"
+          class="py-2"
+          hide-details="hide-details"
+          :items="groupNames"
+        />
+      </v-card>
+      <v-toolbar
+        class="darken-3"
+        color="primary"
+        dark="dark"
+        flat="flat"
+        dense="dense"
+        :card="false"
+      >
+        <v-toolbar-title>Group 2</v-toolbar-title>
+      </v-toolbar>
+      <v-card
+        class="mx-3 px-2"
+        flat="flat"
+      >
+        <v-select
+          v-model="controls.group2"
+          class="py-2"
+          hide-details="hide-details"
+          :items="groupNames"
+        />
+      </v-card>
+      <v-toolbar
+        class="darken-3"
+        color="primary"
+        dark="dark"
+        flat="flat"
+        dense="dense"
       >
         <v-toolbar-title class="switch-title">
           Score Plot

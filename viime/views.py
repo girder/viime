@@ -791,13 +791,29 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
 
 @csv_bp.route('/csv/<uuid:csv_id>/analyses/oplsda', methods=['GET'])
 @use_kwargs({
-    'num_of_components': fields.Integer(required=True)
+    'num_of_components': fields.Integer(required=True),
+    'group1': fields.String(required=False),
+    'group2': fields.String(required=False),
 })
 @load_validated_csv_file
-def get_oplsda(validated_table: ValidatedMetaboliteTable, num_of_components: Optional[int] = 3):
+def get_oplsda(validated_table: ValidatedMetaboliteTable,
+               num_of_components: Optional[int] = 3,
+               group1: Optional[str] = None,
+               group2: Optional[str] = None):
 
     measurements = validated_table.measurements
     groups = validated_table.groups
+    group_column_name = groups.columns[0]
+    # Initial page loads will not have groups selected yet, so default to the first two groups
+    if group1 is None and group2 is None:
+        group_names = groups[group_column_name].unique()
+        group_names.sort()
+        group1 = group_names[0]
+        group2 = group_names[1]
+
+    # Filter groups and measurements by the selected groups
+    groups = groups.loc[groups[group_column_name].isin((group1, group2))]
+    measurements = measurements.loc[measurements.index.intersection(groups.index)]
 
     scores = oplsda(measurements, groups, num_of_components, 'scores')
     loadings = oplsda(measurements, groups, num_of_components, 'loadings')
