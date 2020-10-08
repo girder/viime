@@ -152,11 +152,11 @@ The default value in Viime is 100.  Other options include normalization based on
 a column containing sample weights or volumes.  The next step is data
 transformation.  Often times, data is transformed to bring the distribution
 closer to normality and to compress the dynamic range.  The options in this step
-are  Log10, Log2, square root and cube root.
+are Log10, Log2, square root and cube root.
 
 The final step is scaling.  This also addresses the issue of large dynamic
 range by scaling the variance of the data.  The options here include
-Autoscaling, Pareto scaling, Range scaling, Vast scaling and Level scaling.  
+autoscaling, Pareto scaling, range scaling, vast scaling and level scaling.  
 
 A very important feature of the whole data treatment process is the interactive
 use of principal component analysis (PCA) to examine the similarity and
@@ -340,9 +340,9 @@ Random Forest and K-Nearest Neighbor were implemented with the R packages
 
 Before statistical analysis is performed, the imputed dataset is passed through
 a series of optional, user-configurable preprocessing steps including
-normalization (Min Max, Sum, Reference Sample, Weight/Volume), transformation
-(Log10, Log2, Square Root, Cube Root), and scaling (Autoscaling, Pareto Scaling,
-Range Scaling, Vast Scaling, Level Scaling). All preprocessing functions were
+normalization (min max, sum, reference Sample, weight/volume), transformation
+(log base 10, log base 2, square root, cube root), and scaling (autoscaling, Pareto Scaling,
+range scaling, vast scaling, level scaling). All preprocessing functions were
 programmed in R. After preprocessing, the dataset is ready for input into the
 analysis methods.
 
