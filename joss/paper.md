@@ -112,15 +112,13 @@ analysis.
 
 ## Data Imputation
 
-Once errors are corrected, data imputation is automatically performed.
-For metabolites with missing values, the type of missingness is classified as
+Once errors are corrected, data imputation is automatically performed.  For
+metabolites with missing values, the type of missingness is classified as
 missing completely at random (MCAR) or missing not at random (MNAR).  For each
 type, an imputation mode is automatically performed but the options may be
-adjusted to apply different algorithms, including
-random
-forest, KNN, mean, or median imputation modes for completely at random
-missingness (MCAR) and zero or half-minimum imputation for not-at-random
-missingness (MNAR).
+adjusted to apply different algorithms, including random forest, K neareset
+neighbors, mean, or median imputation modes for completely at random missingness
+(MCAR) and zero or half-minimum imputation for not-at-random missingness (MNAR).
 
 ![Dynamically updating customizable plots which animate to show
 immediate feedback when adjusting pretreatment options.](figures/figure3.png)
@@ -377,12 +375,12 @@ Among the most well-known metabolomics workflow tools are MetaboAnalyst
 which include MS spectral processing and have statistical analyses and
 visualization tools that are generally similar to Viime.
 
-An exhaustive feature comparison of with these other platforms is beyond the
-scope of this paper, but a major distinguishing feature of Viime is its emphasis
-on ease of use and interactivity. Only XCMS and MetaboAnalyst are simple,
-readily accessible web applications that require no existing package (e.g. R),
-downloads or connection to the Galaxy platform. The unique user interactivity in
-Viime starts with the ability to simply drag and drop CSV or Excel files and
+An exhaustive feature comparison with these other platforms is beyond the scope
+of this paper, but a major distinguishing feature of Viime is its emphasis on
+ease of use and interactivity. Only XCMS and MetaboAnalyst are simple, readily
+accessible web applications that require no existing package (e.g. R), downloads
+or connection to the Galaxy platform. The unique user interactivity in Viime
+starts with the ability to simply drag and drop CSV or Excel files and
 interactively assign the sample identifiers, comparison groups, metadata, and
 metabolites. Dynamic visualization of the PCA scores and loadings plots with
 different types of data (e.g. NMR, LC-MS, and GC-MS) and data treatments (e.g.
