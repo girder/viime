@@ -377,7 +377,7 @@ Among the most well-known metabolomics workflow tools are MetaboAnalyst
 which include MS spectral processing and have statistical analyses and
 visualization tools that are generally similar to Viime.
 
-An exhaustive feature comparison of with these other platforms is beyond the
+An exhaustive feature comparison with these other platforms is beyond the
 scope of this paper, but a major distinguishing feature of Viime is its emphasis
 on ease of use and interactivity. Only XCMS and MetaboAnalyst are simple,
 readily accessible web applications that require no existing package (e.g. R),
