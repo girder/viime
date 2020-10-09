@@ -118,7 +118,7 @@ missing completely at random (MCAR) or missing not at random (MNAR).  For each
 type, an imputation mode is automatically performed but the options may be
 adjusted to apply different algorithms, including
 random
-forest, KNN, mean, or median imputation modes for completely at random
+forest, K neareset neighbors, mean, or median imputation modes for completely at random
 missingness (MCAR) and zero or half-minimum imputation for not-at-random
 missingness (MNAR).
 
