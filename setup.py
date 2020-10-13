@@ -23,7 +23,7 @@ data_files.extend(list_files_recursive('static'))
 
 setup(
     name='viime',
-    version='0.1.0',
+    version='1.0.1',
     author='Kitware, Inc.',
     author_email='kitware@kitware.com',
     packages=find_packages(include=['viime']),
