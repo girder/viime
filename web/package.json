@@ -39,7 +39,7 @@
     "lodash": "^4.17.13",
     "material-design-icons": "^3.0.1",
     "material-design-icons-iconfont": "^4.0.5",
-    "papaparse": "^4.6.3",
+    "papaparse": "^5.2.0",
     "vue": "^2.5.22",
     "vue-axios": "^2.1.4",
     "vue-gtag": "^1.1.2",
