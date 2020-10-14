@@ -191,7 +191,7 @@ export default defineComponent({
         flat
         dense
       >
-        <v-toolbar-title>PC selector</v-toolbar-title>
+        <v-toolbar-title>PC Selector</v-toolbar-title>
       </v-toolbar>
       <v-card
         class="mb-3 mx-3"
@@ -233,6 +233,17 @@ export default defineComponent({
                 <td>{{ pc.name }}</td>
                 <td>{{ pc.r2 }}</td>
                 <td>{{ pc.q2 }}</td>
+              </tr>
+              <tr>
+                <td>
+                  <v-divider /> Cum.
+                </td>
+                <td>
+                  <v-divider /> {{plot.data ? plot.data.r2cum : '0'}}
+                </td>
+                <td>
+                  <v-divider /> {{plot.data ? plot.data.q2cum : '0'}}
+                </td>
               </tr>
             </tbody>
           </table>

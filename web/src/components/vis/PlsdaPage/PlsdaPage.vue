@@ -53,6 +53,8 @@ export default defineComponent({
     const r2: ComputedRef<number[]> = computed(() => plot.value.data?.r2 || []);
     const q2: ComputedRef<number[]> = computed(() => plot.value.data?.q2 || []);
     const r2q2Table = computed(() => r2.value.map((r2Val, i) => ({ name: `PC${i + 1}`, r2: r2Val.toFixed(3), q2: q2.value[i].toFixed(3) })));
+    const r2cum = computed(() => r2.value.reduce((a, b) => a + b, 0).toFixed(3));
+    const q2cum = computed(() => q2.value.reduce((a, b) => a + b, 0).toFixed(3));
     const loadings = computed(() => plot.value.data?.loadings || []);
     const allVipScores = computed(() => plot.value.data?.vip_scores || []);
     const sortedVipScores = computed((): { col: string; vip: number }[] => {
@@ -116,6 +118,8 @@ export default defineComponent({
       loadings,
       sortedVipScores,
       r2q2Table,
+      r2cum,
+      q2cum,
       pcCoords,
       eigenvalues,
       rowLabels,
@@ -169,7 +173,7 @@ export default defineComponent({
         flat
         dense
       >
-        <v-toolbar-title>PC selector</v-toolbar-title>
+        <v-toolbar-title>PC Selector</v-toolbar-title>
       </v-toolbar>
       <v-card
         class="mb-3 mx-3"
@@ -220,6 +224,17 @@ export default defineComponent({
                 <td>{{ pc.name }}</td>
                 <td>{{ pc.r2 }}</td>
                 <td>{{ pc.q2 }}</td>
+              </tr>
+              <tr>
+                <td>
+                  <v-divider /> Cum.
+                </td>
+                <td>
+                  <v-divider /> {{r2cum}}
+                </td>
+                <td>
+                  <v-divider /> {{q2cum}}
+                </td>
               </tr>
             </tbody>
           </table>
