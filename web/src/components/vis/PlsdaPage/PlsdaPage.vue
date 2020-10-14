@@ -230,10 +230,10 @@ export default defineComponent({
                   <v-divider /> Cum.
                 </td>
                 <td>
-                  <v-divider /> {{r2cum}}
+                  <v-divider /> {{ r2cum }}
                 </td>
                 <td>
-                  <v-divider /> {{q2cum}}
+                  <v-divider /> {{ q2cum }}
                 </td>
               </tr>
             </tbody>

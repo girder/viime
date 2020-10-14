@@ -239,10 +239,10 @@ export default defineComponent({
                   <v-divider /> Cum.
                 </td>
                 <td>
-                  <v-divider /> {{plot.data ? plot.data.r2cum : '0'}}
+                  <v-divider /> {{ plot.data ? plot.data.r2cum : '0' }}
                 </td>
                 <td>
-                  <v-divider /> {{plot.data ? plot.data.q2cum : '0'}}
+                  <v-divider /> {{ plot.data ? plot.data.q2cum : '0' }}
                 </td>
               </tr>
             </tbody>
