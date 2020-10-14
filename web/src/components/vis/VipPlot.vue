@@ -116,14 +116,13 @@ export default defineComponent({
           .attr('height', (d) => dheight.value - scaleY.value(d.vip));
 
         // Render dotted line accross Y=1 to provide reference point for scores
-        svg.select(`line.unit-line`)
+        svg.select('line.unit-line')
           .attr('x1', scaleX.value(labels.value[0]))
           .attr('x2', scaleX.value(labels.value[labels.value.length - 1]))
           .attr('y1', scaleY.value(1))
           .attr('y2', scaleY.value(1))
           .attr('stroke-dasharray', '10 5 5 5')
           .style('opacity', 1);
-
 
         // Adjust axis labels
         svg.select('g.label.x')
