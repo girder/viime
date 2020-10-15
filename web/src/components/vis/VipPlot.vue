@@ -117,8 +117,8 @@ export default defineComponent({
 
         // Render dotted line accross Y=1 to provide reference point for scores
         svg.select('line.unit-line')
-          .attr('x1', scaleX.value(labels.value[0]))
-          .attr('x2', scaleX.value(labels.value[labels.value.length - 1]))
+          .attr('x1', scaleX.value(labels.value[0]) as number)
+          .attr('x2', scaleX.value(labels.value[labels.value.length - 1]) as number)
           .attr('y1', scaleY.value(1))
           .attr('y2', scaleY.value(1))
           .attr('stroke-dasharray', '10 5 5 5')
