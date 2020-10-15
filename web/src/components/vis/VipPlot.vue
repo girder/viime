@@ -115,6 +115,16 @@ export default defineComponent({
           .attr('y', (d) => scaleY.value(d.vip))
           .attr('height', (d) => dheight.value - scaleY.value(d.vip));
 
+        // Render dotted line accross Y=1 to provide reference point for scores
+        svg.select('line.unit-line')
+          .attr('x1', scaleX.value(labels.value[0]) as number)
+          .attr('x2', scaleX.value(labels.value[labels.value.length - 1]) as number)
+          .attr('y1', scaleY.value(1))
+          .attr('y2', scaleY.value(1))
+          .attr('stroke-dasharray', '10 5 5 5')
+          .style('opacity', 1);
+
+        // Adjust axis labels
         svg.select('g.label.x')
           .selectAll('text')
           .attr('dy', 30);
@@ -172,6 +182,7 @@ export default defineComponent({
         </g>
         <g class="plot">
           <g class="bars" />
+          <line class="unit-line" />
         </g>
       </g>
     </svg>
@@ -200,15 +211,7 @@ path.line {
   stroke: black;
 }
 
-line.cutoff50 {
+line.unit-line {
   stroke: gray;
-}
-
-line.cutoff80 {
-  stroke: firebrick;
-}
-
-line.cutoff90 {
-  stroke: red;
 }
 </style>
