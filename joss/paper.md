@@ -57,8 +57,8 @@ commonly used platforms are based on mass-spectrometry (MS) and nuclear magnetic
 resonance (NMR). Investigators are increasingly using both methods to
 increase the metabolite coverage. The challenge for this type of multi-platform
 approach is that the data structure may be very different in these two
-platforms. For example, NMR data may be reported as a list of spectral features
-e.g. bins or peaks with arbitrary intensity units or more directly with named
+platforms. For example, NMR data may be reported as a list of spectral features,
+e.g., bins or peaks with arbitrary intensity units or more directly with named
 metabolites reported in concentration units ranging from micromolar to
 millimolar. Some MS approaches can also provide data in the form of identified
 metabolite concentrations, but given the superior sensitivity of MS, the
@@ -67,9 +67,9 @@ approaches yield data in the form of arbitrary response units where the dynamic
 range can be more than 6 orders of magnitude.
 Importantly, the variability and reproducibility of the data may differ across platforms.
 Given the diversity of data
-structures (i.e. magnitude and dynamic range) integrating the data from multiple
+structures (i.e., magnitude and dynamic range) integrating the data from multiple
 platforms can be challenging.  This often leads investigators to analyze the
-datasets separately which prevents the observation of potentially interesting
+datasets separately, which prevents the observation of potentially interesting
 relationships and
 correlations between metabolites detected on different platforms.  Viime
 (VIsualization and Integration of Metabolomics Experiments)
@@ -378,12 +378,12 @@ visualization tools that are generally similar to Viime.
 An exhaustive feature comparison with these other platforms is beyond the scope
 of this paper, but a major distinguishing feature of Viime is its emphasis on
 ease of use and interactivity. Only XCMS and MetaboAnalyst are simple, readily
-accessible web applications that require no existing package (e.g. R), downloads
+accessible web applications that require no existing package (e.g., R), downloads
 or connection to the Galaxy platform. The unique user interactivity in Viime
 starts with the ability to simply drag and drop CSV or Excel files and
 interactively assign the sample identifiers, comparison groups, metadata, and
 metabolites. Dynamic visualization of the PCA scores and loadings plots with
-different types of data (e.g. NMR, LC-MS, and GC-MS) and data treatments (e.g.
+different types of data (e.g., NMR, LC-MS, and GC-MS) and data treatments (e.g.,
 normalization, scaling and transformation) aids in selecting the optimal data
 treatment. Viime also enables integration between different data modalities,
 offering simple (i.e., concatenative), mid-level, and multi-block data fusion
