@@ -29,9 +29,9 @@ export default defineComponent({
     const { dataset, plot, changePlotArgs } = usePlotData(toRef(props, 'id'), 'oplsda');
     const controls = reactive({
       pcYval: '1',
-      numComponentsVal: '3',
+      numComponentsVal: '2',
       pcY: 2,
-      numComponents: 3,
+      numComponents: 2,
       group1: dataset.value?.groupLevels[0]?.name || null,
       group2: dataset.value?.groupLevels[1]?.name || null,
       showEllipses: true,
