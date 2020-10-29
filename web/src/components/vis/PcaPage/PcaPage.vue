@@ -86,7 +86,7 @@ export default defineComponent({
         dense
         :card="false"
       >
-        <v-toolbar-title>PC selector</v-toolbar-title>
+        <v-toolbar-title>PC Selector</v-toolbar-title>
       </v-toolbar>
       <v-card
         class="mb-3 mx-3"

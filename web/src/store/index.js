@@ -118,7 +118,7 @@ const plotDefaults = {
     valid: false,
     loading: false,
     args: {
-      num_of_components: 3,
+      num_of_components: 2,
     },
     type: plot_types.ANALYSIS,
   },

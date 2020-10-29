@@ -29,9 +29,9 @@ export default defineComponent({
     const { dataset, plot, changePlotArgs } = usePlotData(toRef(props, 'id'), 'oplsda');
     const controls = reactive({
       pcYval: '1',
-      numComponentsVal: '3',
+      numComponentsVal: '2',
       pcY: 2,
-      numComponents: 3,
+      numComponents: 2,
       group1: dataset.value?.groupLevels[0]?.name || null,
       group2: dataset.value?.groupLevels[1]?.name || null,
       showEllipses: true,
@@ -191,7 +191,7 @@ export default defineComponent({
         flat
         dense
       >
-        <v-toolbar-title>PC selector</v-toolbar-title>
+        <v-toolbar-title>PC Selector</v-toolbar-title>
       </v-toolbar>
       <v-card
         class="mb-3 mx-3"
@@ -233,6 +233,17 @@ export default defineComponent({
                 <td>{{ pc.name }}</td>
                 <td>{{ pc.r2 }}</td>
                 <td>{{ pc.q2 }}</td>
+              </tr>
+              <tr>
+                <td>
+                  <v-divider /> Cum.
+                </td>
+                <td>
+                  <v-divider /> {{ plot.data ? plot.data.r2cum.toFixed(3) : '0' }}
+                </td>
+                <td>
+                  <v-divider /> {{ plot.data ? plot.data.q2cum.toFixed(3) : '0' }}
+                </td>
               </tr>
             </tbody>
           </table>
