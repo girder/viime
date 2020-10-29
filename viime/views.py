@@ -544,17 +544,14 @@ def save_validated_csv_file(csv_id: str):
         old: Dict[str, Any] = {}
         if old_table is not None:
             transformation_schema = ValidatedMetaboliteTableSchema(
-                only=['normalization', 'normalization_argument',
+                only=['id', 'normalization', 'normalization_argument',
                       'scaling', 'transformation']
             )
-            # copy some values
+            # copy some values, including id
             old = transformation_schema.dump(old_table)
 
-            db.session.delete(old_table)
-            db.session.commit()  # we actually want to persist to invalidate the old table
-
         validated_table = ValidatedMetaboliteTable.create_from_csv_file(csv_file, **old)
-        db.session.add(validated_table)
+        db.session.merge(validated_table)
         db.session.commit()
         return jsonify(validated_metabolite_table_schema.dump(validated_table)), 201
     except Exception:
