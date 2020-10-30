@@ -1,26 +1,41 @@
-<script>
+<script lang="ts">
+import {
+  defineComponent, computed, ref, toRef, watch, onMounted, Ref, reactive,
+} from '@vue/composition-api';
 import RocCurve from './RocCurve.vue';
 import VisTileLarge from './VisTileLarge.vue';
 import { CSVService } from '../../common/api.service';
-import plotData from './mixins/plotData';
+import usePlotData from './use/usePlotData';
 
-export default {
-  components: {
-    VisTileLarge,
-    RocCurve,
-  },
+interface Column {
+  column_type: string;
+  column_header: string;
+}
+interface Level {
+  name: string;
+}
+interface PCAData {
+  factor: string[];
+  metabolites: string[];
+}
 
-  mixins: [plotData('roc')],
-
+export default defineComponent({
   props: {
     id: {
       type: String,
       required: true,
     },
   },
-  data() {
-    return {
-      metabolites: [], // currently selected metabolites
+  components: {
+    VisTileLarge,
+    RocCurve,
+  },
+
+  // mixins: [plotData('roc')],
+
+  setup(props) {
+    const controls = reactive({
+      metabolites: [] as string[], // currently selected metabolites
       group1: '',
       group2: '',
       metaboliteSource: 'all',
@@ -29,116 +44,143 @@ export default {
         { value: 'random_forest', text: 'Random Forest' },
         { value: 'logistic_regression', text: 'Logistic Regression' },
       ],
-      pcaData: null, // data from factor analysis endpoint
-      threshold: 0.4, // threshold for factor analysis
-    };
-  },
-  computed: {
+    });
+
+    const pcaData: Ref<PCAData | null> = ref(null);// data from factor analysis endpoint
+    const threshold = ref(0.4);// threshold for factor analysis
+
+    const { plot, dataset, changePlotArgs } = usePlotData(toRef(props, 'id'), 'roc');
+
     // Column names (i.e. metabolites) available for selection,
     // filtered based on current metabolite source
-    columns() {
-      if (this.metaboliteSource === 'all') {
-        return this.dataset.column.data.filter((column) => column.column_type === 'measurement')
-          .map((column) => column.column_header);
+    const columns = computed(() => {
+      if (controls.metaboliteSource === 'all') {
+        return dataset.value.column.data.filter((column: Column) => column.column_type === 'measurement')
+          .map((column: Column) => column.column_header);
       }
-      if (this.metaboliteSource === 'selected') {
-        return this.dataset.selectedColumns;
+      if (controls.metaboliteSource === 'selected') {
+        return dataset.value.selectedColumns;
       }
-      const { metabolites } = this.pcaData;
-      if (!metabolites) {
+      if (!pcaData.value?.metabolites) {
         return [];
       }
-      return metabolites.filter((m, i) => (this.pcaData.factor[i] === this.metaboliteSource));
-    },
-    groups() {
-      return this.dataset.groupLevels.map((level) => level.name);
-    },
-    metaboliteSourceOptions() {
+      const { metabolites } = pcaData.value;
+      // @ts-ignore
+      return metabolites.filter((m, i) => (pcaData.value.factor[i] === controls.metaboliteSource));
+    });
+    const groups = computed(() => dataset.value.groupLevels.map((level: Level) => level.name));
+    const metaboliteSourceOptions = computed(() => {
       let options = [
         { value: 'all', text: 'All metabolites' },
         { value: 'selected', text: 'Selected Metabolites' },
       ];
-      if (this?.pcaData?.factor) {
-        options = options.concat(this.pcaData.factor.map((factor) => ({ value: factor, text: `PC${factor}` })));
+      if (pcaData.value?.factor) {
+        options = options.concat(pcaData.value.factor.map((factor) => ({ value: factor, text: `PC${factor}` })));
       }
       return options;
-    },
-    sensitivities() {
-      if (!this.plot.data || !this.group1 || !this.group2 || this.metabolites.length === 0) {
+    });
+    const sensitivities = computed(() => {
+      if (!plot.value.data
+        || !controls.group1
+        || !controls.group2
+        || controls.metabolites.length === 0) {
         return [];
       }
-      return this.plot.data.sensitivities;
-    },
-    specificities() {
-      if (!this.plot.data || !this.group1 || !this.group2 || this.metabolites.length === 0) {
+      return plot.value.data.sensitivities;
+    });
+    const specificities = computed(() => {
+      if (!plot.value.data
+        || !controls.group1
+        || !controls.group2
+        || controls.metabolites.length === 0) {
         return [];
       }
-      return this.plot.data.specificities;
-    },
-    auc() {
-      if (!this.plot.data || !this.group1 || !this.group2 || this.metabolites.length === 0) {
+      return plot.value.data.specificities;
+    });
+    const auc = computed(() => {
+      if (!plot.value.data
+        || !controls.group1
+        || !controls.group2
+        || controls.metabolites.length === 0) {
         return 0;
       }
-      return this.plot.data.auc[0];
-    },
-  },
-  watch: {
-    // get new factor analysis when threshold changes
-    threshold() {
-      this.getFactors();
-      this.metaboliteSource = 'all';
-    },
+      return plot.value.data.auc[0];
+    });
 
-    // Clear metabolites when metabolite source is changed to 'All'
-    // If the source is changed to 'Selected' or one of the PC factors,
-    // populate the list with the filtered metabolite and graph them.
-    metaboliteSource(newSource) {
-      this.metabolites = newSource === 'all' ? [] : this.columns;
-      this.changePlotArgs({ columns: JSON.stringify(this.metabolites) });
-    },
-
-    // These two watchers prevent the same group from being selected twice.
-    group1(newGroup, oldGroup) {
-      this.changePlotArgs({ group1: newGroup });
-      if (this.group2 === newGroup) {
-        this.group2 = oldGroup;
-        this.changePlotArgs({ group2: oldGroup });
-      }
-    },
-    group2(newGroup, oldGroup) {
-      this.changePlotArgs({ group2: newGroup });
-      if (this.group1 === newGroup) {
-        this.group1 = oldGroup;
-        this.changePlotArgs({ group1: oldGroup });
-      }
-    },
-  },
-  mounted() {
-    // Perform an initial factor analysis when component is mounted
-    this.getFactors();
-  },
-  methods: {
     // Called when a metabolite is removed from the ROC analysis
     // as a result of the user clicking the red 'X' next to its
     // name in the 'Metabolites' autoselect
-    removeMetabolite(metabolite) {
-      this.metabolites.splice(this.metabolites.indexOf(metabolite), 1);
-      this.changePlotArgs({ columns: JSON.stringify(this.metabolites) });
-    },
-    async getFactors() {
-      if (this.metaboliteSourceOptions.length > 2) {
-        this.metaboliteSourceOptions.splice(2, this.metaboliteSourceOptions.length - 2);
+    function removeMetabolite(metabolite: string) {
+      controls.metabolites.splice(controls.metabolites.indexOf(metabolite), 1);
+      changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
+    }
+    async function getFactors() {
+      if (metaboliteSourceOptions.value.length > 2) {
+        metaboliteSourceOptions.value.splice(2, metaboliteSourceOptions.value.length - 2);
       }
       try {
         // perform factor analysis
-        const pcaDataResponse = await CSVService.getAnalysis(this.dataset.id, 'factors', { threshold: this.threshold });
-        this.pcaData = pcaDataResponse?.data?.metabolites ? pcaDataResponse.data : null;
+        // TODO tweak this for the different analyses
+        const pcaDataResponse = await CSVService.getAnalysis(dataset.value.id, 'factors', { threshold: threshold.value });
+        pcaData.value = pcaDataResponse?.data?.metabolites ? pcaDataResponse.data : null;
       } catch (err) {
-        this.pcaData = null;
+        pcaData.value = null;
       }
-    },
+
+      // Perform an initial factor analysis when component is mounted
+      onMounted(() => {
+        getFactors();
+      });
+
+      // get new factor analysis when threshold changes
+      watch(threshold, () => {
+        getFactors();
+        controls.metaboliteSource = 'all';
+      });
+
+      // Clear metabolites when metabolite source is changed to 'All'
+      // If the source is changed to 'Selected' or one of the PC factors,
+      // populate the list with the filtered metabolite and graph them.
+      watch(() => controls.metaboliteSource, (newSource) => {
+        controls.metabolites = newSource === 'all' ? [] : columns.value;
+        changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
+      });
+      watch(() => controls.metabolites, () => {
+        changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
+      });
+      // These two watchers prevent the same group from being selected twice.
+      watch(() => controls.group1, (newGroup, oldGroup) => {
+        changePlotArgs({ group1: newGroup });
+        if (controls.group2 === newGroup) {
+          controls.group2 = oldGroup;
+          changePlotArgs({ group2: oldGroup });
+        }
+      });
+      watch(() => controls.group2, (newGroup, oldGroup) => {
+        changePlotArgs({ group2: newGroup });
+        if (controls.group1 === newGroup) {
+          controls.group1 = oldGroup;
+          changePlotArgs({ group1: oldGroup });
+        }
+      });
+    }
+    return {
+      controls,
+      pcaData,
+      threshold,
+      plot,
+      changePlotArgs,
+      columns,
+      groups,
+      metaboliteSourceOptions,
+      sensitivities,
+      specificities,
+      auc,
+      removeMetabolite,
+      getFactors,
+    };
   },
-};
+});
 </script>
 
 <template>
@@ -166,7 +208,7 @@ export default {
         flat
       >
         <v-select
-          v-model="metaboliteSource"
+          v-model="controls.metaboliteSource"
           class="py-2"
           hide-details
           :items="metaboliteSourceOptions"
@@ -229,14 +271,14 @@ export default {
         dense
         :card="false"
       >
-        <v-toolbar-title v-text="`Metabolites (${metabolites.length})`" />
+        <v-toolbar-title v-text="`Metabolites (${controls.metabolites.length})`" />
       </v-toolbar>
       <v-card
         class="mx-3 px-1"
         flat
       >
         <v-autocomplete
-          v-model="metabolites"
+          v-model="controls.metabolites"
           :items="columns"
           chips
           dense
@@ -246,7 +288,6 @@ export default {
           auto-select-first
           hide-selected
           hide-details
-          @change="changePlotArgs({columns: JSON.stringify(metabolites)})"
         >
           <template v-slot:selection="data">
             <v-tooltip right>
@@ -283,7 +324,7 @@ export default {
         flat
       >
         <v-select
-          v-model="group1"
+          v-model="controls.group1"
           class="py-2"
           hide-details
           :items="groups"
@@ -304,7 +345,7 @@ export default {
         flat
       >
         <v-select
-          v-model="group2"
+          v-model="controls.group2"
           class="py-2"
           hide-details
           :items="groups"
@@ -325,10 +366,10 @@ export default {
         flat
       >
         <v-select
-          v-model="method"
+          v-model="controls.method"
           class="py-2"
           hide-details
-          :items="methodOptions"
+          :items="controls.methodOptions"
           @change="changePlotArgs({method: $event})"
         />
       </v-card>
