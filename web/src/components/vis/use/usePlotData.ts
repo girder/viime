@@ -15,7 +15,7 @@ export default function usePlotData(id: Ref<string>, plotName: string) {
     store.commit(SET_PLOT, {
       dataset_id: id.value,
       name: plotName,
-      obj: { args: { ...plot.value.args, ...args } },
+      obj: { loading: false, valid: false, args: { ...plot.value.args, ...args } },
     });
   }
 
