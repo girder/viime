@@ -43,7 +43,7 @@ export default defineComponent({
       analysisOptions: [
         { value: 'all', text: 'All metabolites' },
         { value: 'selected', text: 'Selected Metabolites' },
-        { value: 'factor', text: 'Factor Analysis' }
+        { value: 'factor', text: 'Factor Analysis' },
       ],
       method: 'random_forest',
       methodOptions: [
@@ -84,9 +84,7 @@ export default defineComponent({
     });
     // The "All" and "Selected" analysis options do not do any analysis,
     // so we don't want to show the Metabolite Source selector
-    const showMetaboliteSource = computed(() => {
-      return controls.analysis !== 'all' && controls.analysis !== 'selected';
-    });
+    const showMetaboliteSource = computed(() => controls.analysis !== 'all' && controls.analysis !== 'selected');
     const sensitivities = computed(() => {
       if (!plot.value.data
         || !controls.group1
@@ -154,7 +152,7 @@ export default defineComponent({
       controls.metabolites = newSource === 'all' ? [] : columns.value;
       changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
     });
-    watch(() => controls.metaboliteSource, (newSource) => {
+    watch(() => controls.metaboliteSource, () => {
       controls.metabolites = columns.value;
       changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
     });
