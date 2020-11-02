@@ -126,44 +126,44 @@ export default defineComponent({
       } catch (err) {
         pcaData.value = null;
       }
-
-      // Perform an initial factor analysis when component is mounted
-      onMounted(() => {
-        getFactors();
-      });
-
-      // get new factor analysis when threshold changes
-      watch(threshold, () => {
-        getFactors();
-        controls.metaboliteSource = 'all';
-      });
-
-      // Clear metabolites when metabolite source is changed to 'All'
-      // If the source is changed to 'Selected' or one of the PC factors,
-      // populate the list with the filtered metabolite and graph them.
-      watch(() => controls.metaboliteSource, (newSource) => {
-        controls.metabolites = newSource === 'all' ? [] : columns.value;
-        changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
-      });
-      watch(() => controls.metabolites, () => {
-        changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
-      });
-      // These two watchers prevent the same group from being selected twice.
-      watch(() => controls.group1, (newGroup, oldGroup) => {
-        changePlotArgs({ group1: newGroup });
-        if (controls.group2 === newGroup) {
-          controls.group2 = oldGroup;
-          changePlotArgs({ group2: oldGroup });
-        }
-      });
-      watch(() => controls.group2, (newGroup, oldGroup) => {
-        changePlotArgs({ group2: newGroup });
-        if (controls.group1 === newGroup) {
-          controls.group1 = oldGroup;
-          changePlotArgs({ group1: oldGroup });
-        }
-      });
     }
+
+    // Perform an initial factor analysis when component is mounted
+    onMounted(() => {
+      getFactors();
+    });
+
+    // get new factor analysis when threshold changes
+    watch(threshold, () => {
+      getFactors();
+      controls.metaboliteSource = 'all';
+    });
+
+    // Clear metabolites when metabolite source is changed to 'All'
+    // If the source is changed to 'Selected' or one of the PC factors,
+    // populate the list with the filtered metabolite and graph them.
+    watch(() => controls.metaboliteSource, (newSource) => {
+      controls.metabolites = newSource === 'all' ? [] : columns.value;
+      changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
+    });
+    watch(() => controls.metabolites, () => {
+      changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
+    });
+    // These two watchers prevent the same group from being selected twice.
+    watch(() => controls.group1, (newGroup, oldGroup) => {
+      changePlotArgs({ group1: newGroup });
+      if (controls.group2 === newGroup) {
+        controls.group2 = oldGroup;
+        changePlotArgs({ group2: oldGroup });
+      }
+    });
+    watch(() => controls.group2, (newGroup, oldGroup) => {
+      changePlotArgs({ group2: newGroup });
+      if (controls.group1 === newGroup) {
+        controls.group1 = oldGroup;
+        changePlotArgs({ group1: oldGroup });
+      }
+    });
     return {
       controls,
       pcaData,
