@@ -39,6 +39,12 @@ export default defineComponent({
       group1: '',
       group2: '',
       metaboliteSource: 'all',
+      analysis: 'all',
+      analysisOptions: [
+        { value: 'all', text: 'All metabolites' },
+        { value: 'selected', text: 'Selected Metabolites' },
+        { value: 'factor', text: 'Factor Analysis' }
+      ],
       method: 'random_forest',
       methodOptions: [
         { value: 'random_forest', text: 'Random Forest' },
@@ -54,11 +60,11 @@ export default defineComponent({
     // Column names (i.e. metabolites) available for selection,
     // filtered based on current metabolite source
     const columns = computed(() => {
-      if (controls.metaboliteSource === 'all') {
+      if (controls.analysis === 'all') {
         return dataset.value.column.data.filter((column: Column) => column.column_type === 'measurement')
           .map((column: Column) => column.column_header);
       }
-      if (controls.metaboliteSource === 'selected') {
+      if (controls.analysis === 'selected') {
         return dataset.value.selectedColumns;
       }
       if (!pcaData.value?.metabolites) {
@@ -70,14 +76,16 @@ export default defineComponent({
     });
     const groups = computed(() => dataset.value.groupLevels.map((level: Level) => level.name));
     const metaboliteSourceOptions = computed(() => {
-      let options = [
-        { value: 'all', text: 'All metabolites' },
-        { value: 'selected', text: 'Selected Metabolites' },
-      ];
-      if (pcaData.value?.factor) {
-        options = options.concat(pcaData.value.factor.map((factor) => ({ value: factor, text: `PC${factor}` })));
+      const options = pcaData.value?.factor.map((factor) => ({ value: factor, text: `PC${factor}` }));
+      if (!options) {
+        return [];
       }
       return options;
+    });
+    // The "All" and "Selected" analysis options do not do any analysis,
+    // so we don't want to show the Metabolite Source selector
+    const showMetaboliteSource = computed(() => {
+      return controls.analysis !== 'all' && controls.analysis !== 'selected';
     });
     const sensitivities = computed(() => {
       if (!plot.value.data
@@ -139,11 +147,15 @@ export default defineComponent({
       controls.metaboliteSource = 'all';
     });
 
-    // Clear metabolites when metabolite source is changed to 'All'
+    // Clear metabolites when analysis is changed to 'All'
     // If the source is changed to 'Selected' or one of the PC factors,
     // populate the list with the filtered metabolite and graph them.
-    watch(() => controls.metaboliteSource, (newSource) => {
+    watch(() => controls.analysis, (newSource) => {
       controls.metabolites = newSource === 'all' ? [] : columns.value;
+      changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
+    });
+    watch(() => controls.metaboliteSource, (newSource) => {
+      controls.metabolites = columns.value;
       changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
     });
     watch(() => controls.metabolites, () => {
@@ -172,6 +184,7 @@ export default defineComponent({
       changePlotArgs,
       columns,
       groups,
+      showMetaboliteSource,
       metaboliteSourceOptions,
       sensitivities,
       specificities,
@@ -201,9 +214,32 @@ export default defineComponent({
         dense
         :card="false"
       >
+        <v-toolbar-title>Analysis</v-toolbar-title>
+      </v-toolbar>
+      <v-card
+        class="mx-3 px-2"
+        flat
+      >
+        <v-select
+          v-model="controls.analysis"
+          class="py-2"
+          hide-details
+          :items="controls.analysisOptions"
+        />
+      </v-card>
+      <v-toolbar
+        v-if="showMetaboliteSource"
+        class="darken-3"
+        color="primary"
+        dark
+        flat
+        dense
+        :card="false"
+      >
         <v-toolbar-title>Metabolite Source</v-toolbar-title>
       </v-toolbar>
       <v-card
+        v-if="showMetaboliteSource"
         class="mx-3 px-2"
         flat
       >
@@ -215,6 +251,7 @@ export default defineComponent({
         />
       </v-card>
       <v-toolbar
+        v-if="showMetaboliteSource"
         class="darken-3"
         color="primary"
         dark
@@ -243,6 +280,7 @@ export default defineComponent({
         </v-toolbar-title>
       </v-toolbar>
       <v-card
+        v-if="showMetaboliteSource"
         class="mx-3"
         flat
       >
