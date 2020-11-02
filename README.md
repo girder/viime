@@ -1,3 +1,5 @@
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.02410/status.svg)](https://doi.org/10.21105/joss.02410)
+
 VIIME
 ========
 
