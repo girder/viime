@@ -1,6 +1,6 @@
 <script lang="ts">
 import {
-  defineComponent, computed, ref, toRef, watch, onMounted, Ref, reactive,
+  defineComponent, computed, ref, toRef, watch, Ref, reactive,
 } from '@vue/composition-api';
 import RocCurve from './RocCurve.vue';
 import VisTileLarge from './VisTileLarge.vue';
@@ -30,8 +30,6 @@ export default defineComponent({
     VisTileLarge,
     RocCurve,
   },
-
-  // mixins: [plotData('roc')],
 
   setup(props) {
     const controls = reactive({
@@ -70,9 +68,12 @@ export default defineComponent({
       if (!pcaData.value?.metabolites) {
         return [];
       }
-      const { metabolites } = pcaData.value;
-      // @ts-ignore
-      return metabolites.filter((m, i) => (pcaData.value.factor[i] === controls.metaboliteSource));
+      const pcaDataValue = pcaData.value;
+      if (!pcaDataValue?.metabolites) {
+        return [];
+      }
+      const { metabolites } = pcaDataValue;
+      return metabolites.filter((m, i) => (pcaDataValue.factor[i] === controls.metaboliteSource));
     });
     const groups = computed(() => dataset.value.groupLevels.map((level: Level) => level.name));
     const metaboliteSourceOptions = computed(() => {
@@ -134,10 +135,8 @@ export default defineComponent({
       }
     }
 
-    // Perform an initial factor analysis when component is mounted
-    onMounted(() => {
-      getFactors();
-    });
+    // Perform an initial factor analysis
+    getFactors();
 
     // get new factor analysis when threshold changes
     watch(threshold, () => {
@@ -188,7 +187,6 @@ export default defineComponent({
       specificities,
       auc,
       removeMetabolite,
-      getFactors,
     };
   },
 });
