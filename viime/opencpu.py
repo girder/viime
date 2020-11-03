@@ -1,6 +1,6 @@
 from io import BytesIO
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from flask import current_app, Response
 import pandas
@@ -17,6 +17,13 @@ class OpenCPUException(Exception):
     def error_response(self):
         return Response(self.response.content, status=self.response.status_code,
                         mimetype='text/plain')
+
+
+def r_json_to_pandas(data: List[Dict[str, Any]]) -> pandas.DataFrame:
+    df = pandas.DataFrame(data=data)
+    if '_row' in df:
+        df = df.set_index('_row')
+    return df
 
 
 def opencpu_request(method: str, files: Optional[Dict[str, Any]] = None,
