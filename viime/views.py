@@ -1012,6 +1012,42 @@ def get_factors(validated_table: ValidatedMetaboliteTable,
     return jsonify(factor_analysis(measurements, threshold))
 
 
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/plsda_factors', methods=['GET'])
+@use_kwargs({
+    'num_of_components': fields.Integer(missing=3),
+    'threshold': fields.Float(missing=0.4)
+})
+@load_validated_csv_file
+def get_plsda_factors(validated_table: ValidatedMetaboliteTable,
+                      num_of_components: Optional[int] = 3,
+                      threshold: Optional[float] = 0.4):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+
+    vip_scores = plsda(measurements, groups, num_of_components, 'vip')
+    column_names = list(measurements.columns)
+
+    metabolites = []
+    factors = []
+    # The maximum VIP score should be upper bound of the threshold slider
+    max_vip = 1
+    for i in range(1, num_of_components + 1):
+        pc_max_vip = max(vip_scores[f'comp{i}'])
+        if pc_max_vip > max_vip:
+            max_vip = pc_max_vip
+        enumerated_scores = enumerate(vip_scores[f'comp{i}'])
+        filtered_scores = filter(lambda s: s[1] > threshold, enumerated_scores)
+        sorted_scores = sorted(filtered_scores, key=lambda s: s[1])
+        metabolites += [column_names[j] for j, score in sorted_scores]
+        factors += [i] * len(sorted_scores)
+
+    return jsonify({
+        'factor': factors,
+        'metabolites': metabolites,
+        'max_vip': max_vip
+    })
+
+
 #
 # sample related
 #

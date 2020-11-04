@@ -34,14 +34,17 @@ export default defineComponent({
   setup(props) {
     const controls = reactive({
       metabolites: [] as string[], // currently selected metabolites
+      threshold: 0.4, // threshold for factor analysis
+      maxThreshold: 1,
       group1: '',
       group2: '',
-      metaboliteSource: 'all',
+      metaboliteSource: null,
       analysis: 'all',
       analysisOptions: [
         { value: 'all', text: 'All metabolites' },
         { value: 'selected', text: 'Selected Metabolites' },
         { value: 'factor', text: 'Factor Analysis' },
+        { value: 'plsda', text: 'PLSDA' },
       ],
       method: 'random_forest',
       methodOptions: [
@@ -51,7 +54,6 @@ export default defineComponent({
     });
 
     const pcaData: Ref<PCAData | null> = ref(null);// data from factor analysis endpoint
-    const threshold = ref(0.4);// threshold for factor analysis
 
     const { plot, dataset, changePlotArgs } = usePlotData(toRef(props, 'id'), 'roc');
 
@@ -122,14 +124,25 @@ export default defineComponent({
       changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
     }
     async function getFactors() {
-      if (metaboliteSourceOptions.value.length > 2) {
-        metaboliteSourceOptions.value.splice(2, metaboliteSourceOptions.value.length - 2);
-      }
       try {
         // perform factor analysis
-        // TODO tweak this for the different analyses
-        const pcaDataResponse = await CSVService.getAnalysis(dataset.value.id, 'factors', { threshold: threshold.value });
-        pcaData.value = pcaDataResponse?.data?.metabolites ? pcaDataResponse.data : null;
+        if (controls.analysis === 'factor') {
+          const pcaDataResponse = await CSVService.getAnalysis(dataset.value.id, 'factors', { threshold: controls.threshold });
+          pcaData.value = pcaDataResponse?.data?.metabolites ? pcaDataResponse.data : null;
+        } else if (controls.analysis === 'plsda') {
+          // TODO add controls for num_of_components?
+          const plsdaDataResponse = await CSVService.getAnalysis(dataset.value.id, 'plsda_factors',
+            {
+              num_of_components: 4,
+              threshold: controls.threshold,
+            });
+          pcaData.value = plsdaDataResponse.data;
+          controls.maxThreshold = plsdaDataResponse.data.max_vip;
+        } else if (controls.analysis === 'oplsda') {
+          // TODO group selectors?
+        }
+        // update the selected metabolites to the result of the analysis
+        controls.metabolites = columns.value;
       } catch (err) {
         pcaData.value = null;
       }
@@ -139,17 +152,18 @@ export default defineComponent({
     getFactors();
 
     // get new factor analysis when threshold changes
-    watch(threshold, () => {
+    watch(() => controls.threshold, () => {
       getFactors();
-      controls.metaboliteSource = 'all';
     });
 
     // Clear metabolites when analysis is changed to 'All'
     // If the source is changed to 'Selected' or one of the PC factors,
     // populate the list with the filtered metabolite and graph them.
-    watch(() => controls.analysis, (newSource) => {
-      controls.metabolites = newSource === 'all' ? [] : columns.value;
+    watch(() => controls.analysis, (newAnalysis) => {
+      controls.metaboliteSource = null;
+      controls.metabolites = newAnalysis === 'all' ? [] : columns.value;
       changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
+      getFactors();
     });
     watch(() => controls.metaboliteSource, () => {
       controls.metabolites = columns.value;
@@ -176,7 +190,6 @@ export default defineComponent({
     return {
       controls,
       pcaData,
-      threshold,
       plot,
       changePlotArgs,
       columns,
@@ -270,7 +283,7 @@ export default defineComponent({
             </v-icon>
             <span>
               Factor analysis with loading threshold of <br>
-              {{ threshold }} returned 0 metabolites.
+              {{ controls.threshold }} returned 0 metabolites.
             </span>
           </v-tooltip>
         </v-toolbar-title>
@@ -284,15 +297,15 @@ export default defineComponent({
           <v-layout column>
             <v-slider
               class="my-1 minCorrelation"
-              :value="threshold"
+              :value="controls.threshold"
               label="0"
               thumb-label="always"
               hide-details
               min="0"
-              max="1"
+              :max="controls.maxThreshold"
               step="0.1"
               style="padding-top: 16px;"
-              @change="threshold = $event"
+              @change="controls.threshold = $event"
             />
           </v-layout>
         </v-card-actions>
