@@ -1017,18 +1017,18 @@ def get_plsda_factors(validated_table: ValidatedMetaboliteTable,
     measurements = validated_table.measurements
     groups = validated_table.groups
 
-    vip_scores = plsda(measurements, groups, num_of_components, 'vip')
+    _, _, vip_scores, _, _ = plsda(measurements, groups, num_of_components)
     column_names = list(measurements.columns)
 
     metabolites = []
     factors = []
     # The maximum VIP score should be upper bound of the threshold slider
     max_vip = 1
-    for i in range(1, num_of_components + 1):
-        pc_max_vip = max(vip_scores[f'comp{i}'])
+    for i in range(0, num_of_components):
+        pc_max_vip = max(vip_scores[i])
         if pc_max_vip > max_vip:
             max_vip = pc_max_vip
-        enumerated_scores = enumerate(vip_scores[f'comp{i}'])
+        enumerated_scores = enumerate(vip_scores[i])
         filtered_scores = filter(lambda s: s[1] > threshold, enumerated_scores)
         sorted_scores = sorted(filtered_scores, key=lambda s: s[1])
         metabolites += [column_names[j] for j, score in sorted_scores]
