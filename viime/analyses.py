@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 
 from .models import clean
-from .opencpu import opencpu_request
+from .opencpu import opencpu_request, r_json_to_pandas
 
 
 def wilcoxon_test(measurements: pd.DataFrame, groups: pd.Series,
@@ -118,25 +118,23 @@ def factor_analysis(measurements: pd.DataFrame, threshold=0.4) -> Dict[str, List
     return clean(data).to_dict(orient='list')
 
 
-def plsda(measurements: pd.DataFrame, groups: pd.DataFrame, num_of_components: int, mode='scores'):
+def plsda(measurements: pd.DataFrame, groups: pd.DataFrame, num_of_components: int):
     files = {
         'measurements': measurements.to_csv().encode(),
         'groups': groups.to_csv(header=True).encode()
     }
     data = opencpu_request('plsda', files, {
         'num_of_components': num_of_components,
-        'mode': mode
-    })
-    return clean(data).to_dict(orient='list')
+    }, return_type='json')
+    return [clean(r_json_to_pandas(d)).to_dict(orient='list') for d in data]
 
 
-def oplsda(measurements: pd.DataFrame, groups: pd.DataFrame, num_of_components: int, mode='scores'):
+def oplsda(measurements: pd.DataFrame, groups: pd.DataFrame, num_of_components: int):
     files = {
         'measurements': measurements.to_csv().encode(),
         'groups': groups.to_csv(header=True).encode()
     }
     data = opencpu_request('oplsda', files, {
         'num_of_components': num_of_components,
-        'mode': mode
-    })
-    return clean(data).to_dict(orient='list')
+    }, return_type='json')
+    return [clean(r_json_to_pandas(d)).to_dict(orient='list') for d in data]

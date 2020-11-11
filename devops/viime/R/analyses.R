@@ -299,7 +299,7 @@ factor_analysis <- function(measurements, threshold) {
 #' plsda
 #'
 #' @export
-plsda <- function(measurements, groups, num_of_components, mode) {
+plsda <- function(measurements, groups, num_of_components) {
   library(mixOmics)
   df <- read.csv(measurements, row.names=1, check.names=FALSE)
   groups <- read.csv(groups, row.names=1, check.names=FALSE)
@@ -308,39 +308,33 @@ plsda <- function(measurements, groups, num_of_components, mode) {
   # PLS-DA (Set to scale=TRUE just for trial, for VIIME it should be FALSE since data has already been pretreated)
   mod_plsda <- mixOmics::plsda(df, groups, scale=FALSE, ncomp = num_of_components)
 
-  if (mode == "scores") {
-    # Save Scores
-    scores_plsda <- data.frame(variates=mod_plsda$variates[1], explained_variance=as.list(mod_plsda$explained_variance$X))
-    return(scores_plsda)
-  } else if (mode == "loadings") {
-    # Save loadings
-    load_plsda <- as.data.frame(mod_plsda$loadings$X)
-    return(load_plsda)
-  } else if (mode == "vip") {
-    # VIP scores/vip
-    vip <- vip(mod_plsda)
-    return(vip)
-  } else if (mode == "r2") {
-    # R2 values
-    Group_num <- as.numeric(as.factor(groups))
-    mod_pls <- mixOmics::pls(df, Group_num, scale=FALSE, ncomp = num_of_components)
-    qr <- mixOmics::perf(mod_pls, validation='loo')
-    return(qr$R2)
-  } else if (mode == "q2") {
-    # Q2 values
-    Group_num <- as.numeric(as.factor(groups))
-    mod_pls <- mixOmics::pls(df, Group_num, scale=FALSE, ncomp = num_of_components)
-    qr <- mixOmics::perf(mod_pls, validation='loo')
-    return(qr$Q2)
-  } else {
-    stop("Invalid mode for PLSDA.")
-  }
+  # Save Scores
+  scores_plsda <- data.frame(variates=mod_plsda$variates[1], explained_variance=as.list(mod_plsda$explained_variance$X))
+
+  # Save loadings
+  load_plsda <- as.data.frame(mod_plsda$loadings$X)
+
+  # VIP scores/vip
+  vip <- vip(mod_plsda)
+
+  # R2/Q2 values
+  Group_num <- as.numeric(as.factor(groups))
+  mod_pls <- mixOmics::pls(df, Group_num, scale=FALSE, ncomp = num_of_components)
+  qr <- mixOmics::perf(mod_pls, validation='loo')
+
+  return(list(
+    scores_plsda,
+    load_plsda,
+    vip,
+    qr$R2,
+    qr$Q2
+  ))
 }
 
 #' oplsda
 #'
 #' @export
-oplsda <- function(measurements, groups, num_of_components, mode) {
+oplsda <- function(measurements, groups, num_of_components) {
   library(ropls)
   df <- read.csv(measurements, row.names=1, check.names=FALSE)
   groups <- read.csv(groups, row.names=1, check.names=FALSE)
@@ -349,34 +343,29 @@ oplsda <- function(measurements, groups, num_of_components, mode) {
   # Perform OPLS-DA
   ropls_oplsda <- ropls::opls(df, groups, scaleC="none", orthoI=num_of_components)
 
-  if (mode == "scores") {
-    #Main Score
-    ropls_scores_x  <- as.data.frame(ropls_oplsda@scoreMN)
-    #Orthogonal
-    ropls_scores_y  <- as.data.frame(ropls_oplsda@orthoScoreMN)
-    #Save scores together
-    oplsda_scores <- cbind(ropls_scores_x , ropls_scores_y)
+  #Main Score
+  ropls_scores_x  <- as.data.frame(ropls_oplsda@scoreMN)
+  #Orthogonal
+  ropls_scores_y  <- as.data.frame(ropls_oplsda@orthoScoreMN)
+  #Save scores together
+  oplsda_scores <- cbind(ropls_scores_x , ropls_scores_y)
 
-    return(oplsda_scores)
-  } else if (mode == "loadings") {
-    # Save loadings
-    #Main loadings
-    ropls_loadings_x  <- as.data.frame(ropls_oplsda@loadingMN)
-    #Orthogonal loadings
-    ropls_loadings_y  <- as.data.frame(ropls_oplsda@orthoLoadingMN)
-    #Save loadings together
-    oplsda_loadings <- cbind(ropls_loadings_x , ropls_loadings_y)
+  # Save loadings
+  #Main loadings
+  ropls_loadings_x  <- as.data.frame(ropls_oplsda@loadingMN)
+  #Orthogonal loadings
+  ropls_loadings_y  <- as.data.frame(ropls_oplsda@orthoLoadingMN)
+  #Save loadings together
+  oplsda_loadings <- cbind(ropls_loadings_x , ropls_loadings_y)
 
-    return(oplsda_loadings)
-  } else if (mode == "vip") {
-    #VIP Scores
-    ropls_vip <- as.data.frame(ropls_oplsda@vipVn)
-    return(ropls_vip)
-  } else if (mode == "modeldf") {
-    return(ropls_oplsda@modelDF)
-  } else if (mode == "summarydf") {
-    return(ropls_oplsda@summaryDF)
-  } else {
-    stop("Invalid mode for PLSDA.")
-  }
+  #VIP Scores
+  ropls_vip <- as.data.frame(ropls_oplsda@vipVn)
+
+  return(list(
+    oplsda_scores,
+    oplsda_loadings,
+    ropls_vip,
+    ropls_oplsda@modelDF,
+    ropls_oplsda@summaryDF
+  ))
 }

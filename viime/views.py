@@ -740,11 +740,7 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
             'error': 'invalid num_of_components'
         }), 400
 
-    scores = plsda(measurements, groups, num_of_components, 'scores')
-    loadings = plsda(measurements, groups, num_of_components, 'loadings')
-    vip_scores = plsda(measurements, groups, num_of_components, 'vip')
-    r2 = plsda(measurements, groups, num_of_components, 'r2')
-    q2 = plsda(measurements, groups, num_of_components, 'q2')
+    scores, loadings, vip_scores, r2, q2 = plsda(measurements, groups, num_of_components)
 
     # massage the data returned from opencpu to correct format for client:
     column_names = list(measurements.columns)
@@ -766,9 +762,9 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
     formatted_vip_scores = [
         [
             {'col': column_names[j], 'vip': vip}
-            for j, vip in enumerate(vip_scores[f'comp{i}'])
+            for j, vip in enumerate(vip_scores[i])
         ]
-        for i in range(1, num_of_components + 1)
+        for i in range(num_of_components)
     ]
 
     explained_variances = [
@@ -803,7 +799,7 @@ def get_plsda(validated_table: ValidatedMetaboliteTable, num_of_components: Opti
 })
 @load_validated_csv_file
 def get_oplsda(validated_table: ValidatedMetaboliteTable,
-               num_of_components: Optional[int] = 3,
+               num_of_components: int = 3,
                group1: Optional[str] = None,
                group2: Optional[str] = None):
 
@@ -821,11 +817,8 @@ def get_oplsda(validated_table: ValidatedMetaboliteTable,
     groups = groups.loc[groups[group_column_name].isin((group1, group2))]
     measurements = measurements.loc[measurements.index.intersection(groups.index)]
 
-    scores = oplsda(measurements, groups, num_of_components, 'scores')
-    loadings = oplsda(measurements, groups, num_of_components, 'loadings')
-    vip_scores = oplsda(measurements, groups, num_of_components, 'vip')['ropls_oplsda@vipVn']
-    modeldf = oplsda(measurements, groups, num_of_components, 'modeldf')
-    summarydf = oplsda(measurements, groups, num_of_components, 'summarydf')
+    scores, loadings, vip, modeldf, summarydf = oplsda(measurements, groups, num_of_components)
+    vip_scores = vip['ropls_oplsda@vipVn']
 
     # TODO: add vip scores to the response
     # vip = next(iter(oplsda(measurements, groups, 'vip').values()))
@@ -1024,18 +1017,18 @@ def get_plsda_factors(validated_table: ValidatedMetaboliteTable,
     measurements = validated_table.measurements
     groups = validated_table.groups
 
-    vip_scores = plsda(measurements, groups, num_of_components, 'vip')
+    _, _, vip_scores, _, _ = plsda(measurements, groups, num_of_components)
     column_names = list(measurements.columns)
 
     metabolites = []
     factors = []
     # The maximum VIP score should be upper bound of the threshold slider
     max_vip = 1
-    for i in range(1, num_of_components + 1):
-        pc_max_vip = max(vip_scores[f'comp{i}'])
+    for i in range(0, num_of_components):
+        pc_max_vip = max(vip_scores[i])
         if pc_max_vip > max_vip:
             max_vip = pc_max_vip
-        enumerated_scores = enumerate(vip_scores[f'comp{i}'])
+        enumerated_scores = enumerate(vip_scores[i])
         filtered_scores = filter(lambda s: s[1] > threshold, enumerated_scores)
         sorted_scores = sorted(filtered_scores, key=lambda s: s[1])
         metabolites += [column_names[j] for j, score in sorted_scores]
