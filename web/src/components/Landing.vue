@@ -219,10 +219,10 @@ v-app.viime-landing
         v-flex(md8, xs12)
           h2.mb-3.pa-0 Ready for Collaboration
           p
-            | The code for VIIME is in a permissive open source library, meaning it can be used and
+            | The code for Viime is in a permissive open source library, meaning it can be used and
             | extended across academia and industry with no restrictions. This includes deploying
-            | VIIME at your institution for your internal research team. If you'd like to partner
-            | with us to deploy or extend VIIME
+            | Viime at your institution for your internal research team. If you'd like to partner
+            | with us to deploy or extend Viime
         v-flex.contacts(md4, xs12)
           div
             feedback-button(front)
