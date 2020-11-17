@@ -51,6 +51,7 @@ export default defineComponent({
         { value: 'random_forest', text: 'Random Forest' },
         { value: 'logistic_regression', text: 'Logistic Regression' },
       ],
+      displayConfidenceInterval: false,
     });
 
     const pcaData: Ref<PCAData | null> = ref(null);// data from factor analysis endpoint
@@ -114,6 +115,24 @@ export default defineComponent({
         return 0;
       }
       return plot.value.data.auc[0];
+    });
+    const lowerBound = computed(() => {
+      if (!plot.value.data
+        || !controls.group1
+        || !controls.group2
+        || controls.metabolites.length === 0) {
+        return [];
+      }
+      return plot.value.data.lower_bound;
+    });
+    const upperBound = computed(() => {
+      if (!plot.value.data
+        || !controls.group1
+        || !controls.group2
+        || controls.metabolites.length === 0) {
+        return [];
+      }
+      return plot.value.data.upper_bound;
     });
 
     // Called when a metabolite is removed from the ROC analysis
@@ -199,6 +218,8 @@ export default defineComponent({
       sensitivities,
       specificities,
       auc,
+      lowerBound,
+      upperBound,
       removeMetabolite,
     };
   },
@@ -419,12 +440,25 @@ export default defineComponent({
           :items="controls.methodOptions"
           @change="changePlotArgs({method: $event})"
         />
+        <v-card-actions>
+          <v-layout column>
+            <v-switch
+              v-model="controls.displayConfidenceInterval"
+              class="ma-0 py-2"
+              label="Confidence Interval"
+              hide-details
+            />
+          </v-layout>
+        </v-card-actions>
       </v-card>
     </template>
     <roc-curve
       :specificities="specificities"
       :sensitivities="sensitivities"
       :auc="auc"
+      :display-confidence-interval="controls.displayConfidenceInterval"
+      :lower-bound="lowerBound"
+      :upper-bound="upperBound"
     />
   </vis-tile-large>
 </template>

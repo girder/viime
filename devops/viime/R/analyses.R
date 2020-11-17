@@ -228,12 +228,22 @@ roc_analysis <- function(measurements, groups, group1_name, group2_name, column_
   #############
   #ROC analysis
   roc.a <- pROC::roc(group_mask, pred, plot=FALSE)
-  out = data.frame(
+
+  # Confidence interval
+  d <- pROC::ci.sp(roc.a)
+  rocci.df <- as.data.frame(cbind(y=as.numeric(rownames(d)),d[,c(1,3)]))
+  rocci.df$`lower_bound` <- 1-rocci.df$`2.5%`
+  rocci.df$`upper_bound` <- 1-rocci.df$`97.5%`
+  rocci.df <- as.data.frame(rocci.df[,c(1,4,5)]*100)
+  
+  return(list(data.frame(
       sensitivities=roc.a$sensitivities,
       specificities=roc.a$specificities,
       thresholds=roc.a$thresholds,
       auc=rep(roc.a$auc, length(roc.a$thresholds))
-  )
+    ),
+    rocci.df
+  ))
 }
 
 #' factor_analysis

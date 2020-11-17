@@ -18,6 +18,18 @@ export default {
       type: Number,
       required: true,
     },
+    displayConfidenceInterval: {
+      type: Boolean,
+      required: true,
+    },
+    lowerBound: {
+      type: Array,
+      required: true,
+    },
+    upperBound: {
+      type: Array,
+      required: true,
+    },
   },
   data() {
     return {
@@ -56,6 +68,15 @@ export default {
         { sensitivity, specificity: 1 - this.specificities[i] }
       ));
     },
+    confidenceInterval() {
+      const lowerBounds = this.lowerBound.map((lowerBound, i) => (
+        { specificity: lowerBound * 0.01, sensitivity: (i * 0.1) }
+      ));
+      const upperBounds = this.upperBound.map((upperBound, i) => (
+        { specificity: upperBound * 0.01, sensitivity: (i * 0.1) }
+      ));
+      return lowerBounds.concat(upperBounds.reverse());
+    },
   },
   mounted() {
     // draw plot axes
@@ -84,6 +105,11 @@ export default {
         />
         <g id="yAxis" />
         <g>
+          <path
+            v-if="displayConfidenceInterval"
+            class="confidence-interval"
+            :d="drawLine(confidenceInterval)"
+          />
           <path
             class="rocCurve"
             :d="drawLine(curvePlotData)"
@@ -145,7 +171,12 @@ export default {
   fill: none;
   stroke: black;
   stroke-width: 3px;
-  stroke-dasharray: 5,5;
+  stroke-dasharray: 5, 5;
+}
+
+.confidence-interval {
+  fill: lightgray;
+  stroke: gray;
 }
 
 g {
@@ -156,5 +187,4 @@ g {
 .label {
   font-size: 1.5em;
 }
-
 </style>

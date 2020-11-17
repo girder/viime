@@ -44,11 +44,22 @@ def test_roc(client, test_dataset):
     }
     resp = client.get(url_for('csv.get_roc', csv_id=str(csv_id)), json=data)
     assert resp.status_code == 200
-    keys = {'sensitivities', 'thresholds', 'specificities', 'auc'}
+    keys = {
+        'sensitivities',
+        'thresholds',
+        'specificities',
+        'auc',
+        'lower_bound',
+        'upper_bound',
+        'y'
+    }
     assert keys == set(resp.json.keys())
     for key in keys:
         for value in resp.json[key]:
-            assert value in {'Inf', '-Inf'} or 0 <= value <= 1
+            if key in ('lower_bound', 'upper_bound', 'y'):
+                assert 0 <= value <= 100
+            else:
+                assert value in {'Inf', '-Inf', 'NaN'} or 0 <= value <= 1
 
 
 def test_factor_analysis(client, test_dataset):
