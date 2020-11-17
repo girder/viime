@@ -106,7 +106,10 @@ def roc_analysis(measurements: pd.DataFrame, groups: pd.DataFrame,
         'method': method
     }, return_type='json')
 
-    return [clean(r_json_to_pandas(d)).to_dict(orient='list') for d in data]
+    cleaned_data = [clean(r_json_to_pandas(d)).to_dict(orient='list') for d in data]
+    merged_data = cleaned_data[0]
+    merged_data.update(cleaned_data[1])
+    return merged_data
 
 
 def factor_analysis(measurements: pd.DataFrame, threshold=0.4) -> Dict[str, List[float]]:
