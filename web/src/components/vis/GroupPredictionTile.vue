@@ -15,7 +15,7 @@ interface Level {
   name: string;
 }
 interface PCAData {
-  factor: string[];
+  factor: number[];
   metabolites: string[];
 }
 
@@ -38,7 +38,7 @@ export default defineComponent({
       maxThreshold: 1,
       group1: '',
       group2: '',
-      metaboliteSource: null,
+      metaboliteSource: null as number | null,
       analysis: 'all',
       analysisOptions: [
         { value: 'all', text: 'All metabolites' },
