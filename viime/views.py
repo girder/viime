@@ -1033,11 +1033,48 @@ def get_plsda_factors(validated_table: ValidatedMetaboliteTable,
         sorted_scores = sorted(filtered_scores, key=lambda s: s[1])
         metabolites += [column_names[j] for j, score in sorted_scores]
         factors += [i] * len(sorted_scores)
+    return jsonify({
+        'factor': factors,
+        'metabolites': metabolites,
+        'max_vip': 3,  # TODO: max_vip
+    })
+
+
+@csv_bp.route('/csv/<uuid:csv_id>/analyses/oplsda_factors', methods=['GET'])
+@use_kwargs({
+    'num_of_components': fields.Integer(missing=3),
+    'threshold': fields.Float(missing=0.4),
+    'group1': fields.String(required=True),
+    'group2': fields.String(required=True),
+})
+@load_validated_csv_file
+def get_oplsda_factors(validated_table: ValidatedMetaboliteTable,
+                       group1: str,
+                       group2: str,
+                       num_of_components: Optional[int] = 3,
+                       threshold: Optional[float] = 0.4):
+    measurements = validated_table.measurements
+    groups = validated_table.groups
+    group_column_name = groups.columns[0]
+
+    # Filter groups and measurements by the selected groups
+    groups = groups.loc[groups[group_column_name].isin((group1, group2))]
+
+    # scores, loadings, vip, modeldf, summarydf = oplsda(measurements, groups, num_of_components)
+    _, _, vip, _, _ = oplsda(measurements, groups, num_of_components)
+    vip_scores = vip['ropls_oplsda@vipVn']
+    column_names = list(measurements.columns)
+
+    enumerated_scores = enumerate(vip_scores)
+    filtered_scores = filter(lambda s: s[1] > threshold, enumerated_scores)
+    sorted_scores = sorted(filtered_scores, key=lambda s: s)
+    metabolites = [column_names[j] for j, score in sorted_scores]
+    factors = [0] * len(sorted_scores)
 
     return jsonify({
         'factor': factors,
         'metabolites': metabolites,
-        'max_vip': max_vip
+        'max_vip': 3  # TODO: max_vip
     })
 
 
