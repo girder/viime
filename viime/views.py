@@ -1059,6 +1059,7 @@ def get_oplsda_factors(validated_table: ValidatedMetaboliteTable,
 
     # Filter groups and measurements by the selected groups
     groups = groups.loc[groups[group_column_name].isin((group1, group2))]
+    measurements = measurements.loc[measurements.index.intersection(groups.index)]
 
     # scores, loadings, vip, modeldf, summarydf = oplsda(measurements, groups, num_of_components)
     _, _, vip, _, _ = oplsda(measurements, groups, num_of_components)
