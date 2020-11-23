@@ -15,7 +15,7 @@ interface Level {
   name: string;
 }
 interface PCAData {
-  factor: string[];
+  factor: number[];
   metabolites: string[];
 }
 
@@ -38,13 +38,14 @@ export default defineComponent({
       maxThreshold: 1,
       group1: '',
       group2: '',
-      metaboliteSource: null,
+      metaboliteSource: null as number | null,
       analysis: 'all',
       analysisOptions: [
         { value: 'all', text: 'All metabolites' },
         { value: 'selected', text: 'Selected Metabolites' },
         { value: 'factor', text: 'Factor Analysis' },
         { value: 'plsda', text: 'PLSDA' },
+        { value: 'oplsda', text: 'OPLSDA' },
       ],
       method: 'random_forest',
       methodOptions: [
@@ -88,7 +89,7 @@ export default defineComponent({
     });
     // The "All" and "Selected" analysis options do not do any analysis,
     // so we don't want to show the Metabolite Source selector
-    const showMetaboliteSource = computed(() => controls.analysis !== 'all' && controls.analysis !== 'selected');
+    const showMetaboliteSource = computed(() => controls.analysis !== 'all' && controls.analysis !== 'selected' && controls.analysis !== 'oplsda');
     const sensitivities = computed(() => {
       if (!plot.value.data
         || !controls.group1
@@ -158,7 +159,17 @@ export default defineComponent({
           pcaData.value = plsdaDataResponse.data;
           controls.maxThreshold = plsdaDataResponse.data.max_vip;
         } else if (controls.analysis === 'oplsda') {
-          // TODO group selectors?
+          // TODO add controls for num_of_components?
+          const oplsdaDataResponse = await CSVService.getAnalysis(dataset.value.id, 'oplsda_factors',
+            {
+              num_of_components: 2,
+              threshold: controls.threshold,
+              group1: controls.group1,
+              group2: controls.group2,
+            });
+          pcaData.value = oplsdaDataResponse.data;
+          controls.maxThreshold = oplsdaDataResponse.data.max_vip;
+          controls.metaboliteSource = 0;
         }
         // update the selected metabolites to the result of the analysis
         controls.metabolites = columns.value;
@@ -192,11 +203,16 @@ export default defineComponent({
       changePlotArgs({ columns: JSON.stringify(controls.metabolites) });
     });
     // These two watchers prevent the same group from being selected twice.
+    // And also rerun the analysis if the analysis is OPLSDA,
+    // since OPLSDA takes the groups as arguments.
     watch(() => controls.group1, (newGroup, oldGroup) => {
       changePlotArgs({ group1: newGroup });
       if (controls.group2 === newGroup) {
         controls.group2 = oldGroup;
         changePlotArgs({ group2: oldGroup });
+      }
+      if (controls.analysis === 'oplsda') {
+        getFactors();
       }
     });
     watch(() => controls.group2, (newGroup, oldGroup) => {
@@ -204,6 +220,9 @@ export default defineComponent({
       if (controls.group1 === newGroup) {
         controls.group1 = oldGroup;
         changePlotArgs({ group1: oldGroup });
+      }
+      if (controls.analysis === 'oplsda') {
+        getFactors();
       }
     });
     return {
