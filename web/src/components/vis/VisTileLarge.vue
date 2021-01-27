@@ -52,6 +52,7 @@ export default defineComponent({
       }
     }
     return {
+      el,
       hasControls,
       helpText,
       downloadImage,
