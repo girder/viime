@@ -44,7 +44,7 @@ setup(
         'sqlalchemy-utils',
         'webargs >=5.5.3, <6',
         'Werkzeug>=0.15',
-        'xlrd>= 1.0.0'
+        'openpyxl'
     ],
     extras_require={
         'memcached': ['pylibmc'],
