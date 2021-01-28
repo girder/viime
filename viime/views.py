@@ -95,7 +95,11 @@ def upload_csv_file(file: FileStorage, meta: Dict[str, Any]):
     'meta': JSONDictStr(missing={})
 })
 def upload_excel_file(file: FileStorage, meta: Dict[str, Any]):
-    excel_sheets: Dict[str, pandas.DataFrame] = pandas.read_excel(file, sheet_name=None)
+    excel_sheets: Dict[str, pandas.DataFrame] = pandas.read_excel(
+        file,
+        sheet_name=None,
+        engine='openpyxl',
+    )
     excel_sheets = {sheet: data for (sheet, data) in excel_sheets.items() if not data.empty}
 
     basename = PurePath(cast(str, file.filename)).with_suffix('')
