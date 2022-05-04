@@ -18,7 +18,7 @@ jobs:
 
   test_web:
     docker:
-      - image: circleci/node:10
+      - image: circleci/node:12
     steps:
       - checkout
       - restore_cache:
@@ -98,7 +98,7 @@ jobs:
 
   release:
     docker:
-      - image: node:10
+      - image: node:12
     steps:
       - checkout
       - restore_cache:

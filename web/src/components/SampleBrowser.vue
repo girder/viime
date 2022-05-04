@@ -81,7 +81,7 @@ export default {
   border-bottom: 1px solid var(--v-primary-lighten4);
   border-top: 1px solid var(--v-primary-lighten4);
 
-  /deep/ .v-expansion-panel__body {
+  ::v-deep .v-expansion-panel__body {
     background: var(--v-primary-lighten5);
     box-shadow: inset 0px 0px 4px rgba(0, 0, 0, .25);
   }

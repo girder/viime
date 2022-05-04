@@ -810,13 +810,13 @@ export default {
   justify-content: center;
   overflow: hidden;
   line-height: normal;
-  /deep/ div {
+  ::v-deep div {
     flex-direction: column;
     flex: 1 1 0;
     display: flex;
     align-items: center;
   }
-  /deep/ .label {
+  ::v-deep .label {
     text-align: right;
     writing-mode: tb;
     transform: rotate(-180deg);
@@ -825,12 +825,12 @@ export default {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  /deep/ .color {
+  ::v-deep .color {
     align-self: stretch;
     height: 5px;
     margin-bottom: 2px;
   }
-  /deep/ .selected {
+  ::v-deep .selected {
     color: orange;
   }
 }
@@ -841,44 +841,44 @@ export default {
   flex-direction: column;
   justify-content: center;
   line-height: normal;
-  /deep/ .color {
+  ::v-deep .color {
     align-self: stretch;
     width: 5px;
     min-width: 5px;
     margin-right: 2px;
   }
-  /deep/ .color.hidden {
+  ::v-deep .color.hidden {
     display: none;
   }
-  /deep/ div {
+  ::v-deep div {
     flex: 1 1 0;
     display: flex;
     align-items: center;
   }
-  /deep/ .label {
+  ::v-deep .label {
     flex: 1 1 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  /deep/ .selected {
+  ::v-deep .selected {
     color: orange;
   }
 }
 
 .edges {
-  /deep/ path {
+  ::v-deep path {
     fill: none;
     stroke-width: 1;
     stroke: black;
   }
-  /deep/ path.selected {
+  ::v-deep path.selected {
     stroke: orange;
   }
 }
 
 .nodes {
-  /deep/ g {
+  ::v-deep g {
     opacity: 0;
     font: normal normal normal 24px/1 "Material Design Icons";
     fill: black;
@@ -887,13 +887,13 @@ export default {
     user-select: none;
     text-anchor: middle;
     dominant-baseline: central;
-    /deep/ circle {
+    ::v-deep circle {
       fill: white;
     }
     &:hover {
       opacity: 1;
       fill: orange;
-      /deep/ text {
+      ::v-deep text {
         fill: orange;
       }
     }
