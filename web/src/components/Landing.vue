@@ -51,6 +51,20 @@ export default {
 </script>
 <template lang="pug">
 v-app.viime-landing
+  div(style="position:absolute;top:70px;left:20px;z-index:100")
+    v-card.mx-auto
+      v-card-text
+        div(style="display:flex;justify-content:center")
+          div(style="max-width:700px")
+            p(style="font-size:30px") See the new module Viime-Path
+            div(style="font-size:20px")
+              | Viime-Path: An Interactive Metabolic Pathway Generation Tool for Metabolomics Data Analysis
+              br
+              | Jeff Baumes, Thomas M. O'Connell
+              br
+              | doi:&nbsp;
+              a(href="https://doi.org/10.1101/2023.03.07.531550") https://doi.org/10.1101/2023.03.07.531550
+
   browser-support-banner
   v-toolbar.main-toolbar.darken-4.py-2(dark, dense, color="transparent", flat)
     v-toolbar-title(style="height: 100%; padding: 10px 0;")
@@ -459,6 +473,10 @@ v-app.viime-landing
     opacity: 0;
     transform: rotate(45deg) translate(30px, 30px);
   }
+}
+
+.viime-path {
+  font-size: 20px;
 }
 
 @media screen and (max-width: 960px) {
