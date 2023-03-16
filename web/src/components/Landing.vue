@@ -475,10 +475,6 @@ v-app.viime-landing
   }
 }
 
-.viime-path {
-  font-size: 20px;
-}
-
 @media screen and (max-width: 960px) {
   .banner-area {
     height: auto;
