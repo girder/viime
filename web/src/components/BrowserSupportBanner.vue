@@ -12,7 +12,7 @@ export default defineComponent({
 
       // Chrome 1 - 71
       // @ts-ignore
-      const isChrome = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime);
+      const isChrome = !!window.chrome;
 
       // Blink engine detection
       const isBlink = (isChrome || isOpera) && !!window.CSS;
