@@ -30,6 +30,7 @@ export default {
         'px-4': this.$vuetify.breakpoint.smAndDown,
         'px-0': this.$vuetify.breakpoint.mdAndUp,
       },
+      showViimePath: JSON.parse(localStorage.getItem('showViimePath') ?? 'true'),
       diclaimerOpen: false,
       images: {
         analysis,
@@ -47,16 +48,24 @@ export default {
       },
     };
   },
+  methods: {
+    hideViimePath() {
+      localStorage.setItem('showViimePath', 'false');
+      this.showViimePath = false;
+    }
+  }
 };
 </script>
 <template lang="pug">
 v-app.viime-landing
-  div(style="position:absolute;top:70px;left:20px;z-index:100")
+  div(v-if="showViimePath", style="position:absolute;top:70px;left:20px;z-index:100")
     v-card.mx-auto
       v-card-text
-        div(style="display:flex;justify-content:center")
+        div(style="display:flex;flex-direction:row;justify-content:flex-start")
           div(style="max-width:700px")
-            p(style="font-size:30px") See the new module Viime-Path
+            p(style="font-size:30px")
+              | See the new module &nbsp;
+              a(href="https://girder.github.io/viime-path/") Viime-Path
             div(style="font-size:20px")
               | Viime-Path: An Interactive Metabolic Pathway Generation Tool for Metabolomics Data Analysis
               br
@@ -64,6 +73,8 @@ v-app.viime-landing
               br
               | doi:&nbsp;
               a(href="https://doi.org/10.1101/2023.03.07.531550") https://doi.org/10.1101/2023.03.07.531550
+          v-btn(icon, @click="hideViimePath")
+            v-icon mdi-close
 
   browser-support-banner
   v-toolbar.main-toolbar.darken-4.py-2(dark, dense, color="transparent", flat)
