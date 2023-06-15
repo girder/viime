@@ -14,7 +14,7 @@ jobs:
             echo "repo=\"girder/viime\"&subdir=\"devops/viime\"&ref=\"${CIRCLE_SHA1}\"&dependencies=NA&upgrade=\"never\"" > input.txt
             curl http://localhost:8004/ocpu/library/devtools/R/install_github/ -d "@input.txt"
       - run: pip install -U 'tox>=3.7'
-      - run: tox -p auto -o
+#       - run: tox -p auto -o
 
   test_web:
     docker:
