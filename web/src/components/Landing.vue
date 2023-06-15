@@ -73,7 +73,8 @@ v-app.viime-landing
               | Jeff Baumes, Thomas M. O'Connell
               br
               | doi:&nbsp;
-              a(href="https://doi.org/10.1101/2023.03.07.531550") https://doi.org/10.1101/2023.03.07.531550
+              a(href="https://doi.org/10.1101/2023.03.07.531550")
+                | https://doi.org/10.1101/2023.03.07.531550
           v-btn(icon, @click="hideViimePath")
             v-icon mdi-close
 
