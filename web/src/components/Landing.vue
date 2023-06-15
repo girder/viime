@@ -52,8 +52,8 @@ export default {
     hideViimePath() {
       localStorage.setItem('showViimePath', 'false');
       this.showViimePath = false;
-    }
-  }
+    },
+  },
 };
 </script>
 <template lang="pug">
@@ -67,7 +67,8 @@ v-app.viime-landing
               | See the new module &nbsp;
               a(href="https://girder.github.io/viime-path/") Viime-Path
             div(style="font-size:20px")
-              | Viime-Path: An Interactive Metabolic Pathway Generation Tool for Metabolomics Data Analysis
+              | Viime-Path: An Interactive Metabolic Pathway
+              | Generation Tool for Metabolomics Data Analysis
               br
               | Jeff Baumes, Thomas M. O'Connell
               br
