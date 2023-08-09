@@ -16,7 +16,7 @@ def test_upload_excel_file(client):
 
     assert resp.status_code == 201
     res = resp.json
-    assert type(res) == list
+    assert type(res) is list
     assert len(res) == 2
 
     sheet1 = res[0]
