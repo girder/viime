@@ -38,7 +38,7 @@ metadata = MetaData(naming_convention={
     'uq': 'uq_%(table_name)s_%(column_0_name)s',
     'ck': 'ck_%(table_name)s_%(column_0_name)s',
 })
-db = SQLAlchemy(metadata=metadata)
+db = SQLAlchemy(metadata=metadata, engine_options={'connect_args': {'timeout': 1000}})
 BaseModel: DefaultMeta = db.Model
 
 AxisNameTypes = namedtuple('AxisNameTypes', ['ROW', 'COLUMN'])
@@ -580,6 +580,7 @@ class CSVFileSchema(BaseSchema):
 
 
 class SampleGroup(BaseModel):
+    __allow_unmapped__ = True
     name = db.Column(db.String, primary_key=True)
     description = db.Column(db.String, nullable=True)
     order = db.Column(db.Integer, nullable=True)
