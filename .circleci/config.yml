@@ -98,7 +98,7 @@ jobs:
 
   release:
     docker:
-      - image: node:12
+      - image: cimg/python:3.8-node
     steps:
       - checkout
       - restore_cache:
@@ -131,7 +131,7 @@ jobs:
 
   publish:
     docker:
-      - image: circleci/buildpack-deps:stretch
+      - image: cimg/base:current
     steps:
       - checkout
       - setup_remote_docker:
@@ -146,7 +146,7 @@ jobs:
 
   deploy:
     docker:
-      - image: circleci/python:3.6.1
+      - image: cimg/python:3.8
     environment:
       AWS_DEFAULT_OUTPUT: json
     steps:
