@@ -98,7 +98,7 @@ jobs:
 
   release:
     docker:
-      - image: cimg/python:3.8-node
+      - image: node:12
     steps:
       - checkout
       - restore_cache:
