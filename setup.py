@@ -40,7 +40,7 @@ setup(
         'pandas>=0.25.0',
         'python-dotenv',
         'requests',
-        'sklearn',
+        'scikit-learn',
         'sqlalchemy-utils',
         'webargs >=5.5.3, <6',
         'Werkzeug>=0.15',

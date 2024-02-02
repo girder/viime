@@ -79,7 +79,7 @@ def create_app(config=None):
 
     app.register_error_handler(ValidationError, handle_validation_error)
     app.register_error_handler(OpenCPUException, handle_opencpu_error)
-    if app.config['ENV'] == 'production':
+    if app.config.get('ENV') == 'production':
         app.register_error_handler(500, handle_general_error)
 
     @app.after_request

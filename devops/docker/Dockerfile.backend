@@ -7,6 +7,10 @@ ADD setup.py /app
 ADD .git /app/.git
 
 RUN pip install -e  /app
+RUN pip install --no-cache-dir -U meinheld
+
+# copy gunicorn config to working dir
+ADD devops/docker/gunicorn_conf.py /app/gunicorn_conf.py
 
 # copy gunicorn prestart script to working dir
 ADD devops/docker/prestart.sh /app/prestart.sh

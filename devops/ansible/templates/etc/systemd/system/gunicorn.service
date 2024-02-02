@@ -14,6 +14,7 @@ RuntimeDirectory=gunicorn
 ExecStart={{ venv }}/bin/gunicorn --name viime \
                                   --pid /run/gunicorn/pid \
                                   --workers 4 \
+                                  --timeout 1000 \
                                   --statsd-host 127.0.0.1:8125 \
                                   --bind 127.0.0.1:8000 viime.wsgi:app
 ExecReload=/bin/kill -s HUP $MAINPID
