@@ -2,7 +2,7 @@ version: 2
 jobs:
   test_python:
     docker:
-      - image: themattrix/tox
+      - image: cimg/python:3.8
       - image: viime/opencpu-base
         command: |
           /bin/sh -c "chmod a+w /usr/local/lib/R/site-library && service cron start && /usr/lib/rstudio-server/bin/rserver && apachectl -DFOREGROUND"
@@ -13,12 +13,12 @@ jobs:
           command: |
             echo "repo=\"girder/viime\"&subdir=\"devops/viime\"&ref=\"${CIRCLE_SHA1}\"&dependencies=NA&upgrade=\"never\"" > input.txt
             curl http://localhost:8004/ocpu/library/devtools/R/install_github/ -d "@input.txt"
-      - run: pip install -U 'tox>=3.7'
-#       - run: tox -p auto -o
+      - run: pip install tox
+      - run: tox -p auto -o
 
   test_web:
     docker:
-      - image: circleci/node:12
+      - image: cimg/python:3.8-node
     steps:
       - checkout
       - restore_cache:
@@ -46,7 +46,7 @@ jobs:
 
   test_e2e:
     docker:
-      - image: circleci/python:3.6-node-browsers
+      - image: cimg/python:3.8-browsers
       - image: viime/opencpu-base
         command: |
           /bin/sh -c "chmod a+w /usr/local/lib/R/site-library && service cron start && /usr/lib/rstudio-server/bin/rserver && apachectl -DFOREGROUND"
@@ -98,7 +98,7 @@ jobs:
 
   release:
     docker:
-      - image: node:12
+      - image: cimg/python:3.8-node
     steps:
       - checkout
       - restore_cache:
@@ -118,7 +118,6 @@ jobs:
       - run:
           name: Build python package
           command: |
-            curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python
             pip install tox
             tox -e release
       - run:

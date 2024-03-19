@@ -5,19 +5,9 @@ VIIME
 
 Getting started (Running natively)
 ----------------------------------
-
-This project includes a `Pipfile` to help set up a virtual environment for
-VIIME. To set up the virtual environment
-
-```sh
-pipenv install
-```
-
-and to enter it
-
-```sh
-pipenv shell
-```
+To install for development:
+* [Create and activate a virtual environment](https://docs.python.org/3/tutorial/venv.html) 
+* Install the dependencies with `pip install -r requirements.txt`
 
 VIIME is configured from a `.env` file present in the current directory where
 it is executed.  See the included [.env_example](./.env_example) for an example

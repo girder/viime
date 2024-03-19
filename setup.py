@@ -28,6 +28,7 @@ setup(
     author_email='kitware@kitware.com',
     packages=find_packages(include=['viime']),
     include_package_data=True,
+    python_requires='>=3.8',
     install_requires=[
         'alembic',
         'dogpile.cache',

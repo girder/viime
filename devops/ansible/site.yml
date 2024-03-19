@@ -65,7 +65,6 @@
           - wheel
         state: "latest"
         virtualenv: "{{ venv }}"
-        virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
       become: true
       become_user: gunicorn
 
@@ -74,23 +73,29 @@
         name: "gunicorn"
         state: "present"
         virtualenv: "{{ venv }}"
-        virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
       notify: Restart gunicorn
       become: true
       become_user: gunicorn
 
+    # TODO: It'd probably be better to clone the repo (which is public) and directly install it
+    # here, rather than depend on an sdist being pre-built by CI.
     - name: Copy viime sdist to the remote machine
       copy:
         src: "{{ viime_sdist_path }}"
         dest: "/tmp/viime-sdist.tar.gz"
 
+    - name: Copy requirements.txt
+      copy:
+        src: "{{ playbook_dir }}/../../requirements.txt"
+        dest: "/tmp/requirements.txt"
+
     - name: Install viime python package
       pip:
         name: "/tmp/viime-sdist.tar.gz[memcached,sentry]"
+        requirements: "/tmp/requirements.txt"
         state: "forcereinstall"
         extra_args: "--no-cache-dir"
         virtualenv: "{{ venv }}"
-        virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
       notify:
         - Migrate database
         - Restart gunicorn
@@ -100,9 +105,9 @@
 
     - name: Add gunicorn environment variables
       template:
-          src: "home/gunicorn/.gunicorn_env"
-          dest: "/home/gunicorn/.env"
-          mode: 0600
+        src: "home/gunicorn/.gunicorn_env"
+        dest: "/home/gunicorn/.env"
+        mode: 0600
       become: true
       become_user: gunicorn
 
