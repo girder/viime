@@ -65,7 +65,6 @@
           - wheel
         state: "latest"
         virtualenv: "{{ venv }}"
-        virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
       become: true
       become_user: gunicorn
 
@@ -74,7 +73,6 @@
         name: "gunicorn"
         state: "present"
         virtualenv: "{{ venv }}"
-        virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
       notify: Restart gunicorn
       become: true
       become_user: gunicorn
@@ -90,7 +88,6 @@
         state: "forcereinstall"
         extra_args: "--no-cache-dir"
         virtualenv: "{{ venv }}"
-        virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
       notify:
         - Migrate database
         - Restart gunicorn
